@@ -1,3 +1,20 @@
 @import url("https://cdn.ratcode.dev/css/reset.css");
 @import url("https://cdn.ratcode.dev/css/default.css");
 @import url("./css/animations.css");
+
+
+body {
+    background-image: url('https://cdnb.artstation.com/p/assets/images/images/035/877/165/large/gregory-ligman-brick-wall-tile.jpg');
+    background-repeat: repeat;
+    background-size: 128px 128px;
+  
+        --animation: movePattern 1s linear infinite;
+  -webkit-animation: var(--animation);
+     -moz-animation: var(--animation);
+          animation: var(--animation);
+}
+
+@keyframes movePattern {
+  from { background-position: 0 0; }
+  to   { background-position: 0 -128px; }
+}
