@@ -8,7 +8,7 @@ body {
     background-repeat: repeat;
     background-size: 128px 128px;
   
-        --animation: movePattern 1s linear infinite;
+        --animation: movePattern 0.25s linear infinite;
   -webkit-animation: var(--animation);
      -moz-animation: var(--animation);
           animation: var(--animation);
