@@ -6,7 +6,7 @@
     * { font-family: "Hubot Sans"; }
 
 body  { z-index: 1; }
-#logo { z-index: 2; opacity: 0.5; }
+#logo { z-index: 2; }
 
 body {
     color: white;
