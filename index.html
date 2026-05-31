@@ -9,9 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Hubot+Sans:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
 </head>
-<body class='mobilefix'>
-  
-  <svg style="display: none;">
+
+<svg style="display: none;">
     <filter id="wave-shader">
       <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" result="noise" />
       <feDisplacementMap in="SourceGraphic" in2="noise" scale="20" xChannelSelector="R" yChannelSelector="G" />
@@ -44,9 +43,11 @@
       <feBlend mode="screen" in="red-green" in2="blue-isolated" />
     </filter>
   </svg>
+
+<body class='mobilefix' style='filter: url(#glitch-rgb);'>
   
   <div id='welcome'>
-    <div id='logo' data-animate='vibrate' style='filter: url(#glitch-rgb);'>
+    <div id='logo' data-animate='vibrate'>
       <img src='./logo.webp' />
       <div class='name'>RAT</div>
       <div class='sub'>version: 0.1.0</div>
