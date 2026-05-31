@@ -70,7 +70,9 @@ nav {
    display: flex;
    gap: 1.5rem;
 }
-
+#welcome {
+   padding: 2rem;
+}
 #logo {
    display: flex;
    flex-flow: column nowrap;
