@@ -55,7 +55,7 @@ body {
     body { height: 100%; }
     */
 header { align-self: stretch; }
-footer { align-self: center; }
+footer { align-self: center; letter-spacing: 2px; }
 
 header, footer {
    display: flex;
