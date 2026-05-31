@@ -7,7 +7,7 @@
 
 a { color: currentcolor; }
 
-html, body { font-size: 14px; line-height: 1; }
+html, body { font-size: 14px; }
 
 body  { z-index: 1; }
 #logo { z-index: 2; }
