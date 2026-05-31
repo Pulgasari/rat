@@ -10,7 +10,7 @@ body  { z-index: 1; }
 
 body {
     color: white;
-    padding: 3rem;
+    padding: 1rem;
 
    /*
     display: grid; 
@@ -52,14 +52,21 @@ body {
     html, body { min-height: 100%; }
     body { height: 100%; }
     */
+header { align-self: stretch; }
+footer { align-self: center; }
+
 header, footer {
-   align-self: stretch;
    display: flex;
    align-items: center;
    justify-content: space-between;
    
    text-transform: uppercase;
 }
+nav {
+   display: flex;
+   gap: 0.5rem;
+}
+#welcome { flex: 1 0 auto; }
 #logo {
    display: flex;
    flex-flow: column nowrap;
