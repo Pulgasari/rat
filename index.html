@@ -18,8 +18,37 @@
     </filter>
   </svg>
 
+  <svg style="display: none;">
+    <filter id="glitch-rgb">
+      <feOffset dx="-5" dy="0" in="SourceGraphic" result="red-channel" />
+      <feColorMatrix type="matrix" in="red-channel" result="red-isolated"
+        values="1 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 1 0" />
+  
+      <feOffset dx="5" dy="0" in="SourceGraphic" result="blue-channel" />
+      <feColorMatrix type="matrix" in="blue-channel" result="blue-isolated"
+        values="0 0 0 0 0
+                0 0 0 0 0
+                0 0 1 0 0
+                0 0 0 1 0" />
+  
+      <feColorMatrix type="matrix" in="SourceGraphic" result="green-isolated"
+        values="0 0 0 0 0
+                0 1 0 0 0
+                0 0 0 0 0
+                0 0 0 1 0" />
+  
+      <feBlend mode="screen" in="red-isolated" in2="green-isolated" result="red-green" />
+      <feBlend mode="screen" in="red-green" in2="blue-isolated" />
+    </filter>
+  </svg>
+
+<img src="dein-bild.jpg" class="glitch-img" alt="Glitch Effekt">
+
   <div id='welcome'>
-    <div id='logo' data-animate='vibrate' style='filter: url(#wave-shader);'>
+    <div id='logo' data-animate='vibrate' style='filter: url(#glitch-rgb);'>
       <img src='./logo.webp' />
       <div class='name'>RAT</div>
       <div class='sub'>version: 0.1.0</div>
