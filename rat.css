@@ -55,6 +55,6 @@ body {
    gap: 1rem;
    max-width: 480px;
    
-   .name { font-size: 4rem; font-weight: 900; }
-   .sub  { font-size: 1rem; font-style: italic; opacity: 0.50; }
+   .name { font-size: 5rem; font-weight: 900; }
+   .sub  { font-size: 1rem; font-style: italic; opacity: 0.50; display: none; }
 }
