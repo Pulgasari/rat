@@ -3,7 +3,7 @@
 @import url("./css/animations.css");
 
 :root { --color: red; }
-    * { font-family: "Hubot Sans"; }
+    * { font-family: "Hubot Sans"; line-height: 1; }
 
 a { color: currentcolor; }
 
