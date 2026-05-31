@@ -5,6 +5,8 @@
 :root { --color: red; }
     * { font-family: "Hubot Sans"; }
 
+a { color: currentcolor; }
+
 body  { z-index: 1; }
 #logo { z-index: 2; }
 
