@@ -48,4 +48,7 @@ body {
     }
     #logo {
       max-width: 480px;
-    #
+    }
+
+.name { font-size: 3rem; font-weight: 900; }
+.sub  { font-size: 1rem; font-style: italic; opacity: 0.50; }
