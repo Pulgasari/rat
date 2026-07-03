@@ -16,7 +16,7 @@ export function compile (code) {
                + `import { createCond, condMap } from './cond.js';\n\n`;
 
   //
-  coye = transform__multiline_strings (code);
+  code = transform__multiline_strings (code);
   code = transform__cond              (code);
   code = transform__named_arguments   (code);
   code = transform__match             (code);
