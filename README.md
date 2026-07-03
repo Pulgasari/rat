@@ -26,8 +26,7 @@ Vec2 Vector2
 Vec3 Vector3
 
 ```javascript
-fn do = () => {
-  ...
-}
+fn doSth = () => {... };
+fn doSth = async () => {... };
 ```
 
