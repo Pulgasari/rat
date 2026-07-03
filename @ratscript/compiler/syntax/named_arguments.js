@@ -3,11 +3,11 @@
 export default function transform (code) {
 
   // Define a Function
-  const regexPattern = /(\w+)\s*\(([^)]*:[^)]*)\)/g;
-  code = code.replace(regexPattern, (match, funcName, body) => {  
-    return (body.trim().startsWith('{'))
+  const funcDefRegex = /function\s+(\w+)\s*\(([^)]+)\)/g;
+  processedCode = processedCode.replace(funcDefRegex, (match, funcName, args) => {
+    return (args.trim().startsWith('{'))
       ? match
-      : `${funcName}({ ${body} })`;
+      : `function ${funcName}({ ${args} } = {})`;
   });
 
   // Call a Function
