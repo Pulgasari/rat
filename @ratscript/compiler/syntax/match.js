@@ -1,4 +1,4 @@
-// @ratscript/compiler/syntax/named_arguments.js
+// @ratscript/compiler/syntax/match.js
 
 export default function transform (code) {
   
