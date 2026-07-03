@@ -30,3 +30,9 @@ fn doSth = () => {... };
 fn doSth = async () => {... };
 ```
 
+```javascript
+if (a) {...}
+if (b) {...}
+if (c) {...}
+or     {...};
+```
