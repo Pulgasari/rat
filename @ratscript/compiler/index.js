@@ -49,18 +49,57 @@ function formatAction (action) {
  * @returns {string} Das kompilierte, ausführbare JavaScript.
  */
 export function compile (sourceCode) {
+  let condsList = new Set();
   let jsOutput = `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
-               + `import { linkStylesheet } from './dom.js';\n\n`;
+               + `import { linkStylesheet } from './dom.js';\n\n`
+               + `import { createCond, condMap } from './cond.js';\n\n`;
+
 
   let code = sourceCode;
 
   //
-  processedCode = named_arguments  (processedCode);
-  processedCode = match            (processedCode);
-  processedCode = guard_line       (processedCode);
-  processedCode = guard_assignment (processedCode);
-  processedCode = signals          (processedCode);
+  code = cond             (code);
+  code = named_arguments  (code);
+  code = match            (code);
+  code = guard_line       (code);
+  code = guard_assignment (code);
+  code = signals          (code);
 
+
+// 1. Definitionen parsen: cond name = ...;
+// Erkennt: cond isSomething = $bla === true;
+// Macht daraus: const isSomething = createCond('isSomething', () => $bla === true);
+const condDefinitionRegex = /cond\s+(\w+)\s*=\s*(.+?)\s*;/g;
+processedCode = processedCode.replace(condDefinitionRegex, (match, name, body) => {
+  condsList.add(name); // Namen für später merken!
+
+  // Prüfen, ob das Body bereits eine Funktion ist (z.B. sth => ...)
+  // Wenn nicht, verpacken wir es automatisch in eine Lazy-Arrow-Function () => body
+  let finalBody = body.trim();
+  if (!finalBody.includes('=>') && !finalBody.startsWith('function')) {
+    finalBody = `() => ${finalBody}`;
+  }
+
+  return `const ${name} = createCond('${name}', ${finalBody});`;
+});
+
+// 2. Den "is"-Operator für Predicates auflösen (input is nullish -> nullish(input))
+processedCode = processedCode.replace(/(\w+)\s+is\s+(\w+)/g, (match, variable, condName) => {
+  return `${condName}(${variable})`;
+});
+
+// 3. Automatische Klammern für klammerlose Conds in "return if" und "match"
+// Wenn der Compiler im Code auf einen Namen aus der condsList stößt, der ohne () genutzt wird,
+// fixen wir das für das valide JavaScript.
+condsList.forEach(condName => {
+  // Findet den Namen, solange KEINE Klammer danach kommt und es kein Variablen-Präfix ist
+  const klammerlosRegex = new RegExp(`\\b${condName}\\b(?!\\s*\\()`, 'g');
+  
+  // Wir mutieren das aber nur in Kontrollstrukturen (z.B. im return if oder match)
+  // Für ein einfaches Suchen-und-Ersetzen reicht das hier vollkommen:
+  processedCode = processedCode.replace(klammerlosRegex, `${condName}()`);
+});
+  
   // ==========================================
   // 1. Named Arguments (Funktions-Definitionen)
   // function name (a, b) -> function name ({ a, b } = {})
