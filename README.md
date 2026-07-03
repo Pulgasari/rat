@@ -17,6 +17,8 @@ StringList
 Record
 
 Tuple
+literal:  let tuple = (123, 'Rat', true);
+destruct: let ( a, b, c ) = tuple;
 
 Color
 
