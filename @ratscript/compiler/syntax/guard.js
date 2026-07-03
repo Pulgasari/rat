@@ -1,5 +1,33 @@
 // @ratscript/compiler/syntax/guard.js
 
+/**
+ * Hilfsfunktion für den Guard-Compiler.
+ * Bestimmt die JS-Bedingung basierend auf dem gewählten Operator.
+ * @param {string} varName - Name der geprüften Variable.
+ * @param {string} operator - Der Operator ('or', '||' oder '??').
+ * @returns {string} Die valide JavaScript-Bedingung.
+ */
+function getGuardCondition (varName, operator) {
+  return (operator === '??')
+    ? `${varName} === null || ${varName} === undefined`;
+    : `!${varName}`;
+}
+
+/**
+ * Hilfsfunktion für den Guard-Compiler.
+ * Formatiert den Inhalt eines do-Statements oder do-Blocks sauber für die Ausgabe.
+ * @param {string} action - Der rohe do-Inhalt.
+ * @returns {string} Formtierter JS-Code-String.
+ */
+function formatAction (action) {
+  if (!action) return '';
+  let trimmed = action.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    return trimmed.slice(1, -1).trim() + '\n';
+  }
+  return trimmed + ';\n';
+}
+
 export default function transform (code) {
 
   // ==========================================
