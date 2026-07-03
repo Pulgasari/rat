@@ -1,10 +1,10 @@
 // @ratscript/compiler
 
-import transform__guard_assignment from './semantics/guard_assignment.js';
-import transform__guard_line       from './semantics/guard_line.js';
-import transform__match            from './semantics/match.js';
-import transform__named_arguments  from './semantics/named_arguments.js';
-import transform__signals          from './semantics/signals.js';
+import transform__cond             from './syntax/cond.js';
+import transform__guard            from './syntax/guard.js';
+import transform__match            from './syntax/match.js';
+import transform__named_arguments  from './syntax/named_arguments.js';
+import transform__signals          from './syntax/signals.js';
 
 /**
  * Hilfsfunktion zur Generierung interner Signal-Variablennamen,
@@ -31,45 +31,13 @@ export function compile (sourceCode) {
   let code = sourceCode;
 
   //
-  code = transform__cond             (code);
-  code = transform__named_arguments  (code);
-  code = transform__match            (code);
-  code = transform__guard_line       (code);
-  code = transform__guard_assignment (code);
-  code = transform__signals          (code);
+  code = transform__cond            (code);
+  code = transform__named_arguments (code);
+  code = transform__match           (code);
+  code = transform__guard           (code);
+  code = transform__signals         (code);
 
-
-
-  // ==========================================
-  // 6. Framework Keywords (Signals, Effects, Stylesheets)
-  // ==========================================
-  const stylesheetRegex = /stylesheet\s+(['"`])(.+?)\1\s*;/g;
-  processedCode = processedCode.replace(stylesheetRegex, (match, quote, path) => {
-    return `linkStylesheet('${path}');`;
-  });
-
-  const signalRegex = /signal\s+\$(\w+)(?:\s*:\s*(\w+))?\s*=\s*(.+?);/g;
-  let signalsList = new Set();
-
-  processedCode = processedCode.replace(signalRegex, (match, name, type, value) => {
-    signalsList.add(name);
-    const className = type === 'bool' ? 'SignalBool' : 'Signal';
-    return `const ${_sig(name)} = new ${className}(${value});`;
-  });
-
-  const effectRegex = /effect\s*\{([\s\S]*?)\};/g;
-  processedCode = processedCode.replace(effectRegex, (match, blockContent) => {
-    return `new Effect(() => {${blockContent}});`;
-  });
-
-  // ==========================================
-  // 7. Framework Dollar-Stripping ($theme -> __theme.value)
-  // ==========================================
-  signalsList.forEach(signalName => {
-    const dollarRegex = new RegExp(`\\$${signalName}\\b`, 'g');
-    processedCode = processedCode.replace(dollarRegex, `${_sig(signalName)}.value`);
-  });
-
-  jsOutput += processedCode;
+  //
+  jsOutput += code;
   return jsOutput;
 };
