@@ -242,8 +242,14 @@ export default class List {
   }
 
   //
+  toMerged (other) {
+    return this.clone().merge(other);
+  }
   toReversed () {
     return this.clone().reverse();
+  }
+  toSliced (start, end) {
+    return this.clone().slice(start, end);
   }
   toShuffled () {
     return this.clone().shuffle();
