@@ -283,18 +283,12 @@ export default class List {
   }
 
   // others
-  find (fn) {
-    for (let v of this._values) {
-      if (fn(v)) return v;
-    }
-    return undefined;
-  }
-  findIndex (fn) {
-    for (let i = 0; i < this._values.length; i++) {
-      if (fn(this._values[i])) return i;
-    }
-    return -1;
-  }
+  find          (fn) { return this._values.find          (fn); }
+  findIndex     (fn) { return this._values.findIndex     (fn); }
+  findLast      (fn) { return this._values.findLast      (fn); }
+  findLastIndex (fn) { return this._values.findLastIndex (fn); }
+
+  // others
   toArray () {
     return [...this._values];
   }
