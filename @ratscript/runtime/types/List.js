@@ -29,7 +29,18 @@ export default class List {
   get length () { return this._values.length; }
   get type   () { return this._type; }
 
-  // methods: access
+  // access indexes
+  lastIndexOf (item, start) { return this._values.lastIndexOf (item, start); }
+  indexOf     (item, start) { return this._values.indexOf     (item, start); }
+  indexOfLast ()            { return this._values.length - 1; }
+
+  // find
+  find          (fn) { return this._values.find          (fn); }
+  findIndex     (fn) { return this._values.findIndex     (fn); }
+  findLast      (fn) { return this._values.findLast      (fn); }
+  findLastIndex (fn) { return this._values.findLastIndex (fn); }
+  
+  // access items/values
   at (index) {
     return this._values.at(index);
   }
@@ -38,15 +49,6 @@ export default class List {
   }
   getLastItem () {
     return this._values[this._values.length - 1];
-  }
-  lastIndexOf (v) {
-    return this._values.lastIndexOf(v);
-  }
-  indexOf (v) {
-    return this._values.indexOf(v);
-  }
-  indexOfLast () {
-    return this._values.length - 1;
   }
   with (index, value) {
     this._checkType(value);
@@ -121,13 +123,7 @@ export default class List {
   
   // loop
   forEach (fn) { return this._values.forEach (fn); }
-
-  // find
-  find          (fn) { return this._values.find          (fn); }
-  findIndex     (fn) { return this._values.findIndex     (fn); }
-  findLast      (fn) { return this._values.findLast      (fn); }
-  findLastIndex (fn) { return this._values.findLastIndex (fn); }
-
+  
   // methods: structural
   slice (start, end) {
     const result = new List();
