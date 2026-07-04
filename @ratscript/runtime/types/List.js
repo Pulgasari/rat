@@ -69,6 +69,10 @@ export default class List {
     }
     return this;
   }
+  removeByIndex (index) {
+    this._values.splice(index, 1);
+    return this;
+  }
   push (v) {
     this._checkType(v);
     this._values.push(v);
@@ -235,15 +239,16 @@ export default class List {
   }
 
   //
-  toMerged    (other)     { return this.clone().merge     (other);     }
-  toRemoved   (...values) { return this.clone().remove    (...values); }
-  toReversed  ()          { return this.clone().reverse   ();          }
-  toShifted   ()          { return this.clone().shift     ();          }
-  toSliced    (...args)   { return this.clone().slice     (...args);   }
-  toSpliced   (...args)   { return this.clone().splice    (...args);   }
-  toShuffled  ()          { return this.clone().shuffle   ();          }
-  toSorted    (fn)        { return this.clone().sort      (fn);        }
-  toUnshifted (v)         { return this.clone().unshifted (v);         }
+  toMerged         (other)     { return this.clone().merge         (other);     }
+  toRemoved        (...values) { return this.clone().remove        (...values); }
+  toRemovedByIndex (index)     { return this.clone().removeByIndex (index);     }
+  toReversed       ()          { return this.clone().reverse       ();          }
+  toShifted        ()          { return this.clone().shift         ();          }
+  toSliced         (...args)   { return this.clone().slice         (...args);   }
+  toSpliced        (...args)   { return this.clone().splice        (...args);   }
+  toShuffled       ()          { return this.clone().shuffle       ();          }
+  toSorted         (fn)        { return this.clone().sort          (fn);        }
+  toUnshifted      (v)         { return this.clone().unshifted     (v);         }
 
   // checks
   includes (v) {
