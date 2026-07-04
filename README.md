@@ -37,6 +37,38 @@ if (c) {...}
 or     {...};
 ```
 
+## match & switch
+
+```javascript
+let x := foo();
+let text = match (x) {
+	x  < 0  : 'x is negative',
+	x == 0  : 'x is zero',
+    default : 'x is positive',
+}
+console.log(text);
+```
+
+```javascript
+let x := foo();
+switch (x) {
+	x  < 0  : console.log('x is negative'),
+	x == 0  : console.log('x is zero'),
+    default : console.log('x is positive'),
+}
+```
+
+```javascript
+let x := foo();
+if  x < 0 {
+	console.log("x is negative")
+} else if x == 0 {
+	console.log("x is zero")
+} else {
+	console.log("x is positive")
+}
+```
+
 ## Loops
 
 ### Bereichs-Schleife
