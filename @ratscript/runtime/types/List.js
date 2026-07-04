@@ -1,6 +1,18 @@
 // @ratscript/runtime/types/List.js
 
-class List {
+function createIterator (values) {
+  let index = 0;
+
+  return {
+    next() {
+      return (index < values.length)
+        ? { value: values[index++], done: false }
+        : { value: undefined, done: true };
+    }
+  };
+}
+
+export default class List {
 
   // init
   constructor (...values) {
@@ -95,7 +107,6 @@ class List {
       result._checkType(mapped);
       result._values.push(mapped);
     }
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   filter (fn) {
@@ -104,7 +115,6 @@ class List {
     for (let v of this._values) {
       if (fn(v)) result._values.push(v);
     }
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   reduce (fn, initial) {
@@ -120,7 +130,6 @@ class List {
     const result = new List();
     result._type   = this._type;
     result._values = this._values.slice(start, end);
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   reverse () {
@@ -131,7 +140,6 @@ class List {
     const result = new List();
     result._type   = this._type;
     result._values = [...this._values].reverse();
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   sort (compareFn) {
@@ -141,7 +149,6 @@ class List {
   sorted (compareFn) {
     const result = this.clone();
     result.sort(compareFn);
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   unique() {
@@ -154,7 +161,6 @@ class List {
         result._values.push(v);
       }
     }
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   equals (other) {
@@ -181,8 +187,7 @@ class List {
     for (let i = 0; i < length; i++) {
       result._values.push([this._values[i], other._values[i]]);
     }
-
-    result[Symbol.iterator] = () => createIterator(result._values);
+    
     return result;
   }
   merge (other) {
@@ -193,7 +198,6 @@ class List {
     for (let v of other._values) {
       result._values.push(v);
     }
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   flatMap (fn) {
@@ -217,7 +221,6 @@ class List {
       }
     }
     
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   groupBy (fn) {
@@ -233,6 +236,7 @@ class List {
 
       groups[key]._values.push(v);
     }
+    //groups[Symbol.iterator] = () => createIterator(result._values);
     return groups;
   }
 
@@ -243,24 +247,24 @@ class List {
   indexOf (v) {
     return this._values.indexOf(v);
   }
-  toArray() {
+  toArray () {
     return [...this._values];
   }
   clone () {
     const result = new List();
     result._type = this._type;
     result._values = [...this._values];
-    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
 
   // debug
-  toString() {
+  toString () {
     return `List<${this._type}> ${JSON.stringify(this._values)}`;
   }
   
 };
 
+/*
 // :::::: ITERATOR
 
 // by function
@@ -275,15 +279,6 @@ function createIterator (values) {
     }
   };
 }
-/*
-[Symbol.iterator]() {
-    return createIterator(this._values);
-}
-
-result[Symbol.iterator] = function() {
-    return createIterator(result._values);
-};
-*/
 
 // by class
 class ListIterator {
@@ -298,15 +293,6 @@ class ListIterator {
       : { value: undefined, done: true };
   }
 }
-/*
-[Symbol.iterator]() {
-  return new ListIterator(this._values);
-}
-
-result[Symbol.iterator] = function() {
-  return new ListIterator(result._values);
-};
-*/
 
 // by prototype
 const ListIteratorPrototype = {
@@ -316,17 +302,6 @@ const ListIteratorPrototype = {
       : { value: undefined, done: true };
   }
 };
-/*
-function createIterator (values) {
-  return Object.create(ListIteratorPrototype, {
-    values: { value: values },
-    index: { value: 0, writable: true }
-  });
-}
-
-[Symbol.iterator]() {
-  return createIterator(this._values);
-}
 */
 
 /*
