@@ -137,6 +137,11 @@ export default class List {
     result._values = this._values.slice(start, end);
     return result;
   }
+  splice (start, deleteCount, ...items) {
+    for (let item of items) this._checkType(item);
+    this._values.splice(start, deleteCount, ...items);
+    return this;
+  }
   reverse () {
     this._values.reverse();
     return this;
@@ -148,8 +153,8 @@ export default class List {
     }
     return this;
   }
-  sort (compareFn) {
-    this._values.sort(compareFn);
+  sort (fn) {
+    this._values.sort(fn);
     return this;
   }
   unique() {
@@ -248,14 +253,23 @@ export default class List {
   toReversed () {
     return this.clone().reverse();
   }
-  toSliced (start, end) {
-    return this.clone().slice(start, end);
+  toShifted () {
+    return this.clone().shift();
+  }
+  toSliced (...args) {
+    return this.clone().slice(...args);
+  }
+  toSpliced (...args) {
+    return this.clone().splice(...args);
   }
   toShuffled () {
     return this.clone().shuffle();
   }
   toSorted (fn) {
     return this.clone().sort(fn);
+  }
+  toUnshifted (v) {
+    return this.clone().unshifted(v);
   }
 
   // checks
@@ -294,11 +308,16 @@ export default class List {
   toArray () {
     return [...this._values];
   }
+
+  // 
   clone () {
     const result = new List();
     result._type = this._type;
     result._values = [...this._values];
     return result;
+  }
+  get clone () {
+    return this.clone();
   }
 
   // debug
@@ -309,6 +328,7 @@ export default class List {
   // aliases
   any      (fn) { return this.some(fn); }
   contains (v)  { return this.includes(v); }
+  has      (v)  { return this.includes(v); }
   
 };
 
