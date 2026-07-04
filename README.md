@@ -12,9 +12,13 @@ Bool
 Number (Float, Int)
 String
 
-Queue
+Deque
+Map
+Pair
+Queue (FIFO)
 Sequence
-Stack
+Set
+Stack (LIFO)
 Vector
 
 List
