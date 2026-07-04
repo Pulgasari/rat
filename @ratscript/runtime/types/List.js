@@ -189,6 +189,9 @@ export default class List {
     
     return result;
   }
+  concat (...args) {
+    return this._values.concat(...args);
+  }
   merge (other) {
     if (!(other instanceof List)) throw new TypeError("merge() expects another List");
     if (other.type !== this.type) throw new TypeError(`merge() requires same element type: ${this.type} vs ${other.type}`);
