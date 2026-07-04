@@ -399,6 +399,9 @@ class NumberList extends List {
   round     ()         { return this._mutate(v => Math.round(v)); }
   floor     ()         { return this._mutate(v => Math.floor(v)); }
   ceil      ()         { return this._mutate(v => Math.ceil(v)); }
+  abs       ()         { return this._mutate(v => Math.abs(v)); }
+  sqrt      ()         { return this._mutate(v => Math.sqrt(v)); }
+  log       ()         { return this._mutate(v => Math.log(v)); }
 
   //
   toDecremented (n = 1)    { return this.clone().decrement(n); }
