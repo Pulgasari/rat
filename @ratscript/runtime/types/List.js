@@ -137,18 +137,17 @@ export default class List {
     result._values = this._values.slice(start, end);
     return result;
   }
-  randomize () {
+  reverse () {
+    this._values.reverse();
+    return this;
+  }
+  shuffle () {
     for (let i = this._values.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [this._values[i], this._values[j]] = [this._values[j], this._values[i]];
     }
     return this;
   }
-  reverse () {
-    this._values.reverse();
-    return this;
-  }
-  
   sort (compareFn) {
     this._values.sort(compareFn);
     return this;
@@ -243,15 +242,15 @@ export default class List {
   }
 
   //
-  toRandomized() {
-    return this.clone().randomize();
-  }
   toReversed () {
     const result = new List();
     result._type   = this._type;
     result._values = [...this._values].reverse();
     return result;
     //return this.clone().reverse();
+  }
+  toShuffled () {
+    return this.clone().randomize();
   }
   toSorted (compareFn) {
     const result = this.clone();
