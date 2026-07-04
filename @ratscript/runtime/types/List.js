@@ -169,16 +169,6 @@ export default class List {
     }
     return result;
   }
-  equals (other) {
-    if (!(other instanceof List))     return false;
-    if (this._type  !== other._type)  return false;
-    if (this.length !== other.length) return false;
-
-    for (let i = 0; i < this.length; i++) {
-      if (this._values[i] !== other._values[i]) return false;
-    }
-    return true;
-  }
   zip (other) {
     if (!(other instanceof List)) {
       throw new TypeError("zip() expects another List");
@@ -278,6 +268,16 @@ export default class List {
   }
   indexOf (v) {
     return this._values.indexOf(v);
+  }
+  equals (other) {
+    if (!(other instanceof List))     return false;
+    if (this._type  !== other._type)  return false;
+    if (this.length !== other.length) return false;
+
+    for (let i = 0; i < this.length; i++) {
+      if (this._values[i] !== other._values[i]) return false;
+    }
+    return true;
   }
   every (fn) {
     for (let v of this._values) {
