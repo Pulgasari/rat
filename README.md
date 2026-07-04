@@ -4,15 +4,17 @@ https://pulgasari.github.io/rat/
 
 ## types
 
+```
 union
 
+Array
 Bool
 Number (Float, Int)
 String
 
 List
-NumberList
-StringList
+List[Number]   NumberList
+List[String]   StringList
 
 Record
 
@@ -24,6 +26,7 @@ Color
 
 Vec2 Vector2
 Vec3 Vector3
+```
 
 ```javascript
 fn doSth = () => {... };
