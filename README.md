@@ -4,6 +4,23 @@ https://pulgasari.github.io/rat/
 
 ## types
 
+```javascript
+let animals = #['bird', 'cat', 'dog'];
+let animals = new List (['bird', 'cat', 'dog']);
+let animals = new StringList (['bird', 'cat', 'dog']);
+```
+
+```javascript
+let tuple = #('Heiko', 33, true);
+let tuple = new Tuple ('Heiko', 33, true);
+```
+
+```javascript
+let person = #{ name: 'Tom', age: 30, isAlive: true };
+let person = new Record ({ name: 'Tom', age: 30, isAlive: true });
+```
+
+
 ```
 union
 
