@@ -141,20 +141,10 @@ export default class List {
     this._values.reverse();
     return this;
   }
-  reversed () {
-    const result = new List();
-    result._type   = this._type;
-    result._values = [...this._values].reverse();
-    return result;
-  }
+  
   sort (compareFn) {
     this._values.sort(compareFn);
     return this;
-  }
-  sorted (compareFn) {
-    const result = this.clone();
-    result.sort(compareFn);
-    return result;
   }
   unique() {
     const result = new List();
@@ -243,6 +233,21 @@ export default class List {
     }
     //groups[Symbol.iterator] = () => createIterator(result._values);
     return groups;
+  }
+
+  //
+  toReversed () {
+    const result = new List();
+    result._type   = this._type;
+    result._values = [...this._values].reverse();
+    return result;
+    //return this.clone().reverse();
+  }
+  toSorted (compareFn) {
+    const result = this.clone();
+    result.sort(compareFn);
+    return result;
+    //return this.clone().sort(compareFn);
   }
 
   // utility
