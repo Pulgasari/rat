@@ -382,7 +382,7 @@ class NumberList extends List {
   }
 
   //
-  mutateItems (fn) {
+  _mutate (fn) {
     for (let i = 0; i < this._values.length; i++) {
       let oldValue = this._values[i];
       let newValue = fn(oldValue);
@@ -392,72 +392,22 @@ class NumberList extends List {
   }
 
   // methods: mutate
-  decrement (n = 1) {
-    this.mutateItems( value => value + n );
-    return this;
-  }
-  increment (n = 1) {
-    this.mutateItems( value => value - n );
-    return this;
-  }
-  decrement (n = 1) {
-    for (let i = 0; i < this._values.length; i++) {
-      this._values[i] -= n;
-    }
-    return this;
-  }
-  increment (n = 1) {
-    for (let i = 0; i < this._values.length; i++) {
-      this._values[i] += n;
-    }
-    return this;
-  }
-  clamp (min, max) {
-    for (let i = 0; i < this._values.length; i++) {
-      const v = this._values[i];
-      this._values[i] = Math.min(max, Math.max(min, v));
-    }
-    return this;
-  }
-  round () {
-    for (let i = 0; i < this._values.length; i++) {
-      this._values[i] = Math.round(this._values[i]);
-    }
-    return this;
-  }
-  floor () {
-    for (let i = 0; i < this._values.length; i++) {
-      this._values[i] = Math.floor(this._values[i]);
-    }
-    return this;
-  }
-  ceil () {
-    for (let i = 0; i < this._values.length; i++) {
-      this._values[i] = Math.ceil(this._values[i]);
-    }
-    return this;
-  }
-  scale (factor) {
-    for (let i = 0; i < this._values.length; i++) {
-      this._values[i] *= factor;
-    }
-    return this;
-  }
+  decrement (n = 1)    { return this._mutate(v => v - n); }
+  increment (n = 1)    { return this._mutate(v => v + n); }
+  scale     (factor)   { return this._mutate(v => v * factor); }
+  clamp     (min, max) { return this._mutate(v => Math.min(max, Math.max(min, v))); }
+  round     ()         { return this._mutate(v => Math.round(v)); }
+  floor     ()         { return this._mutate(v => Math.floor(v)); }
+  ceil      ()         { return this._mutate(v => Math.ceil(v)); }
 
   //
-  toDecremented (n = 1) { return this.clone().decrement(n); }
-  toIncremented (n = 1) { return this.clone().increment(n); }
-  
-  toScaled (factor) {
-    return this.clone().scale(factor);
-  }
-  toClamped (min, max) {
-    return this.clone().clamp(min, max);
-  }
-
-  toCeiled  () { return this.clone().ceil();  }
-  toFloored () { return this.clone().floor(); }
-  toRounded () { return this.clone().round(); }
+  toDecremented (n = 1)    { return this.clone().decrement(n); }
+  toIncremented (n = 1)    { return this.clone().increment(n); }
+  toScaled      (factor)   { return this.clone().scale(factor); }
+  toClamped     (min, max) { return this.clone().clamp(min, max); }
+  toCeiled      ()         { return this.clone().ceil();  }
+  toFloored     ()         { return this.clone().floor(); }
+  toRounded     ()         { return this.clone().round(); }
   
 }
 
