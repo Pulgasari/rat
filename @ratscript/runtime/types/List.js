@@ -39,11 +39,17 @@ export default class List {
     }
     return this._values[index];
   }
-  first () {
+  getFirstItem () {
     return this._values[0];
   }
-  last () {
+  getLastItem () {
     return this._values[this._values.length - 1];
+  }
+  indexOf (v) {
+    return this._values.indexOf(v);
+  }
+  indexOfLast () {
+    return this._values.length - 1;
   }
   with (index, value) {
     this._checkType(value);
@@ -53,13 +59,18 @@ export default class List {
     //return result;
   }
 
-  // methods: mutation
+  // mutate
   clear () {
     this._values.length = 0;
     return this;
   }
   copyWithin (target, start, end) {
     this._values.copyWithin(target, start, end);
+    return this;
+  }
+  push (v) {
+    this._checkType(v);
+    this._values.push(v);
     return this;
   }
   remove (...values) {
@@ -73,13 +84,9 @@ export default class List {
     this._values.splice(index, 1);
     return this;
   }
-  push (v) {
-    this._checkType(v);
-    this._values.push(v);
+  reverse () {
+    this._values.reverse();
     return this;
-  }
-  pop () {
-    return this._values.pop();
   }
   set (index, v) {
     this._checkType(v);
@@ -89,8 +96,16 @@ export default class List {
     this._values[index] = v;
     return this;
   }
-  shift () {
-    return this._values.shift();
+  shuffle () {
+    for (let i = this._values.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this._values[i], this._values[j]] = [this._values[j], this._values[i]];
+    }
+    return this;
+  }
+  sort (fn) {
+    this._values.sort(fn);
+    return this;
   }
   unshift (v) {
     this._checkType(v);
@@ -98,11 +113,23 @@ export default class List {
     return this;
   }
 
-  // methods: functional
+  // mutate + access
+  pop   () { return this._values.pop   (); }
+  shift () { return this._values.shift (); }
+
+  // functionals
   forEach (fn) {
     for (let value of this) {
       fn(value);
     }
+  }
+  filter (fn) {
+    const result = new List();
+    result._type = this._type;
+    for (let v of this._values) {
+      if (fn(v)) result._values.push(v);
+    }
+    return result;
   }
   map (fn) {
     const result = new List();
@@ -110,14 +137,6 @@ export default class List {
       const mapped = fn(v);
       result._checkType(mapped);
       result._values.push(mapped);
-    }
-    return result;
-  }
-  filter (fn) {
-    const result = new List();
-    result._type = this._type;
-    for (let v of this._values) {
-      if (fn(v)) result._values.push(v);
     }
     return result;
   }
@@ -139,21 +158,6 @@ export default class List {
   splice (start, deleteCount, ...items) {
     for (let item of items) this._checkType(item);
     this._values.splice(start, deleteCount, ...items);
-    return this;
-  }
-  reverse () {
-    this._values.reverse();
-    return this;
-  }
-  shuffle () {
-    for (let i = this._values.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this._values[i], this._values[j]] = [this._values[j], this._values[i]];
-    }
-    return this;
-  }
-  sort (fn) {
-    this._values.sort(fn);
     return this;
   }
   unique() {
@@ -254,9 +258,7 @@ export default class List {
   includes (v) {
     return this._values.includes(v);
   }
-  indexOf (v) {
-    return this._values.indexOf(v);
-  }
+  
   equals (other) {
     if (!(other instanceof List))     return false;
     if (this._type  !== other._type)  return false;
