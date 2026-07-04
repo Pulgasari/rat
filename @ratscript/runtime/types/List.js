@@ -33,12 +33,6 @@ export default class List {
   at (index) {
     return this._values.at(index);
   }
-  get (index) {
-    if (index < 0 || index >= this._values.length) {
-      throw new RangeError(`Index ${index} out of bounds`);
-    }
-    return this._values[index];
-  }
   getFirstItem () {
     return this._values[0];
   }
@@ -163,7 +157,7 @@ export default class List {
     const length = Math.min(this.length, other.length);
     const result = new List();
 
-    / zip produces List<Pair>
+    // zip produces List<Pair>
     result._type = "object";
 
     for (let i = 0; i < length; i++) {
@@ -303,6 +297,7 @@ export default class List {
   any      (fn) { return this.some(fn); }
   contains (v)  { return this.includes(v); }
   has      (v)  { return this.includes(v); }
+  get      (i)  { return this.at(i); }
   
 };
 
