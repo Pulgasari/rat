@@ -12,6 +12,11 @@ Bool
 Number (Float, Int)
 String
 
+Queue
+Sequence
+Stack
+Vector
+
 List
 List[Number]   NumberList
 List[String]   StringList
