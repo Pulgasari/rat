@@ -243,20 +243,13 @@ export default class List {
 
   //
   toReversed () {
-    const result = new List();
-    result._type   = this._type;
-    result._values = [...this._values].reverse();
-    return result;
-    //return this.clone().reverse();
+    return this.clone().reverse();
   }
   toShuffled () {
-    return this.clone().randomize();
+    return this.clone().shuffle();
   }
-  toSorted (compareFn) {
-    const result = this.clone();
-    result.sort(compareFn);
-    return result;
-    //return this.clone().sort(compareFn);
+  toSorted (fn) {
+    return this.clone().sort(fn);
   }
 
   // checks
