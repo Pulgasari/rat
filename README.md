@@ -79,5 +79,23 @@ loop {
 }
 ```
 
+## try ... catch
+
+```javascript
+try { let book = await fetchBooks(); }
+catch throw new Error();
+```
+
+```javascript
+try {
+  ...
+}
+catch {
+  ...
+}
+```
+
+
+
 
 
