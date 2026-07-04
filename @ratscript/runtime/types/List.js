@@ -100,6 +100,11 @@ export default class List {
   }
 
   // methods: functional
+  forEach (fn) {
+    for (let value of this) {
+      fn(value);
+    }
+  }
   map (fn) {
     const result = new List();
     for (let v of this._values) {
