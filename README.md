@@ -67,6 +67,21 @@ for nr in range(0,10) do {...};
 for nr in range(0,10) do sth();
 ```
 
+```javascript
+for (char, index) in a_string {
+	console.log(index, char)
+}
+for (value, index) in a_list {
+	console.log(index, value)
+}
+for (value, index) in a_tuple {
+	console.log(index, value)
+}
+for (key, value) in a_record {
+	console.log(key, value)
+}
+```
+
 ### bedingte Schleife (while-Ersatz)
 
 ```javascript
