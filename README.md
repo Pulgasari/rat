@@ -36,3 +36,42 @@ if (b) {...}
 if (c) {...}
 or     {...};
 ```
+
+## Loops
+
+### Bereichs-Schleife
+
+```javascript
+let arr = range(3);
+loop (nr in arr) {
+    ...
+}
+```
+
+```javascript
+let arr = range(3);
+loop in arr as nr {
+    ...
+}
+```
+
+### bedingte Schleife (while-Ersatz)
+
+```javascript
+let x = 0;
+loop (x < 5) {
+  ...
+}
+```
+
+```javascript
+let x = 0;
+loop while (x < 5) {
+  ...
+}
+```
+
+
+
+
+
