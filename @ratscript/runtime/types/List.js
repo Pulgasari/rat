@@ -374,6 +374,119 @@ export default class List {
   
 };
 
+class NumberList extends List {
+  
+  constructor (...values) {
+    super(...values);
+    this._type = 'number';
+  }
+
+  //
+  mutateItems (fn) {
+    for (let i = 0; i < this._values.length; i++) {
+      let oldValue = this._values[i];
+      let newValue = fn(oldValue);
+      this._values[i] = newValue;
+    }
+    return this;
+  }
+
+  // methods: mutate
+  decrement (n = 1) {
+    this.mutateItems( value => value + n );
+    return this;
+  }
+  increment (n = 1) {
+    this.mutateItems( value => value - n );
+    return this;
+  }
+  decrement (n = 1) {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] -= n;
+    }
+    return this;
+  }
+  increment (n = 1) {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] += n;
+    }
+    return this;
+  }
+  clamp (min, max) {
+    for (let i = 0; i < this._values.length; i++) {
+      const v = this._values[i];
+      this._values[i] = Math.min(max, Math.max(min, v));
+    }
+    return this;
+  }
+  round () {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] = Math.round(this._values[i]);
+    }
+    return this;
+  }
+  floor () {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] = Math.floor(this._values[i]);
+    }
+    return this;
+  }
+  ceil () {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] = Math.ceil(this._values[i]);
+    }
+    return this;
+  }
+  scale (factor) {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] *= factor;
+    }
+    return this;
+  }
+
+  //
+  toDecremented (n = 1) { return this.clone().decrement(n); }
+  toIncremented (n = 1) { return this.clone().increment(n); }
+  
+  toScaled (factor) {
+    return this.clone().scale(factor);
+  }
+  toClamped (min, max) {
+    return this.clone().clamp(min, max);
+  }
+
+  toCeiled  () { return this.clone().ceil();  }
+  toFloored () { return this.clone().floor(); }
+  toRounded () { return this.clone().round(); }
+  
+}
+
+class StringList extends List {
+  constructor (...values) {
+    super(...values);
+    this._type = 'string';
+  }
+
+  // methods: mutate
+  toLowerCase () {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] = this._values[i].toLowerCase();
+    }
+    return this;
+  }
+  toUpperCase () {
+    for (let i = 0; i < this._values.length; i++) {
+      this._values[i] = this._values[i].toUpperCase();
+    }
+    return this;
+  }
+
+  // methods: non-mutating clones
+  toLowerCased () { return this.clone().toLowerCase(); }
+  toUpperCased () { return this.clone().toUpperCase(); }
+  
+}
+
 /*
 // :::::: ITERATOR
 
