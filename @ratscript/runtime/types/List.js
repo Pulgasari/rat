@@ -39,6 +39,9 @@ export default class List {
   getLastItem () {
     return this._values[this._values.length - 1];
   }
+  lastIndexOf (v) {
+    return this._values.lastIndexOf(v);
+  }
   indexOf (v) {
     return this._values.indexOf(v);
   }
