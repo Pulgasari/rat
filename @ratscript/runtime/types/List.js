@@ -296,4 +296,50 @@ function groupByIterator () {
   };
 };
 
+// :::::: ITERATOR
+
+// by class
+class ListIterator {
+  constructor (values) {
+    this.index  = 0;
+    this.values = values;
+  }
+
+  next () {
+    return (this.index < this.values.length)
+      ? { value: this.values[this.index++], done: false }
+      : { value: undefined, done: true };
+  }
+}
+/*
+[Symbol.iterator]() {
+  return new ListIterator(this._values);
+}
+
+result[Symbol.iterator] = function() {
+  return new ListIterator(result._values);
+};
+*/
+
+// by prototype
+const ListIteratorPrototype = {
+  next () {
+    return (this.index < this.values.length)
+      ? { value: this.values[this.index++], done: false }
+      : { value: undefined, done: true };
+  }
+};
+/*
+function createIterator (values) {
+  return Object.create(ListIteratorPrototype, {
+    values: { value: values },
+    index: { value: 0, writable: true }
+  });
+}
+
+[Symbol.iterator]() {
+  return createIterator(this._values);
+}
+*/
+
 
