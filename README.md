@@ -71,7 +71,13 @@ loop while (x < 5) {
 }
 ```
 
+### Endlosschleife
 
+```javascript
+loop {
+  ...
+}
+```
 
 
 
