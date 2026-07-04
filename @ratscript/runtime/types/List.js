@@ -75,8 +75,19 @@ export default class List {
   last () {
     return this._values[this._values.length - 1];
   }
+  with (index, value) {
+    this._checkType(value);
+    return this._values.with(index, value);
+    //const result = this.clone();
+    //result._values[index] = value;
+    //return result;
+  }
 
   // methods: mutation
+  copyWithin (target, start, end) {
+    this._values.copyWithin(target, start, end);
+    return this;
+  }
   push (v) {
     this._checkType(v);
     this._values.push(v);
