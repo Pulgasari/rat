@@ -166,10 +166,15 @@ export default class ObjectList extends List {
     this._validate(obj);
     return super.push(obj);
   }
-  remove (index) {
-    this._values.splice(index, 1);
+  remove (criteria) {
+    for (let i = this._values.length - 1; i >= 0; i--) {
+      if (this._matchesCriteria(this._values[i], criteria)) {
+        this._values.splice(i, 1);
+      }
+    }
     return this;
   }
+  
   set (index, obj) {
     this._validate(obj);
     this._values[index] = obj;
@@ -181,11 +186,11 @@ export default class ObjectList extends List {
   }
   
   // methods: non-mutating
-  toMappedKeys   (fn)    { return this.clone().mapKeys   (fn);    }
-  toMappedValues (fn)    { return this.clone().mapValues (fn);    }
-  toPushed       (obj)   { return this.clone().push      (obj);   }
-  toRemoved      (index) { return this.clone().remove    (index); }
-  toUnshifted    (obj)   { return this.clone().unshift   (obj);   }
+  toMappedKeys   (fn)       { return this.clone().mapKeys   (fn);       }
+  toMappedValues (fn)       { return this.clone().mapValues (fn);       }
+  toPushed       (obj)      { return this.clone().push      (obj);      }
+  toUnshifted    (obj)      { return this.clone().unshift   (obj);      }
+  toRemoved      (criteria) { return this.clone().remove    (criteria); }
   
   toFiltered (fn) {
     const result = new ObjectList();
