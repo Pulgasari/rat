@@ -156,6 +156,71 @@ class List {
     }
     return true;
   }
+  zip (other) {
+    if (!(other instanceof List)) {
+      throw new TypeError("zip() expects another List");
+    }
+
+    const length = Math.min(this.length, other.length);
+    const result = new List();
+
+    / zip produces List<Pair>
+    result._type = "object";
+
+    for (let i = 0; i < length; i++) {
+      result._values.push([this._values[i], other._values[i]]);
+    }
+
+    return result;
+  }
+  merge (other) {
+    if (!(other instanceof List)) throw new TypeError("merge() expects another List");
+    if (other.type !== this.type) throw new TypeError(`merge() requires same element type: ${this.type} vs ${other.type}`);
+    
+    const result = this.clone();
+    for (let v of other._values) {
+      result._values.push(v);
+    }
+    return result;
+  }
+  flatMap (fn) {
+    const result = new List();
+
+    for (let v of this._values) {
+      const mapped = fn(v);
+
+      if (!(mapped instanceof List)) {
+        throw new TypeError("flatMap() callback must return a List");
+      }
+
+      // determine type from first mapped list
+      if (result._type === null && mapped._type !== null) {
+        result._type = mapped._type;
+      }
+
+      for (let inner of mapped._values) {
+        result._checkType(inner);
+        result._values.push(inner);
+      }
+    }
+
+    return result;
+  }
+  groupBy (fn) {
+    const groups = {};
+
+    for (let v of this._values) {
+      const key = fn(v);
+
+      if (!groups[key]) {
+        groups[key]       = new List();
+        groups[key]._type = this._type;
+      }
+
+      groups[key]._values.push(v);
+    }
+    return groups;
+  }
 
   // utility
   contains (v) {
