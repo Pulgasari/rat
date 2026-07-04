@@ -24,45 +24,10 @@ export default class List {
       this._values.push(v);
     }
   }
-
-  // methods: static
-  static from (iterable) {
-    const list = new List();
-    for (let v of iterable) {
-      list._checkType(v);
-      list._values.push(v);
-    }
-    return list;
-  }
-  static isList (value) {
-    return value instanceof List;
-  }
   
-  // iterator
-  [Symbol.iterator]() {
-    return createIterator(this._values);
-  }
-
-  // internal type checking
-  _checkType (v) {
-    if (this._type === null) {
-      this._type = typeof v
-    } else if (typeof v !== this._type) {
-      throw new TypeError(`List expects type ${this._type}, got ${typeof v}`)
-    }
-  }
-
   // properties
-  clear () {
-    this._values.length = 0;
-    return this;
-  }
-  get length () {
-    return this._values.length
-  }
-  get type () {
-    return this._type;
-  }
+  get length () { return this._values.length; }
+  get type   () { return this._type; }
 
   // methods: access
   at (index) {
@@ -83,21 +48,18 @@ export default class List {
   with (index, value) {
     this._checkType(value);
     return this._values.with(index, value);
-    //const result = this.clone();
+    //const result = ths.clone();
     //result._values[index] = value;
     //return result;
   }
 
   // methods: mutation
-  copyWithin (target, start, end) {
-    this._values.copyWithin(target, start, end);
+  clear () {
+    this._values.length = 0;
     return this;
   }
-  remove (value) {
-    const index = this._values.indexOf(value);
-    if (index !== -1) {
-      this._values.splice(index, 1);
-    }
+  copyWithin (target, start, end) {
+    this._values.copyWithin(target, start, end);
     return this;
   }
   remove (...values) {
@@ -273,33 +235,15 @@ export default class List {
   }
 
   //
-  toMerged (other) {
-    return this.clone().merge(other);
-  }
-  toRemoved (...values) {
-    return this.clone().remove(...values);
-  }
-  toReversed () {
-    return this.clone().reverse();
-  }
-  toShifted () {
-    return this.clone().shift();
-  }
-  toSliced (...args) {
-    return this.clone().slice(...args);
-  }
-  toSpliced (...args) {
-    return this.clone().splice(...args);
-  }
-  toShuffled () {
-    return this.clone().shuffle();
-  }
-  toSorted (fn) {
-    return this.clone().sort(fn);
-  }
-  toUnshifted (v) {
-    return this.clone().unshifted(v);
-  }
+  toMerged    (other)     { return this.clone().merge     (other);     }
+  toRemoved   (...values) { return this.clone().remove    (...values); }
+  toReversed  ()          { return this.clone().reverse   ();          }
+  toShifted   ()          { return this.clone().shift     ();          }
+  toSliced    (...args)   { return this.clone().slice     (...args);   }
+  toSpliced   (...args)   { return this.clone().splice    (...args);   }
+  toShuffled  ()          { return this.clone().shuffle   ();          }
+  toSorted    (fn)        { return this.clone().sort      (fn);        }
+  toUnshifted (v)         { return this.clone().unshifted (v);         }
 
   // checks
   includes (v) {
@@ -365,6 +309,33 @@ export default class List {
   }
   toString () {
     return `List<${this._type}> ${JSON.stringify(this._values)}`;
+  }
+
+  // static
+  static from (iterable) {
+    const list = new List();
+    for (let v of iterable) {
+      list._checkType(v);
+      list._values.push(v);
+    }
+    return list;
+  }
+  static isList (value) {
+    return value instanceof List;
+  }
+  
+  // iterator
+  [Symbol.iterator]() {
+    return createIterator(this._values);
+  }
+
+  // internals
+  _checkType (v) {
+    if (this._type === null) {
+      this._type = typeof v
+    } else if (typeof v !== this._type) {
+      throw new TypeError(`List expects type ${this._type}, got ${typeof v}`)
+    }
   }
 
   // aliases
