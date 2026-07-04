@@ -3,6 +3,12 @@
 import Enum   from './Enum.js';
 import Record from './Record.js';
 
+// Helpers
+const isRecord = sth => Record.isRecord(sth);
+const isString = sth => typeof sth === 'string';
+const isStruct = sth => Enum.isEnum(sth);
+const isObject = sth => typeof sth === 'object';
+  
 export default class Struct {
 
   // init
@@ -45,9 +51,7 @@ export default class Struct {
 
       // primitive type
       if (typeof def === 'string') {
-        if (typeof value !== def) {
-          throw new TypeError(`Field ${key} must be ${def}, got ${typeof value}`);
-        }
+        if (typeof value !== def) throw new TypeError(`Field ${key} must be ${def}, got ${typeof value}`);
         continue;
       }
 
