@@ -75,11 +75,18 @@ for (value, index) in a_list {
 	console.log(index, value)
 }
 for (value, index) in a_tuple {
-	console.log(index, value)
+	console.log(index, value)f
 }
 for (key, value) in a_record {
 	console.log(key, value)
 }
+```
+
+```javascript
+for (char, index) in a_string do console.log(index, char);
+for (value, index) in a_list do console.log(index, value);
+for (value, index) in a_tuple do console.log(index, value);
+for (key, value) in a_record do console.log(key, value);
 ```
 
 ### bedingte Schleife (while-Ersatz)
