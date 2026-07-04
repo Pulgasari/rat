@@ -12,6 +12,14 @@ class List {
       this._values.push(v);
     }
   }
+  static from (iterable) {
+    const list = new List();
+    for (let v of iterable) {
+      list._checkType(v);
+      list._values.push(v);
+    }
+    return list;
+  }
 
   // internal type checking
   _checkType (v) {
@@ -103,13 +111,19 @@ class List {
   // methods: structural
   slice (start, end) {
     const result = new List();
-    result._type = this._type;
+    result._type   = this._type;
     result._values = this._values.slice(start, end);
     return result;
   }
   reverse () {
     this._values.reverse();
     return this;
+  }
+  reversed () {
+    const result = new List();
+    result._type   = this._type;
+    result._values = [...this._values].reverse();
+    return result;
   }
   sorted (compareFn) {
     const result = this.clone();
@@ -119,6 +133,28 @@ class List {
   sort (compareFn) {
     this._values.sort(compareFn);
     return this;
+  }
+  unique() {
+    const result = new List();
+    result._type = this._type;
+    const seen = new Set();
+    for (let v of this._values) {
+      if (!seen.has(v)) {
+        seen.add(v);
+        result._values.push(v);
+      }
+    }
+    return result;
+  }
+  equals (other) {
+    if (!(other instanceof List))     return false;
+    if (this._type  !== other._type)  return false;
+    if (this.length !== other.length) return false;
+
+    for (let i = 0; i < this.length; i++) {
+      if (this._values[i] !== other._values[i]) return false;
+    }
+    return true;
   }
 
   // utility
