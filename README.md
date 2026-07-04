@@ -16,8 +16,10 @@ let tuple = new Tuple ('Heiko', 33, true);
 ```
 
 ```javascript
-let person = #{ name: 'Tom', age: 30, isAlive: true };
-let person = new Record ({ name: 'Tom', age: 30, isAlive: true });
+let Person = new Struct ({ name: 'string', age: 'number', isAlive: 'bool' });
+
+let person = #Person{ name: 'Tom', age: 30, isAlive: true };
+let person = new Record (Person, { name: 'Tom', age: 30, isAlive: true });
 ```
 
 
