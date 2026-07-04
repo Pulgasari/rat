@@ -268,6 +268,28 @@ class List {
 
 // :::::: ITERATOR
 
+// by function
+function createListIterator (values) {
+  let index = 0;
+
+  return {
+    next() {
+      return (index < values.length)
+        ? { value: values[index++], done: false }
+        : { value: undefined, done: true };
+    }
+  };
+}
+/*
+[Symbol.iterator]() {
+    return createIterator(this._values);
+}
+
+result[Symbol.iterator] = function() {
+    return createIterator(result._values);
+};
+*/
+
 // by class
 class ListIterator {
   constructor (values) {
