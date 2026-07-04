@@ -23,16 +23,7 @@ class List {
   
   // iterator
   [Symbol.iterator]() {
-    let index = 0;
-    const values = this._values;
-
-    return {
-      next() {
-        return (index < values.length)
-          ? { value: values[index++], done: false }
-          : { value: undefined, done: true };
-      }
-    };
+    return createIterator(this._values);
   }
 
   // internal type checking
@@ -104,6 +95,7 @@ class List {
       result._checkType(mapped);
       result._values.push(mapped);
     }
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   filter (fn) {
@@ -112,6 +104,7 @@ class List {
     for (let v of this._values) {
       if (fn(v)) result._values.push(v);
     }
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   reduce (fn, initial) {
@@ -127,6 +120,7 @@ class List {
     const result = new List();
     result._type   = this._type;
     result._values = this._values.slice(start, end);
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   reverse () {
@@ -137,16 +131,18 @@ class List {
     const result = new List();
     result._type   = this._type;
     result._values = [...this._values].reverse();
-    return result;
-  }
-  sorted (compareFn) {
-    const result = this.clone();
-    result.sort(compareFn);
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   sort (compareFn) {
     this._values.sort(compareFn);
     return this;
+  }
+  sorted (compareFn) {
+    const result = this.clone();
+    result.sort(compareFn);
+    result[Symbol.iterator] = () => createIterator(result._values);
+    return result;
   }
   unique() {
     const result = new List();
@@ -158,6 +154,7 @@ class List {
         result._values.push(v);
       }
     }
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   equals (other) {
@@ -185,9 +182,7 @@ class List {
       result._values.push([this._values[i], other._values[i]]);
     }
 
-    result[Symbol.iterator] = function () { return new ListIterator(result._values); };
-    result[Symbol.iterator] = () => new ListIterator(result._values);
-
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   merge (other) {
@@ -198,6 +193,7 @@ class List {
     for (let v of other._values) {
       result._values.push(v);
     }
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   flatMap (fn) {
@@ -220,10 +216,8 @@ class List {
         result._values.push(inner);
       }
     }
-
-    result[Symbol.iterator] = function () { return new ListIterator(result._values); };
-    result[Symbol.iterator] = () => new ListIterator(result._values);
-
+    
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
   groupBy (fn) {
@@ -256,6 +250,7 @@ class List {
     const result = new List();
     result._type = this._type;
     result._values = [...this._values];
+    result[Symbol.iterator] = () => createIterator(result._values);
     return result;
   }
 
@@ -269,7 +264,7 @@ class List {
 // :::::: ITERATOR
 
 // by function
-function createListIterator (values) {
+function createIterator (values) {
   let index = 0;
 
   return {
