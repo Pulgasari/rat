@@ -55,6 +55,18 @@ loop in arr as nr {
 }
 ```
 
+```javascript
+loop in 0...3 as nr {
+    ...
+}
+```
+
+```javascript
+for nr in range(0,10) {...};
+for nr in range(0,10) do {...};
+for nr in range(0,10) do sth();
+```
+
 ### bedingte Schleife (while-Ersatz)
 
 ```javascript
