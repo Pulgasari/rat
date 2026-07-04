@@ -15,7 +15,7 @@ class EnumValue {
 export default class Enum {
   
   constructor (...names) {
-    this._names = names;
+    this._names  = names;
     this._values = [];
 
     for (let name of names) {
@@ -44,9 +44,7 @@ export default class Enum {
   }
 
   parse (name) {
-    if (!this.has(name)) {
-      throw new Error(`Invalid enum value: ${name}`);
-    }
+    if (!this.has(name)) throw new Error(`Invalid enum value: ${name}`);
     return this[name];
   }
 
