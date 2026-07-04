@@ -185,6 +185,8 @@ class List {
       result._values.push([this._values[i], other._values[i]]);
     }
 
+    result[Symbol.iterator] = zipIterator;
+
     return result;
   }
   merge (other) {
@@ -259,3 +261,39 @@ class List {
   }
   
 };
+
+const flatMapIterator = iterator1;
+const     zipIterator = iterator1;
+
+function iterator1 () {
+  let index  = 0;
+  let values = this._values;
+
+  return {
+    next() {
+      return (index < values.length)
+        ? { value: values[index++], done: false }
+        : { value: undefined, done: true };
+    }
+  };
+};
+
+function groupByIterator () {
+  let index = 0;
+  let keys = Object.keys(groups);
+
+  return {
+    next() {
+      if (index < keys.length) {
+        const key = keys[index++];
+        return {
+          value: { key, values: groups[key] },
+          done: false
+        };
+      }
+      return { value: undefined, done: true };
+    }
+  };
+};
+
+
