@@ -4,6 +4,135 @@ import List   from './List.js';
 
 export default class ObjectList extends List {
 
+  constructor (...objects) {
+    super(...objects);
+    this._type = "object";
+
+    for (let obj of this._values) {
+      this._validate(obj);
+    }
+  }
+
+  // :::::: mutating
+  push(obj) {
+    this._validate(obj);
+    return super.push(obj);
+  }
+
+  unshift(obj) {
+    this._validate(obj);
+    return super.unshift(obj);
+  }
+
+  set(index, obj) {
+    this._validate(obj);
+    this._values[index] = obj;
+    return this;
+  }
+
+  removeByIndex(index) {
+    this._values.splice(index, 1);
+    return this;
+  }
+
+  remove(criteria) {
+    for (let i = this._values.length - 1; i >= 0; i--) {
+      if (this._matchesCriteria(this._values[i], criteria)) {
+        this._values.splice(i, 1);
+      }
+    }
+    return this;
+  }
+
+  // :::::: non-mutating
+  toPushed(obj) {
+    return this.clone().push(obj);
+  }
+
+  toUnshifted(obj) {
+    return this.clone().unshift(obj);
+  }
+
+  toSet(index, obj) {
+    return this.clone().set(index, obj);
+  }
+
+  toRemovedByIndex(index) {
+    return this.clone().removeByIndex(index);
+  }
+
+  toRemoved(criteria) {
+    return this.clone().remove(criteria);
+  }
+
+  // :::::: query
+  pluck(key) {
+    const result = new List();
+    for (let obj of this._values) {
+      result._values.push(obj[key]);
+    }
+    return result;
+  }
+
+  findBy(fn) {
+    for (let obj of this._values) {
+      if (fn(obj)) return obj;
+    }
+    return null;
+  }
+
+  countBy(fn) {
+    let count = 0;
+    for (let obj of this._values) {
+      if (fn(obj)) count++;
+    }
+    return count;
+  }
+
+  groupBy(fn) {
+    const groups = {};
+    for (let obj of this._values) {
+      const key = fn(obj);
+      if (!groups[key]) groups[key] = new ObjectList();
+      groups[key]._values.push(obj);
+    }
+    return groups;
+  }
+
+  indexBy(fn) {
+    const result = {};
+    for (let obj of this._values) {
+      result[fn(obj)] = obj;
+    }
+    return result;
+  }
+
+  entries() {
+    return this._values.entries();
+  }
+
+  // iterator
+  [Symbol.iterator]() {
+    return this._values[Symbol.iterator]();
+  }
+
+  // internals
+  _matchesCriteria (obj, criteria) {
+    for (let key in criteria) {
+      if (obj[key] !== criteria[key]) return false;
+    }
+    return true;
+  }
+  _validate (obj) {
+    if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+      throw new TypeError("ObjectList expects plain objects");
+    }
+  }
+
+};
+
+export default class ObjectList extends List {
+
   // init
   constructor (...objects) {
     super(...objects);
