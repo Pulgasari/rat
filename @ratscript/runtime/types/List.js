@@ -60,6 +60,9 @@ export default class List {
   }
 
   // methods: access
+  at (index) {
+    return this._values.at(index);
+  }
   get (index) {
     if (index < 0 || index >= this._values.length) {
       throw new RangeError(`Index ${index} out of bounds`);
@@ -263,6 +266,9 @@ export default class List {
   }
 
   // checks
+  isList (sth) {
+    return sth instanceof List;
+  }
   includes (v) {
     return this._values.includes(v);
   }
@@ -321,6 +327,9 @@ export default class List {
   }
 
   // debug
+  join (separator) {
+    return this._values.join(separator);
+  }
   toString () {
     return `List<${this._type}> ${JSON.stringify(this._values)}`;
   }
