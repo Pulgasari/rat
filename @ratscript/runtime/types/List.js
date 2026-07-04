@@ -118,35 +118,18 @@ export default class List {
   shift () { return this._values.shift (); }
 
   // functionals
-  forEach (fn) {
-    for (let value of this) {
-      fn(value);
-    }
-  }
-  filter (fn) {
-    const result = new List();
-    result._type = this._type;
-    for (let v of this._values) {
-      if (fn(v)) result._values.push(v);
-    }
-    return result;
-  }
-  map (fn) {
-    const result = new List();
-    for (let v of this._values) {
-      const mapped = fn(v);
-      result._checkType(mapped);
-      result._values.push(mapped);
-    }
-    return result;
-  }
-  reduce (fn, initial) {
-    let acc = initial;
-    for (let v of this._values) {
-      acc = fn(acc, v);
-    }
-    return acc;
-  }
+  filter (fn) { return this._values.filter (fn); }
+  map    (fn) { return this._values.map    (fn); }
+  reduce (fn) { return this._values.reduce (fn); }
+  
+  // loop
+  forEach (fn) { return this._values.forEach (fn); }
+
+  // find
+  find          (fn) { return this._values.find          (fn); }
+  findIndex     (fn) { return this._values.findIndex     (fn); }
+  findLast      (fn) { return this._values.findLast      (fn); }
+  findLastIndex (fn) { return this._values.findLastIndex (fn); }
 
   // methods: structural
   slice (start, end) {
@@ -255,10 +238,9 @@ export default class List {
   toUnshifted      (v)         { return this.clone().unshifted     (v);         }
 
   // checks
-  includes (v) {
-    return this._values.includes(v);
-  }
-  
+  includes (v)  { return this._values.includes (v);  }
+  every    (fn) { return this._values.every    (fn); }
+  some     (fn) { return this._values.some     (fn); }
   equals (other) {
     if (!(other instanceof List))     return false;
     if (this._type  !== other._type)  return false;
@@ -269,25 +251,7 @@ export default class List {
     }
     return true;
   }
-  every (fn) {
-    for (let v of this._values) {
-      if (!fn(v)) return false;
-    }
-    return true;
-  }
-  some (fn) {
-    for (let v of this._values) {
-      if (fn(v)) return true;
-    }
-    return false;
-  }
-
-  // others
-  find          (fn) { return this._values.find          (fn); }
-  findIndex     (fn) { return this._values.findIndex     (fn); }
-  findLast      (fn) { return this._values.findLast      (fn); }
-  findLastIndex (fn) { return this._values.findLastIndex (fn); }
-
+  
   // others
   toArray () {
     return [...this._values];
@@ -305,12 +269,8 @@ export default class List {
   }
 
   // debug
-  join (separator) {
-    return this._values.join(separator);
-  }
-  toString () {
-    return `List<${this._type}> ${JSON.stringify(this._values)}`;
-  }
+  join     (sep) { return this._values.join     (sep); }
+  toString ()    { return this._values.toString ();    }
 
   // static
   static from (iterable) {
