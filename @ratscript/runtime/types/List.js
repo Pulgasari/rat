@@ -137,6 +137,13 @@ export default class List {
     result._values = this._values.slice(start, end);
     return result;
   }
+  randomize () {
+    for (let i = this._values.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this._values[i], this._values[j]] = [this._values[j], this._values[i]];
+    }
+    return this;
+  }
   reverse () {
     this._values.reverse();
     return this;
@@ -236,6 +243,9 @@ export default class List {
   }
 
   //
+  toRandomized() {
+    return this.clone().randomize();
+  }
   toReversed () {
     const result = new List();
     result._type   = this._type;
@@ -250,12 +260,38 @@ export default class List {
     //return this.clone().sort(compareFn);
   }
 
-  // utility
-  contains (v) {
+  // checks
+  includes (v) {
     return this._values.includes(v);
   }
   indexOf (v) {
     return this._values.indexOf(v);
+  }
+  every (fn) {
+    for (let v of this._values) {
+      if (!fn(v)) return false;
+    }
+    return true;
+  }
+  some (fn) {
+    for (let v of this._values) {
+      if (fn(v)) return true;
+    }
+    return false;
+  }
+
+  // others
+  find (fn) {
+    for (let v of this._values) {
+      if (fn(v)) return v;
+    }
+    return undefined;
+  }
+  findIndex (fn) {
+    for (let i = 0; i < this._values.length; i++) {
+      if (fn(this._values[i])) return i;
+    }
+    return -1;
   }
   toArray () {
     return [...this._values];
@@ -271,6 +307,10 @@ export default class List {
   toString () {
     return `List<${this._type}> ${JSON.stringify(this._values)}`;
   }
+
+  // aliases
+  any      (fn) { return this.some(fn); }
+  contains (v)  { return this.includes(v); }
   
 };
 
