@@ -20,6 +20,20 @@ class List {
     }
     return list;
   }
+  
+  // iterator
+  [Symbol.iterator]() {
+    let index = 0;
+    const values = this._values;
+
+    return {
+      next() {
+        return (index < values.length)
+          ? { value: values[index++], done: false }
+          : { value: undefined, done: true };
+      }
+    };
+  }
 
   // internal type checking
   _checkType (v) {
