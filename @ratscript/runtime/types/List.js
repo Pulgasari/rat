@@ -24,6 +24,8 @@ export default class List {
       this._values.push(v);
     }
   }
+
+  // methods: static
   static from (iterable) {
     const list = new List();
     for (let v of iterable) {
@@ -31,6 +33,9 @@ export default class List {
       list._values.push(v);
     }
     return list;
+  }
+  static isList (value) {
+    return value instanceof List;
   }
   
   // iterator
@@ -86,6 +91,20 @@ export default class List {
   // methods: mutation
   copyWithin (target, start, end) {
     this._values.copyWithin(target, start, end);
+    return this;
+  }
+  remove (value) {
+    const index = this._values.indexOf(value);
+    if (index !== -1) {
+      this._values.splice(index, 1);
+    }
+    return this;
+  }
+  remove (...values) {
+    for (let value of values) {
+      const index = this._values.indexOf(value);
+      if (index !== -1) this._values.splice(index, 1);
+    }
     return this;
   }
   push (v) {
@@ -257,6 +276,9 @@ export default class List {
   toMerged (other) {
     return this.clone().merge(other);
   }
+  toRemoved (...values) {
+    return this.clone().remove(...values);
+  }
   toReversed () {
     return this.clone().reverse();
   }
@@ -280,9 +302,6 @@ export default class List {
   }
 
   // checks
-  isList (sth) {
-    return sth instanceof List;
-  }
   includes (v) {
     return this._values.includes(v);
   }
