@@ -73,3 +73,24 @@ let bla = 'Some Example' |> eene |> meene |> muh;
 // explicit notation
 let bla = 'Some Example' |> eene(#) |> meene(#) |> muh(#);
 ```
+
+### Named Arguments
+
+### Keyword: `cond`
+
+### Keyword: `match` and `switch`
+
+RatScript provides an improved `switch` syntax and also a `match` (similar to PHP).
+
+```javascript
+let animal = 'cat';
+
+let sound = match (animal) {
+  'cat'   : () => meow(),
+  'cow'   : () => moo(),
+  'dog'   : () => woof(),
+  default : () => stfu(),
+};
+```
+
+
