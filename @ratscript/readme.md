@@ -53,3 +53,23 @@ let html = ```
             ```;
 ````
 
+### Pipe Operator
+
+Instead of writing sth. like this ...
+
+```javascript
+let bla = muh(meene(eene('Some Example')));
+```
+
+... write this:
+
+```javascript
+//
+let bla = 'Some Example' |> eene() |> meene() |> muh();
+
+// implicit notation
+let bla = 'Some Example' |> eene |> meene |> muh;
+
+// explicit notation
+let bla = 'Some Example' |> eene(#) |> meene(#) |> muh(#);
+```
