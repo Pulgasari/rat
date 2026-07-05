@@ -4,16 +4,22 @@ https://pulgasari.github.io/rat/
 
 ## types
 
+#### List
+
 ```javascript
 let animals = #['bird', 'cat', 'dog'];
 let animals = new List (['bird', 'cat', 'dog']);
 let animals = new StringList (['bird', 'cat', 'dog']);
 ```
 
+#### Tuple
+
 ```javascript
 let tuple = #('Heiko', 33, true);
 let tuple = new Tuple ('Heiko', 33, true);
 ```
+
+#### Record
 
 ```javascript
 let Person = new Struct ({ name: 'string', age: 'number', isAlive: 'bool' });
