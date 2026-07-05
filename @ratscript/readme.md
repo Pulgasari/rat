@@ -44,10 +44,12 @@ let html = `<div>
 ... write this
 
 ````javascript
-let html = `<div>
+let html = ```
+            <div>
               <div>...</div>
               <div>...</div>
               <div>...</div>
-            </div>`;
+            </div>
+            ```;
 ````
 
