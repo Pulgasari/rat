@@ -19,11 +19,13 @@
 ; === RATSCRIPT CUSTOM KEYWORDS ===
 "cond"   @keyword
 "effect" @keyword
+"from"   @keyword
 "signal" @keyword
 "match"  @keyword
 "do"     @keyword
 "is"     @keyword
 "or"     @keyword
+"use"    @keyword
 
 
 ; Detects Variables starting with $
