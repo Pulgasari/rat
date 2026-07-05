@@ -29,3 +29,10 @@
 ; Detects Variables starting with $
 ((identifier) @variable.special
  (#match? @variable.special "^\\$.+"))
+
+
+; Färbe den Pipe-Operator als Operator ein
+"|>" @operator
+
+; Färbe das Platzhalter-Symbol # als Spezial-Konstante ein
+"#" @constant.builtin
