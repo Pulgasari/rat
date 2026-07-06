@@ -85,12 +85,14 @@ RatScript provides an improved `switch` syntax and also a `match` (similar to PH
 ```javascript
 let animal = 'cat';
 
-let sound = match (animal) {
+let makeNoise = match (animal) {
   'cat'   : () => meow(),
   'cow'   : () => moo(),
   'dog'   : () => woof(),
   default : () => stfu(),
 };
+
+makeNoise();
 ```
 
 ```javascript
@@ -132,7 +134,7 @@ let activeTheme = match (themeInput) {
 ```javascript
 cond isArray  = v => Array.isArray(v);
 cond isRecord = v => Record.isRecord(v);
-cond isString = v => typdof v === 'string';
+cond isString = v => typeof v === 'string';
 
 let normalized = match (options) {
   isArray  : { label: options[0], value: options[1] },
