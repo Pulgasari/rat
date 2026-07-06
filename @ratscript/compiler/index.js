@@ -8,6 +8,7 @@ import transform__multiline_strings from './syntax/multiline_strings.js';
 import transform__named_arguments   from './syntax/named_arguments.js';
 import transform__pipe_operator     from './syntax/pipe_operator.js';
 import transform__signals           from './syntax/signals.js';
+import transform__switch            from './syntax/switch.js';
 
 let _sig = str => '__' + str;
 
@@ -23,6 +24,7 @@ export function compile (code) {
   code = transform__pipe_operator     (code);
   code = transform__cond              (code);
   code = transform__named_arguments   (code);
+  code = transform__switch            (code);
   code = transform__match             (code);
   code = transform__guard             (code);
   code = transform__signals           (code);
