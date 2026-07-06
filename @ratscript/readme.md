@@ -93,4 +93,40 @@ let sound = match (animal) {
 };
 ```
 
+```javascript
+cond isAdmin     = $userRole   === 'admin';
+cond isModerator = $userRole   === 'mod';
+cond isBanned    = $userStatus === 'banned';
+
+let accessPermission = match {
+  isBanned    : 'no-entry',
+  isAdmin     : 'full-access',
+  isModerator : 'limited-access',
+  default     : 'guest-access'
+};
+```
+
+```javascript
+let pageType = 'profile';
+
+let pageData = match (pageType) {
+  'profile' : await fetchProfileData($userId),
+  'settings': await fetchSettings(),
+  default   : { title: 'Default Page' }
+};
+```
+
+```javascript
+let themeInput = 'neon-green';
+
+let activeTheme = match (themeInput) {
+  'light' : 'theme-white',
+  'dark'  : 'theme-black',
+  default : () => {
+    console.warn(`Unknown Theme: ${themeInput}. Use Fallback.`);
+    return 'theme-standard';
+  }
+};
+```
+
 
