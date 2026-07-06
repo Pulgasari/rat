@@ -143,4 +143,17 @@ let normalized = match (options) {
 }
 ```
 
+### Keyword: `switch`
+
+```javascript
+let isBig    = true;
+let myAnimal = 'dog';
+
+switch (isBig, myAnimal) {
+  (true, 'dog')  : console.log('Großer Hund');
+  (true, 'cat')  : console.log('Große Katze');
+  (false, 'dog') : console.log('Kleiner Hund');
+  default        : console.log('Unbekannte Kombination');
+}
+```
 
