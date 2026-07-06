@@ -129,4 +129,16 @@ let activeTheme = match (themeInput) {
 };
 ```
 
+```javascript
+cond isArray  = v => Array.isArray(v);
+cond isRecord = v => Record.isRecord(v);
+cond isString = v => typdof v === 'string';
+
+let normalized = match (options) {
+  isArray  : { label: options[0], value: options[1] },
+  isRecord : options,
+  isString : { label: options, value: options },
+}
+```
+
 
