@@ -21,6 +21,9 @@ effect(() => update('fontSize',   fontSize.value));
 effect(() => update('lineHeight', lineHeight.value));
 effect(() => update('hyphens',    hyphens.value));
 
+const THEMES = new StringList (['dark', 'light', 'oled']);
+const THEMES = #['dark', 'light', 'oled'];
+
 function App () {
   return (
     <div id='app'>
