@@ -1,0 +1,32 @@
+// app.rat
+
+import from 'aufbau'          use { define, update };
+import from 'domina'          use * as dom;
+import from 'importeur'       use importeur;
+import from 'preact'          use { render };
+import from '@preact/signals' use { effect, signal };
+
+let theme      = signal('dark');
+let fontSize   = signal(16);
+let lineHeight = signal(1);
+let hyphens    = signal(true);
+
+define({ key: 'theme',      type: 'dataset',  init: theme      });
+define({ key: 'fontSize',   type: 'property', init: fontSize   });
+define({ key: 'lineHeight', type: 'property', init: lineHeight });
+define({ key: 'hyphens',    type: 'property', init: hyphens    });
+
+effect(() => update('theme',      theme.value));
+effect(() => update('fontSize',   fontSize.value));
+effect(() => update('lineHeight', lineHeight.value));
+effect(() => update('hyphens',    hyphens.value));
+
+function App () {
+  return (
+    <div id='app'>
+      Hello!
+    </div>
+  );
+};
+
+render(App, dom.get('#app');
