@@ -6,6 +6,7 @@ import transform__cond               from './syntax/cond.js';
 import transform__guard              from './syntax/guard.js';
 import transform__import_statement   from './syntax/import_statement.js';
 import transform__inc                from './syntax/inc.js';
+import transform__is                 from './syntax/is.js';
 import transform__jsx                from './syntax/jsx.js';
 import transform__match              from './syntax/match.js';
 import transform__multiline_strings  from './syntax/multiline_strings.js';
@@ -26,6 +27,7 @@ export function compile (code) {
   code = transform__as                 (code);
   code = transform__prototype_accessor (code);
   code = transform__pipe_operator      (code);
+  code = transform__is                 (code);
   code = transform__cond               (code);
   code = transform__named_arguments    (code);
   code = transform__switch             (code);
@@ -39,7 +41,7 @@ export function compile (code) {
   return `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
        + `import { linkStylesheet }      from './dom.js';\n\n`
        + `import { createCond, condMap } from './cond.js';\n\n`
-       + `import { _assign, _inc }       from './helpers.js';\n\n`
+       + `import { _assign, _inc, _is }  from './helpers.js';\n\n`
        + code;
 };
 
