@@ -229,18 +229,16 @@ Object.assign(cat, { color: 'white', mood: 'sleepy' };
 ```javascript
 let cat = { name: 'Mr. Furball', color: 'black' };
 
-cat ::= { color: 'white', mood: 'sleepy' };
-
-cat <= { color: 'white', mood: 'sleepy' };
+cat += { color: 'white', mood: 'sleepy' };
 ```
 
 ```javascript
 let pets = ['bird', 'cat', 'dog'];
 
+pets += 'snake';
+
 pets []= 'snake';
 pets[] = 'snake';
-
-pets += 'snake';
 ```
 
 ##
