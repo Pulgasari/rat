@@ -163,6 +163,32 @@ let normalized = match (options) {
 }
 ```
 
+### Keyword: `match`
+
+// A) Klassischer Wert-Abgleich
+
+```javascript
+let sound = match (animal) {
+  'cat'   : 'meow',
+  'dog'   : 'woof',
+  default : 'silent'
+};
+
+// B) Nacktes match (Zustands- & cond-Abgleich)
+let access = match {
+  isBanned    : 'no-entry',
+  isAdmin     : 'full-access',
+  default     : () => console.log('Fallback geladen!') // Lazy default evaluation
+};
+
+// C) Tuple Matching (Pattern Matching) mit Inline Await
+let status = match (isLogged, userRole) {
+  (true, 'admin') : await fetchAdminDashboard(),
+  (true, 'user')  : 'User Home',
+  default         : 'Login Page'
+};
+```
+
 ### Keyword: `switch`
 
 #### Multi-Case Switch
