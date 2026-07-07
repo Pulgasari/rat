@@ -100,7 +100,31 @@ let bla = 'Some Example' |> eene(#) |> meene(#) |> muh(#);
 
 ### Keyword: `match` and `switch`
 
-RatScript provides an improved `switch` syntax and also a `match` (similar to PHP).
+```javascript
+cond isArray  = v => Array.isArray(v);
+cond isRecord = v => Record.isRecord(v);
+cond isString = v => typeof v === 'string';
+
+let normalized = match (options) {
+  isArray  : { label: options[0], value: options[1] },
+  isRecord : options,
+  isString : { label: options, value: options },
+}
+```
+
+### Keyword: `match`
+
+`match` is similar to `switch` but for assignment. It was mostly inspired the equivalent from PHP.
+
+#### Basic Match
+
+```javascript
+let sound = match (animal) {
+  'cat'   : 'meow',
+  'dog'   : 'woof',
+  default : 'silent'
+};
+```
 
 ```javascript
 let animal = 'cat';
@@ -116,6 +140,28 @@ makeNoise();
 ```
 
 ```javascript
+let pageType = 'profile';
+
+let pageData = match (pageType) {
+  'profile' : await fetchProfileData($userId),
+  'settings': await fetchSettings(),
+  default   : { title: 'Default Page' }
+};
+```
+
+#### Naked Match
+
+If no `(...)` is provided it implicitly matches against `true`.
+
+```javascript
+let access = match {
+  isBanned    : 'no-entry',
+  isAdmin     : 'full-access',
+  default     : () => console.log('Fallback geladen!') // Lazy default evaluation
+};
+```
+
+```javascript
 cond isAdmin     = $userRole   === 'admin';
 cond isModerator = $userRole   === 'mod';
 cond isBanned    = $userStatus === 'banned';
@@ -128,60 +174,9 @@ let accessPermission = match {
 };
 ```
 
-```javascript
-let pageType = 'profile';
-
-let pageData = match (pageType) {
-  'profile' : await fetchProfileData($userId),
-  'settings': await fetchSettings(),
-  default   : { title: 'Default Page' }
-};
-```
+#### Tuple Match
 
 ```javascript
-let themeInput = 'neon-green';
-
-let activeTheme = match (themeInput) {
-  'light' : 'theme-white',
-  'dark'  : 'theme-black',
-  default : () => {
-    console.warn(`Unknown Theme: ${themeInput}. Use Fallback.`);
-    return 'theme-standard';
-  }
-};
-```
-
-```javascript
-cond isArray  = v => Array.isArray(v);
-cond isRecord = v => Record.isRecord(v);
-cond isString = v => typeof v === 'string';
-
-let normalized = match (options) {
-  isArray  : { label: options[0], value: options[1] },
-  isRecord : options,
-  isString : { label: options, value: options },
-}
-```
-
-### Keyword: `match`
-
-// A) Klassischer Wert-Abgleich
-
-```javascript
-let sound = match (animal) {
-  'cat'   : 'meow',
-  'dog'   : 'woof',
-  default : 'silent'
-};
-
-// B) Nacktes match (Zustands- & cond-Abgleich)
-let access = match {
-  isBanned    : 'no-entry',
-  isAdmin     : 'full-access',
-  default     : () => console.log('Fallback geladen!') // Lazy default evaluation
-};
-
-// C) Tuple Matching (Pattern Matching) mit Inline Await
 let status = match (isLogged, userRole) {
   (true, 'admin') : await fetchAdminDashboard(),
   (true, 'user')  : 'User Home',
@@ -190,6 +185,8 @@ let status = match (isLogged, userRole) {
 ```
 
 ### Keyword: `switch`
+
+**RatScript** provides an improved `switch` syntax.
 
 #### Multi-Case Switch
 
