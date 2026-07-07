@@ -253,6 +253,20 @@ fn (name as n: String, color as c: Color) {
 }
 ```
 
+```javascript
+// if
+let animal = { species: 'cat', name: 'Stella' };
+if (animal.name as n) console.log(`Animal is named ${n}`);
+
+// importing
+import from 'lib.js' use { calculate as calc };
+// import from 'lib.js' use { calculate: calc };
+
+// destructing
+const { something as sth, method } = namespace;
+// const { something: sth, method } = namespace;
+```
+
 
 ## reads
 
