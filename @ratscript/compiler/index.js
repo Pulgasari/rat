@@ -17,8 +17,6 @@ import transform__signals            from './syntax/signals.js';
 import transform__switch             from './syntax/switch.js';
 import transform__union              from './syntax/union.js';
 
-let _sig = str => '__' + str; // ??
-
 export function compile (code) {
   
   // transformations
@@ -41,9 +39,8 @@ export function compile (code) {
 
   // return final code (incl. imports)
   return `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
-       + `import { linkStylesheet }      from './dom.js';\n\n`
        + `import { createCond, condMap } from './cond.js';\n\n`
-       + `import { _assign, _inc, _is }  from './helpers.js';\n\n`
+       + `import * from 'ratscript';\n\n`
        + code;
 };
 
