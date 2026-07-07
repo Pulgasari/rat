@@ -14,6 +14,8 @@ class UnionValue {
 }
 
 export default class Union {
+
+  // init
   constructor (name, definition) {
     this.name      = name;
     this._variants = Object.keys(definition);
@@ -39,16 +41,25 @@ export default class Union {
     Object.freeze(this);
   }
 
-  static isUnion (value) {
-    return value instanceof UnionValue;
-  }
-
-  variants() {
+  
+  // access
+  variants () {
     return [...this._variants];
   }
 
+  // access (by getter)
+  get variants () {
+    return [...this._variants];
+  }
+
+  // checks
   has (value) {
     return value instanceof UnionValue && value.$union === this;
+  }
+
+  // static
+  static isUnion (value) {
+    return value instanceof UnionValue;
   }
   
 };
