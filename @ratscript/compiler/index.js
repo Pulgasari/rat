@@ -22,7 +22,7 @@ export function compile (code) {
   let jsOutput = `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
                + `import { linkStylesheet }      from './dom.js';\n\n`
                + `import { createCond, condMap } from './cond.js';\n\n`
-               + `import { _inc }                from './helpers.js';\n\n`;
+               + `import { _assign, _inc }       from './helpers.js';\n\n`;
 
   //
   code = transform__import_statement   (code);
