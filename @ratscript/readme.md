@@ -165,6 +165,18 @@ let normalized = match (options) {
 
 ### Keyword: `switch`
 
+#### Multi-Case Switch
+
+```javascript
+switch (animal) {
+  'cat'         : meow();
+  'dog', 'wolf' : bark();
+  default       : stfu();
+}
+```
+
+#### Tuple Switch
+
 ```javascript
 let isBig    = true;
 let myAnimal = 'dog';
@@ -174,6 +186,16 @@ switch (isBig, myAnimal) {
   (true, 'cat')  : console.log('Große Katze');
   (false, 'dog') : console.log('Kleiner Hund');
   default        : console.log('Unbekannte Kombination');
+}
+```
+
+#### Naked Switch
+
+```javascript
+switch {
+  $score >= 90 : grade = 'A';
+  $score >= 80 : grade = 'B';
+  default      : grade = 'F';
 }
 ```
 
