@@ -157,3 +157,39 @@ switch (isBig, myAnimal) {
 }
 ```
 
+### Prototype Accessor
+
+...
+
+```javascript
+function String::shout() {
+  return this.toUpperCase() + "!!!";
+}
+```
+
+...
+
+```javascript
+String::replaceAll = function (a, b) {
+  let res = this;
+  while (res.indexOf(a) != -1) {
+    res = res.replace(a, b);
+  }
+  return res;
+};
+```
+
+Define via Arrow Function Syntax
+
+```javascript
+Array::first = () => this[0];
+```
+
+...
+
+```javascript
+Array::forEach.call([1, 2, 3], (item) => {
+  console.log(item);
+});
+```
+
