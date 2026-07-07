@@ -202,6 +202,19 @@ catch {
 }
 ```
 
+```javascript
+let animals = ['bird', 'cat', 'dog'];
+
+let isAnimal;
+if ('dog' in animals) isAnimal = true;
+if ('dog' in animals) isAnimal = false;
+
+let message = match ('dog' in animals) {
+	true  : 'dog is an animal',
+	false : 'dog is not an animal',
+};
+```
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
