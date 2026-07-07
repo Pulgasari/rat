@@ -216,6 +216,29 @@ let message = match ('dog' in animals) {
 ```
 
 ```javascript
+let animals = ['bird', 'cat', 'dog'];
+
+let isAnimal;
+if ('dog' in animals) isAnimal = true;
+if ('dog' in animals) isAnimal = false;
+
+// compiles to
+if ( _in('dog', animals)) isAnimal = true;
+if ( _in('dog', animals)) isAnimal = false;
+
+// the runtime provides _in()
+function _in (needle, haystack) {
+  if (Array.isArray(haystack)) {
+    return haystack.includes(needle);
+  }
+  else if (typeof haystack === 'string') {
+	...
+  }
+  // else if object usw.
+}
+```
+
+```javascript
 fn doSth () {}
 fn async doSth () {}
 ```
