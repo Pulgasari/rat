@@ -23,47 +23,40 @@ export default class Record {
     Object.freeze(this);
   }
 
-  // iterator
-  [Symbol.iterator]() {
-    return Object.values(this.values)[Symbol.iterator]();
-  }
-
-  get (key) {
-    return this.values[key];
-  }
-
   
-
-  keys () {
-    return Object.keys(this.values);
-  }
-
-  entries () {
-    return Object.entries(this.values);
-  }
-
-  toObject () {
-    return { ...this.values };
-  }
-
-  
-
   with (key, value) {
     const newValues = { ...this.values, [key]: value };
     this.struct.validate(newValues);
     return new Record(this.struct, newValues);
   }
 
+  
+  // access
+  get     (key) { return this.values[key]; }
+  entries ()    { return Object.entries(this.values); }
+  keys    ()    { return Object.keys(this.values); }
+
+  // access (by getter)
+  get entries () { return Object.entries(this.values); }
+  get keys    () { return Object.keys(this.values); }
+
+  // mutate
   merge (obj) {
     const newValues = { ...this.values, ...obj };
     this.struct.validate(newValues);
     return new Record(this.struct, newValues);
   }
 
+  // mutated clones
   toMerged (obj) {
     return this.merge(obj);
   }
 
+  // convert
+  toObject () {
+    return { ...this.values };
+  }
+  
   // checks
   equals (other) {
     if (!(other instanceof Record))   return false;
@@ -83,5 +76,13 @@ export default class Record {
   toString () {
     return `Record(${JSON.stringify(this.values)})`;
   }
+
+  // iterator
+  [Symbol.iterator]() {
+    return Object.values(this.values)[Symbol.iterator]();
+  }
+
+  // static
+  static isRecord (value) { return value instanceof Record; }
   
 };
