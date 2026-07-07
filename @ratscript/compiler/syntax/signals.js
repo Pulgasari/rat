@@ -1,5 +1,7 @@
 // @ratscript/compiler/syntax/signals.js
 
+let _sig = str => '__' + str; // ??
+
 export default function (code) {
   // ==========================================
   // 6. Framework Keywords (Signals, Effects, Stylesheets)
