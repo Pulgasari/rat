@@ -4,6 +4,14 @@ function* range (from, to, step = 1) {
   while(from < to) yield from++
 }
 
+function* range (from, to, value) {
+  while (from < to) {
+    yield value ? value(from) : from;
+    from++;
+  }
+}
+
+[...range(64, 75, String.fromCharCode)] // ['@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
 function* range(from, to) {
   while(from < to) yield from++
