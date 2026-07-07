@@ -220,6 +220,20 @@ fn doSth () {}
 fn async doSth () {}
 ```
 
+```javascript
+let cat = { name: 'Mr. Furball', color: 'black' };
+
+Object.assign(cat, { color: 'white', mood: 'sleepy' };
+```
+
+```javascript
+let cat = { name: 'Mr. Furball', color: 'black' };
+
+cat ::= { color: 'white', mood: 'sleepy' };
+```
+
+
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
