@@ -261,7 +261,7 @@ Array::forEach.call([1, 2, 3], (item) => {
 });
 ```
 
-## JSX
+### JSX
 
 A improved JSX syntax is supported.
 
@@ -275,4 +275,23 @@ fn RenderPage () {
   );
 }
 ```
+
+### Aliasing (`as`)
+
+#### Conditional Binding
+
+```javascript
+if (something as sth) ...
+```
+
+#### Destructuring Alias
+
+```javascript
+const { something as sth } = namespace;
+```
+
+
+
+
+
 
