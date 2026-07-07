@@ -1,6 +1,14 @@
 # RatScript
 
+- [Import Statements](#)
 - [JSX](#jsx)
+- [Guards](#guards)
+- [Named Arguments](#named-arguments)
+- [Pipe Operator](#pipe-operator)
+- [cond](#)
+- [match](#)
+- [switch](#)
+- [](#)
 
 ## Syntax
 
@@ -48,30 +56,6 @@ return if (hasError) do {
   console.error('Fehler passiert!');
 };
 ```
-
-### Multiline Comments
-
-Instead of writing sth. like this ...
-
-```javascript
-let html = `<div>
-  <div>...</div>
-  <div>...</div>
-  <div>...</div>
-</div>
-```
-
-... write this
-
-````javascript
-let html = ```
-            <div>
-              <div>...</div>
-              <div>...</div>
-              <div>...</div>
-            </div>
-            ```;
-````
 
 ### Pipe Operator
 
@@ -287,7 +271,29 @@ if (something as sth) ...
 const { something as sth } = namespace;
 ```
 
+### Multiline Comments
 
+Instead of writing sth. like this ...
+
+```javascript
+let html = `<div>
+  <div>...</div>
+  <div>...</div>
+  <div>...</div>
+</div>
+```
+
+... write this
+
+````javascript
+let html = ```
+            <div>
+              <div>...</div>
+              <div>...</div>
+              <div>...</div>
+            </div>
+            ```;
+````
 
 
 
