@@ -31,3 +31,13 @@ function* range(from, to) {
   if (from > to) [from, to] = [to, from];
   while(from < to) yield from++
 }
+
+
+
+const arrayRange = (start, stop, step) =>
+    Array.from(
+    { length: (stop - start) / step + 1 },
+    (value, index) => start + index * step
+    );
+
+console.log(arrayRange(1, 5, 1)); // [1,2,3,4,5]
