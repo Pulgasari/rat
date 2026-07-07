@@ -15,16 +15,11 @@ import transform__prototype_accessor from './syntax/prototype_accessor.js';
 import transform__signals            from './syntax/signals.js';
 import transform__switch             from './syntax/switch.js';
 
-let _sig = str => '__' + str;
+let _sig = str => '__' + str; // ??
 
 export function compile (code) {
-  //
-  let jsOutput = `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
-               + `import { linkStylesheet }      from './dom.js';\n\n`
-               + `import { createCond, condMap } from './cond.js';\n\n`
-               + `import { _assign, _inc }       from './helpers.js';\n\n`;
-
-  //
+  
+  // transformations
   code = transform__import_statement   (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
@@ -40,7 +35,12 @@ export function compile (code) {
   code = transform__assignment_sugar   (code);
   code = transform__signals            (code);
 
-  //
-  jsOutput += code;
-  return jsOutput;
+  // return final code (incl. imports)
+  return `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
+       + `import { linkStylesheet }      from './dom.js';\n\n`
+       + `import { createCond, condMap } from './cond.js';\n\n`
+       + `import { _assign, _inc }       from './helpers.js';\n\n`
+       + code;
 };
+
+export default compile;
