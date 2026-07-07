@@ -1,5 +1,7 @@
 # RatScript
 
+- [JSX](#jsx)
+
 ## Syntax
 
 ### Import Statements
@@ -12,7 +14,7 @@ import from '@preact/signals' use { effect, signal };
 
 ### Guards
 
-Instead of writing sth. like this ...
+#### Assignment Guards
 
 ```javascript
 function example () {
@@ -24,9 +26,27 @@ function example () {
 ... write this:
 
 ```javascript
-function example () {
-  let items = getItems() or return;
-}
+// uses !value checking
+let user = fetchUser() or return;
+
+// uses nullish checking
+let user = fetchUser() ?? return;
+
+// "do" block for extra code to run
+const config = loadConfig() or return 'default_v' do logWarning();
+
+// equivalent to
+const config = loadConfig() or do { logWarning(); return 'default_v'; };
+```
+
+#### Line Guards
+
+```javascript
+return if (isBanned);
+return if (hasError) do {
+  cleanup();
+  console.error('Fehler passiert!');
+};
 ```
 
 ### Multiline Comments
@@ -191,5 +211,20 @@ Array::first = () => this[0];
 Array::forEach.call([1, 2, 3], (item) => {
   console.log(item);
 });
+```
+
+## JSX
+
+A improved JSX syntax is supported.
+
+```javascript
+fn RenderPage () {
+  return (
+    <div class="container">
+      <MyComponent [id, name]="test" theme={$theme} />
+      <span>Standard HTML</span>
+    </div>
+  );
+}
 ```
 
