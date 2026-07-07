@@ -215,6 +215,11 @@ let message = match ('dog' in animals) {
 };
 ```
 
+```javascript
+fn doSth () {}
+fn async doSth () {}
+```
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
