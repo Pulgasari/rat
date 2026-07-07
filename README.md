@@ -232,6 +232,26 @@ let cat = { name: 'Mr. Furball', color: 'black' };
 cat ::= { color: 'white', mood: 'sleepy' };
 ```
 
+##
+
+
+```javascript
+fn (name as n, color as c) {
+	
+}
+```
+
+```javascript
+fn (String name as n, Color color as c) {
+	
+}
+```
+
+```javascript
+fn (name as n: String, color as c: Color) {
+	
+}
+```
 
 
 ## reads
