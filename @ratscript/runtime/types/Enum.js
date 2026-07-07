@@ -13,7 +13,8 @@ class EnumValue {
 }
 
 export default class Enum {
-  
+
+  // init
   constructor (...names) {
     this._names  = names;
     this._values = [];
@@ -26,34 +27,40 @@ export default class Enum {
 
     Object.freeze(this);
   }
-
-  values () {
-    return [...this._values];
-  }
-
-  names () {
-    return [...this._names];
-  }
-
-  has (name) {
-    return this._names.includes(name);
-  }
-
-  isEnumValue (value) {
-    return value instanceof EnumValue && value.enum === this;
-  }
-
+  
+  //
   parse (name) {
     if (!this.has(name)) throw new Error(`Invalid enum value: ${name}`);
     return this[name];
   }
-
   tryParse (name) {
     return this.has(name) ? this[name] : null;
   }
 
+  // access
+  names  () { return [...this._names];  }
+  values () { return [...this._values]; }
+
+  // access (by getter)
+  get names  () { return [...this._names];  }
+  get values () { return [...this._values]; }
+
+  // checks
+  has (name) {
+    return this._names.includes(name);
+  }
+  isEnumValue (value) {
+    return value instanceof EnumValue && value.enum === this;
+  }
+
+  // iterator
   [Symbol.iterator]() {
     return this._values[Symbol.iterator]();
+  }
+
+  // static
+  static isEnum (value) {
+    return value instanceof EnumValue;
   }
   
 };
