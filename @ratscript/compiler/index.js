@@ -1,6 +1,7 @@
 // @ratscript/compiler
 
 import transform__as                 from './syntax/as.js';
+import transform__assignment_sugar   from './syntax/assignment_sugar.js';
 import transform__cond               from './syntax/cond.js';
 import transform__guard              from './syntax/guard.js';
 import transform__import_statement   from './syntax/import_statement.js';
@@ -36,6 +37,7 @@ export function compile (code) {
   code = transform__match              (code);
   code = transform__guard              (code);
   code = transform__inc                (code);
+  code = transform__assignment_sugar   (code);
   code = transform__signals            (code);
 
   //
