@@ -4,6 +4,7 @@ import transform__as                 from './syntax/as.js';
 import transform__cond               from './syntax/cond.js';
 import transform__guard              from './syntax/guard.js';
 import transform__import_statement   from './syntax/import_statement.js';
+import transform__inc                from './syntax/inc.js';
 import transform__jsx                from './syntax/jsx.js';
 import transform__match              from './syntax/match.js';
 import transform__multiline_strings  from './syntax/multiline_strings.js';
@@ -18,8 +19,9 @@ let _sig = str => '__' + str;
 export function compile (code) {
   //
   let jsOutput = `import { Signal, SignalBool, Effect } from './reactivity.js';\n`
-               + `import { linkStylesheet } from './dom.js';\n\n`
-               + `import { createCond, condMap } from './cond.js';\n\n`;
+               + `import { linkStylesheet }      from './dom.js';\n\n`
+               + `import { createCond, condMap } from './cond.js';\n\n`
+               + `import { _inc }                from './helpers.js';\n\n`;
 
   //
   code = transform__import_statement   (code);
@@ -33,6 +35,7 @@ export function compile (code) {
   code = transform__switch             (code);
   code = transform__match              (code);
   code = transform__guard              (code);
+  code = transform__inc                (code);
   code = transform__signals            (code);
 
   //
