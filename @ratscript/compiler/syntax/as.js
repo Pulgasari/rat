@@ -1,27 +1,48 @@
 // packages/compiler/syntax/as.js
 
 const destructuringRegex = /\b(const|let|var)\s*\{([\s\S]+?)\}\s*=/g;
-const          ifAsRegex = /\bif\s*\((.+?)\s+as\s+([a-zA-Z0-9_$]+)\)\s*(\{[\s\S]*?\}|[^;\n]+;?)(?:\s*else\s*(\{[\s\S]*?\}|[^;\n]+;?))?/g;
+const          condRegex = /\b(if|else\s+if|while)\s*\(([^)]+?)\)\s*(\{[\s\S]*?\}|[^;\n]+;?)/g;
+const       innerAsRegex = /([^&|=<>!]+?)\s+as\s+([a-zA-Z0-9_$]+)/g;
 
 export default function (code) {
-  
-  // ==========================================
-  // Destructuring Alias: const { something as sth } = namespace;
-  // ==========================================
+  let hasAsTmp = false;
+
+  // ===================
+  // Destructuring Alias
+  // ===================
   code = code.replace(destructuringRegex, (match, declaration, content) => {
-    const transformed = content.replace(/\b([a-zA-Z0-9_$]+)\s+as\s+([a-zA-Z0-9_$]+)\b/g, '$1: $2');
-    return `${declaration} {${transformed}} =`;
+    const transformedContent = content.replace(/\b([a-zA-Z0-9_$]+)\s+as\s+([a-zA-Z0-9_$]+)\b/g, '$1: $2');
+    return `${declaration} {${transformedContent}} =`;
   });
 
   // ==========================================
-  // Conditional Binding: if (animal.name as n) ... [optional else]
+  // Strict Block-Scoped Conditional Binding (if / else if / while)
   // ==========================================
-  // Erkennt das 'as n' im if und fängt den Rumpf (und ein optionales else) ab
-  code = code.replace(ifAsRegex, (match, expr, varName, ifBody, elseBody) => {
-    let result = `{\n  let ${varName} = ${expr};\n  if (${varName}) ${ifBody.trim()}`;
-    result += elseBody ? ` else ${elseBody.trim()}` : `\n}`;
-    return result;
+  code = code.replace(condRegex, (match, type, condition, body) => {
+    if (!condition.includes(' as ')) return match;
+
+    hasAsTmp = true;
+    let varName = '';
+    
+    // 1. Bedingung umschreiben: animal.name as n -> (__as_tmp = animal.name)
+    const newCondition = condition.replace(innerAsRegex, (m, expr, name) => {
+      varName = name;
+      return `(__as_tmp = ${expr.trim()})`;
+    });
+
+    // 2. Body anpassen und das let n genau dort hineininjizieren
+    let newBody = body.trim();
+    newBody = newBody.startsWith('{')
+      ? '{\n  let ' + varName + ' = __as_tmp;\n  ' + newBody.slice(1)
+      : newBody.endsWith(';')
+        ? `{\n  let ${varName} = __as_tmp;\n  ${newBody}\n}`
+        : `{\n  let ${varName} = __as_tmp;\n  ${newBody};\n}`;
+    
+    return `${type} (${newCondition}) ${newBody}`;
   });
+
+  //
+  if (hasAsTmp) code = `let __as_tmp;\n\n` + code;
 
   return code;
-}
+};
