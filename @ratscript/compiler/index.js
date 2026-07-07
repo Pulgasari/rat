@@ -1,5 +1,6 @@
 // @ratscript/compiler
 
+import transform__as                 from './syntax/as.js';
 import transform__cond               from './syntax/cond.js';
 import transform__guard              from './syntax/guard.js';
 import transform__import_statement   from './syntax/import_statement.js';
@@ -24,6 +25,7 @@ export function compile (code) {
   code = transform__import_statement   (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
+  code = transform__as                 (code);
   code = transform__prototype_accessor (code);
   code = transform__pipe_operator      (code);
   code = transform__cond               (code);
