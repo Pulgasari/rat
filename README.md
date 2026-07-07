@@ -230,6 +230,8 @@ Object.assign(cat, { color: 'white', mood: 'sleepy' };
 let cat = { name: 'Mr. Furball', color: 'black' };
 
 cat ::= { color: 'white', mood: 'sleepy' };
+
+cat <= { color: 'white', mood: 'sleepy' };
 ```
 
 ```javascript
