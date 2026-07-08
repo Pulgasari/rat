@@ -64,7 +64,7 @@ return if (hasError) do {
 
 ## Operators
 
-RatScript has the same operators as JavaScript but additionally it adds an [Pipe Operator(#pipe-operator) `|>` and improves the [Assignment Operator](#assignment-operator) to be universal.
+RatScript has the same operators as JavaScript but additionally it adds an [Pipe Operator](#pipe-operator) `|>` and improves the [Assignment Operator](#assignment-operator) `+=` to be more universal.
 
 ### Assignment Operator
 
