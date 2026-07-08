@@ -1,8 +1,21 @@
 // @ratscript/runtime/helpers/_is.js
 
-import Union from './../types/Union.js';
+import Record from './../types/Record.js';
+import Struct from './../types/Struct.js';
+import Tuple  from './../types/Tuple.js';
+import Union  from './../types/Union.js';
 
 export default function _is (value, pattern) {
+  // Record & Struct Matching
+  if (Record.isRecord(value) && Struct.isStruct(pattern)) {
+    return value.struct === pattern; // Stimmt die Blaupause überein?
+  }
+
+  // Tuple Structural Matching
+  if (Tuple.isTuple(value) && Tuple.isTuple(pattern)) {
+    return value.equals(pattern);
+  }
+  
   if (Union.isUnion(value)) {
     if (typeof pattern === 'function' && pattern.$union) {
       return value.$union === pattern.$union && value.$variant === pattern.$variant;
@@ -19,19 +32,23 @@ export default function _is (value, pattern) {
   // 2. Pattern is a Function 
   // (Constructor, Class, RatScript-Cond)
   if (typeof pattern === 'function') {
-    // A) Built-in JavaScript Primitiv-Konstruktoren abfangen
+    // Primitive Constructors: JavaScript
     if (pattern === Array)   return Array.isArray(value);
     if (pattern === Boolean) return typeof value === 'boolean';
     if (pattern === Number)  return typeof value === 'number';
     if (pattern === Object)  return typeof value === 'object' && value !== null;
     if (pattern === RegExp)  return value instanceof RegExp;
     if (pattern === String)  return typeof value === 'string';
+    
+    // Primitive Constructors: RatScript
+    if (pattern === Record)  return Record.isRecord(value);
+    if (pattern === Tuple)   return Tuple.isTuple(value);
 
-    // B) Echte Instanz-Prüfung für Custom Classes (z.B. user is Admin)
+    // Echte Instanz-Prüfung für Custom Classes (z.B. user is Admin)
     try       { if (value instanceof pattern) return true; } 
     catch (_) {}
 
-    // C) Fallback: RatScript 'cond' or Prädikats-Funktion
+    // Fallback: RatScript 'cond' or Prädikats-Funktion
     try       { return !!pattern(value); } 
     catch (_) { return false; }
   }
