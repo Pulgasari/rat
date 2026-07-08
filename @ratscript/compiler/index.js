@@ -23,12 +23,12 @@ export function compile (code) {
   code = transform__import_statement   (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
-  code = transform__alias              (code);
+  code = transform__alias              (code); // alias, as
   code = transform__prototype_accessor (code);
   code = transform__pipe_operator      (code);
   code = transform__is                 (code);
   code = transform__cond               (code);
-  code = transform__types              (code);
+  code = transform__types              (code); // enum, struct, #(...), #[...]
   code = transform__named_arguments    (code);
   code = transform__switch             (code);
   code = transform__match              (code);
