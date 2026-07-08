@@ -1,6 +1,6 @@
 // @ratscript/compiler/syntax/alias.js
 
-export function default (code) {
+export default function (code) {
   code = transformAlias (code);
   code = transformAs    (code);
   return code;
@@ -12,23 +12,28 @@ const          condRegex = /\b(if|else\s+if|while)\s*\(([^)]+?)\)\s*(\{[\s\S]*?\
 const       innerAsRegex = /([^&|=<>!]+?)\s+as\s+([a-zA-Z0-9_$]+)/g;
 
 function transformAlias (code) {
-  return code.replace(aliasRegex, 'const $2 = $1;');
+  return code.replace(aliasRegex, (match, source, aliasName) => {
+    // with auto-binding
+    if (source.includes('.')) {
+      const lastDotIndex = source.lastIndexOf('.');
+      const baseObject   = source.slice(0, lastDotIndex);
+      return `const ${aliasName} = ${source}.bind(${baseObject});`;
+    }
+    // without auto-binding
+    return `const ${aliasName} = ${source};`;
+  });
 }
 
 function transformAs (code) {
   let hasAsTmp = false;
 
-  // ===================
   // Destructuring Alias
-  // ===================
   code = code.replace(destructuringRegex, (match, declaration, content) => {
     const transformedContent = content.replace(/\b([a-zA-Z0-9_$]+)\s+as\s+([a-zA-Z0-9_$]+)\b/g, '$1: $2');
     return `${declaration} {${transformedContent}} =`;
   });
 
-  // ==========================================
   // Strict Block-Scoped Conditional Binding (if / else if / while)
-  // ==========================================
   code = code.replace(condRegex, (match, type, condition, body) => {
     if (!condition.includes(' as ')) return match;
 
@@ -52,8 +57,7 @@ function transformAs (code) {
     return `${type} (${newCondition}) ${newBody}`;
   });
 
-  //
   if (hasAsTmp) code = `let __as_tmp;\n\n` + code;
 
   return code;
-};
+}
