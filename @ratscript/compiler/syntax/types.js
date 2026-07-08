@@ -33,3 +33,18 @@ export default function (code) {
 
   return code;
 };
+
+// packages/compiler/syntax/struct.js
+export default function transform__struct(code) {
+  const structRegex = /\bstruct\s+([a-zA-Z0-9_$]+)\s*(\{[\s\S]+?\})/g;
+  return code.replace(structRegex, (match, name, body) => {
+    return `const ${name} = new Struct(${body});`;
+  });
+}
+
+export default function transform__tuple(code) {
+  // #(1, 'cat', true) -> new Tuple(1, 'cat', true)
+  return code.replace(/#\(([\s\S]*?)\)/g, 'new Tuple($1)');
+}
+
+
