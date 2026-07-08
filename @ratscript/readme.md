@@ -8,6 +8,13 @@
 - [cond](#)
 - [match](#)
 - [switch](#)
+- [Types](#types)
+  - [Enum](#enum)
+  - [List](#list)
+  - [Record](#record)
+  - [Struct](#struct)
+  - [Tuple](#tuple)
+  - [Union](#union)
 - [](#)
 
 ## Syntax
@@ -295,6 +302,8 @@ let html = ```
             ```;
 ````
 
+### Types
+
 #### List
 
 Lists are improved and type-checked arrays for values of the same type.
@@ -309,8 +318,12 @@ For more informations about Lists read [here](#).
 
 #### Enum
 
+#### Record
+
 #### Struct
 
 #### Tuple
+
+#### Union
 
 
