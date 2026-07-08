@@ -4,12 +4,11 @@ export default class List extends Array {
 
   // init
   constructor (...values) {
-    // Ruft den nativen Array-Konstruktor auf
     super();
     this._type = null;
 
     for (let v of values) {
-      this.push(v); // Nutzt unser getuntes push() inklusive Typecheck!
+      this.push(v);
     }
   }
   
@@ -62,9 +61,7 @@ export default class List extends Array {
     return result;
   }
   
-  // ==========================================
-  // CUSTOM RATSCRIPT UTILITIES
-  // ==========================================
+  //
   getFirstItem () { return this[0]; }
   getLastItem  () { return this[this.length - 1]; }
   indexOfLast  () { return this.length - 1; }
@@ -152,7 +149,6 @@ export default class List extends Array {
   slice (start, end) {
     const result = new List();
     result._type = this._type;
-    // Nutzen den nativen Array slice, um die Werte zu holen
     const slicedValues = super.slice(start, end);
     result.push(...slicedValues);
     return result;
