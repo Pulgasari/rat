@@ -62,7 +62,11 @@ return if (hasError) do {
 };
 ```
 
-## Assignment Operator
+## Operators
+
+RatScript has the same operators as JavaScript but additionally it adds an [Pipe Operator(#pipe-operator) `|>` and improves the [Assignment Operator](#assignment-operator) to be universal.
+
+### Assignment Operator
 
 ```javascript
 let greeting = '';
@@ -100,7 +104,7 @@ let person = { name: 'Udo', age: 60 };
 Object.assign(person, { age: 61, country: 'Germany'});
 ```
 
-## Pipe Operator
+### Pipe Operator
 
 Instead of writing sth. like this ...
 
