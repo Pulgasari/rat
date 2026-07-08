@@ -15,7 +15,7 @@ import transform__pipe_operator      from './syntax/pipe_operator.js';
 import transform__prototype_accessor from './syntax/prototype_accessor.js';
 import transform__signals            from './syntax/signals.js';
 import transform__switch             from './syntax/switch.js';
-import transform__union              from './syntax/union.js';
+import transform__types              from './syntax/types.js';
 
 export function compile (code) {
   
@@ -28,7 +28,7 @@ export function compile (code) {
   code = transform__pipe_operator      (code);
   code = transform__is                 (code);
   code = transform__cond               (code);
-  code = transform__union              (code);
+  code = transform__types              (code);
   code = transform__named_arguments    (code);
   code = transform__switch             (code);
   code = transform__match              (code);
