@@ -1,11 +1,17 @@
 // @ratscript/runtime/helpers/_is.js
 
+import List   from './../types/List.js';
 import Record from './../types/Record.js';
 import Struct from './../types/Struct.js';
 import Tuple  from './../types/Tuple.js';
 import Union  from './../types/Union.js';
 
 export default function _is (value, pattern) {
+  // Structural List Comparison
+  if (List.isList(value) && List.isList(pattern)) {
+    return value.equals(pattern);
+  }
+  
   // Record & Struct Matching
   if (Record.isRecord(value) && Struct.isStruct(pattern)) {
     return value.struct === pattern; // Stimmt die Blaupause überein?
@@ -41,6 +47,7 @@ export default function _is (value, pattern) {
     if (pattern === String)  return typeof value === 'string';
     
     // Primitive Constructors: RatScript
+    if (pattern === List)    return List.isList(value);
     if (pattern === Record)  return Record.isRecord(value);
     if (pattern === Tuple)   return Tuple.isTuple(value);
 
