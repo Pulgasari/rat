@@ -3,8 +3,12 @@
 - [Import Statements](#)
 - [JSX](#jsx)
 - [Guards](#guards)
-- [Named Arguments](#named-arguments)
-- [Pipe Operator](#pipe-operator)
+  - [Assignment Guards](#assignment-guards)
+  - [Line Guards](#line-guards)
+- [Functions](#functions)
+  - [Named Arguments](#named-arguments)
+- [Operators](#operators)
+  - [Pipe Operator](#pipe-operator)
 - [cond](#)
 - [match](#)
 - [switch](#)
@@ -19,6 +23,8 @@
 
 ## Import Statements
 
+RatScript provides an alternative Import Syntax.
+
 ```javascript
 import from 'domina'          use * as dom;
 import from 'preact'          use { render };
@@ -28,15 +34,6 @@ import from '@preact/signals' use { effect, signal };
 ## Guards
 
 #### Assignment Guards
-
-```javascript
-function example () {
-  let items = getItems();
-  if (!items) return;
-}
-```
-
-... write this:
 
 ```javascript
 // uses !value checking
