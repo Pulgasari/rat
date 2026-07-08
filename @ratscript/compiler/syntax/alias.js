@@ -1,10 +1,21 @@
-// packages/compiler/syntax/as.js
+// @ratscript/compiler/syntax/alias.js
 
+export function default (code) {
+  code = transformAlias (code);
+  code = transformAs    (code);
+  return code;
+}
+
+const         aliasRegex = /\balias\s+([a-zA-Z0-9_$.]+)\s+as\s+([a-zA-Z0-9_$]+);?/g;
 const destructuringRegex = /\b(const|let|var)\s*\{([\s\S]+?)\}\s*=/g;
 const          condRegex = /\b(if|else\s+if|while)\s*\(([^)]+?)\)\s*(\{[\s\S]*?\}|[^;\n]+;?)/g;
 const       innerAsRegex = /([^&|=<>!]+?)\s+as\s+([a-zA-Z0-9_$]+)/g;
 
-export default function (code) {
+function transformAlias (code) {
+  return code.replace(aliasRegex, 'const $2 = $1;');
+}
+
+function transformAs (code) {
   let hasAsTmp = false;
 
   // ===================
