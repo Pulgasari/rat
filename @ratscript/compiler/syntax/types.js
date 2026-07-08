@@ -1,6 +1,7 @@
 // @ratscript/compiler/syntax/types.js
 
 export default function (code) {
+  code = transformList   (code);
   code = transformStruct (code);
   code = transformTuple  (code);
   code = transformUnion  (code);
@@ -10,6 +11,12 @@ export default function (code) {
 // RegExp
 const      structRegex = /\bstruct\s+([a-zA-Z0-9_$]+)\s*(\{[\s\S]+?\})/g;
 const taggedUnionRegex = /\bunion\s+([a-zA-Z0-9_$]+)\s*\{([\s\S]+?)\}/g;
+
+// #[1, 2, 3]      -> new List(1, 2, 3)
+// #['dog', 'cat'] -> new List('dog', 'cat')
+export default function transformList (code) {
+  return code.replace(/#\[([\s\S]*?)\]/g, 'new List($1)');
+}
 
 //
 function transformStruct (code) {
