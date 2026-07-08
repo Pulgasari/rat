@@ -86,7 +86,7 @@ const alternativeContext = { prefix: 'Guest: ' };
 // compiler uses database.users for context
 alias database.users.save as saveStandard;
 
-// dev wants full control und bind manually
+// dev wants full control and binds manually
 alias saveCustom = database.users.save.bind(alternativeContext);
 ```
 
