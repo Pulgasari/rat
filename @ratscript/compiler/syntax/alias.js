@@ -6,13 +6,16 @@ export default function (code) {
   return code;
 }
 
-const         aliasRegex = /\balias\s+([a-zA-Z0-9_$.]+)\s+as\s+([a-zA-Z0-9_$]+);?/g;
+const       aliasAsRegex = /\balias\s+([a-zA-Z0-9_$.]+)\s+as\s+([a-zA-Z0-9_$]+);?/g;
+const    aliasEqualRegex = /\balias\s+([a-zA-Z0-9_$]+)\s*=\s*([^;\n]+);?/g;
 const destructuringRegex = /\b(const|let|var)\s*\{([\s\S]+?)\}\s*=/g;
 const          condRegex = /\b(if|else\s+if|while)\s*\(([^)]+?)\)\s*(\{[\s\S]*?\}|[^;\n]+;?)/g;
 const       innerAsRegex = /([^&|=<>!]+?)\s+as\s+([a-zA-Z0-9_$]+)/g;
 
 function transformAlias (code) {
-  return code.replace(aliasRegex, (match, source, aliasName) => {
+  
+  // alias <originalName> as <aliasName>;
+  code = code.replace(aliasAsRegex, (match, source, aliasName) => {
     // with auto-binding
     if (source.includes('.')) {
       const lastDotIndex = source.lastIndexOf('.');
@@ -22,6 +25,13 @@ function transformAlias (code) {
     // without auto-binding
     return `const ${aliasName} = ${source};`;
   });
+
+  // alias <aliasName> = <originalName>;
+  code = code.replace(aliasEqualRegex, (match, aliasName, source) => {
+    return `const ${aliasName} = ${source};`;
+  });
+
+  return code;
 }
 
 function transformAs (code) {
