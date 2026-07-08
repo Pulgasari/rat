@@ -62,6 +62,44 @@ return if (hasError) do {
 };
 ```
 
+## Assignment Operator
+
+```javascript
+let greeting = '';
+
+greeting += 'Good';
+greeting += ' morning,';
+greeting += ' darling!';
+```
+
+This works also on Arrays, [Lists](#list), Objects, Sets and Maps.
+
+#### Assign to Arrays
+
+```javascript
+let animals = ['bird', 'cat', 'dog'];
+
+animals += 'fish';
+animals += 'monkey';
+```
+
+#### Assign to Objects
+
+```javascript
+let person = { name: 'Udo', age: 60 };
+
+person += { age: 61, country: 'Germany'};
+```
+
+It's the equivalent to:
+
+```javascript
+// JavaScript
+let person = { name: 'Udo', age: 60 };
+
+Object.assign(person, { age: 61, country: 'Germany'});
+```
+
 ## Pipe Operator
 
 Instead of writing sth. like this ...
