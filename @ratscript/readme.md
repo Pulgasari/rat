@@ -125,6 +125,23 @@ let bla = 'Some Example' |> eene |> meene |> muh;
 let bla = 'Some Example' |> eene(#) |> meene(#) |> muh(#);
 ```
 
+```javascript
+// Convert Types
+let sth = getNumber() |> String;
+let age = '28' |> Number; // Number('28')
+let True = 1 |> Boolean;  // Boolean(1)
+
+// Mathematische Transformationen
+let rounded = 4.7 |> Math.round; // Math.round(4.7)
+let absolute = -10 |> Math.abs;  // Math.abs(-10)
+
+// Fast Debugging at End of Chain
+let user = fetchUser()
+  |> formatData(#)
+  |> console.log;
+// console.log(formatData(fetchUser()))
+```
+
 ## Named Arguments
 
 ## Keyword: `cond`
