@@ -24,6 +24,12 @@
 - [JSX](#jsx)
 - [](#)
 
+- Keywords
+  - Statement Introducer Keywords
+    - alias, struct
+  - Infix Keywords
+    - is
+
 ## Import Statements
 
 RatScript provides an alternative Import Syntax.
