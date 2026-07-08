@@ -30,6 +30,49 @@
   - Infix Keywords
     - is
 
+---
+
+## Aliasing (`as` and `alias`)
+
+#### Conditional Binding
+
+```javascript
+if (something as sth) ...
+```
+
+#### Destructuring Alias
+
+```javascript
+const { something as sth } = namespace;
+```
+
+#### Function Aliases
+
+The `alias` keyword is used to create aliases for functions.
+
+If the aliased function is part of an object, the compiler auto-binds it to keep the original `this` context intact.
+
+```javascript
+// local function
+function sayHello() { return "Hi"; }
+
+// deep object with 'this' dependency
+const database = {
+  prefix: "User: ",
+  users: {
+    save (data) {
+      return this.prefix + data.name;
+    }
+  }
+};
+
+// create aliases
+alias sayHello as hello;
+alias database.users.save as saveUser; // with auto-binding to keep 'this' context
+```
+
+---
+
 ## Import Statements
 
 RatScript provides an alternative Import Syntax.
@@ -325,20 +368,6 @@ fn RenderPage () {
     </div>
   );
 }
-```
-
-## Aliasing (`as`)
-
-#### Conditional Binding
-
-```javascript
-if (something as sth) ...
-```
-
-#### Destructuring Alias
-
-```javascript
-const { something as sth } = namespace;
 ```
 
 ## Multiline Strings
