@@ -17,9 +17,7 @@
   - [Union](#union)
 - [](#)
 
-## Syntax
-
-### Import Statements
+## Import Statements
 
 ```javascript
 import from 'domina'          use * as dom;
@@ -27,7 +25,7 @@ import from 'preact'          use { render };
 import from '@preact/signals' use { effect, signal };
 ```
 
-### Guards
+## Guards
 
 #### Assignment Guards
 
@@ -64,7 +62,7 @@ return if (hasError) do {
 };
 ```
 
-### Pipe Operator
+## Pipe Operator
 
 Instead of writing sth. like this ...
 
@@ -85,11 +83,11 @@ let bla = 'Some Example' |> eene |> meene |> muh;
 let bla = 'Some Example' |> eene(#) |> meene(#) |> muh(#);
 ```
 
-### Named Arguments
+## Named Arguments
 
-### Keyword: `cond`
+## Keyword: `cond`
 
-### Keyword: `match` and `switch`
+## Keyword: `match` and `switch`
 
 ```javascript
 cond isArray  = v => Array.isArray(v);
@@ -103,7 +101,7 @@ let normalized = match (options) {
 }
 ```
 
-### Keyword: `match`
+## Keyword: `match`
 
 `match` is similar to `switch` but for assignment. It was mostly inspired the equivalent from PHP.
 
@@ -175,7 +173,7 @@ let status = match (isLogged, userRole) {
 };
 ```
 
-### Keyword: `switch`
+## Keyword: `switch`
 
 **RatScript** provides an improved `switch` syntax.
 
@@ -213,7 +211,7 @@ switch {
 }
 ```
 
-### Prototype Accessor
+## Prototype Accessor
 
 ...
 
@@ -249,7 +247,7 @@ Array::forEach.call([1, 2, 3], (item) => {
 });
 ```
 
-### JSX
+## JSX
 
 A improved JSX syntax is supported.
 
@@ -264,7 +262,7 @@ fn RenderPage () {
 }
 ```
 
-### Aliasing (`as`)
+## Aliasing (`as`)
 
 #### Conditional Binding
 
@@ -278,7 +276,7 @@ if (something as sth) ...
 const { something as sth } = namespace;
 ```
 
-### Multiline Comments
+## Multiline Strings
 
 Instead of writing sth. like this ...
 
@@ -302,9 +300,9 @@ let html = ```
             ```;
 ````
 
-### Types
+## Types
 
-#### List
+### List
 
 Lists are improved and type-checked arrays for values of the same type.
 
@@ -316,14 +314,14 @@ let numbers = #[1, 2, 3, 4, 5];
 
 For more informations about Lists read [here](#).
 
-#### Enum
+### Enum
 
-#### Record
+### Record
 
-#### Struct
+### Struct
 
-#### Tuple
+### Tuple
 
-#### Union
+### Union
 
 
