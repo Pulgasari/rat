@@ -71,6 +71,25 @@ alias sayHello as hello;
 alias database.users.save as saveUser; // with auto-binding to keep 'this' context
 ```
 
+In case one wants to have full control over the binding, one also could use the `alias` keyword in combination with `=`.
+
+```javascript
+const database = {
+  prefix: "User: ",
+  users: {
+    save (data) { return this.prefix + data.name; }
+  }
+};
+
+const alternativeContext = { prefix: 'Guest: ' };
+
+// compiler uses database.users for context
+alias database.users.save as saveStandard;
+
+// dev wants full control und bind manually
+alias saveCustom = database.users.save.bind(alternativeContext);
+```
+
 ---
 
 ## Import Statements
