@@ -295,6 +295,22 @@ let html = ```
             ```;
 ````
 
+#### List
 
+Lists are improved and type-checked arrays for values of the same type.
+
+```javascript
+let animals = #['cat', 'dog', 'fish'];
+
+let numbers = #[1, 2, 3, 4, 5];
+```
+
+For more informations about Lists read [here](#).
+
+#### Enum
+
+#### Struct
+
+#### Tuple
 
 
