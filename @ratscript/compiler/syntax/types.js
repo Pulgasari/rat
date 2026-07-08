@@ -1,16 +1,32 @@
-// @ratscript/compiler/syntax/union.js
-
-/*
-union Response { Loading, Success(payload) }
-=>
-const Response = new Union('Response', { Loading: [], Success: ['payload'] });
-*/
-
-const taggedRegex = /\bunion\s+([a-zA-Z0-9_$]+)\s*\{([\s\S]+?)\}/g;
+// @ratscript/compiler/syntax/types.js
 
 export default function (code) {
+  code = transformStruct (code);
+  code = transformTuple  (code);
+  code = transformUnion  (code);
+  return code;
+}
+
+// RegExp
+const      structRegex = /\bstruct\s+([a-zA-Z0-9_$]+)\s*(\{[\s\S]+?\})/g;
+const taggedUnionRegex = /\bunion\s+([a-zA-Z0-9_$]+)\s*\{([\s\S]+?)\}/g;
+
+//
+function transformStruct (code) {
+  return code.replace(structRegex, (match, name, body) => {
+    return `const ${name} = new Struct(${body});`;
+  });
+}
+
+// #(1, 'cat', true) -> new Tuple(1, 'cat', true)
+function transformTuple (code) {
+  return code.replace(/#\(([\s\S]*?)\)/g, 'new Tuple($1)');
+}
+
+// union Response { Loading, Success(payload) } -> const Response = new Union('Response', { Loading: [], Success: ['payload'] });
+function transformUnion (code) {
   
-  code = code.replace(taggedRegex, (match, unionName, body) => {
+  code = code.replace(taggedUnionRegex, (match, unionName, body) => {
     const variants = body.split(',').map(v => v.trim()).filter(Boolean);
     let defEntries = [];
     
@@ -32,19 +48,4 @@ export default function (code) {
   });
 
   return code;
-};
-
-// packages/compiler/syntax/struct.js
-export default function transform__struct(code) {
-  const structRegex = /\bstruct\s+([a-zA-Z0-9_$]+)\s*(\{[\s\S]+?\})/g;
-  return code.replace(structRegex, (match, name, body) => {
-    return `const ${name} = new Struct(${body});`;
-  });
 }
-
-export default function transform__tuple(code) {
-  // #(1, 'cat', true) -> new Tuple(1, 'cat', true)
-  return code.replace(/#\(([\s\S]*?)\)/g, 'new Tuple($1)');
-}
-
-
