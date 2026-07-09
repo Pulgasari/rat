@@ -1,4 +1,4 @@
-// @ratscript/compiler/parser/parser.js
+// @ratscript/compiler/parser.js
 
 export function createNode (type, properties = {}) {
   return {
