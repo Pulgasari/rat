@@ -16,6 +16,36 @@ export function createNode (type, properties = {}) {
 
 // :::::: THE PARSER
 
+// ::: State
+
+let current;
+let tokens;
+
+// ::: Methods
+
+function peek     () { return tokens[current]; }
+function previous () { return tokens[current - 1]; }
+function isAtEnd  () { return isToken('EOF'); }
+
+function consumeToken (type, value, message) {
+  if (isToken(type, value)) return this.advance();
+  const token = this.peek();
+  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
+}
+function isToken (type, value) {
+  const token = this.peek();
+  if (token.type !== type) return false;
+  if (value !== undefined && token.value !== value) return false;
+  return true;
+}
+function matchToken (type, value) {
+  if (isToken(type, value)) {
+    this.advance();
+    return true;
+  }
+  return false;
+}
+
 export default class Parser {
   constructor(tokens) {
     this.tokens = tokens;
