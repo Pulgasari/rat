@@ -46,10 +46,11 @@ function advance () {
     if (!isEOF()) current++;
     return previous();
 }
-function consumeToken (type, value, message) {
-  if (isToken(type, value)) return advance();
+function consumeToken (typeOrValue, maybeValue, message) {
+  if (isToken(typeOrValue, maybeValue)) return advance();
   const token = peek();
-  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
+  const query = resolveTokenQuery(typeOrValue, maybeValue);
+  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
 }
 function isToken (typeOrValue, maybeValue) {
   const query = resolveTokenQuery(typeOrValue, maybeValue);
@@ -66,12 +67,6 @@ function matchToken (typeOrValue, maybeValue) {
   }
   return false;
 }
-function expect (typeOrValue, maybeValue, message) {
-  if (isToken(typeOrValue, maybeValue)) return advance();
-  const token = peek();
-  const query = resolveTokenQuery(typeOrValue, maybeValue);
-  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
-}
 
 // ::: Methods | Parsing
 
@@ -87,7 +82,7 @@ function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt E
     while (!isToken('}') && !isEOF()) {
       statements.push(parseStatement());
     }
-    consumeToken('PUNCT', '}', "Erwarte '}' nach Aktionsblock.");
+    consumeToken('}');
     return nodes.createBlock(statements);
   }
   return nodes.createBlock([ parseStatement() ]);
@@ -114,7 +109,7 @@ function parseExpression () {
 
 function parseForStatement () {
     advance(); // 'for'
-    consumeToken('LPAREN', "Erwarte '(' nach 'for'.");
+    consumeToken('(');
 
     let initializer = null;
     let isNaked     = true;
@@ -129,13 +124,13 @@ function parseForStatement () {
       initializer = parseExpression();
     }
 
-    this.consume(TokenType.RPAREN, "Erwarte ')' nach Schleifenkopf.");
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor Schleifenkörper.");
+    consumeToken(')');
+    consumeToken('{');
     const bodyStatements = [];
     while (!isToken('}') && !isEOF()) {
       bodyStatements.push(parseStatement());
     }
-    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende der Schleife.");
+    consumeToken('}');
 
     return nodes.createForStatement(initializer, isNaked, nodes.createBlock(bodyStatements));
 }
@@ -154,59 +149,56 @@ function parseStatement () {
 }
 
 parseMoldStatement () { // mold(target) { init: ..., cond: ... }
-    this.advance(); // 'mold'
-    consumeToken('PUNCT', '(', "Erwarte '(' nach 'mold'.");
-    const targetExpr = this.parseExpression();
-    this.consume(TokenType.RPAREN, "Erwarte ')' nach mold-Zielwert.");
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor mold-Körper.");
+  advance(); // 'mold'
+  consumeToken('(');
+    const targetExpr = parseExpression();
+    consumeToken(')');
+    consumeToken('{');
 
     let init = null, cases = [], catchBlock = null, finallyBlock = null;
 
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      const keyToken = this.advance();
-      this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
-      const action = this.parseActionBlock();
+    while (!isToken('}') && !isEOF()) {
+      const keyToken = advance();
+      consumeToken(';');
+      const action = parseActionBlock();
 
            if (keyToken.value === 'init')                  init = action;
       else if (keyToken.value === 'finally')       finallyBlock = action;
       else if (keyToken.value.startsWith('catch'))   catchBlock = action;
       else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
-      
     }
 
-    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des mold-Blocks.");
+    consumeToken('}');
     return nodes.createMoldStatement(targetExpr, init, cases, catchBlock, finallyBlock);
   }
 
-  
-
-  // fn name(args) use Trait { ... }
-  parseFunctionDeclaration() {
-    this.advance(); // 'fn'
-    const nameToken = this.consume(TokenType.IDENTIFIER, "Erwarte Funktionsnamen.");
+// fn name(args) use Trait { ... }
+function parseFunctionDeclaration () {
+  advance(); // 'fn'
+  const nameToken = consumeToken('IDENTIFIER', "Erwarte Funktionsnamen.");
     
-    this.consume(TokenType.LPAREN, "Erwarte '(' nach Funktionsnamen.");
-    const params = [];
-    if (!this.check(TokenType.RPAREN)) {
-      do {
-        params.push(this.consume(TokenType.IDENTIFIER, "Erwarte Parametername.").value);
-      } while (this.match(TokenType.COLON)); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
-    }
-    this.consume(TokenType.RPAREN, "Erwarte ')' nach Parameterliste.");
+  consumeToken('(');
+  const params = [];
+  if (!isToken(')')) {
+    do {
+      params.push(consumeToken('IDENTIFIER', "Erwarte Parametername.").value);
+    } while (matchToken(';')); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
+  }
+  consumeToken(')');
 
-    // Optionale Traits via 'use' abfangen
-    const traits = [];
-    if (this.check(TokenType.KEYWORD) && this.peek().value === 'use') {
-      this.advance(); // 'use'
-      traits.push(this.consume(TokenType.IDENTIFIER, "Erwarte Trait-Name nach 'use'.").value);
-    }
+  // Optionale Traits via 'use' abfangen
+  const traits = [];
+  if (isToken('use')) {
+    advance(); // 'use'
+    traits.push(consumeToken('IDENTIFIER', "Erwarte Trait-Name nach 'use'.").value);
+  }
 
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor Funktionskörper.");
-    const bodyStatements = [];
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      bodyStatements.push(this.parseStatement());
-    }
-  this.consume(TokenType.RBRACE, "Erwarte '}' nach Funktionskörper.");
+  consumeToken('{');
+  const bodyStatements = [];
+  while (!isToken('}') && !isEOL()) {
+    bodyStatements.push(parseStatement());
+  }
+  consumeToken('}');
 
   return nodes.createFunctionDeclaration(nameToken.value, params, traits, nodes.createBlock(bodyStatements));
 }
