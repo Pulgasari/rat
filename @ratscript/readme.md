@@ -125,6 +125,22 @@ try {
   let x = 10;
   compute(x);
 }
+
+// oneliners
+try doSomething();
+catch logError();
+finally cleanUp();
+
+// 'try' + 'finally' oneliners
+try doSomething();
+finally closeConnection();
+
+// 'try' oneliner + 'finally' block
+try doSomething();
+finally {
+  console.log('done!');
+  resetState();
+}
 ```
 
 ## Guards
