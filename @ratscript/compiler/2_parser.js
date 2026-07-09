@@ -21,97 +21,183 @@ export function createNode (type, properties = {}) {
 let current;
 let tokens;
 
-// ::: Methods
+// ::: Methods | Consume + Navigate
 
 function peek     () { return tokens[current]; }
 function previous () { return tokens[current - 1]; }
-function isAtEnd  () { return isToken('EOF'); }
+function isEOF    () { return isToken('EOF'); }
 
+function advance () {
+    if (!isEOF()) current++;
+    return previous();
+}
 function consumeToken (type, value, message) {
-  if (isToken(type, value)) return this.advance();
-  const token = this.peek();
+  if (isToken(type, value)) return advance();
+  const token = peek();
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
 }
 function isToken (type, value) {
-  const token = this.peek();
+  const token = peek();
   if (token.type !== type) return false;
   if (value !== undefined && token.value !== value) return false;
   return true;
 }
 function matchToken (type, value) {
   if (isToken(type, value)) {
-    this.advance();
+    advance();
     return true;
   }
   return false;
 }
 
+// ::: Methods | Parsing
+
+function parse() {
+  const statements = [];
+  while (!isEOF()) statements.push(this.parseStatement());
+  return nodes.createProgram(statements);
+}
+
+function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
+  if (matchToken('LBRACE')) {
+    const statements = [];
+    while (!isToken('RBRACE') && !isEOF()) {
+      statements.push(parseStatement());
+    }
+    consumeToken('RBRACE', "Erwarte '}' nach Aktionsblock.");
+    return nodes.createBlock(statements);
+  }
+  return nodes.createBlock([ parseStatement() ]);
+}
+
+function parseAssignment () {
+  const expr = parseTraitUse();
+  if (matchToken('ASSIGN')) {
+    const value = parseAssignment();
+    return { type: 'AssignmentExpression', left: expr, right: value };
+  }
+  return expr;
+}
+
+function parseExpressionStatement () {
+  const expr = parseExpression();
+  matchToken('SEMICOLON'); // optionales Semikolon schlucken
+  return nodes.createExpressionStatement(expr);
+}
+
+function parseExpression () {
+  return parseAssignment();
+}
+
+function parseForStatement () {
+    advance(); // 'for'
+    consumeToken('LPAREN', "Erwarte '(' nach 'for'.");
+
+    let initializer = null;
+    let isNaked     = true;
+
+    // Erkennung ob Standard-Loop oder Naked-Loop
+    if (isToken('KEYWORD') && ['let', 'const', 'var'].includes(this.peek().value)) {
+      // Standard JS Loop
+      isNaked = false;
+      initializer = parseExpression(); // Für den Prototyp als Expression abgefangen
+    } else {
+      // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
+      initializer = parseExpression();
+    }
+
+    this.consume(TokenType.RPAREN, "Erwarte ')' nach Schleifenkopf.");
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor Schleifenkörper.");
+    const bodyStatements = [];
+    while (!isToken('RBRACE') && !isEOF()) {
+      bodyStatements.push(parseStatement());
+    }
+    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende der Schleife.");
+
+    return nodes.createForStatement(initializer, isNaked, nodes.createBlock(bodyStatements));
+}
+
+function parseStatement () {
+  if (isToken('KEYWORD')) {
+    switch (peek().value) {
+      case 'sift'  : return parseSiftStatement();
+      case 'mold'  : return parseMoldStatement();
+      case 'trait' : return parseTraitDeclaration();
+      case 'fn'    : return parseFunctionDeclaration();
+      case 'for'   : return parseForStatement();
+    }
+  }
+  return parseExpressionStatement();
+}
+
+// trait Name { ... }
+function parseTraitDeclaration () {
+  advance(); // 'trait'
+  const nameToken = consumeToken('IDENTIFIER', "Erwarte Name des Traits.");
+  consumeToken('LBRACE', "Erwarte '{' vor Trait-Inhalt.");
+    
+  const bodyStatements = [];
+  while (!isToken('RBRACE') && !isEOF()) {
+    bodyStatements.push(parseStatement());
+  }
+    
+  this.consumeToken('RBRACE', "Erwarte '}' nach Trait-Inhalt.");
+  return nodes.createTraitDeclaration(nameToken.value, nodes.createBlock(bodyStatements));
+}
+
+function parseTraitUse () { // Expression 'use' TraitName
+    let expr = parseRange();
+    if (isToken('KEYWORD', 'use')) {
+      advance(); // 'use'
+      const traitName = consumeTokem('IDENTIFIER', "Erwarte Trait-Name nach 'use'.").value;
+      expr = nodes.createTraitUseExpression(expr, traitName);
+    }
+    return expr;
+  }
+
+  
+function parseRange() { // From '..' To
+  let expr = parsePrimary();
+  if (matchToken('OPERATOR', '..')) {
+    const toExpr = parsePrimary();
+    return nodes.createRangeExpression(expr, toExpr);
+  }
+  return expr;
+}
+
+// sift { init: ..., cond: ... }
+parseSiftStatement () {
+  advance(); // 'sift'
+  consumeToken('LBRACE', "Erwarte '{' nach 'sift'.");
+
+  let init = null, cases = [], catchBlock = null, finallyBlock = null;
+
+  while (!isToken('RBRACE') && !isEOF()) {
+    const keyToken = advance();
+    consumeToken('COLON', "Erwarte ':' nach Kaskaden-Bedingung.");
+    const action = parseActionBlock();
+
+         if (keyToken.value === 'init')                  init = action;
+    else if (keyToken.value === 'finally')       finallyBlock = action;
+    else if (keyToken.value.startsWith('catch'))   catchBlock = action;
+    else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
+  }
+
+  consumeToken('RBRACE', "Erwarte '}' am Ende des sift-Blocks.");
+  return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
+  return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
+}
+
+// ::: EXPORT PARSER OBJECT
+
+export default Parser = function (tokens) {
+  
+};
+
 export default class Parser {
   constructor(tokens) {
     this.tokens = tokens;
     this.current = 0;
-  }
-
-  // ==========================================
-  // NAVIGATION & TOKENS KONSUMIEREN
-  // ==========================================
-
-  peek     () { return this.tokens[this.current]; }
-  previous () { return this.tokens[this.current - 1]; }
-  isAtEnd  () { return this.peek().type === TokenType.EOF; }
-
-  
-
-  // ==========================================
-  // HAUPT-EINSTIEGSPUNKTE
-  // ==========================================
-
-  parse() {
-    const statements = [];
-    while (!this.isAtEnd()) {
-      statements.push(this.parseStatement());
-    }
-    return nodes.createProgram(statements);
-  }
-
-  parseStatement() {
-    if (this.check(TokenType.KEYWORD)) {
-      switch (this.peek().value) {
-        case 'sift'  : return this.parseSiftStatement();
-        case 'mold'  : return this.parseMoldStatement();
-        case 'trait' : return this.parseTraitDeclaration();
-        case 'fn'    : return this.parseFunctionDeclaration();
-        case 'for'   : return this.parseForStatement();
-      }
-    }
-    return this.parseExpressionStatement();
-  }
-
-  // ==========================================
-  // RATSCRIPT SPEZIFISCHE STRUKTUREN
-  // ==========================================
-
-  // sift { init: ..., cond: ... }
-  parseSiftStatement() {
-    this.advance(); // 'sift'
-    this.consume(TokenType.LBRACE, "Erwarte '{' nach 'sift'.");
-
-    let init = null, cases = [], catchBlock = null, finallyBlock = null;
-
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      const keyToken = this.advance();
-      this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
-      const action = this.parseActionBlock();
-
-           if (keyToken.value === 'init')                  init = action;
-      else if (keyToken.value === 'finally')       finallyBlock = action;
-      else if (keyToken.value.startsWith('catch'))   catchBlock = action;
-      else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
-    }
-
-    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des sift-Blocks.");
-    return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
-    return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
   }
 
   // mold(target) { init: ..., cond: ... }
@@ -140,20 +226,7 @@ export default class Parser {
     return nodes.createMoldStatement(targetExpr, init, cases, catchBlock, finallyBlock);
   }
 
-  // trait Name { ... }
-  parseTraitDeclaration() {
-    this.advance(); // 'trait'
-    const nameToken = this.consume(TokenType.IDENTIFIER, "Erwarte Name des Traits.");
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor Trait-Inhalt.");
-    
-    const bodyStatements = [];
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      bodyStatements.push(this.parseStatement());
-    }
-    
-    this.consume(TokenType.RBRACE, "Erwarte '}' nach Trait-Inhalt.");
-    return nodes.createTraitDeclaration(nameToken.value, nodes.createBlock(bodyStatements));
-  }
+  
 
   // fn name(args) use Trait { ... }
   parseFunctionDeclaration() {
@@ -187,91 +260,19 @@ export default class Parser {
   }
 
   // for (1..10) ODER for (let x of items)
-  parseForStatement() {
-    this.advance(); // 'for'
-    this.consume(TokenType.LPAREN, "Erwarte '(' nach 'for'.");
+  
 
-    let initializer = null;
-    let isNaked     = true;
-
-    // Erkennung ob Standard-Loop oder Naked-Loop
-    if (this.check(TokenType.KEYWORD) && ['let', 'const', 'var'].includes(this.peek().value)) {
-      // Standard JS Loop
-      isNaked = false;
-      initializer = this.parseExpression(); // Für den Prototyp als Expression abgefangen
-    } else {
-      // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
-      initializer = this.parseExpression();
-    }
-
-    this.consume(TokenType.RPAREN, "Erwarte ')' nach Schleifenkopf.");
-    
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor Schleifenkörper.");
-    const bodyStatements = [];
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      bodyStatements.push(this.parseStatement());
-    }
-    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende der Schleife.");
-
-    return nodes.createForStatement(initializer, isNaked, nodes.createBlock(bodyStatements));
-  }
-
-  // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
-  parseActionBlock() {
-    if (this.match(TokenType.LBRACE)) {
-      const statements = [];
-      while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-        statements.push(this.parseStatement());
-      }
-      this.consume(TokenType.RBRACE, "Erwarte '}' nach Aktionsblock.");
-      return nodes.createBlock(statements);
-    }
-    return nodes.createBlock([this.parseStatement()]);
-  }
+  
 
   // ==========================================
   // AUSDRÜCKE & OPERATOREN (Expression Tree)
   // ==========================================
 
-  parseExpressionStatement() {
-    const expr = this.parseExpression();
-    this.match(TokenType.SEMICOLON); // optionales Semikolon schlucken
-    return nodes.createExpressionStatement(expr);
-  }
 
-  parseExpression() {
-    return this.parseAssignment();
-  }
+  
 
-  parseAssignment() {
-    const expr = this.parseTraitUse();
-    if (this.match(TokenType.ASSIGN)) {
-      const value = this.parseAssignment();
-      return { type: 'AssignmentExpression', left: expr, right: value };
-    }
-    return expr;
-  }
 
-  // Expression 'use' TraitName
-  parseTraitUse() {
-    let expr = this.parseRange();
-    if (this.check(TokenType.KEYWORD) && this.peek().value === 'use') {
-      this.advance(); // 'use'
-      const traitName = this.consume(TokenType.IDENTIFIER, "Erwarte Trait-Name nach 'use'.").value;
-      expr = nodes.createTraitUseExpression(expr, traitName);
-    }
-    return expr;
-  }
-
-  // From '..' To
-  parseRange() {
-    let expr = this.parsePrimary();
-    if (this.match(TokenType.RANGE)) {
-      const toExpr = this.parsePrimary();
-      return nodes.createRangeExpression(expr, toExpr);
-    }
-    return expr;
-  }
+  
 
   // Basis-Bausteine (Identifiers, Literals, Funktionsaufrufe)
   parsePrimary() {
