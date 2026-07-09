@@ -72,7 +72,7 @@ function matchToken (typeOrValue, maybeValue) {
 
 function parse() {
   const statements = [];
-  while (!isEOF()) statements.push(this.parseStatement());
+  while (!isEOF()) statements.push(parseStatement());
   return nodes.createProgram(statements);
 }
 
@@ -97,14 +97,14 @@ function parseAssignment () {
   return expr;
 }
 
+function parseExpression () {
+  return parseAssignment();
+}
+
 function parseExpressionStatement () {
   const expr = parseExpression();
   matchToken(':'); // optionales Semikolon schlucken
   return nodes.createExpressionStatement(expr);
-}
-
-function parseExpression () {
-  return parseAssignment();
 }
 
 function parseForStatement () {
@@ -207,22 +207,22 @@ function parseFunctionDeclaration () {
 function parseTraitDeclaration () {
   advance(); // 'trait'
   const nameToken = consumeToken('IDENTIFIER', "Erwarte Name des Traits.");
-  consumeToken('LBRACE', "Erwarte '{' vor Trait-Inhalt.");
+  consumeToken('{');
     
   const bodyStatements = [];
-  while (!isToken('RBRACE') && !isEOF()) {
+  while (!isToken('}') && !isEOF()) {
     bodyStatements.push(parseStatement());
   }
     
-  this.consumeToken('RBRACE', "Erwarte '}' nach Trait-Inhalt.");
+  consumeToken('}');
   return nodes.createTraitDeclaration(nameToken.value, nodes.createBlock(bodyStatements));
 }
 
 function parseTraitUse () { // Expression 'use' TraitName
     let expr = parseRange();
-    if (isToken('KEYWORD', 'use')) {
+    if (isToken('use')) {
       advance(); // 'use'
-      const traitName = consumeTokem('IDENTIFIER', "Erwarte Trait-Name nach 'use'.").value;
+      const traitName = consumeToken('IDENTIFIER', "Erwarte Trait-Name nach 'use'.").value;
       expr = nodes.createTraitUseExpression(expr, traitName);
     }
     return expr;
@@ -231,7 +231,7 @@ function parseTraitUse () { // Expression 'use' TraitName
   
 function parseRange() { // From '..' To
   let expr = parsePrimary();
-  if (matchToken('OPERATOR', '..')) {
+  if (matchToken('..')) {
     const toExpr = parsePrimary();
     return nodes.createRangeExpression(expr, toExpr);
   }
@@ -250,14 +250,14 @@ function parsePrimary () {
       
     // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
     while (true) {
-      if (matchToken('PUNCT','(')) {
+      if (matchToken('(')) {
         const args = [];
-        if (!isToken('PUNCT',')')) {
+        if (!isToken(')')) {
             do {
               args.push(parseExpression());
-            } while (matchToken('PUNCT', ':')); // einfaches Argument-Splitting
+            } while (matchToken(':')); // einfaches Argument-Splitting
           }
-          this.consume('PUNCT', ')', "Erwarte ')' nach Argumenten.");
+          consumeToken(')');
           expr = nodes.createCallExpression(expr, args);
         } 
         else break;
@@ -272,13 +272,13 @@ function parsePrimary () {
 // sift { init: ..., cond: ... }
 parseSiftStatement () {
   advance(); // 'sift'
-  consumeToken('PUNCT', '{', "Erwarte '{' nach 'sift'.");
+  consumeToken('{');
 
   let init = null, cases = [], catchBlock = null, finallyBlock = null;
 
-  while (!isToken('PUNCT','}') && !isEOF()) {
+  while (!isToken('}') && !isEOF()) {
     const keyToken = advance();
-    consumeToken('PUNCT', ':', "Erwarte ':' nach Kaskaden-Bedingung.");
+    consumeToken(':');
     const action = parseActionBlock();
 
          if (keyToken.value === 'init')                  init = action;
@@ -287,7 +287,7 @@ parseSiftStatement () {
     else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
   }
 
-  consumeToken('PUNCT', '}', "Erwarte '}' am Ende des sift-Blocks.");
+  consumeToken('}');
   return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
   return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
 }
@@ -295,57 +295,7 @@ parseSiftStatement () {
 // ::: EXPORT PARSER OBJECT
 
 export default Parser = function (tokens) {
-  
+  consumeToken,
+  isToken,
+  matchToken,
 };
-
-export default class Parser {
-  constructor(tokens) {
-    this.tokens = tokens;
-    this.current = 0;
-  }
-
-  // old
-  advance () {
-    if (!this.isAtEnd()) this.current++;
-    return this.previous();
-  }
-  check (type) {
-    if (this.isAtEnd()) return false;
-    return this.peek().type === type;
-  }
-  consume (type, message) {
-    if (this.check(type)) return this.advance();
-    const token = this.peek();
-    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
-  }
-  match (...types) {
-    for (const type of types) {
-      if (this.check(type)) {
-        this.advance();
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // new
-  consumeToken (type, value, message) {
-    if (this.isToken(type, value)) return this.advance();
-    const token = this.peek();
-    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
-  }
-  isToken (type, value) {
-    const token = this.peek();
-    if (token.type !== type) return false;
-    if (value !== undefined && token.value !== value) return false;
-    return true;
-  }
-  matchToken (type, value) {
-    if (this.isToken(type, value)) {
-      this.advance();
-      return true;
-    }
-    return false;
-  }
-  
-}
