@@ -4,13 +4,13 @@ import transform__alias              from './syntax/alias.js';
 import transform__assignment_sugar   from './syntax/assignment_sugar.js';
 import transform__cond               from './syntax/cond.js';
 import transform__guard              from './syntax/guard.js';
+import transform__fn                 from './syntax/fn.js';
 import transform__import_statement   from './syntax/import_statement.js';
 import transform__inc                from './syntax/inc.js';
 import transform__is                 from './syntax/is.js';
 import transform__jsx                from './syntax/jsx.js';
 import transform__match              from './syntax/match.js';
 import transform__multiline_strings  from './syntax/multiline_strings.js';
-import transform__named_arguments    from './syntax/named_arguments.js';
 import transform__pipe_operator      from './syntax/pipe_operator.js';
 import transform__prototype_accessor from './syntax/prototype_accessor.js';
 import transform__signals            from './syntax/signals.js';
@@ -22,6 +22,7 @@ export function compile (code) {
   
   // transformations
   code = transform__import_statement   (code);
+  code = transform__fn                 (code);
   code = transform__try_catch          (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
@@ -31,7 +32,6 @@ export function compile (code) {
   code = transform__is                 (code);
   code = transform__cond               (code);
   code = transform__types              (code); // enum, struct, #(...), #[...]
-  code = transform__named_arguments    (code);
   code = transform__switch             (code);
   code = transform__match              (code);
   code = transform__guard              (code);
