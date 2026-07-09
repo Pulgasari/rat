@@ -1,9 +1,31 @@
 // @ratscript/compiler/lexer.js
 
+// :::::: IMPORTS
+
 import { TokenType: Token } from './utils.js';
 import { keywords }         from './meta.js';
 
+// :::::: HELPERS
+
 const isKeyword = value => keywords.includes(value);
+
+// :::::: LEXER RULES
+
+const OPERATOR_RULES = OPERATORS.map(op => ({
+  type: TokenType.OPERATOR,
+  regex: new RegExp(op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'y')
+}));
+
+const PUNCT_RULES = [
+  { type: TokenType.PUNCT, value: '{', regex: /\{/y },
+  { type: TokenType.PUNCT, value: '}', regex: /\}/y },
+  { type: TokenType.PUNCT, value: '(', regex: /\(/y },
+  { type: TokenType.PUNCT, value: ')', regex: /\)/y },
+  { type: TokenType.PUNCT, value: '[', regex: /\[/y },
+  { type: TokenType.PUNCT, value: ']', regex: /\]/y },
+  { type: TokenType.PUNCT, value: ',', regex: /,/y },
+  { type: TokenType.PUNCT, value: ';', regex: /;/y },
+];
 
 const RULES = [
   { type: TokenType.RANGE     , regex: /\.\./y },
@@ -78,8 +100,8 @@ export function Lexer (source) {
 
   return {
     tokenize,
-    get line   () { return line; },
     get column () { return column; },
     get cursor () { return cursor; },
+    get line   () { return line; },
   };
 }
