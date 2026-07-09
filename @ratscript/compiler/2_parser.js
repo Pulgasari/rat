@@ -2,8 +2,8 @@ s// @ratscript/compiler/parser.js
 
 // :::::: IMPORTS
 
-import { TokenType } from './meta.js';
-import * as nodes    from './nodes.js';
+import { keywords, operators, puncts, TokenType } from './meta.js';
+import * as nodes from './nodes.js';
 
 // :::::: HELPERS
 
@@ -15,6 +15,15 @@ export function createNode (type, properties = {}) {
 }
 
 // :::::: THE PARSER
+
+// ::: TokenMap
+
+const TOKEN_MAP = new Map();
+for (const value of keywords) TOKEN_MAP.set(value, { value, type: TokenType.KEYWORD });
+for (const value of puncts)   TOKEN_MAP.set(value, { value, type: TokenType.PUNCT   });
+for (const value of Object.keys(operators)) {
+  TOKEN_MAP.set(value, { type: TokenType.OPERATOR, value });
+}
 
 // ::: State
 
