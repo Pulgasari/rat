@@ -1,5 +1,12 @@
 // @ratscript/compiler/parser/parser.js
 
+export function createNode (type, properties = {}) {
+  return {
+    type,
+    ...properties
+  };
+}
+
 // packages/compiler/src/parser/parser.js
 import { TokenType } from '../lexer/token.js';
 import * as nodes from './nodes.js';
@@ -14,19 +21,11 @@ export class Parser {
   // NAVIGATION & TOKENS KONSUMIEREN
   // ==========================================
 
-  peek() {
-    return this.tokens[this.current];
-  }
+  peek     () { return this.tokens[this.current]; }
+  previous () { return this.tokens[this.current - 1]; }
+  isAtEnd  () { return this.peek().type === TokenType.EOF; }
 
-  previous() {
-    return this.tokens[this.current - 1];
-  }
-
-  isAtEnd() {
-    return this.peek().type === TokenType.EOF;
-  }
-
-  check(type) {
+  check (type) {
     if (this.isAtEnd()) return false;
     return this.peek().type === type;
   }
@@ -103,6 +102,7 @@ export class Parser {
 
     this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des sift-Blocks.");
     return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
+    return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
   }
 
   // mold(target) { init: ..., cond: ... }
