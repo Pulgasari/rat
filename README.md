@@ -238,6 +238,20 @@ proxy fn guardedMethod for method {
 }
 ```
 
+```javascript
+mixin Sth {
+  irgendwas = 1;
+
+  fn doSomething () { ... }
+}
+```
+
+```
+const sth = ...;
+final sth = ...;
+fixed sth = ...;
+```
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
