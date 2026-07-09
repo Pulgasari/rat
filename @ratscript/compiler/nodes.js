@@ -1,34 +1,60 @@
 // @ratscript/compiler/parser/nodes.js
 
+export const
+
+// :::::: DECLARATIONS
+
+FunctionDeclaration = {
+  type: 'FunctionDeclaration',
+  args: {
+    name   : {},
+    params : {},
+    traits : {},
+    body   : {},
+  }
+},
+ 
+TraitDeclaration = {
+  type: 'TraitDeclaration',
+  args: {
+    name : {},
+    body : {},
+  }
+},
+ 
+// :::::: STATEMENTS
+  
+BlockStatement = {
+  type: 'BlockStatement',
+  args: { body: { required: true } }
+},
+
+MoldStatement = {
+  type: 'MoldStatement',
+  args: {
+    target: { required: true },
+    init: { default: null },
+    cases: { required: true },
+    catchBlock: { default: null },
+    finallyBlock: { default: null }
+  }
+},
+
+Program: {
+  type: 'Program',
+  args: { body: { required: true } }
+},
+
+
+
+
+
+
 export function createNode (type, properties = {}) {
   return {
     type,
     ...properties
   };
-}
-
-const BlockStatement = {
-  type: 'BlockStatement',
-  args: ['body'],
-}
-const MoldStatement = {
-  type: 'MoldStatement',
-  args: ['target', 'init', 'cases', 'catchBlock', 'finallyBlock'],
-}
-
-export function createBlock(statements) {
-  return { type: 'BlockStatement', body: statements };
-}
-export function createMoldStatement(target, init, cases, catchBlock, finallyBlock) {
-  return { type: 'MoldStatement', target, init, cases, catchBlock, finallyBlock };
-}
-
-export function createProgram(body) {
-  return { type: 'Program', body };
-}
-
-export function createBlock(statements) {
-  return { type: 'BlockStatement', body: statements };
 }
 
 export function createSiftStatement(init, cases, catchBlock, finallyBlock) {
@@ -40,7 +66,7 @@ export function createMoldStatement(target, init, cases, catchBlock, finallyBloc
 }
 
 export function createTraitDeclaration(name, body) {
-  return { type: 'TraitDeclaration', name, body };
+  
 }
 
 export function createFunctionDeclaration(name, params, traits, body) {
