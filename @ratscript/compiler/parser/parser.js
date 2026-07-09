@@ -1,46 +1,59 @@
 // @ratscript/compiler/parser/parser.js
 
+// packages/compiler/src/parser/parser.js
 import { TokenType } from '../lexer/token.js';
+import * as nodes from './nodes.js';
 
 export class Parser {
   constructor(tokens) {
     this.tokens = tokens;
-    this.current = 0; // Zeigt auf das Token, das wir gerade prüfen
+    this.current = 0;
   }
 
   // ==========================================
-  // NAVIGATION-HELPER (Die Standard-Werkzeuge)
+  // NAVIGATION & TOKENS KONSUMIEREN
   // ==========================================
-  
+
   peek() {
     return this.tokens[this.current];
+  }
+
+  previous() {
+    return this.tokens[this.current - 1];
   }
 
   isAtEnd() {
     return this.peek().type === TokenType.EOF;
   }
 
-  // Schaut, ob das aktuelle Token einen bestimmten Typ hat, ohne es zu verbrauchen
   check(type) {
     if (this.isAtEnd()) return false;
     return this.peek().type === type;
   }
 
-  // Geht ein Token weiter und gibt das vorherige zurück
   advance() {
     if (!this.isAtEnd()) this.current++;
-    return this.tokens[this.current - 1];
+    return this.previous();
   }
 
-  // Verlangt ein bestimmtes Token. Wenn es nicht da ist -> Knallt es mit Zeilenangabe!
-  consume(type, errorMessage) {
+  match(...types) {
+    for (const type of types) {
+      if (this.check(type)) {
+        this.advance();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  consume(type, message) {
     if (this.check(type)) return this.advance();
     const token = this.peek();
-    throw new SyntaxError(`[Parser-Fehler ${token.line}:${token.column}]: ${errorMessage} (Gefunden: '${token.value}')`);
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
   }
 
   // ==========================================
-  // GRAMMATIK-REGELN (Das eigentliche Parsen)
+  // HAUPT-EINSTIEGSPUNKTE
   // ==========================================
 
   parse() {
@@ -48,85 +61,241 @@ export class Parser {
     while (!this.isAtEnd()) {
       statements.push(this.parseStatement());
     }
-    return { type: 'Program', body: statements };
+    return nodes.createProgram(statements);
   }
 
   parseStatement() {
-    const token = this.peek();
-
-    // Wenn der Parser das Keyword 'sift' sieht, verzweigt er in die Sift-Regel
-    if (token.type === TokenType.KEYWORD && token.value === 'sift') {
-      return this.parseSiftStatement();
+    if (this.check(TokenType.KEYWORD)) {
+      switch (this.peek().value) {
+        case 'sift':  return this.parseSiftStatement();
+        case 'mold':  return this.parseMoldStatement();
+        case 'trait': return this.parseTraitDeclaration();
+        case 'fn':    return this.parseFunctionDeclaration();
+        case 'for':   return this.parseForStatement();
+      }
     }
-
-    // Fallback: Für diesen Prototyp fangen wir unbekannte Zeilen einfach als "Expression" ab
     return this.parseExpressionStatement();
   }
 
+  // ==========================================
+  // RATSCRIPT SPEZIFISCHE STRUKTUREN
+  // ==========================================
+
+  // sift { init: ..., cond: ... }
   parseSiftStatement() {
-    this.advance(); // Verbraucht das 'sift' Keyword
+    this.advance(); // 'sift'
     this.consume(TokenType.LBRACE, "Erwarte '{' nach 'sift'.");
 
-    const node = {
-      type: 'SiftStatement',
-      init: null,
-      cases: [],
-      catchBlock: null,
-      finallyBlock: null
-    };
+    let init = null, cases = [], catchBlock = null, finallyBlock = null;
 
-    // Wir loopen durch den Inhalt des sift-Blocks bis zur schließenden Schleife '}'
     while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      
-      // 1. Wir parsen die linke Seite (Bedingung oder Lebenszyklus-Key)
-      let keyToken = this.advance();
-      
-      // Doppelpunkt ':' erwarten
-      this.consume(TokenType.COLON, "Erwarte ':' nach der Bedingung im sift-Block.");
+      const keyToken = this.advance();
+      this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
+      const action = this.parseActionBlock();
 
-      // 2. Wir parsen die rechte Seite (Die Aktion)
-      // Für den Prototyp erlauben wir hier entweder einen Block { } oder eine einzelne Zeile
-      let actionNode = this.parseAction();
-
-      // 3. Den Ast an die richtige Stelle im SiftNode hängen
-      if (keyToken.value === 'init') {
-        node.init = actionNode;
-      } else if (keyToken.value === 'finally') {
-        node.finallyBlock = actionNode;
-      } else if (keyToken.value.startsWith('catch')) {
-        node.catchBlock = actionNode; // Hier könnte man später noch den Fehler-Parameter parsen
-      } else {
-        // Eine ganz normale Bedingung
-        node.cases.push({
-          condition: { type: 'Identifier', value: keyToken.value },
-          body: actionNode
-        });
+      if (keyToken.value === 'init') init = action;
+      else if (keyToken.value === 'finally') finallyBlock = action;
+      else if (keyToken.value.startsWith('catch')) catchBlock = action;
+      else {
+        cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
       }
     }
 
     this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des sift-Blocks.");
-    return node;
+    return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
   }
 
-  parseAction() {
-    if (this.check(TokenType.LBRACE)) {
-      this.advance(); // {
+  // mold(target) { init: ..., cond: ... }
+  parseMoldStatement() {
+    this.advance(); // 'mold'
+    this.consume(TokenType.LPAREN, "Erwarte '(' nach 'mold'.");
+    const targetExpr = this.parseExpression();
+    this.consume(TokenType.RPAREN, "Erwarte ')' nach mold-Zielwert.");
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor mold-Körper.");
+
+    let init = null, cases = [], catchBlock = null, finallyBlock = null;
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      const keyToken = this.advance();
+      this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
+      const action = this.parseActionBlock();
+
+      if (keyToken.value === 'init') init = action;
+      else if (keyToken.value === 'finally') finallyBlock = action;
+      else if (keyToken.value.startsWith('catch')) catchBlock = action;
+      else {
+        cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
+      }
+    }
+
+    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des mold-Blocks.");
+    return nodes.createMoldStatement(targetExpr, init, cases, catchBlock, finallyBlock);
+  }
+
+  // trait Name { ... }
+  parseTraitDeclaration() {
+    this.advance(); // 'trait'
+    const nameToken = this.consume(TokenType.IDENTIFIER, "Erwarte Name des Traits.");
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor Trait-Inhalt.");
+    
+    const bodyStatements = [];
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      bodyStatements.push(this.parseStatement());
+    }
+    
+    this.consume(TokenType.RBRACE, "Erwarte '}' nach Trait-Inhalt.");
+    return nodes.createTraitDeclaration(nameToken.value, nodes.createBlock(bodyStatements));
+  }
+
+  // fn name(args) use Trait { ... }
+  parseFunctionDeclaration() {
+    this.advance(); // 'fn'
+    const nameToken = this.consume(TokenType.IDENTIFIER, "Erwarte Funktionsnamen.");
+    
+    this.consume(TokenType.LPAREN, "Erwarte '(' nach Funktionsnamen.");
+    const params = [];
+    if (!this.check(TokenType.RPAREN)) {
+      do {
+        params.push(this.consume(TokenType.IDENTIFIER, "Erwarte Parametername.").value);
+      } while (this.match(TokenType.COLON)); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
+    }
+    this.consume(TokenType.RPAREN, "Erwarte ')' nach Parameterliste.");
+
+    // Optionale Traits via 'use' abfangen
+    const traits = [];
+    if (this.check(TokenType.KEYWORD) && this.peek().value === 'use') {
+      this.advance(); // 'use'
+      traits.push(this.consume(TokenType.IDENTIFIER, "Erwarte Trait-Name nach 'use'.").value);
+    }
+
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor Funktionskörper.");
+    const bodyStatements = [];
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      bodyStatements.push(this.parseStatement());
+    }
+    this.consume(TokenType.RBRACE, "Erwarte '}' nach Funktionskörper.");
+
+    return nodes.createFunctionDeclaration(nameToken.value, params, traits, nodes.createBlock(bodyStatements));
+  }
+
+  // for (1..10) ODER for (let x of items)
+  parseForStatement() {
+    this.advance(); // 'for'
+    this.consume(TokenType.LPAREN, "Erwarte '(' nach 'for'.");
+
+    let initializer = null;
+    let isNaked = true;
+
+    // Erkennung ob Standard-Loop oder Naked-Loop
+    if (this.check(TokenType.KEYWORD) && ['let', 'const', 'var'].includes(this.peek().value)) {
+      // Standard JS Loop
+      isNaked = false;
+      initializer = this.parseExpression(); // Für den Prototyp als Expression abgefangen
+    } else {
+      // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
+      initializer = this.parseExpression();
+    }
+
+    this.consume(TokenType.RPAREN, "Erwarte ')' nach Schleifenkopf.");
+    
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor Schleifenkörper.");
+    const bodyStatements = [];
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      bodyStatements.push(this.parseStatement());
+    }
+    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende der Schleife.");
+
+    return nodes.createForStatement(initializer, isNaked, nodes.createBlock(bodyStatements));
+  }
+
+  // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
+  parseActionBlock() {
+    if (this.match(TokenType.LBRACE)) {
       const statements = [];
       while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
         statements.push(this.parseStatement());
       }
-      this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des Aktions-Blocks.");
-      return statements;
-    } else {
-      // Einzeiler
-      return [this.parseExpressionStatement()];
+      this.consume(TokenType.RBRACE, "Erwarte '}' nach Aktionsblock.");
+      return nodes.createBlock(statements);
     }
+    return nodes.createBlock([this.parseStatement()]);
   }
 
+  // ==========================================
+  // AUSDRÜCKE & OPERATOREN (Expression Tree)
+  // ==========================================
+
   parseExpressionStatement() {
-    // Extrem vereinfacht für diesen Testlauf: Nimmt einfach das Token als nackten Ausdruck
-    const token = this.advance();
-    if (this.check(TokenType.SEMICOLON)) this.advance(); // optionales Semikolon fressen
-    return { type: 'Expression', value: token.value };
+    const expr = this.parseExpression();
+    this.match(TokenType.SEMICOLON); // optionales Semikolon schlucken
+    return nodes.createExpressionStatement(expr);
   }
-                 }
+
+  parseExpression() {
+    return this.parseAssignment();
+  }
+
+  parseAssignment() {
+    const expr = this.parseTraitUse();
+    if (this.match(TokenType.ASSIGN)) {
+      const value = this.parseAssignment();
+      return { type: 'AssignmentExpression', left: expr, right: value };
+    }
+    return expr;
+  }
+
+  // Expression 'use' TraitName
+  parseTraitUse() {
+    let expr = this.parseRange();
+    if (this.check(TokenType.KEYWORD) && this.peek().value === 'use') {
+      this.advance(); // 'use'
+      const traitName = this.consume(TokenType.IDENTIFIER, "Erwarte Trait-Name nach 'use'.").value;
+      expr = nodes.createTraitUseExpression(expr, traitName);
+    }
+    return expr;
+  }
+
+  // From '..' To
+  parseRange() {
+    let expr = this.parsePrimary();
+    if (this.match(TokenType.RANGE)) {
+      const toExpr = this.parsePrimary();
+      return nodes.createRangeExpression(expr, toExpr);
+    }
+    return expr;
+  }
+
+  // Basis-Bausteine (Identifiers, Literals, Funktionsaufrufe)
+  parsePrimary() {
+    if (this.match(TokenType.NUMBER)) {
+      return nodes.createLiteral('NUMBER', this.previous().value);
+    }
+    if (this.match(TokenType.STRING)) {
+      return nodes.createLiteral('STRING', this.previous().value);
+    }
+    if (this.match(TokenType.IDENTIFIER)) {
+      let expr = nodes.createIdentifier(this.previous().value);
+      
+      // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
+      while (true) {
+        if (this.match(TokenType.LPAREN)) {
+          const args = [];
+          if (!this.check(TokenType.RPAREN)) {
+            do {
+              args.push(this.parseExpression());
+            } while (this.match(TokenType.COLON)); // einfaches Argument-Splitting
+          }
+          this.consume(TokenType.RPAREN, "Erwarte ')' nach Argumenten.");
+          expr = nodes.createCallExpression(expr, args);
+        } else {
+          break;
+        }
+      }
+      return expr;
+    }
+
+    const token = this.peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
+  }
+                          
+}
