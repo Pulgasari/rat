@@ -1,4 +1,4 @@
-// @ratscript/compiler/parser.js
+s// @ratscript/compiler/parser.js
 
 // :::::: IMPORTS
 
@@ -130,6 +130,64 @@ function parseStatement () {
   return parseExpressionStatement();
 }
 
+parseMoldStatement () { // mold(target) { init: ..., cond: ... }
+    this.advance(); // 'mold'
+    this.consume(TokenType.LPAREN, "Erwarte '(' nach 'mold'.");
+    const targetExpr = this.parseExpression();
+    this.consume(TokenType.RPAREN, "Erwarte ')' nach mold-Zielwert.");
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor mold-Körper.");
+
+    let init = null, cases = [], catchBlock = null, finallyBlock = null;
+
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      const keyToken = this.advance();
+      this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
+      const action = this.parseActionBlock();
+
+           if (keyToken.value === 'init')                  init = action;
+      else if (keyToken.value === 'finally')       finallyBlock = action;
+      else if (keyToken.value.startsWith('catch'))   catchBlock = action;
+      else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
+      
+    }
+
+    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des mold-Blocks.");
+    return nodes.createMoldStatement(targetExpr, init, cases, catchBlock, finallyBlock);
+  }
+
+  
+
+  // fn name(args) use Trait { ... }
+  parseFunctionDeclaration() {
+    this.advance(); // 'fn'
+    const nameToken = this.consume(TokenType.IDENTIFIER, "Erwarte Funktionsnamen.");
+    
+    this.consume(TokenType.LPAREN, "Erwarte '(' nach Funktionsnamen.");
+    const params = [];
+    if (!this.check(TokenType.RPAREN)) {
+      do {
+        params.push(this.consume(TokenType.IDENTIFIER, "Erwarte Parametername.").value);
+      } while (this.match(TokenType.COLON)); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
+    }
+    this.consume(TokenType.RPAREN, "Erwarte ')' nach Parameterliste.");
+
+    // Optionale Traits via 'use' abfangen
+    const traits = [];
+    if (this.check(TokenType.KEYWORD) && this.peek().value === 'use') {
+      this.advance(); // 'use'
+      traits.push(this.consume(TokenType.IDENTIFIER, "Erwarte Trait-Name nach 'use'.").value);
+    }
+
+    this.consume(TokenType.LBRACE, "Erwarte '{' vor Funktionskörper.");
+    const bodyStatements = [];
+    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+      bodyStatements.push(this.parseStatement());
+    }
+  this.consume(TokenType.RBRACE, "Erwarte '}' nach Funktionskörper.");
+
+  return nodes.createFunctionDeclaration(nameToken.value, params, traits, nodes.createBlock(bodyStatements));
+}
+
 // trait Name { ... }
 function parseTraitDeclaration () {
   advance(); // 'trait'
@@ -200,64 +258,8 @@ export default class Parser {
     this.current = 0;
   }
 
-  // mold(target) { init: ..., cond: ... }
-  parseMoldStatement() {
-    this.advance(); // 'mold'
-    this.consume(TokenType.LPAREN, "Erwarte '(' nach 'mold'.");
-    const targetExpr = this.parseExpression();
-    this.consume(TokenType.RPAREN, "Erwarte ')' nach mold-Zielwert.");
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor mold-Körper.");
-
-    let init = null, cases = [], catchBlock = null, finallyBlock = null;
-
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      const keyToken = this.advance();
-      this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
-      const action = this.parseActionBlock();
-
-           if (keyToken.value === 'init')                  init = action;
-      else if (keyToken.value === 'finally')       finallyBlock = action;
-      else if (keyToken.value.startsWith('catch'))   catchBlock = action;
-      else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
-      
-    }
-
-    this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des mold-Blocks.");
-    return nodes.createMoldStatement(targetExpr, init, cases, catchBlock, finallyBlock);
-  }
-
   
-
-  // fn name(args) use Trait { ... }
-  parseFunctionDeclaration() {
-    this.advance(); // 'fn'
-    const nameToken = this.consume(TokenType.IDENTIFIER, "Erwarte Funktionsnamen.");
-    
-    this.consume(TokenType.LPAREN, "Erwarte '(' nach Funktionsnamen.");
-    const params = [];
-    if (!this.check(TokenType.RPAREN)) {
-      do {
-        params.push(this.consume(TokenType.IDENTIFIER, "Erwarte Parametername.").value);
-      } while (this.match(TokenType.COLON)); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
-    }
-    this.consume(TokenType.RPAREN, "Erwarte ')' nach Parameterliste.");
-
-    // Optionale Traits via 'use' abfangen
-    const traits = [];
-    if (this.check(TokenType.KEYWORD) && this.peek().value === 'use') {
-      this.advance(); // 'use'
-      traits.push(this.consume(TokenType.IDENTIFIER, "Erwarte Trait-Name nach 'use'.").value);
-    }
-
-    this.consume(TokenType.LBRACE, "Erwarte '{' vor Funktionskörper.");
-    const bodyStatements = [];
-    while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
-      bodyStatements.push(this.parseStatement());
-    }
-    this.consume(TokenType.RBRACE, "Erwarte '}' nach Funktionskörper.");
-
-    return nodes.createFunctionDeclaration(nameToken.value, params, traits, nodes.createBlock(bodyStatements));
-  }
+  
 
   // for (1..10) ODER for (let x of items)
   
