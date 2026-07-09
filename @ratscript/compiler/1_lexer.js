@@ -1,33 +1,33 @@
-// @ratscript/compiler/lexer/lexer.js
+// @ratscript/compiler/lexer.js
 
 import { TokenType } from './token.js';
 import { keywords }  from './../meta.js';
 
 // Die Regeln für unseren Lexer von spezifisch nach allgemein
 const RULES = [
-  { regex: /\.\./y,            type: TokenType.RANGE },
-  { regex: /:/y,              type: TokenType.COLON },
-  { regex: /=/y,              type: TokenType.ASSIGN },
-  { regex: /\{/y,             type: TokenType.LBRACE },
-  { regex: /\}/y,             type: TokenType.RBRACE },
-  { regex: /\(/y,             type: TokenType.LPAREN },
-  { regex: /\)/y,             type: TokenType.RPAREN },
-  { regex: /;/y,              type: TokenType.SEMICOLON },
+  { type: TokenType.RANGE     , regex: /\.\./y },
+  { type: TokenType.COLON     , regex: /:/y    },
+  { type: TokenType.ASSIGN    , regex: /=/y    },
+  { type: TokenType.LBRACE    , regex: /\{/y   },
+  { type: TokenType.RBRACE    , regex: /\}/y   },
+  { type: TokenType.LPAREN    , regex: /\(/y   },
+  { type: TokenType.RPAREN    , regex: /\)/y   },
+  { type: TokenType.SEMICOLON , regex: /;/y    },
   
   // Literale (Strings & Zahlen)
-  { regex: /"(?:\\.|[^"\\])*"/y, type: TokenType.STRING },
-  { regex: /'(?:\\.|[^'\\])*'/y, type: TokenType.STRING },
-  { regex: /\d+/y,             type: TokenType.NUMBER },
+  { type: TokenType.STRING , regex: /"(?:\\.|[^"\\])*"/y },
+  { type: TokenType.STRING , regex: /'(?:\\.|[^'\\])*'/y },
+  { type: TokenType.NUMBER , regex: /\d+/y,              },
   
   // Identifiers (Variablen, Funktionen, Keywords)
   { regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/y, type: TokenType.IDENTIFIER }
 ];
 
 export class Lexer {
-  constructor(source) {
+  constructor (source) {
     this.source = source;
     this.cursor = 0;
-    this.line = 1;
+    this.line   = 1;
     this.column = 1;
   }
 
@@ -37,18 +37,9 @@ export class Lexer {
     while (this.cursor < this.source.length) {
       const char = this.source[this.cursor];
 
-      // 1. Whitespace & Zeilenumbrüche tracken und überspringen
-      if (char === '\n') {
-        this.line++;
-        this.column = 1;
-        this.cursor++;
-        continue;
-      }
-      if (/\s/.test(char)) {
-        this.cursor++;
-        this.column++;
-        continue;
-      }
+      // skip linebreaks + whitespaces
+      if (char === '\n') { this.column = 1; this.cursor++; this.line++; continue; }
+      if (/\s/.test(char)) { this.cursor++; this.column++; continue; }
 
       // 2. Kommentare überspringen (Single Line //)
       if (char === '/' && this.source[this.cursor + 1] === '/') {
