@@ -11,9 +11,9 @@ const isKeyword = value => keywords.includes(value);
 
 // :::::: LEXER RULES
 
-const OPERATOR_RULES = OPERATORS.map(op => ({
-  type: TokenType.OPERATOR,
-  regex: new RegExp(op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'y')
+const OPERATOR_RULES = operators.map(op => ({
+  type  : TokenType.OPERATOR,
+  regex : new RegExp(op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'y')
 }));
 
 const PUNCT_RULES = [
