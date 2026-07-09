@@ -123,4 +123,13 @@ export const runtimeHelpers = {
   '_proxy'  : { token: '_proxy',  from: './../runtime/index.js' }
 };
 
+export const TokenType = {
+  EOF        : 'EOF', // 'end of line'
+  IDENTIFIER : 'IDENTIFIER',
+  KEYWORD    : 'KEYWORD',
+  NUMBER     : 'NUMBER',
+  OPERATOR   : 'OPERATOR',
+  PUNCT      : 'PUNCT',
+  STRING     : 'STRING',
+};
 
