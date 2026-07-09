@@ -4,6 +4,7 @@
 - [Import Statements](#)
 - [Functions](#functions)
   - [Named Arguments](#named-arguments)
+- [Loops](#loops)
 - [Operators](#operators)
   - [Assignment Operator](#assignment-operator)
   - [Pipe Operator](#pipe-operator)
@@ -172,6 +173,34 @@ return if (hasError) do {
 };
 ```
 
+## Functions
+
+```javascript
+fn doSomething () {...}
+```
+
+### Named Arguments
+
+```javascript
+fn person (name, age) {
+  console.log(`${name} is ${age} years old.);
+}
+
+person('Max', 18);
+person(age: 60, name: 'Udo');
+```
+
+## Loops
+
+#### Naked Loops
+
+Use naked loops if you don't need an index but only want to loop x times.
+
+```javascript
+// loops 10 times
+for (1..10) {...}
+```
+
 ## Operators
 
 RatScript has the same operators as JavaScript but additionally it adds an [Pipe Operator](#pipe-operator) `|>` and improves the [Assignment Operator](#assignment-operator) `+=` to be more universal.
@@ -269,7 +298,7 @@ let lowers  = z..a;
 
 // usage in loops
 for (let x of 1..10) { ... }
-// use naked in loops
+// usage in naked loops
 for (1..10) { ... }
 ```
 
