@@ -15,12 +15,14 @@ import transform__pipe_operator      from './syntax/pipe_operator.js';
 import transform__prototype_accessor from './syntax/prototype_accessor.js';
 import transform__signals            from './syntax/signals.js';
 import transform__switch             from './syntax/switch.js';
+import transform__try_catch          from './syntax/try_catch.js';
 import transform__types              from './syntax/types.js';
 
 export function compile (code) {
   
   // transformations
   code = transform__import_statement   (code);
+  code = transform__try_catch          (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
   code = transform__alias              (code); // alias, as
