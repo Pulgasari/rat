@@ -7,6 +7,22 @@ export function createNode (type, properties = {}) {
   };
 }
 
+const BlockStatement = {
+  type: 'BlockStatement',
+  args: ['body'],
+}
+const MoldStatement = {
+  type: 'MoldStatement',
+  args: ['target', 'init', 'cases', 'catchBlock', 'finallyBlock'],
+}
+
+export function createBlock(statements) {
+  return { type: 'BlockStatement', body: statements };
+}
+export function createMoldStatement(target, init, cases, catchBlock, finallyBlock) {
+  return { type: 'MoldStatement', target, init, cases, catchBlock, finallyBlock };
+}
+
 export function createProgram(body) {
   return { type: 'Program', body };
 }
