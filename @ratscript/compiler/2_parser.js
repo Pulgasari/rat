@@ -82,12 +82,12 @@ function parse() {
 }
 
 function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
-  if (matchToken('LBRACE')) {
+  if (matchToken('{')) {
     const statements = [];
-    while (!isToken('RBRACE') && !isEOF()) {
+    while (!isToken('}') && !isEOF()) {
       statements.push(parseStatement());
     }
-    consumeToken('RBRACE', "Erwarte '}' nach Aktionsblock.");
+    consumeToken('PUNCT', '}', "Erwarte '}' nach Aktionsblock.");
     return nodes.createBlock(statements);
   }
   return nodes.createBlock([ parseStatement() ]);
@@ -95,7 +95,7 @@ function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt E
 
 function parseAssignment () {
   const expr = parseTraitUse();
-  if (matchToken('ASSIGN')) {
+  if (matchToken('=')) {
     const value = parseAssignment();
     return { type: 'AssignmentExpression', left: expr, right: value };
   }
@@ -104,7 +104,7 @@ function parseAssignment () {
 
 function parseExpressionStatement () {
   const expr = parseExpression();
-  matchToken('SEMICOLON'); // optionales Semikolon schlucken
+  matchToken(':'); // optionales Semikolon schlucken
   return nodes.createExpressionStatement(expr);
 }
 
@@ -132,7 +132,7 @@ function parseForStatement () {
     this.consume(TokenType.RPAREN, "Erwarte ')' nach Schleifenkopf.");
     this.consume(TokenType.LBRACE, "Erwarte '{' vor Schleifenkörper.");
     const bodyStatements = [];
-    while (!isToken('RBRACE') && !isEOF()) {
+    while (!isToken('}') && !isEOF()) {
       bodyStatements.push(parseStatement());
     }
     this.consume(TokenType.RBRACE, "Erwarte '}' am Ende der Schleife.");
@@ -155,7 +155,7 @@ function parseStatement () {
 
 parseMoldStatement () { // mold(target) { init: ..., cond: ... }
     this.advance(); // 'mold'
-    this.consume(TokenType.LPAREN, "Erwarte '(' nach 'mold'.");
+    consumeToken('PUNCT', '(', "Erwarte '(' nach 'mold'.");
     const targetExpr = this.parseExpression();
     this.consume(TokenType.RPAREN, "Erwarte ')' nach mold-Zielwert.");
     this.consume(TokenType.LBRACE, "Erwarte '{' vor mold-Körper.");
