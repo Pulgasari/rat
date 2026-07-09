@@ -100,19 +100,69 @@ export const literals = [
 ];
 
 export const operators = {
-  '=':   { precedence: 1,  associativity: 'right' },
-  '+=':  { precedence: 1,  associativity: 'right' },
-  '|>':  { precedence: 2,  associativity: 'left'  }, // Deine Pipe bindet relativ früh
-  '||':  { precedence: 4,  associativity: 'left'  },
-  '&&':  { precedence: 5,  associativity: 'left'  },
-  'is':  { precedence: 7,  associativity: 'left'  }, // RatScript 'is' verhält sich wie ein Vergleich
-  '===': { precedence: 7,  associativity: 'left'  },
-  '<':   { precedence: 8,  associativity: 'left'  },
-  '+':   { precedence: 12, associativity: 'left'  },
-  '-':   { precedence: 12, associativity: 'left'  },
-  '*':   { precedence: 13, associativity: 'left'  },
-  '/':   { precedence: 13, associativity: 'left'  },
-  'inc': { precedence: 15, associativity: 'right' }, // Inkrement bindet extrem stark
+  // assignment (lowest precedence)
+  '='    : { precedence: 1, associativity: 'right' },
+  '+='   : { precedence: 1, associativity: 'right' },
+  '-='   : { precedence: 1, associativity: 'right' },
+  '*='   : { precedence: 1, associativity: 'right' },
+  '/='   : { precedence: 1, associativity: 'right' },
+  '%='   : { precedence: 1, associativity: 'right' },
+  '<<='  : { precedence: 1, associativity: 'right' },
+  '>>='  : { precedence: 1, associativity: 'right' },
+  '>>>=' : { precedence: 1, associativity: 'right' },
+  '&='   : { precedence: 1, associativity: 'right' },
+  '^='   : { precedence: 1, associativity: 'right' },
+  '|='   : { precedence: 1, associativity: 'right' },
+
+  //
+  '|>' : { precedence: 2, associativity: 'left' }, // Pipe
+  '..' : { precedence: 7, associativity: 'left' }, // Range (wie Vergleich)
+
+  // logical OR
+  '||' : { precedence: 4, associativity: 'left' },
+
+  // logical AND
+  '&&' : { precedence: 5, associativity: 'left' },
+
+  // nullish
+  '??' : { precedence: 6, associativity: 'left' },
+
+  // equality
+  'is'  : { precedence: 7, associativity: 'left' }, // Dein Dialekt
+  '===' : { precedence: 7, associativity: 'left' },
+  '!==' : { precedence: 7, associativity: 'left' },
+  '=='  : { precedence: 7, associativity: 'left' },
+  '!='  : { precedence: 7, associativity: 'left' },
+
+  // relational
+  '<'          : { precedence: 8, associativity: 'left' },
+  '>'          : { precedence: 8, associativity: 'left' },
+  '<='         : { precedence: 8, associativity: 'left' },
+  '>='         : { precedence: 8, associativity: 'left' },
+  'in'         : { precedence: 8, associativity: 'left' },
+  'instanceof' : { precedence: 8, associativity: 'left' },
+
+  // bitwise shifts
+  '<<'  : { precedence: 9, associativity: 'left' },
+  '>>'  : { precedence: 9, associativity: 'left' },
+  '>>>' : { precedence: 9, associativity: 'left' },
+
+  // additive
+  '+' : { precedence: 12, associativity: 'left' },
+  '-' : { precedence: 12, associativity: 'left' },
+
+  // multiplicative
+  '*' : { precedence: 13, associativity: 'left' },
+  '/' : { precedence: 13, associativity: 'left' },
+  '%' : { precedence: 13, associativity: 'left' },
+
+  // unary (highest)
+  'inc'    : { precedence: 15, associativity: 'right' }, // Dein Dialekt
+  '!'      : { precedence: 15, associativity: 'right' },
+  '~'      : { precedence: 15, associativity: 'right' },
+  'typeof' : { precedence: 15, associativity: 'right' },
+  'void'   : { precedence: 15, associativity: 'right' },
+  'delete' : { precedence: 15, associativity: 'right' },
 };
 
 export const runtimeHelpers = {
