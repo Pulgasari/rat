@@ -1,32 +1,30 @@
 // @ratscript/compiler/syntax/try_catch.js
 
 /**
- * Transformiert die modernisierte RatScript try/catch-Syntax in natives JavaScript.
- * Erlaubt blocklose Einzeiler, klammerlose Catches und Standalone-Trys (Silent Fails).
+ * Transformiert die modernisierte RatScript try/catch/finally-Syntax in natives JavaScript.
+ * Erlaubt blocklose Einzeiler, klammerlose Catches, optionale Finallies und Standalone-Trys (Silent Fails).
  */
-export default function (code) {
+export default function transform__try_catch(code) {
   let pos = 0;
 
   while (true) {
-    // Finde das nächste freistehende 'try'
+    // 1. Finde das nächste freistehende 'try'
     const match = code.slice(pos).match(/\btry\b/);
     if (!match) break;
 
     const tryIndex = pos + match.index;
     let startOfBody = tryIndex + 3;
     
-    // Whitespace überspringen
     while (startOfBody < code.length && /\s/.test(code[startOfBody])) {
       startOfBody++;
     }
 
-    let tryBody  = '';
+    let tryBody = '';
     let isBraced = code[startOfBody] === '{';
     let endOfTry = startOfBody;
 
-    // 1. TRY-BODY ISOLIEREN
+    // TRY-BODY ISOLIEREN
     if (isBraced) {
-      // Klassischer Block { ... }: Klammer-Tiefe tracken
       let depth = 1;
       endOfTry++;
       while (endOfTry < code.length && depth > 0) {
@@ -36,15 +34,15 @@ export default function (code) {
       }
       tryBody = code.slice(startOfBody + 1, endOfTry - 1);
     } else {
-      // Modernes Inline-Statement: Lesen bis Semicolon, Newline oder dem 'catch'-Keyword
       let inlineEnd = startOfBody;
       while (inlineEnd < code.length) {
         if (code[inlineEnd] === ';' || code[inlineEnd] === '\n') {
           inlineEnd++;
           break;
         }
-        if (code.slice(inlineEnd).match(/^\bcatch\b/)) {
-          break; // Stop direkt vor dem catch-Keyword!
+        // Stop, falls direkt das nächste Keyword folgt
+        if (code.slice(inlineEnd).match(/^\bcatch\b/) || code.slice(inlineEnd).match(/^\bfinally\b/)) {
+          break;
         }
         inlineEnd++;
       }
@@ -54,33 +52,25 @@ export default function (code) {
     }
 
     // 2. NACH FOLGENDEM CATCH SUCHEN
-    let lookAhead = endOfTry;
-    while (lookAhead < code.length && /\s/.test(code[lookAhead])) {
-      lookAhead++;
-    }
+    let lookAheadCatch = endOfTry;
+    while (lookAheadCatch < code.length && /\s/.test(code[lookAheadCatch])) lookAheadCatch++;
 
-    const hasCatch = code.slice(lookAhead).match(/^\bcatch\b/);
+    const hasCatch = code.slice(lookAheadCatch).match(/^\bcatch\b/);
     let catchBody = '';
-    let catchVar  = '';
-    let totalEnd  = endOfTry;
+    let catchVar = '';
+    let endOfCatchChain = endOfTry;
 
     if (hasCatch) {
-      let startOfCatchBody = lookAhead + 5;
-      while (startOfCatchBody < code.length && /\s/.test(code[startOfCatchBody])) {
-        startOfCatchBody++;
-      }
+      let startOfCatchBody = lookAheadCatch + 5;
+      while (startOfCatchBody < code.length && /\s/.test(code[startOfCatchBody])) startOfCatchBody++;
 
-      // Prüfen, ob eine optionale Fehler-Variable existiert, z.B. (e)
       if (code[startOfCatchBody] === '(') {
         let closingParen = code.indexOf(')', startOfCatchBody);
         catchVar = code.slice(startOfCatchBody + 1, closingParen).trim();
         startOfCatchBody = closingParen + 1;
-        while (startOfCatchBody < code.length && /\s/.test(code[startOfCatchBody])) {
-          startOfCatchBody++;
-        }
+        while (startOfCatchBody < code.length && /\s/.test(code[startOfCatchBody])) startOfCatchBody++;
       }
 
-      // CATCH-BODY ISOLIEREN
       let isCatchBraced = code[startOfCatchBody] === '{';
       if (isCatchBraced) {
         let depth = 1;
@@ -91,27 +81,68 @@ export default function (code) {
           endOfCatch++;
         }
         catchBody = code.slice(startOfCatchBody + 1, endOfCatch - 1);
-        totalEnd = endOfCatch;
+        endOfCatchChain = endOfCatch;
       } else {
         let inlineCatchEnd = startOfCatchBody;
         while (inlineCatchEnd < code.length && code[inlineCatchEnd] !== ';' && code[inlineCatchEnd] !== '\n') {
+          if (code.slice(inlineCatchEnd).match(/^\bfinally\b/)) break; // Stop vorm finally!
           inlineCatchEnd++;
         }
         if (inlineCatchEnd < code.length && code[inlineCatchEnd] === ';') inlineCatchEnd++;
         catchBody = code.slice(startOfCatchBody, inlineCatchEnd).trim();
         if (!catchBody.endsWith(';')) catchBody += ';';
-        totalEnd = inlineCatchEnd;
+        endOfCatchChain = inlineCatchEnd;
       }
     }
 
-    // 3. NATIVEN TRY-CATCH-BLOCK REKONSTRUIEREN
-    let replacement = '';
+    // 3. NACH FOLGENDEM FINALLY SUCHEN
+    let lookAheadFinally = endOfCatchChain;
+    while (lookAheadFinally < code.length && /\s/.test(code[lookAheadFinally])) lookAheadFinally++;
+
+    const hasFinally = code.slice(lookAheadFinally).match(/^\bfinally\b/);
+    let finallyBody = '';
+    let totalEnd = endOfCatchChain;
+
+    if (hasFinally) {
+      let startOfFinallyBody = lookAheadFinally + 7;
+      while (startOfFinallyBody < code.length && /\s/.test(code[startOfFinallyBody])) startOfFinallyBody++;
+
+      let isFinallyBraced = code[startOfFinallyBody] === '{';
+      if (isFinallyBraced) {
+        let depth = 1;
+        let endOfFinally = startOfFinallyBody + 1;
+        while (endOfFinally < code.length && depth > 0) {
+          if (code[endOfFinally] === '{') depth++;
+          else if (code[endOfFinally] === '}') depth--;
+          endOfFinally++;
+        }
+        finallyBody = code.slice(startOfFinallyBody + 1, endOfFinally - 1);
+        totalEnd = endOfFinally;
+      } else {
+        let inlineFinallyEnd = startOfFinallyBody;
+        while (inlineFinallyEnd < code.length && code[inlineFinallyEnd] !== ';' && code[inlineFinallyEnd] !== '\n') {
+          inlineFinallyEnd++;
+        }
+        if (inlineFinallyEnd < code.length && code[inlineFinallyEnd] === ';') inlineFinallyEnd++;
+        finallyBody = code.slice(startOfFinallyBody, inlineFinallyEnd).trim();
+        if (!finallyBody.endsWith(';')) finallyBody += ';';
+        totalEnd = inlineFinallyEnd;
+      }
+    }
+
+    // 4. NATIVEN TRY-CATCH-FINALLY BLOCK REKONSTRUIEREN
+    let replacement = `try {\n  ${tryBody.trim()}\n}`;
+    
     if (hasCatch) {
       const errPart = catchVar ? `(${catchVar})` : '';
-      replacement = `try {\n  ${tryBody.trim()}\n} catch ${errPart} {\n  ${catchBody.trim()}\n}`;
-    } else {
-      // Wenn catch fehlt -> automatischer Silent Fail via nativem ES2019 Optional Catch Binding
-      replacement = `try {\n  ${tryBody.trim()}\n} catch {}`;
+      replacement += ` catch ${errPart} {\n  ${catchBody.trim()}\n}`;
+    } else if (!hasFinally) {
+      // Reines Standalone-Try -> Automatischer Silent Fail
+      replacement += ` catch {}`;
+    }
+    
+    if (hasFinally) {
+      replacement += ` finally {\n  ${finallyBody.trim()}\n}`;
     }
 
     code = code.slice(0, tryIndex) + replacement + code.slice(totalEnd);
@@ -119,4 +150,4 @@ export default function (code) {
   }
 
   return code;
-}
+      }
