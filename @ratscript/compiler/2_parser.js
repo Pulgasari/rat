@@ -25,31 +25,7 @@ export class Parser {
   previous () { return this.tokens[this.current - 1]; }
   isAtEnd  () { return this.peek().type === TokenType.EOF; }
 
-  check (type) {
-    if (this.isAtEnd()) return false;
-    return this.peek().type === type;
-  }
-
-  advance() {
-    if (!this.isAtEnd()) this.current++;
-    return this.previous();
-  }
-
-  match(...types) {
-    for (const type of types) {
-      if (this.check(type)) {
-        this.advance();
-        return true;
-      }
-    }
-    return false;
-  }
-
-  consume(type, message) {
-    if (this.check(type)) return this.advance();
-    const token = this.peek();
-    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
-  }
+  
 
   // ==========================================
   // HAUPT-EINSTIEGSPUNKTE
@@ -66,11 +42,11 @@ export class Parser {
   parseStatement() {
     if (this.check(TokenType.KEYWORD)) {
       switch (this.peek().value) {
-        case 'sift':  return this.parseSiftStatement();
-        case 'mold':  return this.parseMoldStatement();
-        case 'trait': return this.parseTraitDeclaration();
-        case 'fn':    return this.parseFunctionDeclaration();
-        case 'for':   return this.parseForStatement();
+        case 'sift'  : return this.parseSiftStatement();
+        case 'mold'  : return this.parseMoldStatement();
+        case 'trait' : return this.parseTraitDeclaration();
+        case 'fn'    : return this.parseFunctionDeclaration();
+        case 'for'   : return this.parseForStatement();
       }
     }
     return this.parseExpressionStatement();
@@ -92,12 +68,10 @@ export class Parser {
       this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
       const action = this.parseActionBlock();
 
-      if (keyToken.value === 'init') init = action;
-      else if (keyToken.value === 'finally') finallyBlock = action;
-      else if (keyToken.value.startsWith('catch')) catchBlock = action;
-      else {
-        cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
-      }
+           if (keyToken.value === 'init')                  init = action;
+      else if (keyToken.value === 'finally')       finallyBlock = action;
+      else if (keyToken.value.startsWith('catch'))   catchBlock = action;
+      else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
     }
 
     this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des sift-Blocks.");
@@ -120,12 +94,11 @@ export class Parser {
       this.consume(TokenType.COLON, "Erwarte ':' nach Kaskaden-Bedingung.");
       const action = this.parseActionBlock();
 
-      if (keyToken.value === 'init') init = action;
-      else if (keyToken.value === 'finally') finallyBlock = action;
-      else if (keyToken.value.startsWith('catch')) catchBlock = action;
-      else {
-        cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
-      }
+           if (keyToken.value === 'init')                  init = action;
+      else if (keyToken.value === 'finally')       finallyBlock = action;
+      else if (keyToken.value.startsWith('catch'))   catchBlock = action;
+      else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
+      
     }
 
     this.consume(TokenType.RBRACE, "Erwarte '}' am Ende des mold-Blocks.");
@@ -184,7 +157,7 @@ export class Parser {
     this.consume(TokenType.LPAREN, "Erwarte '(' nach 'for'.");
 
     let initializer = null;
-    let isNaked = true;
+    let isNaked     = true;
 
     // Erkennung ob Standard-Loop oder Naked-Loop
     if (this.check(TokenType.KEYWORD) && ['let', 'const', 'var'].includes(this.peek().value)) {
@@ -297,5 +270,49 @@ export class Parser {
     const token = this.peek();
     throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
   }
-                          
+
+  // old
+  advance () {
+    if (!this.isAtEnd()) this.current++;
+    return this.previous();
+  }
+  check (type) {
+    if (this.isAtEnd()) return false;
+    return this.peek().type === type;
+  }
+  consume (type, message) {
+    if (this.check(type)) return this.advance();
+    const token = this.peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
+  }
+  match (...types) {
+    for (const type of types) {
+      if (this.check(type)) {
+        this.advance();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // new
+  consumeToken (type, value, message) {
+    if (this.isToken(type, value)) return this.advance();
+    const token = this.peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
+  }
+  isToken (type, value) {
+    const token = this.peek();
+    if (token.type !== type) return false;
+    if (value !== undefined && token.value !== value) return false;
+    return true;
+  }
+  matchToken (type, value) {
+    if (this.isToken(type, value)) {
+      this.advance();
+      return true;
+    }
+    return false;
+  }
+  
 }
