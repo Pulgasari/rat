@@ -21,6 +21,7 @@
   - [List](#list)
   - [Record](#record)
   - [Struct](#struct)
+  - [Trait](#trait)
   - [Tuple](#tuple)
   - [Union](#union)
 - [JSX](#jsx)
@@ -524,6 +525,97 @@ For more informations about Lists read [here](#).
 ### Record
 
 ### Struct
+
+### Trait
+
+#### Traits on Classes
+
+```javascript
+// define trait
+trait Serializable {
+  toJson () {
+    return JSON.stringify(this);
+  }
+}
+
+// apply trait on class
+class User use Serializable {
+  constructor(name, role) {
+    this.name = name;
+    this.role = role;
+  }
+}
+
+//
+const admin = new User("Sandro", "Admin");
+
+// use method from applied trait
+console.log(admin.toJson()); 
+// Output: '{"name":"Sandro","role":"Admin"}'
+```
+
+#### Traits on Functions
+
+```javascript
+// define trait
+trait Trackable {
+  callCount: 0,
+  resetCounter () {
+    this.callCount = 0;
+    console.log("Counter was resetted.");
+  }
+}
+
+// apply trait on function
+fn sendReport (data) use Trackable {
+  // use methed from applied trait
+  sendReport.callCount++;
+  console.log(`Report fired by: ${data}`);
+}
+
+//
+sendReport("Umsatz Q1");
+sendReport("Umsatz Q2");
+
+// read property from applied trait
+console.log(sendReport.callCount); // Output: 2
+
+// call method from the applied trait
+sendReport.resetCounter(); // Output: "Counter was resetted."
+console.log(sendReport.callCount); // Output: 0
+```
+
+#### Traits on Objects
+
+```javascript
+// define trait
+trait Observable {
+  listeners: [],
+  on (event, callback) {
+    this.listeners.push({ event, callback });
+  },
+  emit (event, data) {
+    this.listeners
+      .filter(l => l.event === event)
+      .forEach(l => l.callback(data));
+  }
+}
+
+// apply trait on object
+let appConfig = {
+  theme: "dark",
+  sidebar: true
+} use Observable;
+
+// use method from applied trait
+appConfig.on("change", (key) => {
+  console.log(`Setting ${key} was updated!`);
+});
+
+// Event abfeuern
+appConfig.emit("change", "theme"); 
+// Output: "Einstellung theme wurde aktualisiert!"
+```
 
 ### Tuple
 
