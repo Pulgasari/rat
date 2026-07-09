@@ -13,6 +13,7 @@ import transform__match              from './syntax/match.js';
 import transform__multiline_strings  from './syntax/multiline_strings.js';
 import transform__pipe_operator      from './syntax/pipe_operator.js';
 import transform__prototype_accessor from './syntax/prototype_accessor.js';
+import transform__range              from './syntax/range.js';
 import transform__signals            from './syntax/signals.js';
 import transform__switch             from './syntax/switch.js';
 import transform__try_catch          from './syntax/try_catch.js';
@@ -23,6 +24,7 @@ export function compile (code) {
   // transformations
   code = transform__import_statement   (code);
   code = transform__fn                 (code);
+  code = transform__range              (code);
   code = transform__try_catch          (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
