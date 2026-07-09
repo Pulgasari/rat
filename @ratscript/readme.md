@@ -104,7 +104,7 @@ import from '@preact/signals' use { effect, signal };
 
 ---
 
-## `try` / `catch`
+## `try` / `catch` / `finally`
 
 Use `try` and `catch` with less boilerplate.
 
