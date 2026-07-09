@@ -243,6 +243,7 @@ proxy fn guardedMethod for method {
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
 
 - https://livescript.net
+- https://purescript.org
 - http://spiderlang.org
 
 - [JS-Functions :: the arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments)
