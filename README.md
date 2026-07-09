@@ -63,11 +63,6 @@ Vec3 Vector3
 ```
 
 ```javascript
-fn doSth = () => {... };
-fn doSth = async () => {... };
-```
-
-```javascript
 if (a) {...}
 if (b) {...}
 if (c) {...}
@@ -186,82 +181,9 @@ loop {
 }
 ```
 
-## try ... catch
-
-```javascript
-try { let book = await fetchBooks(); }
-catch throw new Error();
-```
-
-```javascript
-try {
-  ...
-}
-catch {
-  ...
-}
-```
-
-```javascript
-let animals = ['bird', 'cat', 'dog'];
-
-let isAnimal;
-if ('dog' in animals) isAnimal = true;
-if ('dog' in animals) isAnimal = false;
-
-let message = match ('dog' in animals) {
-	true  : 'dog is an animal',
-	false : 'dog is not an animal',
-};
-```
-
-```javascript
-let animals = ['bird', 'cat', 'dog'];
-
-let isAnimal;
-if ('dog' in animals) isAnimal = true;
-if ('dog' in animals) isAnimal = false;
-
-// compiles to
-if ( _in('dog', animals)) isAnimal = true;
-if ( _in('dog', animals)) isAnimal = false;
-
-// the runtime provides _in()
-function _in (needle, haystack) {
-  if (Array.isArray(haystack)) {
-    return haystack.includes(needle);
-  }
-  else if (typeof haystack === 'string') {
-	...
-  }
-  // else if object usw.
-}
-```
-
 ```javascript
 fn doSth () {}
 fn async doSth () {}
-```
-
-```javascript
-let cat = { name: 'Mr. Furball', color: 'black' };
-
-Object.assign(cat, { color: 'white', mood: 'sleepy' };
-```
-
-```javascript
-let cat = { name: 'Mr. Furball', color: 'black' };
-
-cat += { color: 'white', mood: 'sleepy' };
-```
-
-```javascript
-let pets = ['bird', 'cat', 'dog'];
-
-pets += 'snake';
-
-pets []= 'snake';
-pets[] = 'snake';
 ```
 
 ##
@@ -283,20 +205,6 @@ fn (String name as n, Color color as c) {
 fn (name as n: String, color as c: Color) {
 	
 }
-```
-
-```javascript
-// if
-let animal = { species: 'cat', name: 'Stella' };
-if (animal.name as n) console.log(`Animal is named ${n}`);
-
-// importing
-import from 'lib.js' use { calculate as calc };
-// import from 'lib.js' use { calculate: calc };
-
-// destructing
-const { something as sth, method } = namespace;
-// const { something: sth, method } = namespace;
 ```
 
 ```javascript
