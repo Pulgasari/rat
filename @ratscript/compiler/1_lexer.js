@@ -2,8 +2,8 @@
 
 // :::::: IMPORTS
 
-import { TokenType: Token } from './utils.js';
-import { keywords }         from './meta.js';
+import { TokenType } from './utils.js';
+import { keywords, operators } from './meta.js';
 
 // :::::: HELPERS
 
