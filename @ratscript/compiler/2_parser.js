@@ -1,5 +1,12 @@
 // @ratscript/compiler/parser.js
 
+// :::::: IMPORTS
+
+import { TokenType } from './meta.js';
+import * as nodes    from './nodes.js';
+
+// :::::: HELPERS
+
 export function createNode (type, properties = {}) {
   return {
     type,
@@ -7,11 +14,9 @@ export function createNode (type, properties = {}) {
   };
 }
 
-// packages/compiler/src/parser/parser.js
-import { TokenType } from '../lexer/token.js';
-import * as nodes from './nodes.js';
+// :::::: THE PARSER
 
-export class Parser {
+export default class Parser {
   constructor(tokens) {
     this.tokens = tokens;
     this.current = 0;
