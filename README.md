@@ -299,6 +299,36 @@ const { something as sth, method } = namespace;
 // const { something: sth, method } = namespace;
 ```
 
+```javascript
+proxy ThingProxy for RealThing {
+  // 
+  get password : { return "********"; }
+  get password : "********";
+
+  fn doSth () {...}
+  fn doSth : () => {...}
+  fn doSth : 'function returnt eh nur nen string';
+  
+  // static props and methods
+
+  static get version : { return "1.0.0"; }
+  static get version : "1.0.0";
+
+  static fn doSth () {...}
+  static fn doSth : () => {...}
+  static fn doSth : 'function returnt eh nur nen string';
+}
+```
+
+```javascript
+fn method (...) {...}
+
+proxy fn guardedMethod for method {
+  (...) : {
+    ...
+  }
+}
+```
 
 ## reads
 
