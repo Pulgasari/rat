@@ -2,7 +2,8 @@
 
 import List   from './../types/List.js';
 import Record from './../types/Record.js';
-import Struct from './../types/Struct.js';
+import Struct from './../types/Struct.js'
+import Trait  from './../types/Trait.js';
 import Tuple  from './../types/Tuple.js';
 import Union  from './../types/Union.js';
 
@@ -16,6 +17,11 @@ export default function _is (value, pattern) {
   if (Record.isRecord(value) && Struct.isStruct(pattern)) {
     return value.struct === pattern; // Stimmt die Blaupause überein?
   }
+
+  // Trait
+  //if (Trait.isTrait(type)) {
+  //  return Trait.has(target, type);
+  //}
 
   // Tuple Structural Matching
   if (Tuple.isTuple(value) && Tuple.isTuple(pattern)) {
