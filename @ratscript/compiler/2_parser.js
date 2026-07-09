@@ -223,16 +223,47 @@ function parseRange() { // From '..' To
   return expr;
 }
 
+function parsePrimary () {
+  if (matchToken('NUMBER')) {
+    return nodes.createLiteral('NUMBER', previous().value);
+  }
+  if (matchToken('STRING')) {
+    return nodes.createLiteral('STRING', previous().value);
+  }
+  if (matchToken('IDENTIFIER')) {
+    let expr = nodes.createIdentifier(previous().value);
+      
+    // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
+    while (true) {
+      if (matchToken('PUNCT','(')) {
+        const args = [];
+        if (!isToken('PUNCT',')')) {
+            do {
+              args.push(parseExpression());
+            } while (matchToken('PUNCT', ':')); // einfaches Argument-Splitting
+          }
+          this.consume('PUNCT', ')', "Erwarte ')' nach Argumenten.");
+          expr = nodes.createCallExpression(expr, args);
+        } 
+        else break;
+      }
+      return expr;
+    }
+
+  const token = peek();
+  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
+}
+
 // sift { init: ..., cond: ... }
 parseSiftStatement () {
   advance(); // 'sift'
-  consumeToken('LBRACE', "Erwarte '{' nach 'sift'.");
+  consumeToken('PUNCT', '{', "Erwarte '{' nach 'sift'.");
 
   let init = null, cases = [], catchBlock = null, finallyBlock = null;
 
-  while (!isToken('RBRACE') && !isEOF()) {
+  while (!isToken('PUNCT','}') && !isEOF()) {
     const keyToken = advance();
-    consumeToken('COLON', "Erwarte ':' nach Kaskaden-Bedingung.");
+    consumeToken('PUNCT', ':', "Erwarte ':' nach Kaskaden-Bedingung.");
     const action = parseActionBlock();
 
          if (keyToken.value === 'init')                  init = action;
@@ -241,7 +272,7 @@ parseSiftStatement () {
     else cases.push({ condition: nodes.createIdentifier(keyToken.value), body: action });
   }
 
-  consumeToken('RBRACE', "Erwarte '}' am Ende des sift-Blocks.");
+  consumeToken('PUNCT', '}', "Erwarte '}' am Ende des sift-Blocks.");
   return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
   return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
 }
@@ -256,57 +287,6 @@ export default class Parser {
   constructor(tokens) {
     this.tokens = tokens;
     this.current = 0;
-  }
-
-  
-  
-
-  // for (1..10) ODER for (let x of items)
-  
-
-  
-
-  // ==========================================
-  // AUSDRÜCKE & OPERATOREN (Expression Tree)
-  // ==========================================
-
-
-  
-
-
-  
-
-  // Basis-Bausteine (Identifiers, Literals, Funktionsaufrufe)
-  parsePrimary() {
-    if (this.match(TokenType.NUMBER)) {
-      return nodes.createLiteral('NUMBER', this.previous().value);
-    }
-    if (this.match(TokenType.STRING)) {
-      return nodes.createLiteral('STRING', this.previous().value);
-    }
-    if (this.match(TokenType.IDENTIFIER)) {
-      let expr = nodes.createIdentifier(this.previous().value);
-      
-      // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
-      while (true) {
-        if (this.match(TokenType.LPAREN)) {
-          const args = [];
-          if (!this.check(TokenType.RPAREN)) {
-            do {
-              args.push(this.parseExpression());
-            } while (this.match(TokenType.COLON)); // einfaches Argument-Splitting
-          }
-          this.consume(TokenType.RPAREN, "Erwarte ')' nach Argumenten.");
-          expr = nodes.createCallExpression(expr, args);
-        } else {
-          break;
-        }
-      }
-      return expr;
-    }
-
-    const token = this.peek();
-    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
   }
 
   // old
