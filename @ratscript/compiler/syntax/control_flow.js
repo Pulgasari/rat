@@ -1,6 +1,30 @@
-// @ratscript/compiler/syntax/sift.js
+// @ratscript/compiler/syntax/control_flow.js
 
 export default function (code) {
+  code = transformMold (code);
+  code = transformSift (code);
+  return code;
+}
+
+// ::::::
+
+function transformMold (code) {
+  // Matcht mold(initialValue) { ... }
+  const moldRegex = /\bmold\s*\(([^)]+)\)\s*\{([\s\S]*?)\}/g;
+
+  return code.replace(moldRegex, (match, initValue, content) => {
+    const { initCode, catchBlock, finallyCode, bodyCode } = parseBlockContent(content);
+
+    return `(() => {
+  let self = ${initValue.trim()};
+${initCode}  try {
+${bodyCode}  } ${catchBlock || 'catch(__err) { throw __err; }'} ${finallyCode ? `finally {\n${finallyCode}  }` : ''}
+  return self;
+})()`;
+  });
+}
+
+function transformSift (code) {
   // Matcht sift { ... }
   const siftRegex = /\bsift\s*\{([\s\S]*?)\}/g;
 
@@ -13,6 +37,8 @@ ${bodyCode}  } ${catchBlock || 'catch(__err) { throw __err; }'} ${finallyCode ? 
 })()`;
   });
 }
+
+// :::::: HELPERS
 
 /**
  * Hilfsfunktion: Teilt den Block deklarativ in seine Lebenszyklus-Phasen auf.
