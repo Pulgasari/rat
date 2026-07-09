@@ -102,6 +102,31 @@ import from 'preact'          use { render };
 import from '@preact/signals' use { effect, signal };
 ```
 
+---
+
+## `try` / `catch`
+
+Use `try` and `catch` with less boilerplate.
+
+```javascript
+// oneliners
+try doSomething();
+catch (e) logError(e);
+
+// oneliners without error-variable
+try doSomething();
+catch doSomethingElse();
+
+// silent fail oneliner
+try doSomething();
+
+// silent fail with block
+try {
+  let x = 10;
+  compute(x);
+}
+```
+
 ## Guards
 
 #### Assignment Guards
