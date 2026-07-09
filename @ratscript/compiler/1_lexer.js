@@ -1,9 +1,10 @@
 // @ratscript/compiler/lexer.js
 
-import { TokenType } from './token.js';
-import { keywords }  from './../meta.js';
+import { TokenType: Token } from './utils.js';
+import { keywords }         from './meta.js';
 
-// Die Regeln für unseren Lexer von spezifisch nach allgemein
+const isKeyword = value => keywords.includes(value);
+
 const RULES = [
   { type: TokenType.RANGE     , regex: /\.\./y },
   { type: TokenType.COLON     , regex: /:/y    },
@@ -23,75 +24,62 @@ const RULES = [
   { regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/y, type: TokenType.IDENTIFIER }
 ];
 
-export class Lexer {
-  constructor (source) {
-    this.source = source;
-    this.cursor = 0;
-    this.line   = 1;
-    this.column = 1;
-  }
+export function Lexer (source) {
+  let cursor = 0;
+  let line   = 1;
+  let column = 1;
 
-  tokenize() {
+  function tokenize () {
     const tokens = [];
 
-    while (this.cursor < this.source.length) {
-      const char = this.source[this.cursor];
+    while (cursor < source.length) {
+      const char = source[cursor];
 
       // skip linebreaks + whitespaces
-      if (char === '\n') { this.column = 1; this.cursor++; this.line++; continue; }
-      if (/\s/.test(char)) { this.cursor++; this.column++; continue; }
+      if (char === '\n')   { column = 1; cursor++; line++; continue; }
+      if (/\s/.test(char)) { column++; cursor++; continue; }
 
-      // 2. Kommentare überspringen (Single Line //)
-      if (char === '/' && this.source[this.cursor + 1] === '/') {
-        while (this.cursor < this.source.length && this.source[this.cursor] !== '\n') {
-          this.cursor++;
+      // skip comments: '//'
+      if (char === '/' && source[cursor + 1] === '/') {
+        while (cursor < source.length && source[cursor] !== '\n') {
+          cursor++;
         }
         continue;
       }
 
-      // 3. Unsere Token-Regeln abgleichen
       let matched = false;
 
       for (const { regex, type } of RULES) {
-        // Setzt den Startpunkt für das 'sticky' Matching
-        regex.lastIndex = this.cursor;
-        const match = regex.exec(this.source);
+        regex.lastIndex = cursor;
+        const match = regex.exec(source);
 
         if (match) {
           let value = match[0];
-          let tokenType = type;
 
-          // Spezialfall: Wenn es ein IDENTIFIER ist, prüfen wir, ob es ein geschütztes Keyword ist
-          if (tokenType === TokenType.IDENTIFIER && keywords.includes(value)) {
-            tokenType = TokenType.KEYWORD;
+          if (type === TokenType.IDENTIFIER && keywords.includes(value)) {
+            type = TokenType.KEYWORD;
           }
 
-          // Token registrieren mit Positionsdaten für Fehlermeldungen
-          tokens.push({
-            type: tokenType,
-            value: value,
-            line: this.line,
-            column: this.column
-          });
+          tokens.push({ column, line, type, value });
 
-          // Cursor und Spalte updaten
-          this.cursor += value.length;
-          this.column += value.length;
+          cursor += value.length;
+          column += value.length;
           matched = true;
           break;
         }
       }
 
-      // Wenn kein Muster matcht, hat der Entwickler ungültige Zeichen getippt!
-      if (!matched) {
-        throw new SyntaxError(
-          `Ungültiges Zeichen '${char}' an Position ${this.line}:${this.column}`
-        );
-      }
+      if (!matched) throw new SyntaxError(`Ungültiges Zeichen '${char}' an Position ${line}:${column}`);
     }
 
-    // Am Ende hängen wir immer ein EOF (End of File) Token an
-    tokens.push({ type: TokenType.EOF, value: '', line: this.line, column: this.column });
+    tokens.push({ column, line, type: TokenType.EOF, value: '' });
     return tokens;
   }
-    }
+
+  return {
+    tokenize,
+    get line   () { return line; },
+    get column () { return column; },
+    get cursor () { return cursor; },
+  };
+}
