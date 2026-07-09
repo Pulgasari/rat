@@ -1,4 +1,4 @@
-// @ratscript/compiler/generator/generator.js
+// @ratscript/compiler/generator.js
 
 export class Generator {
   generate(node) {
