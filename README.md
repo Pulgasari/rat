@@ -307,4 +307,6 @@ const { something as sth, method } = namespace;
 - https://livescript.net
 - http://spiderlang.org
 
+- [JS-Functions :: the arguments object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments)
+
 
