@@ -3,6 +3,7 @@
 import transform__alias              from './syntax/alias.js';
 import transform__assignment_sugar   from './syntax/assignment_sugar.js';
 import transform__cond               from './syntax/cond.js';
+import transform__control_flow       from './syntax/control_flow.js';
 import transform__guard              from './syntax/guard.js';
 import transform__fn                 from './syntax/fn.js';
 import transform__for                from './syntax/for.js';
@@ -27,6 +28,7 @@ export function compile (code) {
   code = transform__fn                 (code);
   code = transform__range              (code);
   code = transform__for                (code);
+  code = transform__control_flow       (code); // mold, sift
   code = transform__try_catch          (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
