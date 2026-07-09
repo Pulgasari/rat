@@ -5,6 +5,7 @@ import transform__assignment_sugar   from './syntax/assignment_sugar.js';
 import transform__cond               from './syntax/cond.js';
 import transform__guard              from './syntax/guard.js';
 import transform__fn                 from './syntax/fn.js';
+import transform__for                from './syntax/for.js';
 import transform__import_statement   from './syntax/import_statement.js';
 import transform__inc                from './syntax/inc.js';
 import transform__is                 from './syntax/is.js';
@@ -25,6 +26,7 @@ export function compile (code) {
   code = transform__import_statement   (code);
   code = transform__fn                 (code);
   code = transform__range              (code);
+  code = transform__for                (code);
   code = transform__try_catch          (code);
   code = transform__multiline_strings  (code);
   code = transform__jsx                (code);
