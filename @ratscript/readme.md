@@ -7,6 +7,7 @@
 - [Operators](#operators)
   - [Assignment Operator](#assignment-operator)
   - [Pipe Operator](#pipe-operator)
+  - [Range Operator](#range-operator)
 - [Control Flow](#control-flow)
   - [cond](#)
   - [match](#)
@@ -249,6 +250,27 @@ let user = fetchUser()
   |> formatData(#)
   |> console.log;
 // console.log(formatData(fetchUser()))
+```
+
+### Range Operator
+
+Creates an iterator for a range of numbers or chars.
+
+```javascript
+//
+let numbers = 1..100;
+let uppers  = A..Z;
+let lowers  = a..z;
+
+// backwards
+let numbers = 100..1;
+let uppers  = Z..A;
+let lowers  = z..a;
+
+// usage in loops
+for (let x of 1..10) { ... }
+// use naked in loops
+for (1..10) { ... }
 ```
 
 ## Named Arguments
