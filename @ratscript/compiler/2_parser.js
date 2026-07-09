@@ -51,18 +51,26 @@ function consumeToken (type, value, message) {
   const token = peek();
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message} (Gefunden: '${token.value}')`);
 }
-function isToken (type, value) {
+function isToken (typeOrValue, maybeValue) {
+  const query = resolveTokenQuery(typeOrValue, maybeValue);
+  if (!query) return false;
+
   const token = peek();
-  if (token.type !== type) return false;
-  if (value !== undefined && token.value !== value) return false;
-  return true;
+  return token.type  === query.type 
+      && token.value === query.value;
 }
-function matchToken (type, value) {
-  if (isToken(type, value)) {
+function matchToken (typeOrValue, maybeValue) {
+  if (isToken(typeOrValue, maybeValue)) {
     advance();
     return true;
   }
   return false;
+}
+function expect (typeOrValue, maybeValue, message) {
+  if (isToken(typeOrValue, maybeValue)) return advance();
+  const token = peek();
+  const query = resolveTokenQuery(typeOrValue, maybeValue);
+  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
 }
 
 // ::: Methods | Parsing
