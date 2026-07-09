@@ -1,5 +1,12 @@
 // @ratscript/compiler/parser/nodes.js
 
+export function createNode (type, properties = {}) {
+  return {
+    type,
+    ...properties
+  };
+}
+
 export function createProgram(body) {
   return { type: 'Program', body };
 }
