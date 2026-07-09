@@ -288,13 +288,13 @@ Creates an iterator for a range of numbers or chars.
 ```javascript
 //
 let numbers = 1..100;
-let uppers  = A..Z;
-let lowers  = a..z;
+let uppers  = 'A'..'Z';
+let lowers  = 'a'..'z';
 
 // backwards
 let numbers = 100..1;
-let uppers  = Z..A;
-let lowers  = z..a;
+let uppers  = 'Z'..'A';
+let lowers  = 'z'..'a';
 
 // usage in loops
 for (let x of 1..10) { ... }
