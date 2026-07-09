@@ -7,11 +7,17 @@ import * as nodes from './nodes.js';
 
 // :::::: HELPERS
 
-export function createNode (type, properties = {}) {
+function createNode (type, properties = {}) {
   return {
     type,
     ...properties
   };
+}
+
+function resolveTokenQuery (typeOrValue, maybeValue) {
+  return (maybeValue !== undefined)
+    ? { type: typeOrValue, value: maybeValue }
+    : TOKEN_MAP.get(typeOrValue) ?? null;
 }
 
 // :::::: THE PARSER
