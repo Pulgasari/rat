@@ -30,3 +30,11 @@ export function generateFunctionDeclaration (node) {
 export function generateTraitDeclaration (node) {
   throw new Error('[Generator-Fehler]: TraitDeclaration-Codegen ist noch nicht spezifiziert.');
 }
+
+// :::::: let/const/var <id | {pattern}> = <init>?;
+
+export function generateVariableDeclaration (node) {
+  const target = generate(node.id); // Identifier oder ObjectPattern
+  if (node.init === null) return `${node.kind} ${target};`;
+  return `${node.kind} ${target} = ${generate(node.init)};`;
+}
