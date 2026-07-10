@@ -78,9 +78,9 @@ function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt E
       statements.push(parseStatement());
     }
     consumeToken('}');
-    return nodes.createBlock(statements);
+    return create.Block({ statements });
   }
-  return nodes.createBlock([ parseStatement() ]);
+  return create.Block({ statements: [parseStatement()] });
 }
 
 function parseAssignment () {
@@ -99,7 +99,7 @@ function parseExpression () {
 function parseExpressionStatement () {
   const expr = parseExpression();
   matchToken(':');
-  return nodes.createExpressionStatement(expr);
+  return create.ExpressionStatement({ expr });
 }
 
 function parseForStatement () {
@@ -127,7 +127,7 @@ function parseForStatement () {
     }
     consumeToken('}');
 
-    return nodes.createForStatement(initializer, isNaked, nodes.createBlock(bodyStatements));
+    return create.ForStatement({ initializer, isNaked, nodes.createBlock(bodyStatements) });
 }
 
 function parseStatement () {
@@ -164,7 +164,7 @@ parseMoldStatement () { // mold(target) { init: ..., cond: ... }
     }
 
     consumeToken('}');
-    return nodes.createMoldStatement(targetExpr, init, cases, catchBlock, finallyBlock);
+    return create.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
   }
 
 // fn name(args) use Trait { ... }
@@ -195,7 +195,7 @@ function parseFunctionDeclaration () {
   }
   consumeToken('}');
 
-  return nodes.createFunctionDeclaration(nameToken.value, params, traits, nodes.createBlock(bodyStatements));
+  return create.FunctionDeclaration({ name: nameToken.value, params, traits, body: create.Block(bodyStatements) });
 }
 
 // trait Name { ... }
@@ -210,7 +210,7 @@ function parseTraitDeclaration () {
   }
     
   consumeToken('}');
-  return nodes.createTraitDeclaration(nameToken.value, nodes.createBlock(bodyStatements));
+  return create.TraitDeclaration({ name: nameToken.value, body: create.Block(bodyStatements) });
 }
 
 function parseTraitUse () { // Expression 'use' TraitName
@@ -218,7 +218,7 @@ function parseTraitUse () { // Expression 'use' TraitName
     if (isToken('use')) {
       advance(); // 'use'
       const traitName = consumeToken('IDENTIFIER').value;
-      expr = nodes.createTraitUseExpression(expr, traitName);
+      expr = create.TraitUseExpression({ expr, traitName });
     }
     return expr;
   }
@@ -228,22 +228,20 @@ function parseRange() { // From '..' To
   let expr = parsePrimary();
   if (matchToken('..')) {
     const toExpr = parsePrimary();
-    return nodes.createRangeExpression(expr, toExpr);
+    return create.RangeExpression({ expr, toExpr });
   }
   return expr;
 }
 
 function parsePrimary () {
   if (matchToken('NUMBER')) {
-    return nodes.createLiteral('NUMBER', previous().value);
+    return AST.Literal({ type: 'NUMBER', value: previous().value });
   }
   if (matchToken('STRING')) {
-    return nodes.createLiteral('STRING', previous().value);
-    return create.Literal('STRING', previous().value);
-    return node.Literal('STRING', previous().value);
+    return AST.Literal({ type: 'STRING', value: previous().value });
   }
   if (matchToken('IDENTIFIER')) {
-    let expr = nodes.createIdentifier(previous().value);
+    let expr = AST.Identifier({ name: previous().value });
       
     // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
     while (true) {
@@ -255,7 +253,7 @@ function parsePrimary () {
             } while (matchToken(':')); // einfaches Argument-Splitting
           }
           consumeToken(')');
-          expr = nodes.createCallExpression(expr, args);
+          expr = AST.CallExpression({ expr, args });
         } 
         else break;
       }
