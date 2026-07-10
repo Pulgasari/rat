@@ -21,12 +21,24 @@ TraitDeclaration = {
     body : {},
   }
 },
+
+// :::::: EXPRESSION
+
+RangeExpression = {
+  type: 'RangeExpression',
+  args: ['from', 'to' ]
+},
  
 // :::::: STATEMENTS
   
 BlockStatement = {
   type: 'BlockStatement',
   args: { body: { required: true } }
+},
+
+ForStatement = {
+  type: 'BlockStatement',
+  args: ['initializer', 'isNaked', 'body']
 },
 
 MoldStatement = {
@@ -40,41 +52,25 @@ MoldStatement = {
   }
 },
 
+SiftStatement = {
+  type: 'SiftStatement', 
+  args: ['init', 'cases', 'catchBlock', 'finallyBlock'],
+},
+
+// ::::::
+  
 Program: {
   type: 'Program',
-  args: { body: { required: true } }
+  args: { 
+    body: { required: true } 
+  }
 },
 
 
 
 
-
-
-export function createNode (type, properties = {}) {
-  return {
-    type,
-    ...properties
-  };
-}
-
-export function createSiftStatement(init, cases, catchBlock, finallyBlock) {
-  return { type: 'SiftStatement', init, cases, catchBlock, finallyBlock };
-}
-
-export function createMoldStatement(target, init, cases, catchBlock, finallyBlock) {
-  return { type: 'MoldStatement', target, init, cases, catchBlock, finallyBlock };
-}
-
-export function createTraitDeclaration(name, body) {
-  
-}
-
-export function createFunctionDeclaration(name, params, traits, body) {
-  return { type: 'FunctionDeclaration', name, params, traits, body };
-}
-
 export function createForStatement(initializer, isNaked, body) {
-  return { type: 'ForStatement', initializer, isNaked, body };
+  return { type: 'ForStatement',  };
 }
 
 export function createRangeExpression(from, to) {
