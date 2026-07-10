@@ -42,6 +42,16 @@ export function parseActionBlock () {
   return ASTNode.BlockStatement({ body: [parsed.Statement] });
 }
 
+export function parseConditionTest () {
+  const expr = parseExpression();
+  if (isToken('as')) {
+    advance(); // 'as'
+    const name = consumeToken('IDENTIFIER').value;
+    return ASTNode.AsBindingExpression({ expr, name });
+  }
+  return expr;
+}
+
 // :::::: ExpressionStatement
 
 export function parseExpressionStatement () {
@@ -73,6 +83,23 @@ export function parseForStatement () {
 
   const body = parsed.Block;
   return ASTNode.ForStatement({ initializer, isNaked, body });
+}
+
+export function parseIfStatement () {
+  advance(); // 'if'
+  consumeToken('(');
+  const test = parsed.ConditionTest;
+  consumeToken(')');
+
+  const consequent = parsed.Block;
+
+  let alternate = null;
+  if (isToken('else')) {
+    advance(); // 'else'
+    alternate = isToken('if') ? parsed.IfStatement : parsed.Block;
+  }
+
+  return ASTNode.IfStatement({ test, consequent, alternate });
 }
 
 // :::::: sift { init: ..., cond: ... }
@@ -122,6 +149,15 @@ export function parseMoldStatement () {
 
   consumeToken('}');
   return ASTNode.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
+}
+
+export function parseWhileStatement () {
+  advance(); // 'while'
+  consumeToken('(');
+  const test = parsed.ConditionTest;
+  consumeToken(')');
+  const body = parsed.Block;
+  return ASTNode.WhileStatement({ test, body });
 }
 
 /*
