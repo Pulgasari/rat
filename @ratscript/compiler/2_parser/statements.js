@@ -45,7 +45,7 @@ export function parseActionBlock () {
 }
 
 export function parseConditionTest () {
-  const expr = parseExpression();
+  const expr = parsed.Expression;
   if (isToken('as')) {
     advance(); // 'as'
     const name = consumeToken('IDENTIFIER').value;
