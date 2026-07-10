@@ -1,5 +1,17 @@
 # RatScript
 
+## About
+
+**RatScript** is an experimental project which I created out of curiousity.
+
+I do love **JavaScript** because it is such an awkward weirdo. And yeah, it's okay to make fun about it because it's all (mostly) true.
+
+A while ago I became interested in Programming Language design and was looking into that topic more deeply as I ever had done before. I started to understand why some patterns exist which often annoyed me while coding. (Not only in JS but in general.)
+
+What **Ratscript** is not: It's not an attempt to "fix JavaScript" or even replace it (like other projects tried before).
+
+## Index
+
 - [Aliasing](#as)
 - [Import Statements](#)
 - [Functions](#functions)
