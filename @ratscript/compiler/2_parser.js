@@ -67,21 +67,21 @@ function parse () {
 
 function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
   if (matchToken('{')) {
-    const statements = [];
+    const body = [];
     while (!isToken('}') && !isEOF()) {
-      statements.push(parseStatement());
+      body.push(parseStatement());
     }
     consumeToken('}');
-    return create.Block({ statements });
+    return ASTNode.BlockStatement({ body });
   }
-  return create.Block({ statements: [parseStatement()] });
+  return ASTNode.BlockStatement({ body: [parseStatement()] });
 }
 
 function parseAssignment () {
   const expr = parseTraitUse();
   if (matchToken('=')) {
-    const value = parseAssignment();
-    return { type: 'AssignmentExpression', left: expr, right: value };
+    const right = parseAssignment();
+    return ASTNode.AssignmentExpression({ left: expr, right });
   }
   return expr;
 }
@@ -93,7 +93,7 @@ function parseExpression () {
 function parseExpressionStatement () {
   const expr = parseExpression();
   matchToken(':');
-  return create.ExpressionStatement({ expr });
+  return ASTNode.ExpressionStatement({ expr });
 }
 
 function parseForStatement () {
@@ -121,7 +121,7 @@ function parseForStatement () {
   }
   consumeToken('}');
 
-  return AST.ForStatement({ initializer, isNaked, body: AST.Block({ body: bodyStatements }) });
+  return ASTNode.ForStatement({ initializer, isNaked, body: ASTNode.BlockStatement({ body: bodyStatements }) });
 }
 
 function parseStatement () {
@@ -158,7 +158,7 @@ parseMoldStatement () { // mold(target) { init: ..., cond: ... }
     }
 
     consumeToken('}');
-    return create.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
+    return ASTNode.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
   }
 
 // fn name(args) use Trait { ... }
@@ -189,22 +189,22 @@ function parseFunctionDeclaration () {
   }
   consumeToken('}');
 
-  return create.FunctionDeclaration({ name: nameToken.value, params, traits, body: create.Block(bodyStatements) });
+  return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body: ASTNode.Block({ body: bodyStatements }) });
 }
 
 // trait Name { ... }
 function parseTraitDeclaration () {
   advance(); // 'trait'
   const nameToken = consumeToken('IDENTIFIER');
+  
   consumeToken('{');
-    
   const bodyStatements = [];
   while (!isToken('}') && !isEOF()) {
     bodyStatements.push(parseStatement());
   }
-    
   consumeToken('}');
-  return create.TraitDeclaration({ name: nameToken.value, body: create.Block(bodyStatements) });
+  
+  return ASTNode.TraitDeclaration({ name: nameToken.value, body: ASTNode.Block({ body: bodyStatements }) });
 }
 
 function parseTraitUse () { // Expression 'use' TraitName
