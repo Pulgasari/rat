@@ -7,3 +7,9 @@ export function indent (code, level = 1) {
     .map(line => line.length ? pad + line : line)
     .join('\n');
 }
+
+function wrapInIIFE (code) {
+ return `(() => {\n` + code + `})();`;
+}
+
+export const iife = (code) => `(() => {\n` + code + `})();`;
