@@ -165,6 +165,15 @@ export const operators = {
   'delete' : { precedence: 15, associativity: 'right' },
 };
 
+export const puncts = [
+  '{', '}',
+  '(', ')',
+  '[', ']',
+  ',', ';',
+  '.', ':',
+  '?'
+];
+
 export const runtimeHelpers = {
   '_assign' : { token: '_assign', from: './../runtime/index.js' },
   '_fn'     : { token: '_fn',     from: './../runtime/index.js' },
