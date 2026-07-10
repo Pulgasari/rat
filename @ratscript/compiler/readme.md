@@ -2,12 +2,11 @@
 
 ```c
 compiler/
-├── src/
-│   ├── lexer/          # Zerlegt Text in Token (Tokenize)
-│   │   ├── token.js
-│   │   └── lexer.js
-│   ├── parser/         # Baut aus Token den AST (Abstract Syntax Tree)
-│   │   ├── nodes.js    # Typen für AST-Knoten (z.B. SiftNode, MoldNode)
+├── 1_lexer.js   # Zerlegt Text in Token (Tokenize)
+├── 2_parser.js  # Baut aus Token den AST
+├── 3_transformer.js # modifies AST
+├── 4_generator.js
+├── nodes.js    # Typen für AST-Knoten (z.B. SiftNode, MoldNode)
 │   │   └── parser.js
 │   ├── transformer/    # Modifiziert den AST (z.B. Optimierungen)
 │   │   └── transformer.js
