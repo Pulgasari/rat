@@ -1,25 +1,26 @@
 // @ratscript/compiler/parser/statements.js
 
 import { ASTNode } from './../utils.js';
-import { parseBody } from './index.js';
+import { parsed } from './index.js';
 import { advance, peek, isToken, isEOF, matchToken, consumeToken } from './state.js';
-import { parseAliasDeclaration, parseFunctionDeclaration, parseTraitDeclaration } from './declarations.js';
-import { parseExpression } from './expressions.js';
 
 // :::::: Dispatcher
 
 export function parseStatement () {
   if (isToken('KEYWORD')) {
     switch (peek().value) {
-      case 'alias' : return parseAliasDeclaration();
-      case 'fn'    : return parseFunctionDeclaration();
-      case 'for'   : return parseForStatement();
-      case 'mold'  : return parseMoldStatement();
-      case 'sift'  : return parseSiftStatement();
-      case 'trait' : return parseTraitDeclaration();
+      case 'alias' : return parsed.AliasDeclaration;
+      case 'const' : return parsed.VariableDeclaration;
+      case 'fn'    : return parsed.FunctionDeclaration;
+      case 'for'   : return parsed.ForStatement;
+      case 'let'   : return parsed.VariableDeclaration;
+      case 'mold'  : return parsed.MoldStatement;
+      case 'sift'  : return parsed.SiftStatement;
+      case 'trait' : return parsed.TraitDeclaration;
+      case 'var'   : return parsed.VariableDeclaration;
     }
   }
-  return parseExpressionStatement();
+  return parsed.ExpressionStatement;
 }
 
 // :::::: Block-Helpers
@@ -27,24 +28,24 @@ export function parseStatement () {
 
 export function parseBlock () {
   consumeToken('{');
-  const body = parseBody();
+  const body = parsed.Body;
   consumeToken('}');
   return ASTNode.BlockStatement({ body });
 }
 
 export function parseActionBlock () {
   if (matchToken('{')) {
-    const body = parseBody();
+    const body = parsed.Body;
     consumeToken('}');
     return ASTNode.BlockStatement({ body });
   }
-  return ASTNode.BlockStatement({ body: [parseStatement()] });
+  return ASTNode.BlockStatement({ body: [parsed.Statement] });
 }
 
 // :::::: ExpressionStatement
 
 export function parseExpressionStatement () {
-  const expr = parseExpression();
+  const expr = parsed.Expression;
   matchToken(':');
   return ASTNode.ExpressionStatement({ expr });
 }
@@ -62,15 +63,15 @@ export function parseForStatement () {
   if (isToken('KEYWORD') && ['let', 'const', 'var'].includes(peek().value)) {
     // Standard JS Loop
     isNaked = false;
-    initializer = parseExpression(); // Für den Prototyp als Expression abgefangen
+    initializer = parsed.Expression; // Für den Prototyp als Expression abgefangen
   } else {
     // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
-    initializer = parseExpression();
+    initializer = parsed.Expression;
   }
 
   consumeToken(')');
 
-  const body = parseBlock();
+  const body = parsed.Block;
   return ASTNode.ForStatement({ initializer, isNaked, body });
 }
 
@@ -85,7 +86,7 @@ export function parseSiftStatement () {
   while (!isToken('}') && !isEOF()) {
     const keyToken = advance();
     consumeToken(':');
-    const action = parseActionBlock();
+    const action = parsed.ActionBlock;
 
          if (keyToken.value === 'init')                  init = action;
     else if (keyToken.value === 'finally')       finallyBlock = action;
@@ -102,7 +103,7 @@ export function parseSiftStatement () {
 export function parseMoldStatement () {
   advance(); // 'mold'
   consumeToken('(');
-  const targetExpr = parseExpression();
+  const targetExpr = parsed.Expression;
   consumeToken(')');
   consumeToken('{');
 
@@ -111,7 +112,7 @@ export function parseMoldStatement () {
   while (!isToken('}') && !isEOF()) {
     const keyToken = advance();
     consumeToken(':');
-    const action = parseActionBlock();
+    const action = parsed.ActionBlock;
 
          if (keyToken.value === 'init')                  init = action;
     else if (keyToken.value === 'finally')       finallyBlock = action;
