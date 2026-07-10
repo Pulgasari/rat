@@ -2,17 +2,13 @@
 
 ```c
 compiler/
-├── 1_lexer.js   # Zerlegt Text in Token (Tokenize)
-├── 2_parser.js  # Baut aus Token den AST
-├── 3_transformer.js # modifies AST
-├── 4_generator.js
-├── nodes.js    # Typen für AST-Knoten (z.B. SiftNode, MoldNode)
-│   │   └── parser.js
-│   ├── transformer/    # Modifiziert den AST (z.B. Optimierungen)
-│   │   └── transformer.js
-│   ├── generator/      # Macht aus dem AST finales JavaScript Code
-│   │   └── generator.ts
-│   └── ast.ts          # Zentrale AST-Schnittstelle
-├── mod.js              # main export
+├── 1_lexer.js       # tokenize
+├── 2_parser.js      # create AST
+├── 3_transformer.js # modify AST
+├── 4_generator.js   # generate final code
+├── meta.js
+├── mod.js           # main export
+├── nodes.js         # types for AST-nodes
+├── utils.js
 └── jsr.json / package.json
 ```
