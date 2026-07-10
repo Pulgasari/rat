@@ -2,6 +2,8 @@
 
 import { ASTNode } from './../utils.js';
 import { advance, isToken, matchToken, consumeToken } from './state.js';
+import { parsed } from './index.js';
+
 import { parseExpression, parsePrimary } from './expressions.js';
 import { parseBlock } from './statements.js';
 
@@ -12,7 +14,7 @@ export function parseAliasDeclaration () {
 
   // Erst mal nur einen einfachen Identifier/Member-Chain lesen (kein '=', kein 'as' -> parsePrimary reicht,
   // KEIN parseExpression, sonst würde parseAssignment das '=' schon vorzeitig selbst konsumieren).
-  const first = parsePrimary();
+  const first = parsed.Primary;
 
   // Form 1: alias database.users.save as saveUser;
   if (matchToken('as')) {
@@ -32,7 +34,7 @@ export function parseAliasDeclaration () {
       const token = peek();
       throw new SyntaxError(`[Parser ${token.line}:${token.column}]: 'alias <name> = ...' erwartet einen einfachen Namen vor '=', kein Member-Chain.`);
     }
-    const source = parseExpression();
+    const source = parsed.Expression;
     matchToken(';');
 
     return ASTNode.AliasDeclaration({ name: first.name, source, autoBind: false }); // volle Kontrolle -> nie autoBind
@@ -42,7 +44,7 @@ export function parseAliasDeclaration () {
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte 'as' oder '=' nach 'alias' (Gefunden: '${token.value}')`);
 }
 
-// :::::: fn name(args) use Trait { ... }
+// :::::: fn name (args) use Trait { ... }
 export function parseFunctionDeclaration () {
   advance(); // 'fn'
   const nameToken = consumeToken('IDENTIFIER');
@@ -63,8 +65,7 @@ export function parseFunctionDeclaration () {
     traits.push(consumeToken('IDENTIFIER').value);
   }
 
-  const body = parseBlock();
-
+  const body = parsed.Block;
   return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body });
 }
 
@@ -72,6 +73,46 @@ export function parseFunctionDeclaration () {
 export function parseTraitDeclaration () {
   advance(); // 'trait'
   const nameToken = consumeToken('IDENTIFIER');
-  const body      = parseBlock();
+  const body      = parsed.Block;
   return ASTNode.TraitDeclaration({ name: nameToken.value, body });
+}
+
+// :::::: let/const/var <id | {pattern}> = <init>?;
+
+export function parseVariableDeclaration () {
+  const kindToken = advance(); // 'let' | 'const' | 'var'
+
+  const id = isToken('{')
+    ? parsed.ObjectPattern
+    : ASTNode.Identifier({ name: consumeToken('IDENTIFIER').value });
+
+  let init = null;
+  if (matchToken('=')) {
+    init = parsed.Expression;
+  }
+  matchToken(';');
+
+  return ASTNode.VariableDeclaration({ kind: kindToken.value, id, init });
+}
+
+function parseObjectPattern () {
+  consumeToken('{');
+  const properties = [];
+
+  if (!isToken('}')) {
+    do {
+      const keyToken = consumeToken('IDENTIFIER');
+      let valueName = keyToken.value;
+
+      if (isToken('as')) {
+        advance(); // 'as'
+        valueName = consumeToken('IDENTIFIER').value;
+      }
+
+      properties.push({ key: keyToken.value, value: valueName });
+    } while (matchToken(','));
+  }
+
+  consumeToken('}');
+  return ASTNode.ObjectPattern({ properties });
 }
