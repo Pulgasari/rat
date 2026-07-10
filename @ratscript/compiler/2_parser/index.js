@@ -32,6 +32,9 @@ export function parse (tokens) {
 
 
 
+
+
+
 import * as declarations from './declarations.js';
 import * as expressions  from './expressions.js';
 import * as statements   from './statements.js';
@@ -49,13 +52,14 @@ const Body = () => {
   while (!isToken('}') && !isEOF()) {
     body.push(parse('Statement'));
     body.push(parse.Statement());
-    body.push(parse.Statement);
-
+    body.push(parsed.Statement);
+    parse.Statement |> body.push;
   }
   return body;
 }
 
 export const parse = name => methods[name]();
+export const parse = name => methods['parse' + name]();
 
 parse('Body');
 parse('Expression');
@@ -64,5 +68,23 @@ parse('For');
 parse.Body();
 parse.Expression();
 parse.For();
+
+parse.Body;
+parse.Expression;
+parse.For;
+
+parsed.Body;
+parsed.Expression;
+parsed.For;
+
+
+
+
+
+
+
+
+
+
 
 
