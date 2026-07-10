@@ -1,7 +1,5 @@
 // @ratscript/compiler/parser/nodes.js
 
-export const
-
 // :::::: DECLARATIONS
 
 AliasDeclaration = {
@@ -31,8 +29,22 @@ TraitDeclaration = {
   }
 },
 
+VariableDeclaration = {
+  type: 'VariableDeclaration',
+  args: {
+    kind: { required: true }, // 'let' | 'const' | 'var'
+    id:   { required: true }, // Identifier | ObjectPattern
+    init: { default: null }
+  }
+},
+
 // :::::: EXPRESSION
 
+CallExpression = {
+  type: 'CallExpression', 
+  args: ['callee', 'arguments'],
+},
+  
 MemberExpression = {
   type: 'MemberExpression',
   args: ['object', 'property']
@@ -43,7 +55,12 @@ RangeExpression = {
   type: 'RangeExpression',
   args: ['from', 'to']
 },
- 
+
+TraitUseExpression = {
+  type: 'TraitUseExpression',
+  args: ['expression', 'traitName']
+},
+
 // :::::: STATEMENTS
   
 BlockStatement = {
@@ -51,8 +68,13 @@ BlockStatement = {
   args: ['body']
 },
 
+ExpressionStatement = {
+  type: 'ExpressionStatement',
+  args: ['expression']
+},
+  
 ForStatement = {
-  type: 'BlockStatement',
+  type: 'ForStatement',
   args: ['initializer', 'isNaked', 'body']
 },
 
@@ -73,7 +95,22 @@ SiftStatement = {
 },
 
 // ::::::
+
+Expression = {
+  type: 'Expression', 
+  args: ['value'],
+},
   
+Identifier = {
+  type: 'Identifier', 
+  args: ['name'],
+},
+
+Literal = {
+  type: 'Literal', 
+  args: ['kind','value'],
+},
+
 Program: {
   type: 'Program',
   args: { 
@@ -81,47 +118,23 @@ Program: {
   }
 },
 
+// :::::: PATTERNS
+
+ObjectPattern = {
+  type: 'ObjectPattern',
+  args: ['properties']
+  // properties: Array<{ key: string, value: string }>
+  // key === value ohne Alias; sonst 'x as y' -> { key: 'x', value: 'y' }
+},
 
 
 
-export function createForStatement(initializer, isNaked, body) {
-  return { type: 'ForStatement',  };
-}
 
-export function createRangeExpression(from, to) {
-  return { type: 'RangeExpression', from, to };
-}
 
-export function createTraitUseExpression(expression, traitName) {
-  return { type: 'TraitUseExpression', expression, traitName };
-}
 
-export function createExpressionStatement(expression) {
-  return { type: 'ExpressionStatement', expression };
-}
 
-export function createIdentifier(name) {
-  return { type: 'Identifier', name };
-}
 
-export function createLiteral(kind, value) {
-  return { type: 'Literal', kind, value };
-}
 
-export function createMemberExpression(object, property) {
-  return { type: 'MemberExpression', object, property };
-}
-
-export function createCallExpression(callee, args) {
-  return { type: 'CallExpression', callee, arguments: args };
-}
-
-export function createProgram(body) {
-  return {
-    type: 'Program',
-    body
-  };
-}
 
 export function createSiftStatement(init, cases, catchBlock, finallyBlock) {
   return {
@@ -141,20 +154,5 @@ export function createMoldStatement(target, init, cases, catchBlock, finallyBloc
     cases,
     catchBlock,
     finallyBlock
-  };
-}
-
-
-export function createExpression(value) {
-  return {
-    type: 'Expression',
-    value
-  };
-}
-
-export function createIdentifier(value) {
-  return {
-    type: 'Identifier',
-    value
   };
 }
