@@ -26,14 +26,14 @@ TraitDeclaration = {
 
 RangeExpression = {
   type: 'RangeExpression',
-  args: ['from', 'to' ]
+  args: ['from', 'to']
 },
  
 // :::::: STATEMENTS
   
 BlockStatement = {
   type: 'BlockStatement',
-  args: { body: { required: true } }
+  args: ['body']
 },
 
 ForStatement = {
