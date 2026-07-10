@@ -15,6 +15,7 @@ import {
 } from './statements.js';
 
 import {
+  generateAliasDeclaration,
   generateFunctionDeclaration,
   generateTraitDeclaration,
 } from './declarations.js';
@@ -22,8 +23,10 @@ import {
 import {
   generateIdentifier,
   generateLiteral,
-  generateCallExpression,
+
   generateAssignmentExpression,
+  generateCallExpression,
+  generateMemberExpression,
   generateRangeExpression,
   generateTraitUseExpression,
 } from './expressions.js';
