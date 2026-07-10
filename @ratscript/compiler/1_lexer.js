@@ -16,6 +16,11 @@ const OPERATOR_RULES = operators.map(op => ({
   regex : new RegExp(op.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'y')
 }));
 
+const PUNCT_RULES = puncts.map(char => ({
+  type  : TokenType.PUNCT,
+  regex : new RegExp(`/\${char}/`, 'y')
+}));
+
 const PUNCT_RULES = [
   { type: TokenType.PUNCT, value: '{', regex: /\{/y },
   { type: TokenType.PUNCT, value: '}', regex: /\}/y },
