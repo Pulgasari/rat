@@ -91,12 +91,15 @@ export const parsed = {
   ...statements,
 };
 
-for (const [name, body] of Object.entries(parsed)) {
-  const key = name.replace(/^parse/, '');
-  Object.defineProperty(parsed, key, { 
+for (const [key, body] of Object.entries(parsed)) {
+  const name = key.replace(/^parse/, '');
+  
+  Object.defineProperty(parsed, name, { 
     get () { return body(); },
     enumerable: true
   });
+  
+  delete parsed[key];
 }
 
 parsed.call = name => parsed[name];
