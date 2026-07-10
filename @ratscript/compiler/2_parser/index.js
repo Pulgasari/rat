@@ -6,17 +6,11 @@ import * as declarations from './declarations.js';
 import * as expressions  from './expressions.js';
 import * as statements   from './statements.js';
 
-function parseBody () {
-  const body = [];
-  while (!isToken('}') && !isEOF()) {
-    body.push(parseStatement());
-  }
-  return body;
-}
+
 
 export function parse (tokens) {
   init(tokens);
-  return ASTNode.Program({ body: parse.Body });
+  return ASTNode.Program({ body: parsed.Body });
 }
 
 export const parsed = {
@@ -39,7 +33,13 @@ for (const [key, body] of Object.entries(parsed)) {
 
 parsed.call = name => parsed[name];
 
-
+function parseBody () {
+  const body = [];
+  while (!isToken('}') && !isEOF()) {
+    body.push(parsed.Statement);
+  }
+  return body;
+}
 
 
 
