@@ -3,13 +3,20 @@
 import * as NodeTypes from './nodes.js';
 
   
+function normalizeArgs (rawArgs) {
+  if (Array.isArray(rawArgs)) {
+    // Kurzform: ['from', 'to'] -> { from: {}, to: {} }
+    return Object.fromEntries(rawArgs.map(key => [key, {}]));
+  }
+  return rawArgs;
+}
+
 function createNode (type, args = {}) {
-  const def = NodeTypes[type];
-  if (!def) throw new Error(`Unknown node type: ${type}`);
+  const def     = NodeTypes[type]; if (!def) throw new Error(`Unknown node type: ${type}`);
+  const node    = { type: def.type };
+  const argDefs = normalizeArgs(def.args);
 
-  const node = { type: def.type };
-
-  for (const [key, meta] of Object.entries(def.args)) {
+  for (const [key, meta] of Object.entries(argDefs)) {
     if (args[key] !== undefined) {
       node[key] = args[key];
     } else if (meta.default !== undefined) {
@@ -24,8 +31,8 @@ function createNode (type, args = {}) {
   return node;
 }
 
-export const AST = new Proxy({}, {
-  get(_, prop) {
+export const ASTNode = new Proxy({}, {
+  get (_, prop) {
     return (args = {}) => createNode(prop, args);
   }
 });
