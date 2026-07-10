@@ -3,7 +3,7 @@
 // :::::: IMPORTS
 
 import { TokenType } from './utils.js';
-import { keywords, operators } from './meta.js';
+import { keywords, puncts, operators } from './meta.js';
 
 // :::::: HELPERS
 
@@ -28,14 +28,8 @@ const PUNCT_RULES = [
 ];
 
 const RULES = [
-  { type: TokenType.RANGE     , regex: /\.\./y },
-  { type: TokenType.COLON     , regex: /:/y    },
-  { type: TokenType.ASSIGN    , regex: /=/y    },
-  { type: TokenType.LBRACE    , regex: /\{/y   },
-  { type: TokenType.RBRACE    , regex: /\}/y   },
-  { type: TokenType.LPAREN    , regex: /\(/y   },
-  { type: TokenType.RPAREN    , regex: /\)/y   },
-  { type: TokenType.SEMICOLON , regex: /;/y    },
+  ...OPERATOR_RULES,
+  ...PUNCT_RULES,
   
   // Literale (Strings & Zahlen)
   { type: TokenType.STRING , regex: /"(?:\\.|[^"\\])*"/y },
@@ -102,6 +96,6 @@ export function Lexer (source) {
     tokenize,
     get column () { return column; },
     get cursor () { return cursor; },
-    get line   () { return line; },
+    get line   () { return line;   },
   };
 }
