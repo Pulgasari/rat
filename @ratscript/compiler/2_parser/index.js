@@ -81,24 +81,22 @@ parsed.For;
 
 
 
-
-// parser/index.js
 import * as declarations from './declarations.js';
 import * as expressions  from './expressions.js';
 import * as statements   from './statements.js';
 
-const parsed = {
+export const parsed = {
   ...declarations,
   ...expressions,
   ...statements,
 };
 
 for (const [name, body] of Object.entries(parsed)) {
-  Object.defineProperty(parsed, name, { 
+  const key = name.replace(/^parse/, '');
+  Object.defineProperty(parsed, key, { 
     get () { return body(); },
     enumerable: true
   });
 }
 
-
-
+parsed.call = name => parsed[name];
