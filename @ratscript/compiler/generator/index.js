@@ -18,6 +18,7 @@ import {
   generateAliasDeclaration,
   generateFunctionDeclaration,
   generateTraitDeclaration,
+  generateVariableDeclaration
 } from './declarations.js';
 
 import {
@@ -29,6 +30,8 @@ import {
   generateMemberExpression,
   generateRangeExpression,
   generateTraitUseExpression,
+
+  generateObjectPattern,
 } from './expressions.js';
 
 const generators = {
@@ -39,12 +42,16 @@ const generators = {
   // Declarations
   FunctionDeclaration  : generateFunctionDeclaration,
   TraitDeclaration     : generateTraitDeclaration,
+  VariableDeclaration  : generateVariableDeclaration,
   
   // Expressions
   CallExpression       : generateCallExpression,
   AssignmentExpression : generateAssignmentExpression,
   RangeExpression      : generateRangeExpression,
   TraitUseExpression   : generateTraitUseExpression,
+
+  // Patterns
+  ObjectPattern        : generateObjectPattern,
 
   // Statements
   ExpressionStatement  : generateExpressionStatement,
