@@ -11,13 +11,19 @@ export function generateLiteral (node) {
   return String(node.value);
 }
 
+// ::::::
+
+export function generateAssignmentExpression (node) {
+  return `${generate(node.left)} = ${generate(node.right)}`;
+}
+
 export function generateCallExpression (node) {
   const args = node.args.map(generate).join(', ');
   return `${generate(node.expr)}(${args})`;
 }
 
-export function generateAssignmentExpression (node) {
-  return `${generate(node.left)} = ${generate(node.right)}`;
+export function generateMemberExpression (node) {
+  return `${generate(node.object)}.${node.property}`;
 }
 
 // RangeExpression (z.B. `1..10`) hat für sich genommen kein direktes JS-Äquivalent
