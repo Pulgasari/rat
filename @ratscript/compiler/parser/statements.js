@@ -2,7 +2,7 @@
 
 import { ASTNode } from './../utils.js';
 import { advance, peek, isToken, isEOF, matchToken, consumeToken } from './state.js';
-import { parseFunctionDeclaration, parseTraitDeclaration } from './declarations.js';
+import { parseAliasDeclaration, parseFunctionDeclaration, parseTraitDeclaration } from './declarations.js';
 import { parseExpression } from './expressions.js';
 
 // :::::: Dispatcher
@@ -10,11 +10,12 @@ import { parseExpression } from './expressions.js';
 export function parseStatement () {
   if (isToken('KEYWORD')) {
     switch (peek().value) {
-      case 'sift'  : return parseSiftStatement();
-      case 'mold'  : return parseMoldStatement();
-      case 'trait' : return parseTraitDeclaration();
+      case 'alias' : return parseAliasDeclaration();
       case 'fn'    : return parseFunctionDeclaration();
       case 'for'   : return parseForStatement();
+      case 'mold'  : return parseMoldStatement();
+      case 'sift'  : return parseSiftStatement();
+      case 'trait' : return parseTraitDeclaration();
     }
   }
   return parseExpressionStatement();
