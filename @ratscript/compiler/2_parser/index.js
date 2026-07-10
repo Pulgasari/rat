@@ -42,13 +42,15 @@ const methods = {
   ...statements,
 };
 
-const Expression = () => {
-  return parseAssignment();
-}
+const Expression = () => parse.Assignment;
+
 const Body = () => {
   const body = [];
   while (!isToken('}') && !isEOF()) {
-    body.push(parseStatement());
+    body.push(parse('Statement'));
+    body.push(parse.Statement());
+    body.push(parse.Statement);
+
   }
   return body;
 }
