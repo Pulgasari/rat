@@ -252,6 +252,22 @@ final sth = ...;
 fixed sth = ...;
 ```
 
+```javascript
+const name = 'Heiko';
+const name : String = 'Heiko';
+const name is String = 'Heiko';
+const String name = 'Heiko';
+String name = 'Heiko';
+```
+
+```javascript
+$name = 'Heiko';
+$name : String = 'Heiko';
+$name is String = 'Heiko';
+String $name = 'Heiko';
+String name = 'Heiko';
+```
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
