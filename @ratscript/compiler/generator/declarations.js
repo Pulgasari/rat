@@ -3,7 +3,13 @@
 import { indent } from './helpers.js';
 import { generateBlockStatement } from './statements.js';
 
-// :::::: fn name(args) use Trait { ... }
+export function generateAliasDeclaration (node) {
+  if (node.autoBind) {
+    const context = generate(node.source.object); // z.B. "database.users"
+    return `const ${node.name} = ${generate(node.source)}.bind(${context});`;
+  }
+  return `const ${node.name} = ${generate(node.source)};`;
+}
 
 export function generateFunctionDeclaration (node) {
   const params   = node.params.join(', ');
@@ -19,10 +25,8 @@ export function generateFunctionDeclaration (node) {
   return `function ${node.name}(${params}) {\n${traitsNote}${indent(bodyCode)}\n}`;
 }
 
-// :::::: trait Name { ... }
 // Noch kein definiertes Laufzeit-Modell (Objekt aus Methoden? Mixin-Funktion?
 // Interface-Check?) -> bewusster Stub statt Rateversuch, analog zu TraitUseExpression.
-
 export function generateTraitDeclaration (node) {
   throw new Error('[Generator-Fehler]: TraitDeclaration-Codegen ist noch nicht spezifiziert.');
 }
