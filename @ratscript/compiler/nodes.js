@@ -40,6 +40,12 @@ VariableDeclaration = {
 
 // :::::: EXPRESSION
 
+AsBindingExpression = {
+  type: 'AsBindingExpression',
+  args: ['expr', 'name']
+  // nur gültig als 'test' von IfStatement/WhileStatement
+},
+
 CallExpression = {
   type: 'CallExpression', 
   args: ['callee', 'arguments'],
@@ -72,6 +78,15 @@ ExpressionStatement = {
   type: 'ExpressionStatement',
   args: ['expression']
 },
+
+IfStatement = {
+  type: 'IfStatement',
+  args: {
+    test:       { required: true }, // Expression | AsBindingExpression
+    consequent: { required: true }, // BlockStatement
+    alternate:  { default: null }   // BlockStatement | IfStatement | null
+  }
+},
   
 ForStatement = {
   type: 'ForStatement',
@@ -94,6 +109,11 @@ SiftStatement = {
   args: ['init', 'cases', 'catchBlock', 'finallyBlock'],
 },
 
+WhileStatement = {
+  type: 'WhileStatement',
+  args: { test: {required:true}, body: {required:true} }
+},
+  
 // ::::::
 
 Expression = {
