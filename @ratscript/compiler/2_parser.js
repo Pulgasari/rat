@@ -4,15 +4,9 @@ s// @ratscript/compiler/parser.js
 
 import { keywords, operators, puncts, TokenType } from './meta.js';
 import * as nodes from './nodes.js';
+import { ASTNode } from './utils.js';
 
 // :::::: HELPERS
-
-function createNode (type, properties = {}) {
-  return {
-    type,
-    ...properties
-  };
-}
 
 function resolveTokenQuery (typeOrValue, maybeValue) {
   return (maybeValue !== undefined)
@@ -65,10 +59,10 @@ function matchToken (typeOrValue, maybeValue) {
 
 // ::: Methods | Parsing
 
-function parse() {
-  const statements = [];
-  while (!isEOF()) statements.push(parseStatement());
-  return nodes.createProgram(statements);
+function parse () {
+  const body = [];
+  while (!isEOF()) body.push(parseStatement());
+  return ASTNode.Program({ body });
 }
 
 function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
