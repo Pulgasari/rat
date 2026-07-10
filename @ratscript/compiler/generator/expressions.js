@@ -40,3 +40,16 @@ export function generateRangeExpression (node) {
 export function generateTraitUseExpression (node) {
   throw new Error('[Generator-Fehler]: TraitUseExpression-Codegen ist noch nicht spezifiziert.');
 }
+
+
+
+/*
+export const
+
+Identifier = node => return node.name,
+Literal    = node => (node.type === 'STRING') ? JSON.stringify(node.value) : String(node.value),
+
+AssignmentExpression = node => `${generate(node.left)} = ${generate(node.right)}`,
+      CallExpression = node => `${generate(node.expr)}(${node.args.map(generate).join(', ')})`,
+    MemberExpression = node => `${generate(node.object)}.${node.property}`,
+*/
