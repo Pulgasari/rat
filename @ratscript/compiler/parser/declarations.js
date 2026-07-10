@@ -2,6 +2,7 @@
 
 import { ASTNode } from './../utils.js';
 import { advance, isToken, matchToken, consumeToken } from './state.js';
+import { parseExpression, parsePrimary } from './expressions.js';
 import { parseBlock } from './statements.js';
 
 // alias <source> as <name>;   
