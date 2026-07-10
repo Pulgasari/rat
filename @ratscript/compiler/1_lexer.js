@@ -19,19 +19,8 @@ const OPERATOR_RULES = operators.map(op => ({
 const PUNCT_RULES = puncts.map(char => ({
   type  : TokenType.PUNCT,
   value : char,
-  regex : new RegExp(`/\${char}/`, 'y')
+  regex : new RegExp(char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'y')
 }));
-
-const PUNCT_RULES = [
-  { type: TokenType.PUNCT, value: '{', regex: /\{/y },
-  { type: TokenType.PUNCT, value: '}', regex: /\}/y },
-  { type: TokenType.PUNCT, value: '(', regex: /\(/y },
-  { type: TokenType.PUNCT, value: ')', regex: /\)/y },
-  { type: TokenType.PUNCT, value: '[', regex: /\[/y },
-  { type: TokenType.PUNCT, value: ']', regex: /\]/y },
-  { type: TokenType.PUNCT, value: ',', regex: /,/y },
-  { type: TokenType.PUNCT, value: ';', regex: /;/y },
-];
 
 const RULES = [
   ...OPERATOR_RULES,
