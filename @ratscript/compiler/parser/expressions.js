@@ -57,7 +57,10 @@ export function parsePrimary () {
 
     // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
     while (true) {
-      if (matchToken('(')) {
+      if (matchToken('.')) {
+        const propToken = consumeToken('IDENTIFIER');
+        expr = ASTNode.MemberExpression({ object: expr, property: propToken.value });
+      } else if (matchToken('(')) {
         const args = [];
         if (!isToken(')')) {
           do {
