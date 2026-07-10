@@ -280,3 +280,62 @@ export default Parser = function (tokens) {
   isToken,
   matchToken,
 };
+
+
+
+
+
+
+
+// parser/index.js
+import { parseStatement } from './parser/statements.js';
+
+// :::::: HELPERS
+
+function resolveTokenQuery (typeOrValue, maybeValue) {
+  return (maybeValue !== undefined)
+    ? { type: typeOrValue, value: maybeValue }
+    : TOKEN_MAP.get(typeOrValue) ?? null;
+}
+
+// :::::: MAIN EXPORT
+
+export function createParser (tokens) {
+  let current = 0;
+
+  function advance  () { if (!isEOF()) current++; return previous(); }
+  function peek     () { return tokens[current]; }
+  function previous () { return tokens[current - 1]; }
+  function isEOF    () { return isToken('EOF'); }
+
+  function isToken (typeOrValue, maybeValue) {
+    const query = resolveTokenQuery(typeOrValue, maybeValue);
+    if (!query) return false;
+    const token = peek();
+    return token.type === query.type && token.value === query.value;
+  }
+
+  function matchToken (typeOrValue, maybeValue) {
+    if (isToken(typeOrValue, maybeValue)) { advance(); return true; }
+    return false;
+  }
+
+  function consumeToken (typeOrValue, maybeValue, message) {
+    if (isToken(typeOrValue, maybeValue)) return advance();
+    const token = peek();
+    const query = resolveTokenQuery(typeOrValue, maybeValue);
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
+  }
+
+  // ctx wird an alle statement/expression parser durchgereicht
+  const ctx = { advance, peek, previous, isEOF, isToken, matchToken, consumeToken };
+  ctx.parseStatement = (...args) => parseStatement(ctx, ...args);
+
+  function parse () {
+    const body = [];
+    while (!isEOF()) body.push(parseStatement(ctx));
+    return ASTNode.Program({ body });
+  }
+
+  return { parse };
+}
