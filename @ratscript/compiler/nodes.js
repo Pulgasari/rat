@@ -4,6 +4,15 @@ export const
 
 // :::::: DECLARATIONS
 
+AliasDeclaration = {
+  type: 'AliasDeclaration',
+  args: {
+    name     : { required: true },  // der neue Name
+    source   : { required: true },  // Expression, auf die aliased wird
+    autoBind : { default: false }   // true nur bei 'as'-Form mit Member-Chain (database.users.save)
+  }
+},
+
 FunctionDeclaration = {
   type: 'FunctionDeclaration',
   args: {
@@ -23,6 +32,12 @@ TraitDeclaration = {
 },
 
 // :::::: EXPRESSION
+
+MemberExpression = {
+  type: 'MemberExpression',
+  args: ['object', 'property']
+  // property: einfacher String-Name der Property (nur '.'-Zugriff, kein '[...]' bisher)
+},
 
 RangeExpression = {
   type: 'RangeExpression',
