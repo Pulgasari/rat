@@ -40,6 +40,40 @@ export function generateForStatement (node) {
   throw new Error('[Generator-Fehler]: Standard-For-Loops (nicht "naked") sind im AST noch nicht vollständig genug abgebildet (fehlende condition/update).');
 }
 
+
+// 'if (expr as name) { ... }' hat kein direktes JS-Äquivalent (kein 'let' in einer
+// Expression-Position) -> wird in einen eigenen Block-Scope mit Temp-Variable gepackt:
+//
+//   if (expr as name) { body }      ->  { let __as_tmp = expr; if (__as_tmp) { let name = __as_tmp; body } }
+//   while (expr as name) { body }   ->  { let __as_tmp; while ((__as_tmp = expr)) { let name = __as_tmp; body } }
+//
+// Jedes Binding kriegt seinen EIGENEN Block-Scope (anders als der alte, global
+// gehoistete __as_tmp) -> keine Kollisionsgefahr zwischen mehreren 'as'-Bindings.
+
+function generateElseBranch (alternate) {
+  if (!alternate) return '';
+  
+  return (alternate.type === 'IfStatement')
+    ? ` else ${generateIfStatement(alternate)}`
+    : ` else {\n${indent(generateBlockStatement(alternate))}\n}`;
+}
+
+export function generateIfStatement (node) {
+  if (node.test.type === 'AsBindingExpression') {
+    const { expr, name } = node.test;
+
+    let inner = `if (__as_tmp) {\n`;
+    inner += `  let ${name} = __as_tmp;\n`;
+    inner += indent(generateBlockStatement(node.consequent)) + '\n';
+    inner += `}`;
+    inner += generateElseBranch(node.alternate);
+
+    return `{\n  let __as_tmp = ${generate(expr)};\n${indent(inner)}\n}`;
+  }
+
+  return `if (${generate(node.test)}) {\n${indent(generateBlockStatement(node.consequent))}\n}` + generateElseBranch(node.alternate);
+}
+
 // :::::: sift { init: ..., cond: ... }
 
 export function generateSiftStatement (node) {
@@ -111,4 +145,19 @@ export function generateMoldStatement (node) {
   js += `  return self;\n`;
   js += `})();`;
   return js;
+}
+
+export function generateWhileStatement (node) {
+  if (node.test.type === 'AsBindingExpression') {
+    const { expr, name } = node.test;
+
+    let inner = `while ((__as_tmp = ${generate(expr)})) {\n`;
+    inner += `  let ${name} = __as_tmp;\n`;
+    inner += indent(generateBlockStatement(node.body)) + '\n';
+    inner += `}`;
+
+    return `{\n  let __as_tmp;\n${indent(inner)}\n}`;
+  }
+
+  return `while (${generate(node.test)}) {\n${indent(generateBlockStatement(node.body))}\n}`;
 }
