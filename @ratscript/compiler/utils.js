@@ -3,7 +3,7 @@
 import * as NodeTypes from './nodes.js';
 
   
-export function createNode (type, args = {}) {
+function createNode (type, args = {}) {
   const def = NodeTypes[type];
   if (!def) throw new Error(`Unknown node type: ${type}`);
 
@@ -24,7 +24,7 @@ export function createNode (type, args = {}) {
   return node;
 }
 
-export const create = new Proxy({}, {
+export const AST = new Proxy({}, {
   get(_, prop) {
     return (args = {}) => createNode(prop, args);
   }
