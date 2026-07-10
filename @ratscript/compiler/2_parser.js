@@ -25,11 +25,9 @@ function resolveTokenQuery (typeOrValue, maybeValue) {
 // ::: TokenMap
 
 const TOKEN_MAP = new Map();
-for (const value of keywords) TOKEN_MAP.set(value, { value, type: TokenType.KEYWORD });
-for (const value of puncts)   TOKEN_MAP.set(value, { value, type: TokenType.PUNCT   });
-for (const value of Object.keys(operators)) {
-  TOKEN_MAP.set(value, { type: TokenType.OPERATOR, value });
-}
+for (const value of keywords)               TOKEN_MAP.set(value, { value, type: TokenType.KEYWORD  });
+for (const value of puncts)                 TOKEN_MAP.set(value, { value, type: TokenType.PUNCT    });
+for (const value of Object.keys(operators)) TOKEN_MAP.set(value, { value, type: TokenType.OPERATOR });
 
 // ::: State
 
@@ -38,14 +36,11 @@ let tokens;
 
 // ::: Methods | Consume + Navigate
 
+function advance  () { if (!isEOF()) current++; return previous(); }
 function peek     () { return tokens[current]; }
 function previous () { return tokens[current - 1]; }
 function isEOF    () { return isToken('EOF'); }
 
-function advance () {
-    if (!isEOF()) current++;
-    return previous();
-}
 function consumeToken (typeOrValue, maybeValue, message) {
   if (isToken(typeOrValue, maybeValue)) return advance();
   const token = peek();
@@ -103,26 +98,26 @@ function parseExpression () {
 
 function parseExpressionStatement () {
   const expr = parseExpression();
-  matchToken(':'); // optionales Semikolon schlucken
+  matchToken(':');
   return nodes.createExpressionStatement(expr);
 }
 
 function parseForStatement () {
-    advance(); // 'for'
-    consumeToken('(');
+  advance(); // 'for'
+  consumeToken('(');
 
-    let initializer = null;
-    let isNaked     = true;
+  let initializer = null;
+  let isNaked     = true;
 
-    // Erkennung ob Standard-Loop oder Naked-Loop
-    if (isToken('KEYWORD') && ['let', 'const', 'var'].includes(this.peek().value)) {
-      // Standard JS Loop
-      isNaked = false;
-      initializer = parseExpression(); // Für den Prototyp als Expression abgefangen
-    } else {
-      // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
-      initializer = parseExpression();
-    }
+  // Erkennung ob Standard-Loop oder Naked-Loop
+  if (isToken('KEYWORD') && ['let', 'const', 'var'].includes(this.peek().value)) {
+    // Standard JS Loop
+    isNaked = false;
+    initializer = parseExpression(); // Für den Prototyp als Expression abgefangen
+  } else {
+    // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
+    initializer = parseExpression();
+  }
 
     consumeToken(')');
     consumeToken('{');
@@ -175,13 +170,13 @@ parseMoldStatement () { // mold(target) { init: ..., cond: ... }
 // fn name(args) use Trait { ... }
 function parseFunctionDeclaration () {
   advance(); // 'fn'
-  const nameToken = consumeToken('IDENTIFIER', "Erwarte Funktionsnamen.");
+  const nameToken = consumeToken('IDENTIFIER');
     
   consumeToken('(');
   const params = [];
   if (!isToken(')')) {
     do {
-      params.push(consumeToken('IDENTIFIER', "Erwarte Parametername.").value);
+      params.push(consumeToken('IDENTIFIER').value);
     } while (matchToken(';')); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
   }
   consumeToken(')');
@@ -190,7 +185,7 @@ function parseFunctionDeclaration () {
   const traits = [];
   if (isToken('use')) {
     advance(); // 'use'
-    traits.push(consumeToken('IDENTIFIER', "Erwarte Trait-Name nach 'use'.").value);
+    traits.push(consumeToken('IDENTIFIER').value);
   }
 
   consumeToken('{');
@@ -206,7 +201,7 @@ function parseFunctionDeclaration () {
 // trait Name { ... }
 function parseTraitDeclaration () {
   advance(); // 'trait'
-  const nameToken = consumeToken('IDENTIFIER', "Erwarte Name des Traits.");
+  const nameToken = consumeToken('IDENTIFIER');
   consumeToken('{');
     
   const bodyStatements = [];
@@ -222,7 +217,7 @@ function parseTraitUse () { // Expression 'use' TraitName
     let expr = parseRange();
     if (isToken('use')) {
       advance(); // 'use'
-      const traitName = consumeToken('IDENTIFIER', "Erwarte Trait-Name nach 'use'.").value;
+      const traitName = consumeToken('IDENTIFIER').value;
       expr = nodes.createTraitUseExpression(expr, traitName);
     }
     return expr;
@@ -244,6 +239,8 @@ function parsePrimary () {
   }
   if (matchToken('STRING')) {
     return nodes.createLiteral('STRING', previous().value);
+    return create.Literal('STRING', previous().value);
+    return node.Literal('STRING', previous().value);
   }
   if (matchToken('IDENTIFIER')) {
     let expr = nodes.createIdentifier(previous().value);
@@ -270,7 +267,7 @@ function parsePrimary () {
 }
 
 // sift { init: ..., cond: ... }
-parseSiftStatement () {
+function parseSiftStatement () {
   advance(); // 'sift'
   consumeToken('{');
 
@@ -290,11 +287,33 @@ parseSiftStatement () {
   consumeToken('}');
   return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
   return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
+  return create.SiftStatement({ init, cases, catchBlock, finallyBlock });
+  return node.SiftStatement({ init, cases, catchBlock, finallyBlock });
 }
 
 // ::: EXPORT PARSER OBJECT
 
 export default Parser = function (tokens) {
+  consumeToken,
+  isToken,
+  matchToken,
+
+  check,
+  consume,
+  match,
+
+  check,
+  eat,
+  match,
+
+  parser.check,
+  parser.eat,
+  parser.match,
+
+  TKN.is,
+  TKN.expect,
+  TKN.match,
+
   consumeToken,
   isToken,
   matchToken,
