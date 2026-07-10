@@ -1,27 +1,22 @@
 // @ratscript/compiler/generator.js
 
+function wrapInIIFE (code) {
+ return `(() => {\n` + code + `})();`;
+}
+
 export class Generator {
-  generate(node) {
+  generate (node) {
     if (!node) return '';
 
     switch (node.type) {
-      case 'Program':
-        // Das gesamte Programm besteht aus einer Liste von Statements
-        return node.body.map(stmt => this.generate(stmt)).join('\n');
-
-      case 'SiftStatement':
-        return this.generateSift(node);
-
-      case 'Expression':
-        // Ein einfacher Ausdruck bekommt im JS-Output sein Semikolon
-        return `${node.value};`;
-
-      default:
-        throw new Error(`[Generator-Fehler]: Unbekannter AST-Knoten-Typ "${node.type}"`);
+      case 'Program'       : return node.body.map(stmt => this.generate(stmt)).join('\n'); // Das gesamte Programm besteht aus einer Liste von Statements
+      case 'SiftStatement' : return this.generateSift(node);
+      case 'Expression'    : return `${node.value};`; // Ein einfacher Ausdruck bekommt im JS-Output sein Semikolon
+      default              : throw new Error(`[Generator-Fehler]: Unbekannter AST-Knoten-Typ "${node.type}"`);
     }
   }
 
-  generateSift(node) {
+  generateSift (node) {
     let js = `(() => {\n`;
 
     // 1. 'init'-Block ausführen (falls vorhanden)
@@ -65,4 +60,5 @@ export class Generator {
     js += `})();`;
     return js;
   }
-  }
+  
+}
