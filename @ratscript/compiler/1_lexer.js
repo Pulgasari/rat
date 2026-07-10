@@ -8,18 +8,19 @@ import { keywords, puncts, operators } from './meta.js';
 // :::::: HELPERS
 
 const isKeyword = value => keywords.includes(value);
+const rgx       = (value, flags) => new RegExp(RegExp.escape(value), flags); 
 
 // :::::: LEXER RULES
 
 const OPERATOR_RULES = Object.keys(operators).map(char => ({
   type  : TokenType.OPERATOR,
-  regex : new RegExp(RegExp.escape(char), 'y')
+  regex : rgx(char, 'y'),
 }));
 
 const PUNCT_RULES = puncts.map(char => ({
   type  : TokenType.PUNCT,
   value : char,
-  regex : new RegExp(RegExp.escape(char), 'y')
+  regex : rgx(char, 'y'),
 }));
 
 const RULES = [
@@ -44,7 +45,8 @@ export function Lexer (source) {
     const tokens = [];
 
     while (cursor < source.length) {
-      const char = source[cursor];
+      let char    = source[cursor];
+      let matched = false;
 
       // skip linebreaks + whitespaces
       if (char === '\n')   { column = 1; cursor++; line++; continue; }
@@ -57,9 +59,7 @@ export function Lexer (source) {
         }
         continue;
       }
-
-      let matched = false;
-
+      
       for (const { regex, type } of RULES) {
         regex.lastIndex = cursor;
         const match = regex.exec(source);
@@ -82,7 +82,7 @@ export function Lexer (source) {
 
       if (!matched) throw new SyntaxError(`Ungültiges Zeichen '${char}' an Position ${line}:${column}`);
     }
-
+    // end of file
     tokens.push({ column, line, type: TokenType.EOF, value: '' });
     return tokens;
   }
