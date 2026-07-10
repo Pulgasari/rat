@@ -2,28 +2,29 @@
 
 import { generate } from './index.js';
 
-export function generateIdentifier (node) {
-  return node.name;
+export function generateIdentifier ({ name }) {
+  return name;
 }
 
-export function generateLiteral (node) {
-  if (node.type === 'STRING') return JSON.stringify(node.value);
-  return String(node.value);
+export function generateLiteral ({ type,value }) {
+  return (type === 'STRING') 
+    ? JSON.stringify(value)
+    : String(value);
 }
 
 // ::::::
 
-export function generateAssignmentExpression (node) {
-  return `${generate(node.left)} = ${generate(node.right)}`;
+export function generateAssignmentExpression ({ left, right }) {
+  return `${generate(left)} = ${generate(right)}`;
 }
 
-export function generateCallExpression (node) {
-  const args = node.args.map(generate).join(', ');
-  return `${generate(node.expr)}(${args})`;
+export function generateCallExpression ({ expr, args }) {
+  const argsList = args.map(generate).join(', ');
+  return `${generate(expr)}(${argsList})`;
 }
 
-export function generateMemberExpression (node) {
-  return `${generate(node.object)}.${node.property}`;
+export function generateMemberExpression ({ object, property }) {
+  return `${generate(object)}.${property}`;
 }
 
 // RangeExpression (z.B. `1..10`) hat für sich genommen kein direktes JS-Äquivalent
@@ -41,7 +42,12 @@ export function generateTraitUseExpression (node) {
   throw new Error('[Generator-Fehler]: TraitUseExpression-Codegen ist noch nicht spezifiziert.');
 }
 
-
+export function generateObjectPattern (node) {
+  const props = node.properties
+    .map(p => p.key === p.value ? p.key : `${p.key}: ${p.value}`)
+    .join(', ');
+  return `{ ${props} }`;
+}
 
 /*
 export const
