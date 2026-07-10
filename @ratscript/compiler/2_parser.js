@@ -119,15 +119,15 @@ function parseForStatement () {
     initializer = parseExpression();
   }
 
-    consumeToken(')');
-    consumeToken('{');
-    const bodyStatements = [];
-    while (!isToken('}') && !isEOF()) {
-      bodyStatements.push(parseStatement());
-    }
-    consumeToken('}');
+  consumeToken(')');
+  consumeToken('{');
+  const bodyStatements = [];
+  while (!isToken('}') && !isEOF()) {
+    bodyStatements.push(parseStatement());
+  }
+  consumeToken('}');
 
-    return create.ForStatement({ initializer, isNaked, nodes.createBlock(bodyStatements) });
+  return AST.ForStatement({ initializer, isNaked, body: AST.Block({ body: bodyStatements }) });
 }
 
 function parseStatement () {
