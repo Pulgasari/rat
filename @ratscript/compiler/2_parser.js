@@ -1,9 +1,9 @@
-s// @ratscript/compiler/parser.js
+// @ratscript/compiler/parser.js
 
 // :::::: IMPORTS
 
 import { keywords, operators, puncts, TokenType } from './meta.js';
-import * as nodes from './nodes.js';
+//import * as nodes from './nodes.js';
 import { ASTNode } from './utils.js';
 
 // :::::: HELPERS
@@ -65,6 +65,16 @@ function parse () {
   return ASTNode.Program({ body });
 }
 
+function parseBlock () {
+  consumeToken('{');
+  const body = [];
+  while (!isToken('}') && !isEOF()) {
+    body.push(parseStatement());
+  }
+  consumeToken('}');
+  return ASTNode.BlockStatement({ body });
+}
+
 function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
   if (matchToken('{')) {
     const body = [];
@@ -114,14 +124,9 @@ function parseForStatement () {
   }
 
   consumeToken(')');
-  consumeToken('{');
-  const bodyStatements = [];
-  while (!isToken('}') && !isEOF()) {
-    bodyStatements.push(parseStatement());
-  }
-  consumeToken('}');
-
-  return ASTNode.ForStatement({ initializer, isNaked, body: ASTNode.BlockStatement({ body: bodyStatements }) });
+  
+  const body = parseBlock();
+  return ASTNode.ForStatement({ initializer, isNaked, body });
 }
 
 function parseStatement () {
@@ -182,29 +187,17 @@ function parseFunctionDeclaration () {
     traits.push(consumeToken('IDENTIFIER').value);
   }
 
-  consumeToken('{');
-  const bodyStatements = [];
-  while (!isToken('}') && !isEOL()) {
-    bodyStatements.push(parseStatement());
-  }
-  consumeToken('}');
+  const body = parseBlock();
 
-  return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body: ASTNode.Block({ body: bodyStatements }) });
+  return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body });
 }
 
 // trait Name { ... }
 function parseTraitDeclaration () {
   advance(); // 'trait'
   const nameToken = consumeToken('IDENTIFIER');
-  
-  consumeToken('{');
-  const bodyStatements = [];
-  while (!isToken('}') && !isEOF()) {
-    bodyStatements.push(parseStatement());
-  }
-  consumeToken('}');
-  
-  return ASTNode.TraitDeclaration({ name: nameToken.value, body: ASTNode.Block({ body: bodyStatements }) });
+  const body      = parseBlock();
+  return ASTNode.TraitDeclaration({ name: nameToken.value, body });
 }
 
 function parseTraitUse () { // Expression 'use' TraitName
@@ -212,19 +205,19 @@ function parseTraitUse () { // Expression 'use' TraitName
     if (isToken('use')) {
       advance(); // 'use'
       const traitName = consumeToken('IDENTIFIER').value;
-      expr = create.TraitUseExpression({ expr, traitName });
+      expr = ASTNode.TraitUseExpression({ expr, traitName });
     }
     return expr;
   }
 
   
 function parseRange() { // From '..' To
-  let expr = parsePrimary();
+  let from = parsePrimary();
   if (matchToken('..')) {
-    const toExpr = parsePrimary();
-    return create.RangeExpression({ expr, toExpr });
+    const to = parsePrimary();
+    return ASTNode.RangeExpression({ from, to });
   }
-  return expr;
+  return from;
 }
 
 function parsePrimary () {
@@ -277,35 +270,12 @@ function parseSiftStatement () {
   }
 
   consumeToken('}');
-  return nodes.createSiftStatement(init, cases, catchBlock, finallyBlock);
-  return createNode('SiftStatement', { init, cases, catchBlock, finallyBlock });
-  return create.SiftStatement({ init, cases, catchBlock, finallyBlock });
-  return node.SiftStatement({ init, cases, catchBlock, finallyBlock });
+  return ASTNode.SiftStatement({ init, cases, catchBlock, finallyBlock });
 }
 
 // ::: EXPORT PARSER OBJECT
 
 export default Parser = function (tokens) {
-  consumeToken,
-  isToken,
-  matchToken,
-
-  check,
-  consume,
-  match,
-
-  check,
-  eat,
-  match,
-
-  parser.check,
-  parser.eat,
-  parser.match,
-
-  TKN.is,
-  TKN.expect,
-  TKN.match,
-
   consumeToken,
   isToken,
   matchToken,
