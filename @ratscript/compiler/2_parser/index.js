@@ -29,3 +29,38 @@ export function parse (tokens) {
   return ASTNode.Program({ body });
 }
 */
+
+
+
+import * as declarations from './declarations.js';
+import * as expressions  from './expressions.js';
+import * as statements   from './statements.js';
+
+const methods = { 
+  ...declarations,
+  ...expressions,
+  ...statements,
+};
+
+const Expression = () => {
+  return parseAssignment();
+}
+const Body = () => {
+  const body = [];
+  while (!isToken('}') && !isEOF()) {
+    body.push(parseStatement());
+  }
+  return body;
+}
+
+export const parse = name => methods[name]();
+
+parse('Body');
+parse('Expression');
+parse('For');
+
+parse.Body();
+parse.Expression();
+parse.For();
+
+
