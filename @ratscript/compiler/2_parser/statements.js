@@ -1,6 +1,7 @@
 // @ratscript/compiler/parser/statements.js
 
 import { ASTNode } from './../utils.js';
+import { parseBody } from './index.js';
 import { advance, peek, isToken, isEOF, matchToken, consumeToken } from './state.js';
 import { parseAliasDeclaration, parseFunctionDeclaration, parseTraitDeclaration } from './declarations.js';
 import { parseExpression } from './expressions.js';
@@ -26,20 +27,14 @@ export function parseStatement () {
 
 export function parseBlock () {
   consumeToken('{');
-  const body = [];
-  while (!isToken('}') && !isEOF()) {
-    body.push(parseStatement());
-  }
+  const body = parseBody();
   consumeToken('}');
   return ASTNode.BlockStatement({ body });
 }
 
-export function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
+export function parseActionBlock () {
   if (matchToken('{')) {
-    const body = [];
-    while (!isToken('}') && !isEOF()) {
-      body.push(parseStatement());
-    }
+    const body = parseBody();
     consumeToken('}');
     return ASTNode.BlockStatement({ body });
   }
@@ -127,3 +122,27 @@ export function parseMoldStatement () {
   consumeToken('}');
   return ASTNode.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
 }
+
+/*
+export function parseBlock () {
+  consumeToken('{');
+  const body = [];
+  while (!isToken('}') && !isEOF()) {
+    body.push(parseStatement());
+  }
+  consumeToken('}');
+  return ASTNode.BlockStatement({ body });
+}
+
+export function parseActionBlock () { // Hilfsmethode für Kaskaden-Aktionen (Erlaubt Einzeiler oder { Blöcke })
+  if (matchToken('{')) {
+    const body = [];
+    while (!isToken('}') && !isEOF()) {
+      body.push(parseStatement());
+    }
+    consumeToken('}');
+    return ASTNode.BlockStatement({ body });
+  }
+  return ASTNode.BlockStatement({ body: [parseStatement()] });
+}
+*/
