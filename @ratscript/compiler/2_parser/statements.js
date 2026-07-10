@@ -13,11 +13,13 @@ export function parseStatement () {
       case 'const' : return parsed.VariableDeclaration;
       case 'fn'    : return parsed.FunctionDeclaration;
       case 'for'   : return parsed.ForStatement;
+      case 'if'    : return parsed.IfStatement;
       case 'let'   : return parsed.VariableDeclaration;
       case 'mold'  : return parsed.MoldStatement;
       case 'sift'  : return parsed.SiftStatement;
       case 'trait' : return parsed.TraitDeclaration;
       case 'var'   : return parsed.VariableDeclaration;
+      case 'while' : return parsed.WhileStatement;
     }
   }
   return parsed.ExpressionStatement;
