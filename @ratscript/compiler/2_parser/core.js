@@ -150,3 +150,24 @@ export function parseMethodLike () {
   return { name: nameToken.value, params, body };
 }
 
+export function parseObjectPattern () {
+  consumeToken('{');
+  const properties = [];
+
+  if (!isToken('}')) {
+    do {
+      const keyToken = consumeToken('IDENTIFIER');
+      let valueName = keyToken.value;
+
+      if (isToken('as')) {
+        advance(); // 'as'
+        valueName = consumeToken('IDENTIFIER').value;
+      }
+
+      properties.push({ key: keyToken.value, value: valueName });
+    } while (matchToken(','));
+  }
+
+  consumeToken('}');
+  return ASTNode.ObjectPattern({ properties });
+}
