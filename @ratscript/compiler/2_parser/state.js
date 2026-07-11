@@ -1,8 +1,5 @@
 // @ratscript/compiler/parser/state.js
 
-// Modul-State für EINEN laufenden Parse-Vorgang (Singleton).
-// Wird per init(tokens) vor jedem parse()-Aufruf zurückgesetzt.
-
 import { keywords, operators, puncts, TokenType } from './../meta.js';
 
 // :::::: TokenMap
@@ -28,6 +25,18 @@ let tokens;
 export function init (inputTokens) {
   tokens  = inputTokens;
   current = 0;
+}
+
+let stack = [];
+
+export function pushState (inputTokens) {
+  stack.push({ tokens, current });
+  tokens  = inputTokens;
+  current = 0;
+}
+
+export function popState () {
+  ({ tokens, current } = stack.pop());
 }
 
 // :::::: Navigate
