@@ -46,6 +46,11 @@ export function parseObjectProperties () {
 // :::::: Dispatcher
 
 export function parseStatement () {
+  // Labeled Statements
+  if (isToken('IDENTIFIER') && peekNext()?.value === ':') {
+    return parsed.LabeledStatement;
+  }
+  
   if (isToken('KEYWORD')) {
     switch (peek().value) {
       case 'alias'    : return parsed.AliasDeclaration;
@@ -69,6 +74,13 @@ export function parseStatement () {
     }
   }
   return parsed.ExpressionStatement;
+}
+
+function parseLabeledStatement () {
+  const labelToken = advance(); // Label-Identifier
+  advance(); // ':'
+  const body = parsed.Statement; // wraps IRGENDEIN Statement, typischerweise for/while
+  return ASTNode.LabeledStatement({ label: labelToken.value, body });
 }
 
 // :::::: Block-Helpers
