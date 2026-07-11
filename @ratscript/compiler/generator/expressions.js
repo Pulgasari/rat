@@ -8,6 +8,10 @@ export function generateAssignmentExpression ({ left, right }) {
   return `${generate(left)} = ${generate(right)}`;
 }
 
+export function generateAwaitExpression (node) {
+  return `await ${generate(node.argument)}`;
+}
+
 export function generateBinaryExpression (node) {
   return `${generate(node.left)} ${node.operator} ${generate(node.right)}`;
 }
@@ -83,7 +87,9 @@ export function generateUnaryExpression (node) {
   return `${symbol}${spacer}${generate(node.argument)}`;
 }
 
-
+export function generateYieldExpression (node) {
+  return node.argument === null ? 'yield' : `yield ${generate(node.argument)}`;
+}
 
 
 
