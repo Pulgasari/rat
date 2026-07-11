@@ -57,7 +57,10 @@ export function generateRangeExpression ({ from, to ) {
 }
 
 export function generateTraitUseExpression (node) {
-  return `${node.traitName}.apply(${generate(node.expr)})`;
+  // { } use A, B
+  // ->  B.apply(A.apply({ }))  
+  // -- A wird zuerst appliziert, B zuletzt
+  return node.traitNames.reduce((code, name) => `${name}.apply(${code})`, generate(node.expr));
 }
 
 export function generateTupleExpression (node) {
