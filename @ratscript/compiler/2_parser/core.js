@@ -26,8 +26,14 @@ export function parseObjectProperties () {
         properties.push({ kind: 'method', key: name, params, body });
       } else {
         const keyToken = consumeToken('IDENTIFIER');
-        consumeToken(':');
-        const value = parsed.Assignment; // NICHT parseExpression -> ',' trennt Properties, keine Komma-Expression
+        let value;
+
+        if (matchToken(':')) {
+          value = parsed.Assignment;
+        } else { // Shorthand: { x } -> { x: x }
+          value = ASTNode.Identifier({ name: keyToken.value });
+        }
+
         properties.push({ kind: 'init', key: keyToken.value, value });
       }
     } while (matchToken(','));
