@@ -86,22 +86,8 @@ export function parseActionBlock () {
   return ASTNode.BlockStatement({ body: [parsed.Statement] });
 }
 
-// :::::: gemeinsamer Helper für #(...) und #[...]
 
-function parseBracketedElements (open, close) {
-  consumeToken(open);
-  const elements = [];
 
-  if (!isToken(close)) {
-    do {
-      if (isToken(close)) break; // trailing comma erlaubt
-      elements.push(parsed.Expression);
-    } while (matchToken(','));
-  }
-
-  consumeToken(close);
-  return elements;
-}
 
 export function parseConditionTest () {
   const expr = parsed.Expression;
@@ -193,6 +179,22 @@ export function parseObjectPattern () {
 // :::::: INTERNAL HELPERS
 // can't be exported to avoid conflicts with 'evilObject' because they have arguments
 // TODO: maybe find a solution to change this
+
+// :::::: gemeinsamer Helper für #(...) und #[...]
+function parseBracketedElements (open, close) {
+  consumeToken(open);
+  const elements = [];
+
+  if (!isToken(close)) {
+    do {
+      if (isToken(close)) break; // trailing comma erlaubt
+      elements.push(parsed.Expression);
+    } while (matchToken(','));
+  }
+
+  consumeToken(close);
+  return elements;
+}
 
 // :::::: .property und (...) beliebig kaskadierbar, auf JEDER Primary-Form.
 // Zentralisiert statt pro Branch dupliziert -> jede neue Primary-Form (Tuple, List, ...)
