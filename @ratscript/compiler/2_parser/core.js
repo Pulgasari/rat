@@ -111,6 +111,8 @@ export function parsePrimary () {
     expr = ASTNode.Literal({ kind: 'NUMBER', value: previous().value });
   } else if (matchToken('STRING')) {
     expr = ASTNode.Literal({ kind: 'STRING', value: previous().value });
+  } else if (isToken('TEMPLATE_STRING')) {
+    expr = parsed.TemplateLiteral;
   } else if (matchToken('(')) {
     // Geklammerte Gruppierung, z.B. (1 + 2) * 3 -> gibt einfach den inneren Ausdruck zurück
     expr = parsed.Expression;
