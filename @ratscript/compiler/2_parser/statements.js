@@ -14,14 +14,18 @@ export function parseExpressionStatement () {
 
 export function parseBreakStatement () {
   advance(); // 'break'
+  let label = null;
+  if (isToken('IDENTIFIER')) label = advance().value;
   matchToken(';');
-  return ASTNode.BreakStatement({});
+  return ASTNode.BreakStatement({ label });
 }
 
 export function parseContinueStatement () {
   advance(); // 'continue'
+  let label = null;
+  if (isToken('IDENTIFIER')) label = advance().value;
   matchToken(';');
-  return ASTNode.ContinueStatement({});
+  return ASTNode.ContinueStatement({ label });
 }
 
 // :::::: for (...) { ... }
