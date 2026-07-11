@@ -1,5 +1,10 @@
 // @ratscript/compiler/parser/nodes.js
 
+// :::::: PLACEHOLDERS
+// transient - taucht nie im finalen AST auf, wird schon beim Parsen aufgelöst
+
+PipePlaceholder = { type: 'PipePlaceholder', args: [] },
+
 // :::::: DECLARATIONS
 
 AliasDeclaration = {
@@ -49,6 +54,12 @@ AsBindingExpression = {
 CallExpression = {
   type: 'CallExpression', 
   args: ['callee', 'args', 'namedArgs'],
+},
+
+CompoundAssignmentExpression = {
+  type: 'CompoundAssignmentExpression',
+  args: ['operator', 'left', 'right']
+  // operator: '+=' | '-=' | '*=' | ... (aktuell nur '+=' semantisch implementiert)
 },
 
 MemberExpression = {
