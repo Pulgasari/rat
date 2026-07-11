@@ -30,6 +30,11 @@ export function generateCompoundAssignmentExpression (node) {
   throw new Error(`[Generator-Fehler]: Compound-Assignment-Operator '${node.operator}' ist noch nicht implementiert (bisher nur '+=' via _assign).`);
 }
 
+export function generateListExpression (node) {
+  useHelper('List');
+  return `new List(${node.elements.map(generate).join(', ')})`;
+}
+
 export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
 }
@@ -54,6 +59,13 @@ export function generateRangeExpression ({ from, to ) {
 export function generateTraitUseExpression (node) {
   return `${node.traitName}.apply(${generate(node.expr)})`;
 }
+
+export function generateTupleExpression (node) {
+  useHelper('Tuple');
+  return `new Tuple(${node.elements.map(generate).join(', ')})`;
+}
+
+
 
 /*
 export const
