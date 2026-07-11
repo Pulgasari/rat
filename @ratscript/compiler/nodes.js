@@ -233,6 +233,11 @@ Literal = {
   args: ['kind','value'],
 },
 
+TemplateLiteral = {
+  type: 'TemplateLiteral',
+  args: ['quasis', 'expressions']
+}, // quasis: string[] (Länge = expressions.length + 1)
+
 Program: {
   type: 'Program',
   args: { 
