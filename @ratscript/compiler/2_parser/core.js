@@ -108,6 +108,10 @@ export function parsePrimary () {
     expr = ASTNode.Literal({ kind: 'NUMBER', value: previous().value });
   } else if (matchToken('STRING')) {
     expr = ASTNode.Literal({ kind: 'STRING', value: previous().value });
+  } else if (matchToken('(')) {
+    // Geklammerte Gruppierung, z.B. (1 + 2) * 3 -> gibt einfach den inneren Ausdruck zurück
+    expr = parsed.Expression;
+    consumeToken(')');
   } else if (matchToken('#')) {
     if (isToken('(')) {
       expr = ASTNode.TupleExpression({ elements: parseBracketedElements('(', ')') });
@@ -119,6 +123,21 @@ export function parsePrimary () {
     }
   } else if (isToken('{')) {
     expr = ASTNode.ObjectExpression({ properties: parsed.ObjectProperties });
+  } else if (matchToken('new')) {
+    let callee = ASTNode.Identifier({ name: consumeToken('IDENTIFIER').value });
+    while (matchToken('.')) {
+      callee = ASTNode.MemberExpression({ object: callee, property: consumeToken('IDENTIFIER').value });
+    }
+
+    let args = [];
+    if (matchToken('(')) {
+      if (!isToken(')')) {
+        do { args.push(parsed.Expression); } while (matchToken(','));
+      }
+      consumeToken(')');
+    }
+
+    expr = ASTNode.NewExpression({ callee, args });
   } else if (isToken('IDENTIFIER') && peek().value === '_') {
     advance();
     expr = ASTNode.PipePlaceholder({});
@@ -131,8 +150,6 @@ export function parsePrimary () {
 
   return parsePostfix(expr);
 }
-
-
 
 // :::::: gemeinsame Param-Liste (fn + class-Methoden)
 export function parseParamList () {
