@@ -29,7 +29,7 @@ const RULES = [
   // Literale (Strings & Zahlen)
   { type: TokenType.STRING , regex: /"(?:\\.|[^"\\])*"/y },
   { type: TokenType.STRING , regex: /'(?:\\.|[^'\\])*'/y },
-  { type: TokenType.NUMBER , regex: /\d+/y,              },
+  { type: TokenType.NUMBER , regex: /\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/y },
   
   // Identifiers (Variablen, Funktionen, Keywords)
   { regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/y, type: TokenType.IDENTIFIER }
