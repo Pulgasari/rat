@@ -134,6 +134,9 @@ BlockStatement = {
   args: ['body']
 },
 
+BreakStatement    = { type: 'BreakStatement',    args: [] },
+ContinueStatement = { type: 'ContinueStatement', args: [] },
+
 ExpressionStatement = {
   type: 'ExpressionStatement',
   args: ['expression']
