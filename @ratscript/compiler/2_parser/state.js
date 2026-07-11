@@ -63,3 +63,24 @@ export function consumeToken (typeOrValue, maybeValue, message) {
   const query = resolveTokenQuery(typeOrValue, maybeValue);
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: ${message || `Erwarte '${query?.value}'`} (Gefunden: '${token.value}')`);
 }
+
+// Runtime Helpers Tracking
+
+// @ratscript/compiler/generator/state.js
+//
+// Sammelt während EINES generate(Program)-Laufs, welche Runtime-Helper
+// (_fn, _assign, _inc, _is, _proxy, ...) tatsächlich gebraucht wurden,
+// damit generateProgram nur die nötigen Imports voranstellt.
+
+const usedHelpers = new Set;
+export const resetHelpers   = ()     => usedHelpers.clear();
+export const useHelper      = (name) => usedHelpers.add(name);
+export const getUsedHelpers = ()     => [...usedHelpers];
+
+
+
+
+
+
+
+
