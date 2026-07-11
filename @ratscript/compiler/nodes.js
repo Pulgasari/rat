@@ -161,6 +161,11 @@ MoldStatement = {
   }
 },
 
+ReturnStatement = {
+  type: 'ReturnStatement',
+  args: ['argument']
+},
+
 SiftStatement = {
   type: 'SiftStatement', 
   args: ['init', 'cases', 'catchBlock', 'finallyBlock'],
