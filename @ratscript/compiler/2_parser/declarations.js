@@ -54,7 +54,7 @@ export function parseFunctionDeclaration () {
   if (!isToken(')')) {
     do {
       params.push(consumeToken('IDENTIFIER').value);
-    } while (matchToken(';')); // Einfaches Splitting über Kommata/Doppelpunkte ignorieren wir flexibel
+    } while (matchToken(','));
   }
   consumeToken(')');
 
