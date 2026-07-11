@@ -164,6 +164,8 @@ export const operators = {
   'typeof' : { precedence: 15, associativity: 'right' },
   'void'   : { precedence: 15, associativity: 'right' },
   'delete' : { precedence: 15, associativity: 'right' },
+  'unary+' : { precedence: 15, associativity: 'right' },
+  'unary-' : { precedence: 15, associativity: 'right' },
 };
 
 export const puncts = '()[]{}.:,;?#|'.split('');
