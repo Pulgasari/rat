@@ -175,12 +175,20 @@ export const puncts = [
   '?'
 ];
 
-export const runtimeHelpers = {
-  '_assign' : { token: '_assign', from: './../runtime/index.js' },
-  '_fn'     : { token: '_fn',     from: './../runtime/index.js' },
-  '_inc'    : { token: '_inc',    from: './../runtime/index.js' },
-  '_is'     : { token: '_is',     from: './../runtime/index.js' },
-  '_proxy'  : { token: '_proxy',  from: './../runtime/index.js' }
+export const runtimeImports = {
+  // Builtins
+  'Enum'  : { token: 'Enum',  from: 'types/Enum.js'  },
+  'List'  : { token: 'List',  from: 'types/List.js'  },
+  'Trait' : { token: 'Trait', from: 'types/Trait.js' },
+  'Tuple' : { token: 'Tuple', from: 'types/Tuple.js' },
+  'Union' : { token: 'Union', from: 'types/Union.js' },
+  
+  // Helpers
+  '_assign' : { token: '_assign', from: 'index.js' },
+  '_fn'     : { token: '_fn',     from: 'index.js' },
+  '_inc'    : { token: '_inc',    from: 'index.js' },
+  '_is'     : { token: '_is',     from: 'index.js' },
+  '_proxy'  : { token: '_proxy',  from: 'index.js' },
 };
 
 export const TokenType = {
