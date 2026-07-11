@@ -84,13 +84,15 @@ function buildPipeStep (left, step) {
 
 
 // :::::: 'use' Trait
-
-export function parseTraitUse () { // Expression 'use' TraitName
+export function parseTraitUse () {
   let expr = parsed.Range;
   if (isToken('use')) {
     advance(); // 'use'
-    const traitName = consumeToken('IDENTIFIER').value;
-    expr = ASTNode.TraitUseExpression({ expr, traitName });
+    const traitNames = [consumeToken('IDENTIFIER').value];
+    while (matchToken(',')) {
+      traitNames.push(consumeToken('IDENTIFIER').value);
+    }
+    expr = ASTNode.TraitUseExpression({ expr, traitNames });
   }
   return expr;
 }
