@@ -39,6 +39,11 @@ export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
 }
 
+export function generateNewExpression (node) {
+  const args = node.args.map(generate).join(', ');
+  return `new ${generate(node.callee)}(${args})`;
+}
+
 export function generateObjectExpression (node) {
   const props = node.properties.map(p => {
     if (p.kind === 'method') {
