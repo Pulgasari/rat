@@ -166,14 +166,7 @@ export const operators = {
   'delete' : { precedence: 15, associativity: 'right' },
 };
 
-export const puncts = [
-  '{', '}',
-  '(', ')',
-  '[', ']',
-  ',', ';',
-  '.', ':',
-  '?'
-];
+export const puncts = '()[]{}.:,;?#|'.split('');
 
 export const runtimeImports = {
   // Builtins
