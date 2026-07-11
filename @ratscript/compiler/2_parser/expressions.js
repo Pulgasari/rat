@@ -3,22 +3,85 @@
 import { ASTNode } from './../utils.js';
 import { advance, peek, peekNext, previous, isToken, matchToken, consumeToken } from './state.js';
 
+const COMPOUND_ASSIGN_OPERATORS = ['+=','-=','*=','/=','%=','<<=','>>=','>>>=','&=','^=','|='];
+
 // :::::: Entry Point
 
 export function parseExpression () {
   return parsed.Assignment;
 }
 
-// :::::: Assignment
+// ::::::
 
 export function parseAssignment () {
-  const expr = parsed.TraitUse;
+  const expr = parsed.Pipe;
+
   if (matchToken('=')) {
     const right = parsed.Assignment;
     return ASTNode.AssignmentExpression({ left: expr, right });
   }
+
+  for (const op of COMPOUND_ASSIGN_OPERATORS) {
+    if (matchToken(op)) {
+      const right = parsed.Assignment;
+      return ASTNode.CompoundAssignmentExpression({ operator: op, left: expr, right });
+    }
+  }
+
   return expr;
 }
+
+// Pipe (a |> b(...) |> c(_, x) |> ...)
+export function parsePipe () {
+  let left = parsed.TraitUse;
+
+  while (matchToken('|>')) {
+    const step = parsed.TraitUse;
+    left = buildPipeStep(left, step);
+  }
+
+  return left;
+}
+
+// Bewusst NICHT exportiert: nimmt Parameter entgegen statt vom Token-Stream zu lesen ->
+// ist kein Grammatik-Einstiegspunkt, sondern reiner AST-Baustein.
+function buildPipeStep (left, step) {
+  // Bare Identifier ohne Klammern -> impliziter Aufruf: `x |> fn1` -> `fn1(x)`
+  // Falls 'fn1' eigentlich ein Getter statt eines Funktionswerts wäre, crasht das zur
+  // Laufzeit zurecht - das ist so gewollt und kümmert uns hier nicht.
+  if (step.type === 'Identifier') {
+    return ASTNode.CallExpression({ expr: step, args: [left], namedArgs: null });
+  }
+
+  if (step.type !== 'CallExpression') {
+    throw new SyntaxError(`Pipe-Ziel muss ein Funktionsname oder Funktionsaufruf sein, nicht '${step.type}'.`);
+  }
+
+  if (step.namedArgs) {
+    const hasPlaceholder = step.namedArgs.some(a => a.value.type === 'PipePlaceholder');
+    if (!hasPlaceholder) {
+      throw new SyntaxError(`Pipe-Schritt mit Named Arguments braucht einen '_'-Platzhalter (z.B. 'fn(x: _)').`);
+    }
+    const namedArgs = step.namedArgs.map(a =>
+      a.value.type === 'PipePlaceholder' ? { name: a.name, value: left } : a
+    );
+    return ASTNode.CallExpression({ expr: step.expr, args: [], namedArgs });
+  }
+
+  const placeholderCount = step.args.filter(a => a.type === 'PipePlaceholder').length;
+
+  if (placeholderCount > 0) {
+    const args = step.args.map(a => a.type === 'PipePlaceholder' ? left : a);
+    return ASTNode.CallExpression({ expr: step.expr, args, namedArgs: null });
+  }
+
+  // Kein Platzhalter -> Fallback wie im alten Regex-Compiler: leere Klammern '()'
+  // bekommen den gepipten Wert als einzigen Arg, sonst wird er vorne angehängt.
+  const args = step.args.length === 0 ? [left] : [left, ...step.args];
+  return ASTNode.CallExpression({ expr: step.expr, args, namedArgs: null });
+}
+
+
 
 // :::::: 'use' Trait
 
@@ -51,6 +114,11 @@ export function parsePrimary () {
   }
   if (matchToken('STRING')) {
     return ASTNode.Literal({ type: 'STRING', value: previous().value });
+  }
+  // Pipe-Platzhalter '_' -> eigener, transienter Node
+  if (isToken('IDENTIFIER') && peek().value === '_') {
+    advance();
+    return ASTNode.PipePlaceholder({});
   }
   if (matchToken('IDENTIFIER')) {
     let expr = ASTNode.Identifier({ name: previous().value });
