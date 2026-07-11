@@ -81,6 +81,11 @@ VariableDeclaration = {
 
 // :::::: EXPRESSION
 
+ArrayExpression = { 
+  type: 'ArrayExpression', 
+  args: ['elements']
+},
+
 AsBindingExpression = {
   type: 'AsBindingExpression',
   args: ['expr', 'name']
