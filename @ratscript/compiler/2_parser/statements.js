@@ -4,57 +4,6 @@ import { ASTNode } from './../utils.js';
 import { parsed } from './index.js';
 import { advance, peek, isToken, isEOF, matchToken, consumeToken } from './state.js';
 
-// :::::: Dispatcher
-
-export function parseStatement () {
-  if (isToken('KEYWORD')) {
-    switch (peek().value) {
-      case 'alias' : return parsed.AliasDeclaration;
-      case 'const' : return parsed.VariableDeclaration;
-      case 'fn'    : return parsed.FunctionDeclaration;
-      case 'for'   : return parsed.ForStatement;
-      case 'if'    : return parsed.IfStatement;
-      case 'let'   : return parsed.VariableDeclaration;
-      case 'mold'  : return parsed.MoldStatement;
-      case 'sift'  : return parsed.SiftStatement;
-      case 'trait' : return parsed.TraitDeclaration;
-      case 'try'   : return parsed.TryStatement;
-      case 'var'   : return parsed.VariableDeclaration;
-      case 'while' : return parsed.WhileStatement;
-    }
-  }
-  return parsed.ExpressionStatement;
-}
-
-// :::::: Block-Helpers
-// (werden von statements.js UND declarations.js gebraucht -> hier zentral)
-
-export function parseBlock () {
-  consumeToken('{');
-  const body = parsed.Body;
-  consumeToken('}');
-  return ASTNode.BlockStatement({ body });
-}
-
-export function parseActionBlock () {
-  if (matchToken('{')) {
-    const body = parsed.Body;
-    consumeToken('}');
-    return ASTNode.BlockStatement({ body });
-  }
-  return ASTNode.BlockStatement({ body: [parsed.Statement] });
-}
-
-export function parseConditionTest () {
-  const expr = parsed.Expression;
-  if (isToken('as')) {
-    advance(); // 'as'
-    const name = consumeToken('IDENTIFIER').value;
-    return ASTNode.AsBindingExpression({ expr, name });
-  }
-  return expr;
-}
-
 // :::::: ExpressionStatement
 
 export function parseExpressionStatement () {
