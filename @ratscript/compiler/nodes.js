@@ -30,12 +30,26 @@ ClassDeclaration = {
 FunctionDeclaration = {
   type: 'FunctionDeclaration',
   args: {
-    name   : {},
-    params : {},
-    traits : {},
-    body   : {},
+    name        : {required: true}, 
+    params      : {required: true}, 
+    traits      : {default: []},
+    body        : {required: true}, 
+    isAsync     : {default: false}, 
+    isGenerator : {default: false},
   }
 },
+
+AwaitExpression = { 
+  type: 'AwaitExpression', 
+  args: ['argument'] 
+},
+  
+YieldExpression = { 
+  type: 'YieldExpression', 
+  args: {
+    argument: {default: null}
+  } 
+};
  
 // ERSETZT die bisherige (nie fertig implementierte) Version -> body wurde zu properties,
 // weil ein Trait-Body kein Statement-Block ist, sondern Objekt-Literal-Syntax
