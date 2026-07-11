@@ -12,17 +12,15 @@ export function generateAliasDeclaration (node) {
 }
 
 export function generateFunctionDeclaration (node) {
-  const params   = node.params.join(', ');
-  const bodyCode = generateBlockStatement(node.body);
+  const params    = node.params.join(', ');
+  const bodyCode  = generateBlockStatement(node.body);
+  const paramList = JSON.stringify(node.params); // z.B. ["name","x"]
 
-  // Traits werden aktuell nur als Kommentar markiert -> die eigentliche
-  // Mixin-/Wrapper-Semantik von "use Trait" ist noch nicht spezifiziert
-  // (siehe generateTraitUseExpression in expressions.js).
   const traitsNote = node.traits.length
     ? indent(`// TODO: traits nicht implementiert -> uses: ${node.traits.join(', ')}\n`)
     : '';
 
-  return `function ${node.name}(${params}) {\n${traitsNote}${indent(bodyCode)}\n}`;
+  return `const ${node.name} = _fn(function (${params}) {\n${traitsNote}${indent(bodyCode)}\n}, ${paramList});`;
 }
 
 // Noch kein definiertes Laufzeit-Modell (Objekt aus Methoden? Mixin-Funktion?
