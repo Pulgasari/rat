@@ -127,3 +127,26 @@ export function parsePrimary () {
   const token = peek();
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
 }
+
+// :::::: gemeinsame Param-Liste (fn + class-Methoden)
+
+export function parseParamList () {
+  consumeToken('(');
+  const params = [];
+  if (!isToken(')')) {
+    do {
+      params.push(consumeToken('IDENTIFIER').value);
+    } while (matchToken(','));
+  }
+  consumeToken(')');
+  return params;
+}
+
+// Von parseClassDeclaration UND parseObjectProperties (Methoden-Shorthand) genutzt.
+export function parseMethodLike () {
+  const nameToken = consumeToken('IDENTIFIER');
+  const params = parseParamList();
+  const body = parsed.Block;
+  return { name: nameToken.value, params, body };
+}
+
