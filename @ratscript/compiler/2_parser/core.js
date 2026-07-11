@@ -43,6 +43,7 @@ export function parseStatement () {
   if (isToken('KEYWORD')) {
     switch (peek().value) {
       case 'alias' : return parsed.AliasDeclaration;
+      case 'class' : return parsed.ClassDeclaration;
       case 'const' : return parsed.VariableDeclaration;
       case 'fn'    : return parsed.FunctionDeclaration;
       case 'for'   : return parsed.ForStatement;
