@@ -89,6 +89,21 @@ export function parseTraitDeclaration () {
   return ASTNode.TraitDeclaration({ name: nameToken.value, properties });
 }
 
+// :::::: union Name = a | b | c;
+export function parseUnionDeclaration () {
+  advance(); // 'union'
+  const nameToken = consumeToken('IDENTIFIER');
+  consumeToken('=');
+
+  const members = [parsed.Primary];
+  while (matchToken('|')) {
+    members.push(parsed.Primary);
+  }
+  matchToken(';');
+
+  return ASTNode.UnionDeclaration({ name: nameToken.value, members });
+}
+
 // :::::: let/const/var <id | {pattern}> = <init>?;
 
 export function parseVariableDeclaration () {
