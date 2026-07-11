@@ -42,29 +42,19 @@ export function generateExpressionStatement (node) {
   return `${generate(node.expr)};`;
 }
 
-// :::::: for
+// ::::::
 
 export function generateForStatement (node) {
-  const bodyCode = generateBlockStatement(node.body);
+  const bodyCode     = generateBlockStatement(node.body);
+  const iterableCode = generate(node.iterable);
 
-  if (node.isNaked) {
-    if (node.initializer.type === 'RangeExpression') {
-      const from = generate(node.initializer.from);
-      const to   = generate(node.initializer.to);
-      return `for (let i = ${from}; i <= ${to}; i++) {\n${indent(bodyCode)}\n}`;
-    }
-    // Naked-Loop über ein Array/Iterable, z.B. `for (liste) { ... }`
-    return `for (const it of ${generate(node.initializer)}) {\n${indent(bodyCode)}\n}`;
+  if (node.id) {
+    return `for (${node.kind} ${generate(node.id)} of ${iterableCode}) {\n${indent(bodyCode)}\n}`;
   }
 
-  // Standard-Loop (`for (let i = 0; ...; ...)`): der Parser erfasst aktuell nur EINE
-  // Initializer-Expression, keine separate Bedingung/Inkrement -> für einen echten
-  // C-artigen for-Loop fehlen dem AST noch die nötigen Felder. Das muss erst im
-  // Parser nachgezogen werden (z.B. initializer/condition/update als eigene Felder),
-  // bevor der Generator hier sinnvoll JS erzeugen kann.
-  throw new Error('[Generator-Fehler]: Standard-For-Loops (nicht "naked") sind im AST noch nicht vollständig genug abgebildet (fehlende condition/update).');
+  // Naked: keine Bindung im Body -> interner, nicht referenzierbarer Loop-Variablenname
+  return `for (const __for_it of ${iterableCode}) {\n${indent(bodyCode)}\n}`;
 }
-
 
 // 'if (expr as name) { ... }' hat kein direktes JS-Äquivalent (kein 'let' in einer
 // Expression-Position) -> wird in einen eigenen Block-Scope mit Temp-Variable gepackt:
@@ -169,6 +159,24 @@ export function generateMoldStatement (node) {
 
   js += `  return self;\n`;
   js += `})();`;
+  return js;
+}
+
+// :::::: try/catch/finally
+// Standalone-Try (weder catch noch finally) -> automatischer Silent Fail via 'catch {}',
+// exakt wie im alten Regex-Compiler.
+export function generateTryStatement (node) {
+  let js = `try {\n${indent(generateBlockStatement(node.block))}\n}`;
+
+  if (node.handler) {
+    const param = node.handlerParam ? ` (${node.handlerParam})` : '';
+    js += ` catch${param} {\n${indent(generateBlockStatement(node.handler))}\n}`;
+  } else if (!node.finalizer) {
+    js += ` catch {}`;
+  }
+
+  if (node.finalizer) js += ` finally {\n${indent(generateBlockStatement(node.finalizer))}\n}`;
+
   return js;
 }
 
