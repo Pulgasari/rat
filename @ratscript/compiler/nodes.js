@@ -111,7 +111,7 @@ RangeExpression = {
 
 TraitUseExpression = {
   type: 'TraitUseExpression',
-  args: ['expression', 'traitName']
+  args: ['expr', 'traitNames']
 },
 
 TupleExpression = { 
