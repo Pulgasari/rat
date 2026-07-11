@@ -124,6 +124,9 @@ TupleExpression = {
   args: ['elements']
 },
 
+BinaryExpression = { type: 'BinaryExpression', args: ['operator', 'left', 'right'] },
+UnaryExpression  = { type: 'UnaryExpression',  args: ['operator', 'argument'] },
+
 // :::::: STATEMENTS
   
 BlockStatement = {
