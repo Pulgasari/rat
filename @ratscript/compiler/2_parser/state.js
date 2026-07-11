@@ -34,6 +34,7 @@ export function init (inputTokens) {
 
 export function advance  () { if (!isEOF()) current++; return previous(); }
 export function peek     () { return tokens[current]; }
+export function peekNext () { return tokens[current + 1]; }
 export function previous () { return tokens[current - 1]; }
 export function isEOF    () { return isToken('EOF'); }
 
