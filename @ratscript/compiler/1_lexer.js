@@ -29,7 +29,9 @@ const RULES = [
   // Literale (Strings & Zahlen)
   { type: TokenType.STRING , regex: /"(?:\\.|[^"\\])*"/y },
   { type: TokenType.STRING , regex: /'(?:\\.|[^'\\])*'/y },
-  { type: TokenType.NUMBER , regex: /\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/y },
+  //{ type: TokenType.NUMBER , regex: /\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/y },
+  { type: TokenType.NUMBER , regex: /0[xX][0-9a-fA-F](?:_?[0-9a-fA-F])*|0[bB][01](?:_?[01])*|0[oO][0-7](?:_?[0-7])*|(?:\d(?:_?\d)*)?\.\d(?:_?\d)*(?:[eE][+-]?\d+)?|\d(?:_?\d)*\.(?!\.)(?:[eE][+-]?\d+)?|\d(?:_?\d)*(?:[eE][+-]?\d+)?/y },
+  // kürzer? /0(?:x[\da-f](?:_?[\da-f])*|b[01](?:_?[01])*|o[0-7](?:_?[0-7])*)|(?:(?:\d(?:_?\d)*)?\.\d(?:_?\d)*|\d(?:_?\d)*(?:\.(?!\.))?)(?:e[+-]?\d+)?/i
   
   // Identifiers (Variablen, Funktionen, Keywords)
   { regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/y, type: TokenType.IDENTIFIER }
