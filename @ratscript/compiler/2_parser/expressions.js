@@ -10,8 +10,15 @@ const EXCLUDED_FROM_GENERIC = new Set([
   '=','+=','-=','*=','/=','%=','<<=','>>=','>>>=','&=','^=','|=',
   '|>', '..', 'is', 'in', 'inc',
 ]);
-const UNARY_OPERATORS = ['!', '~', 'typeof', 'void', 'delete']; // 'inc' bewusst ausgeklammert
-
+const UNARY_OPERATORS = [
+  { token: '+', operator: 'unary+' },
+  { token: '-', operator: 'unary-' },
+  { token: '!', operator: '!' },
+  { token: '~', operator: '~' },
+  { token: 'typeof', operator: 'typeof' },
+  { token: 'void', operator: 'void' },
+  { token: 'delete', operator: 'delete' },
+];
 
 // :::::: Entry Point
 
@@ -118,11 +125,11 @@ export function parseRange () {
 
 // :::::: Unary (rechtsassoziativ, z.B. !!x)
 export function parseUnary () {
-  for (const op of UNARY_OPERATORS) {
-    if (isToken(op)) {
+  for (const { token, operator } of UNARY_OPERATORS) {
+    if (isToken(token)) {
       advance();
       const argument = parsed.Unary;
-      return ASTNode.UnaryExpression({ operator: op, argument });
+      return ASTNode.UnaryExpression({ operator, argument });
     }
   }
   return parsed.Range;
