@@ -12,6 +12,22 @@ export function generateAliasDeclaration (node) {
   return `const ${node.name} = ${generate(node.source)};`;
 }
 
+// :::::: class Name [use Trait] { ... }
+export function generateClassDeclaration (node) {
+  const methodsCode = node.methods
+    .map(m => `${m.name} (${m.params.join(', ')}) {\n${indent(generateBlockStatement(m.body))}\n}`)
+    .join('\n\n');
+
+  let js = `class ${node.name} {\n${indent(methodsCode)}\n}`;
+
+  for (const traitName of node.traits) {
+    useHelper('Trait');
+    js += `\n${traitName}.apply(${node.name});`;
+  }
+
+  return js;
+}
+
 export function generateFunctionDeclaration (node) {
   useHelper('_fn');
 
@@ -19,21 +35,31 @@ export function generateFunctionDeclaration (node) {
   const bodyCode  = generateBlockStatement(node.body);
   const paramList = JSON.stringify(node.params);
 
-  const traitsNote = node.traits.length
-    ? indent(`// TODO: traits nicht implementiert -> uses: ${node.traits.join(', ')}\n`)
-    : '';
+  let js = `const ${node.name} = _fn(function (${params}) {\n${indent(bodyCode)}\n}, ${paramList});`;
 
-  return `const ${node.name} = _fn(function (${params}) {\n${traitsNote}${indent(bodyCode)}\n}, ${paramList});`;
+  for (const traitName of node.traits) {
+    useHelper('Trait'); // via Trait.apply() referenziert -> Import muss vorhanden sein
+    js += `\n${traitName}.apply(${node.name});`;
+  }
+
+  return js;
 }
 
-// Noch kein definiertes Laufzeit-Modell (Objekt aus Methoden? Mixin-Funktion?
-// Interface-Check?) -> bewusster Stub statt Rateversuch, analog zu TraitUseExpression.
 export function generateTraitDeclaration (node) {
-  throw new Error('[Generator-Fehler]: TraitDeclaration-Codegen ist noch nicht spezifiziert.');
+  useHelper('Trait');
+
+  const propsCode = node.properties.map(p => {
+    if (p.kind === 'method') {
+      const params = p.params.join(', ');
+      return `${p.key} (${params}) {\n${indent(generateBlockStatement(p.body))}\n}`;
+    }
+    return `${p.key}: ${generate(p.value)}`;
+  }).join(',\n');
+
+  return `const ${node.name} = new Trait('${node.name}', () => ({\n${indent(propsCode)}\n}));`;
 }
 
 // :::::: let/const/var <id | {pattern}> = <init>?;
-
 export function generateVariableDeclaration (node) {
   const target = generate(node.id); // Identifier oder ObjectPattern
   if (node.init === null) return `${node.kind} ${target};`;
