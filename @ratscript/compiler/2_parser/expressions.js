@@ -4,6 +4,14 @@ import { ASTNode } from './../utils.js';
 import { advance, peek, peekNext, previous, isToken, matchToken, consumeToken } from './state.js';
 
 const COMPOUND_ASSIGN_OPERATORS = ['+=','-=','*=','/=','%=','<<=','>>=','>>>=','&=','^=','|='];
+// Bewusst ausgeklammert (eigene Ebenen bzw. später): Assignment-Operatoren, Pipe,
+// Range ('..' bleibt die eigene, dedizierte Node), 'is'/'in'/'inc'.
+const EXCLUDED_FROM_GENERIC = new Set([
+  '=','+=','-=','*=','/=','%=','<<=','>>=','>>>=','&=','^=','|=',
+  '|>', '..', 'is', 'in', 'inc',
+]);
+const UNARY_OPERATORS = ['!', '~', 'typeof', 'void', 'delete']; // 'inc' bewusst ausgeklammert
+
 
 // :::::: Entry Point
 
@@ -85,7 +93,7 @@ function buildPipeStep (left, step) {
 
 // :::::: 'use' Trait
 export function parseTraitUse () {
-  let expr = parsed.Range;
+  let expr = parsed.BinaryExpression;
   if (isToken('use')) {
     advance(); // 'use'
     const traitNames = [consumeToken('IDENTIFIER').value];
@@ -108,7 +116,32 @@ export function parseRange () {
   return from;
 }
 
+// :::::: Unary (rechtsassoziativ, z.B. !!x)
+export function parseUnary () {
+  for (const op of UNARY_OPERATORS) {
+    if (isToken(op)) {
+      advance();
+      const argument = parsed.Unary;
+      return ASTNode.UnaryExpression({ operator: op, argument });
+    }
+  }
+  return parsed.Range;
+}
 
+export function parseBinaryExpression (minPrecedence = 0) {
+  let left = parsed.Unary;
+
+  while (true) {
+    const match = matchBinaryOperator(minPrecedence);
+    if (!match) break;
+
+    // Alle verbleibenden Operatoren sind laut Tabelle linksassoziativ -> +1 rechts
+    const right = parseBinaryExpression(match.precedence + 1); // direkter Aufruf, NICHT parsed.X (braucht Parameter)
+    left = ASTNode.BinaryExpression({ operator: match.operator, left, right });
+  }
+
+  return left;
+}
 
 // :::::: INTERNAL HELPERS
 
@@ -139,4 +172,19 @@ expoet function parseCallArguments () {
   }
 
   return namedArgs.length ? { args: [], namedArgs } : { args, namedArgs: null };
+}
+
+// :::::: Binär-Operatoren via Precedence-Climbing (nutzt die Tabelle aus meta.js direkt,
+// statt für jede Präzedenzstufe eine eigene handgeschriebene Funktion zu brauchen)
+
+function matchBinaryOperator (minPrecedence) {
+  for (const [op, info] of Object.entries(operators)) {
+    if (EXCLUDED_FROM_GENERIC.has(op)) continue;
+    if (info.precedence < minPrecedence) continue;
+    if (isToken(op)) {
+      advance();
+      return { operator: op, precedence: info.precedence };
+    }
+  }
+  return null;
 }
