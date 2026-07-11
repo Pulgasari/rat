@@ -1,5 +1,51 @@
 // @ratscript/runtime/types/Union.js
 
+export default class Union {
+
+  // init
+  constructor (name, members) {
+    this._members = members; // bereits ausgewertete Werte/Konstruktoren
+    this._name    = name;
+    Object.freeze(this);
+  }
+
+  // access (by getter)
+  get members () { return this._members; }
+  get name    () { return this._name; }
+
+  //
+  assert (value) {
+    if (!this.check(value)) throw new TypeError(`Wert entspricht keinem Member von Union '${this._name}': ${JSON.stringify(value)}`);
+    return value;
+  }
+  check (value) {
+    return this._members.some(member => this._matches(value, member));
+  }
+  
+  // debug
+  toString () {
+    return `[Union ${this._name}]`;
+  }
+
+  // internal
+  _matches (value, member) {
+    if (typeof member === 'function') {
+      if (member === String)  return typeof value === 'string';
+      if (member === Number)  return typeof value === 'number';
+      if (member === Boolean) return typeof value === 'boolean';
+      return value instanceof member;
+    }
+    return value === member;
+  }
+
+  // static
+  static isUnion (value) {
+    return value instanceof Union;
+  }
+}
+
+// --------- OLD ----------
+
 class UnionValue {
   constructor (union, variant, payload = {}) {
     this.$union   = union;
