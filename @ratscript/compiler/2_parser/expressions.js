@@ -122,6 +122,24 @@ export function parseRange () {
   return from;
 }
 
+export function parseTemplateLiteral () {
+  const token = advance(); // TEMPLATE_STRING-Token
+  const quasis = [];
+  const expressions = [];
+
+  for (const segment of token.value) {
+    if (segment.kind === 'string') {
+      quasis.push(segment.value);
+    } else {
+      pushState(segment.tokens);
+      expressions.push(parsed.Expression);
+      popState();
+    }
+  }
+
+  return ASTNode.TemplateLiteral({ quasis, expressions });
+}
+
 // :::::: Unary (rechtsassoziativ, z.B. !!x)
 export function parseUnary () {
   if (isToken('await')) {
