@@ -59,6 +59,12 @@ export function generateTraitDeclaration (node) {
   return `const ${node.name} = new Trait('${node.name}', () => ({\n${indent(propsCode)}\n}));`;
 }
 
+export function generateUnionDeclaration (node) {
+  useHelper('Union');
+  const members = node.members.map(generate).join(', ');
+  return `const ${node.name} = new Union('${node.name}', [${members}]);`;
+}
+
 // :::::: let/const/var <id | {pattern}> = <init>?;
 export function generateVariableDeclaration (node) {
   const target = generate(node.id); // Identifier oder ObjectPattern
