@@ -48,13 +48,9 @@ export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
 }
 
-// RangeExpression (z.B. `1..10`) hat für sich genommen kein direktes JS-Äquivalent
-// -> aktuell nur sinnvoll als Initializer eines Naked-For-Loops, wo generateForStatement
-// gezielt .from/.to ausliest, statt generate() auf den ganzen Range-Knoten anzuwenden.
-// Sobald Ranges auch standalone (z.B. `let r = 1..10`) unterstützt werden sollen,
-// braucht's hier eine Design-Entscheidung (Array? Lazy-Iterator? Runtime-Helper?).
-export function generateRangeExpression (node) {
-  throw new Error('[Generator-Fehler]: RangeExpression wird aktuell nur innerhalb von "for"-Loops unterstützt.');
+export function generateRangeExpression ({ from, to ) {
+  useHelper('_range');
+  return `_range(${generate(from)}, ${generate(to)})`;
 }
 
 // TraitUseExpression (z.B. `expr use Trait`) hat noch keine definierte Laufzeit-Semantik
