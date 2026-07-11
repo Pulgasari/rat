@@ -48,6 +48,14 @@ TraitDeclaration = {
   }
 },
 
+UnionDeclaration = {
+  type: 'UnionDeclaration',
+  args: { 
+    name    : {required:true}, 
+    members : {required:true} 
+  }
+},
+
 VariableDeclaration = {
   type: 'VariableDeclaration',
   args: {
@@ -76,6 +84,11 @@ CompoundAssignmentExpression = {
   // operator: '+=' | '-=' | '*=' | ... (aktuell nur '+=' semantisch implementiert)
 },
 
+ListExpression  = { 
+  type: 'ListExpression',  
+  args: ['elements'] 
+},
+
 MemberExpression = {
   type: 'MemberExpression',
   args: ['object', 'property']
@@ -99,6 +112,11 @@ RangeExpression = {
 TraitUseExpression = {
   type: 'TraitUseExpression',
   args: ['expression', 'traitName']
+},
+
+TupleExpression = { 
+  type: 'TupleExpression', 
+  args: ['elements']
 },
 
 // :::::: STATEMENTS
