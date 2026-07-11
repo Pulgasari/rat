@@ -18,6 +18,7 @@ export function parseStatement () {
       case 'mold'  : return parsed.MoldStatement;
       case 'sift'  : return parsed.SiftStatement;
       case 'trait' : return parsed.TraitDeclaration;
+      case 'try'   : return parsed.TryStatement;
       case 'var'   : return parsed.VariableDeclaration;
       case 'while' : return parsed.WhileStatement;
     }
@@ -64,27 +65,27 @@ export function parseExpressionStatement () {
 
 // :::::: for (...) { ... }
 
+// ERSETZT die bisherige parseForStatement komplett
+
 export function parseForStatement () {
   advance(); // 'for'
   consumeToken('(');
 
-  let initializer = null;
-  let isNaked     = true;
+  let id = null, kind = null;
 
-  // Erkennung ob Standard-Loop oder Naked-Loop
+  // for (let n of <iterable>) { ... }
   if (isToken('KEYWORD') && ['let', 'const', 'var'].includes(peek().value)) {
-    // Standard JS Loop
-    isNaked = false;
-    initializer = parsed.Expression; // Für den Prototyp als Expression abgefangen
-  } else {
-    // RatScript Naked Loop (z.B. 1..10 oder ein nacktes Array)
-    initializer = parsed.Expression;
+    kind = advance().value;
+    id = ASTNode.Identifier({ name: consumeToken('IDENTIFIER').value });
+    consumeToken('IDENTIFIER', 'of'); // 'of' ist kontextuell, kein globales Keyword
   }
+  // sonst: naked for (<iterable>) { ... } -> kein id/kind
 
+  const iterable = parsed.Expression;
   consumeToken(')');
-
   const body = parsed.Block;
-  return ASTNode.ForStatement({ initializer, isNaked, body });
+
+  return ASTNode.ForStatement({ id, kind, iterable, body });
 }
 
 export function parseIfStatement () {
@@ -151,6 +152,34 @@ export function parseMoldStatement () {
 
   consumeToken('}');
   return ASTNode.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
+}
+
+// try           [{...}|stmt] 
+// catch   [(e)] [{...}|stmt]? 
+// finally       [{...}|stmt]?
+export function parseTryStatement () {
+  advance(); // 'try'
+  const block = parsed.ActionBlock; // erlaubt Block ODER Einzeiler (wie schon bei sift/mold)
+
+  let handlerParam = null;
+  let handler = null;
+  let finalizer = null;
+
+  if (isToken('catch')) {
+    advance(); // 'catch'
+    if (matchToken('(')) {
+      handlerParam = consumeToken('IDENTIFIER').value;
+      consumeToken(')');
+    }
+    handler = parsed.ActionBlock;
+  }
+
+  if (isToken('finally')) {
+    advance(); // 'finally'
+    finalizer = parsed.ActionBlock;
+  }
+
+  return ASTNode.TryStatement({ block, handlerParam, handler, finalizer });
 }
 
 export function parseWhileStatement () {
