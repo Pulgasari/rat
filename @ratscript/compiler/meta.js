@@ -71,6 +71,7 @@ export const keywords = [
   'match',
   'mold',
   'new',
+  'of',
   'proxy',
   'return',
   'sift',
