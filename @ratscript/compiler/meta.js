@@ -194,8 +194,8 @@ export const TokenType = {
   OPERATOR   : 'OPERATOR',
   PUNCT      : 'PUNCT',
   STRING     : 'STRING',
+  TEMPLATE_STRING : 'TEMPLATE_STRING',
 };
-
 
 
 
@@ -232,5 +232,6 @@ export const TokenType = {
   OPERATOR   : 'OPERATOR',
   PUNCT      : 'PUNCT',
   STRING     : 'STRING',
+  TEMPLATE_STRING : 'TEMPLATE_STRING',
 };
 */
