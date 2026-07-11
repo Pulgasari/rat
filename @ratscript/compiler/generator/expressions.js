@@ -78,9 +78,9 @@ export function generateTupleExpression (node) {
 }
 
 export function generateUnaryExpression (node) {
-  // Wort-Operatoren (typeof/void/delete) brauchen ein Leerzeichen, Symbol-Operatoren (!/~) nicht
-  const spacer = /^[a-z]/.test(node.operator) ? ' ' : '';
-  return `${node.operator}${spacer}${generate(node.argument)}`;
+  const symbol = node.operator.replace(/^unary/, '');
+  const spacer = /^[a-z]/.test(symbol) ? ' ' : '';
+  return `${symbol}${spacer}${generate(node.argument)}`;
 }
 
 
