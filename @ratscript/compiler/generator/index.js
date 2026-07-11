@@ -46,12 +46,16 @@ const generators = {
   
   // Expressions
   CallExpression       : generateCallExpression,
+  CompoundAssignmentExpression : generateCompoundAssignmentExpression,
   AssignmentExpression : generateAssignmentExpression,
   RangeExpression      : generateRangeExpression,
   TraitUseExpression   : generateTraitUseExpression,
 
   // Patterns
   ObjectPattern        : generateObjectPattern,
+
+  // Placeholders
+  PipePlaceholder      : generatePipePlaceholder,
 
   // Statements
   ExpressionStatement  : generateExpressionStatement,
