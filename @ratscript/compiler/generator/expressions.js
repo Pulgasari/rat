@@ -2,16 +2,6 @@
 
 import { generate } from './index.js';
 
-export function generateIdentifier ({ name }) {
-  return name;
-}
-
-export function generateLiteral ({ type,value }) {
-  return (type === 'STRING') 
-    ? JSON.stringify(value)
-    : String(value);
-}
-
 // ::::::
 
 export function generateAssignmentExpression ({ left, right }) {
@@ -40,12 +30,20 @@ export function generateCompoundAssignmentExpression (node) {
   throw new Error(`[Generator-Fehler]: Compound-Assignment-Operator '${node.operator}' ist noch nicht implementiert (bisher nur '+=' via _assign).`);
 }
 
-export function generatePipePlaceholder (node) {
-  throw new Error('[Generator-Fehler]: PipePlaceholder ("_") sollte bereits beim Parsen aufgelöst worden sein.');
-}
-
 export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
+}
+
+export function generateObjectExpression (node) {
+  const props = node.properties.map(p => {
+    if (p.kind === 'method') {
+      const params = p.params.join(', ');
+      return `${p.key} (${params}) {\n${indent(generateBlockStatement(p.body))}\n}`;
+    }
+    return `${p.key}: ${generate(p.value)}`;
+  }).join(',\n');
+
+  return `{\n${indent(props)}\n}`;
 }
 
 export function generateRangeExpression ({ from, to ) {
@@ -53,17 +51,8 @@ export function generateRangeExpression ({ from, to ) {
   return `_range(${generate(from)}, ${generate(to)})`;
 }
 
-// TraitUseExpression (z.B. `expr use Trait`) hat noch keine definierte Laufzeit-Semantik
-// (Mixin? Wrapper? Runtime-Check?) -> bewusster Stub statt Rateversuch.
 export function generateTraitUseExpression (node) {
-  throw new Error('[Generator-Fehler]: TraitUseExpression-Codegen ist noch nicht spezifiziert.');
-}
-
-export function generateObjectPattern (node) {
-  const props = node.properties
-    .map(p => p.key === p.value ? p.key : `${p.key}: ${p.value}`)
-    .join(', ');
-  return `{ ${props} }`;
+  return `${node.traitName}.apply(${generate(node.expr)})`;
 }
 
 /*
