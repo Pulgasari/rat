@@ -16,6 +16,17 @@ AliasDeclaration = {
   }
 },
 
+ClassDeclaration = {
+  type: 'ClassDeclaration',
+  args: { 
+    name: {required:true}, 
+    methods: {required:true}, 
+    traits: {default: []} 
+  }
+},
+// methods: Array<{ name:string, params:string[], body:BlockStatement }>
+// (Constructor ist einfach die Methode mit name === 'constructor')
+
 FunctionDeclaration = {
   type: 'FunctionDeclaration',
   args: {
@@ -26,11 +37,14 @@ FunctionDeclaration = {
   }
 },
  
+// ERSETZT die bisherige (nie fertig implementierte) Version -> body wurde zu properties,
+// weil ein Trait-Body kein Statement-Block ist, sondern Objekt-Literal-Syntax
+// (comma-getrennte properties/methods, kein Statement-Loop wie bei BlockStatement).
 TraitDeclaration = {
   type: 'TraitDeclaration',
-  args: {
-    name : {},
-    body : {},
+  args: { 
+    name       : {required: true}, 
+    properties : {required: true},
   }
 },
 
@@ -67,6 +81,15 @@ MemberExpression = {
   args: ['object', 'property']
   // property: einfacher String-Name der Property (nur '.'-Zugriff, kein '[...]' bisher)
 },
+
+ObjectExpression = { 
+  type: 'ObjectExpression', 
+  args: ['properties'] 
+},
+// properties: Array<
+//   { kind:'init',   key:string, value:Expression } |
+//   { kind:'method', key:string, params:string[], body:BlockStatement }
+// >
 
 RangeExpression = {
   type: 'RangeExpression',
@@ -112,11 +135,11 @@ IfStatement = {
 MoldStatement = {
   type: 'MoldStatement',
   args: {
-    target: { required: true },
-    init: { default: null },
-    cases: { required: true },
-    catchBlock: { default: null },
-    finallyBlock: { default: null }
+    target       : { required: true },
+    init         : { default: null },
+    cases        : { required: true },
+    catchBlock   : { default: null },
+    finallyBlock : { default: null },
   }
 },
 
