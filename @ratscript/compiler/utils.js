@@ -36,3 +36,29 @@ export const ASTNode = new Proxy({}, {
     return (args = {}) => createNode(prop, args);
   }
 });
+
+// :::::: Evil Factory
+
+export function createEvilFactory ({ prefix, source, applyCaller = true }) {
+  const sources   = Array.isArray(source) : source : [source];
+  const targetObj = {};
+  sources.forEach( sourceObj => {
+    for (const [key, body] of Object.entries(sourceObj)) {
+      const prefix = 'generate';
+      const name   = key.replace(new RegExp(`^${prefix}`), '');
+      
+      Object.defineProperty(targetObj, name, { 
+        get () { return body(); },
+        enumerable: true
+      });
+      
+      //delete sourceObj[key];
+    }
+  }
+
+  // apply caller
+  if (applyCaller) targetObj.call = name => targetObj[name];
+
+  // done!
+  return targetObj;
+};
