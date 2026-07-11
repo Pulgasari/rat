@@ -153,8 +153,15 @@ BlockStatement = {
   args: ['body']
 },
 
-BreakStatement    = { type: 'BreakStatement',    args: [] },
-ContinueStatement = { type: 'ContinueStatement', args: [] },
+BreakStatement = {
+  type: 'BreakStatement',
+  args: ['label'] // label: string|null
+},
+
+ContinueStatement = { 
+  type: 'ContinueStatement', 
+  args: ['label']
+},
 
 ExpressionStatement = {
   type: 'ExpressionStatement',
@@ -178,6 +185,11 @@ IfStatement = {
     consequent: { required: true }, // BlockStatement
     alternate:  { default: null }   // BlockStatement | IfStatement | null
   }
+},
+
+LabeledStatement = { 
+  type: 'LabeledStatement', 
+  args: ['label', 'body']
 },
 
 MoldStatement = {
