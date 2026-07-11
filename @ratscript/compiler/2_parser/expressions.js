@@ -106,42 +106,7 @@ export function parseRange () {
   return from;
 }
 
-// :::::: Primary (Literale, Identifier, Calls)
 
-export function parsePrimary () {
-  if (matchToken('NUMBER')) {
-    return ASTNode.Literal({ type: 'NUMBER', value: previous().value });
-  }
-  if (matchToken('STRING')) {
-    return ASTNode.Literal({ type: 'STRING', value: previous().value });
-  }
-  // Pipe-Platzhalter '_' -> eigener, transienter Node
-  if (isToken('IDENTIFIER') && peek().value === '_') {
-    advance();
-    return ASTNode.PipePlaceholder({});
-  }
-  if (matchToken('IDENTIFIER')) {
-    let expr = ASTNode.Identifier({ name: previous().value });
-
-    // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
-    while (true) {
-      if (matchToken('.')) {
-        const propToken = consumeToken('IDENTIFIER');
-        expr = ASTNode.MemberExpression({ object: expr, property: propToken.value });
-      } 
-      else if (matchToken('(')) {
-        const { args, namedArgs } = parsed.CallArguments;
-        expr = ASTNode.CallExpression({ expr, args, namedArgs });
-      }
-      else break;
-    }
-
-    return expr;
-  }
-
-  const token = peek();
-  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
-}
 
 // :::::: INTERNAL HELPERS
 
