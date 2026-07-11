@@ -285,6 +285,11 @@ String name = 'Heiko';
 [ ] extends, super, static
 ```
 
+## notes
+
+- parseStatement() is Lookahead-Dispatcher LL(1) = a switch
+- parseStatement() wird rekursiv von überall dort aufgerufen, wo eine Statement-Liste gebraucht wird: parseBlock() (Funktionskörper, if/while-Bodies), das Programm-Root (parse()), etc. — immer in einer while-Schleife bis }/EOF, nie in einer Präzedenz-Kette.
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
