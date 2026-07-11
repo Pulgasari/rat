@@ -2,11 +2,36 @@
 
 import { generate } from './index.js';
 import { indent } from './helpers.js';
+import { resetHelpers, getUsedHelpers } from './state.js';
+import { runtimeHelpers } from './../meta.js';
 
 // :::::: Program / Block
 
 export function generateProgram (node) {
-  return node.body.map(generate).join('\n');
+  resetHelpers();
+
+  const body     = node.body.map(generate).join('\n');
+  const preamble = generateHelperImports();
+
+  return preamble ? `${preamble}\n\n${body}` : body;
+}
+
+export function generateHelperImports () {
+  const used = getUsedHelpers();
+  if (!used.length) return '';
+
+  // Mehrere Helper aus derselben Datei -> EIN gemeinsamer Import
+  const byPath = new Map();
+  for (const name of used) {
+    const meta = runtimeHelpers[name];
+    if (!meta) throw new Error(`[Generator-Fehler]: Unbekannter Runtime-Helper "${name}" (fehlt in meta.js -> runtimeHelpers).`);
+    if (!byPath.has(meta.from)) byPath.set(meta.from, []);
+    byPath.get(meta.from).push(meta.token);
+  }
+
+  return [...byPath.entries()]
+    .map(([from, tokens]) => `import { ${tokens.join(', ')} } from '${from}';`)
+    .join('\n');
 }
 
 export function generateBlockStatement (node) {
