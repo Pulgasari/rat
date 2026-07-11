@@ -2,8 +2,7 @@
 
 // :::::: IMPORTS
 
-import { TokenType } from './utils.js';
-import { keywords, puncts, operators } from './meta.js';
+import { keywords, puncts, operators, TokenType } from './meta.js';
 
 // :::::: HELPERS
 
