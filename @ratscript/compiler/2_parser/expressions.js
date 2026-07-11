@@ -113,7 +113,6 @@ export function parseTraitUse () {
 }
 
 // :::::: Range (From '..' To)
-
 export function parseRange () {
   let from = parsed.Primary;
   if (matchToken('..')) {
@@ -125,6 +124,21 @@ export function parseRange () {
 
 // :::::: Unary (rechtsassoziativ, z.B. !!x)
 export function parseUnary () {
+  if (isToken('await')) {
+    advance();
+    const argument = parsed.Unary;
+    return ASTNode.AwaitExpression({ argument });
+  }
+
+  if (isToken('yield')) {
+    advance();
+    let argument = null;
+    if (!isToken(';') && !isToken(')') && !isToken('}') && !isEOF()) {
+      argument = parsed.Unary;
+    }
+    return ASTNode.YieldExpression({ argument });
+  }
+
   for (const { token, operator } of UNARY_OPERATORS) {
     if (isToken(token)) {
       advance();
