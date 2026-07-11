@@ -52,7 +52,9 @@ export function parseClassDeclaration () {
   const traits = [];
   if (isToken('use')) {
     advance(); // 'use'
-    traits.push(consumeToken('IDENTIFIER').value);
+    do {
+      traits.push(consumeToken('IDENTIFIER').value);
+    } while (matchToken(','));
   }
 
   consumeToken('{');
@@ -74,7 +76,9 @@ export function parseFunctionDeclaration () {
   const traits = [];
   if (isToken('use')) {
     advance(); // 'use'
-    traits.push(consumeToken('IDENTIFIER').value);
+    do {
+      traits.push(consumeToken('IDENTIFIER').value);
+    } while (matchToken(','));
   }
 
   const body = parsed.Block;
