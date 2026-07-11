@@ -48,9 +48,9 @@ AsBindingExpression = {
 
 CallExpression = {
   type: 'CallExpression', 
-  args: ['callee', 'arguments'],
+  args: ['callee', 'args', 'namedArgs'],
 },
-  
+
 MemberExpression = {
   type: 'MemberExpression',
   args: ['object', 'property']
