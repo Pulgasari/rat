@@ -1,8 +1,17 @@
 // @ratscript/compiler/parser/core.js
 
+import { parsed } from './index.js';
+
+export function parseBody () {
+  const body = [];
+  while (!isToken('}') && !isEOF()) {
+    body.push(parsed.Statement);
+  }
+  return body;
+}
+
 // :::::: { key: value, method (params) { ... }, ... }
 // Wird von parsePrimary (ObjectExpression) UND parsed.TraitDeclaration (Trait-Body) genutzt.
-
 export function parseObjectProperties () {
   consumeToken('{');
   const properties = [];
