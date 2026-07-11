@@ -73,6 +73,15 @@ export function generateRangeExpression ({ from, to ) {
   return `_range(${generate(from)}, ${generate(to)})`;
 }
 
+export function generateTemplateLiteral (node) {
+  let js = '`';
+  node.quasis.forEach((str, i) => {
+    js += str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+    if (i < node.expressions.length) js += '${' + generate(node.expressions[i]) + '}';
+  });
+  return js + '`';
+}
+
 export function generateTraitUseExpression (node) {
   // { } use A, B
   // ->  B.apply(A.apply({ }))  
