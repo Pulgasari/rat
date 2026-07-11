@@ -63,6 +63,7 @@ const generators = {
   ForStatement         : generateForStatement,
   SiftStatement        : generateSiftStatement,
   MoldStatement        : generateMoldStatement,
+  TryStatement         : generateTryStatement,
 };
 
 export function generate (node) {
