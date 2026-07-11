@@ -90,6 +90,16 @@ ExpressionStatement = {
   args: ['expression']
 },
 
+ForStatement = {
+  type: 'ForStatement',
+  args: {
+    id:       { default: null },  // Identifier | null (null = naked, keine Bindung im Body)
+    kind:     { default: null },  // 'let' | 'const' | 'var' | null (nur bei gesetztem id)
+    iterable: { required: true }, // Expression (Range, Array, beliebiges Iterable)
+    body:     { required: true }
+  }
+},
+
 IfStatement = {
   type: 'IfStatement',
   args: {
@@ -97,11 +107,6 @@ IfStatement = {
     consequent: { required: true }, // BlockStatement
     alternate:  { default: null }   // BlockStatement | IfStatement | null
   }
-},
-  
-ForStatement = {
-  type: 'ForStatement',
-  args: ['initializer', 'isNaked', 'body']
 },
 
 MoldStatement = {
@@ -118,6 +123,16 @@ MoldStatement = {
 SiftStatement = {
   type: 'SiftStatement', 
   args: ['init', 'cases', 'catchBlock', 'finallyBlock'],
+},
+
+TryStatement = {
+  type: 'TryStatement',
+  args: {
+    block        : { required: true }, // BlockStatement
+    handlerParam : { default: null }, // string|null (Name der Catch-Variable)
+    handler      : { default: null }, // BlockStatement | null (null = kein catch überhaupt)
+    finalizer    : { default: null }  // BlockStatement | null
+  }
 },
 
 WhileStatement = {
