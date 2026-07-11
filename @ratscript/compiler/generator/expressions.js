@@ -32,6 +32,18 @@ export function generateCallExpression (node) {
   return `${generate(node.expr)}(${args})`;
 }
 
+export function generateCompoundAssignmentExpression (node) {
+  if (node.operator === '+=') {
+    useHelper('_assign');
+    return `${generate(node.left)} = _assign(${generate(node.left)}, ${generate(node.right)})`;
+  }
+  throw new Error(`[Generator-Fehler]: Compound-Assignment-Operator '${node.operator}' ist noch nicht implementiert (bisher nur '+=' via _assign).`);
+}
+
+export function generatePipePlaceholder (node) {
+  throw new Error('[Generator-Fehler]: PipePlaceholder ("_") sollte bereits beim Parsen aufgelöst worden sein.');
+}
+
 export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
 }
