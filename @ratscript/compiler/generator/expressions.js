@@ -4,6 +4,10 @@ import { generate } from './index.js';
 
 // ::::::
 
+export function generateArrayExpression (node) {
+  return `[${node.elements.map(generate).join(', ')}]`;
+}
+
 export function generateAssignmentExpression ({ left, right }) {
   return `${generate(left)} = ${generate(right)}`;
 }
