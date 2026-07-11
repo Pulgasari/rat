@@ -79,6 +79,23 @@ export function parseActionBlock () {
   return ASTNode.BlockStatement({ body: [parsed.Statement] });
 }
 
+// :::::: gemeinsamer Helper für #(...) und #[...]
+
+function parseBracketedElements (open, close) {
+  consumeToken(open);
+  const elements = [];
+
+  if (!isToken(close)) {
+    do {
+      if (isToken(close)) break; // trailing comma erlaubt
+      elements.push(parsed.Expression);
+    } while (matchToken(','));
+  }
+
+  consumeToken(close);
+  return elements;
+}
+
 export function parseConditionTest () {
   const expr = parsed.Expression;
   if (isToken('as')) {
@@ -100,6 +117,12 @@ export function parsePrimary () {
   if (isToken('{')) {
     const properties = parsed.ObjectProperties;
     return ASTNode.ObjectExpression({ properties });
+  }
+  if (matchToken('#')) {
+    if (isToken('(')) return ASTNode.TupleExpression ({ elements: parseBracketedElements('(', ')') });
+    if (isToken('[')) return ASTNode.ListExpression  ({ elements: parseBracketedElements('[', ']') });
+    const token = peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte '(' oder '[' nach '#' (Gefunden: '${token.value}')`);
   }
   // Pipe-Platzhalter '_' -> eigener, transienter Node
   if (isToken('IDENTIFIER') && peek().value === '_') {
