@@ -1,7 +1,7 @@
 // @ratscript/compiler/parser/expressions.js
 
 import { ASTNode } from './../utils.js';
-import { advance, peek, previous, isToken, matchToken, consumeToken } from './state.js';
+import { advance, peek, peekNext, previous, isToken, matchToken, consumeToken } from './state.js';
 
 // :::::: Entry Point
 
@@ -79,4 +79,35 @@ export function parsePrimary () {
 
   const token = peek();
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
+}
+
+// :::::: INTERNAL HELPERS
+
+// :::::: Call-Argumente: positional ODER named ('key: value', komma-getrennt)
+// Beide Formen dürfen NICHT gemischt werden (der Runtime-Helper _fn erwartet entweder
+// reine Positional-Args ODER ein einzelnes { __isNamed: true, ... }-Objekt).
+
+function parseCallArguments () {
+  const args = [];
+  const namedArgs = [];
+
+  if (!isToken(')')) {
+    do {
+      if (isToken('IDENTIFIER') && peekNext()?.value === ':') {
+        const nameToken = advance();
+        consumeToken(':');
+        namedArgs.push({ name: nameToken.value, value: parseExpression() });
+      } else {
+        args.push(parseExpression());
+      }
+    } while (matchToken(','));
+  }
+  consumeToken(')');
+
+  if (namedArgs.length && args.length) {
+    const token = peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Named und positionale Argumente können nicht gemischt werden.`);
+  }
+
+  return namedArgs.length ? { args: [], namedArgs } : { args, namedArgs: null };
 }
