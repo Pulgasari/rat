@@ -69,20 +69,25 @@ export function parseClassDeclaration () {
 
 // :::::: fn name (args) use Trait { ... }
 export function parseFunctionDeclaration () {
+  let isAsync = false;
+  if (isToken('async')) { advance(); isAsync = true; }
+
   advance(); // 'fn'
+
+  let isGenerator = false;
+  if (matchToken('*')) isGenerator = true; // fn* name(...) { ... }
+
   const nameToken = consumeToken('IDENTIFIER');
   const params = parseParamList();
 
   const traits = [];
   if (isToken('use')) {
-    advance(); // 'use'
-    do {
-      traits.push(consumeToken('IDENTIFIER').value);
-    } while (matchToken(','));
+    advance();
+    do { traits.push(consumeToken('IDENTIFIER').value); } while (matchToken(','));
   }
 
   const body = parsed.Block;
-  return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body });
+  return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body, isAsync, isGenerator });
 }
 
 // :::::: trait Name { ... }
