@@ -38,8 +38,19 @@ export function generateBlockStatement (node) {
   return node.body.map(generate).join('\n');
 }
 
+export function generateBreakStatement (node) {
+  return node.label ? `break ${node.label};` : 'break;';
+}
+
+export function generateContinueStatement (node) {
+  return node.label ? `continue ${node.label};` : 'continue;';
+}
+
 export function generateExpressionStatement (node) {
   return `${generate(node.expr)};`;
+}
+export function generateLabeledStatement (node) {
+  return `${node.label}: ${generate(node.body)}`;
 }
 
 // ::::::
