@@ -135,6 +135,32 @@ export function Lexer (source) {
         }
         continue;
       }
+
+      // skip comments: '//'
+      if (char === '/' && source[cursor + 1] === '/') {
+        while (cursor < source.length && source[cursor] !== '\n') {
+          cursor++;
+        }
+        continue;
+      }
+
+      // Template-Strings (Backtick) -> eigener Scan statt Regex-Rule
+      if (char === '`') {
+        const { segments, endCursor } = scanTemplateString(source, cursor);
+        const raw = source.slice(cursor, endCursor);
+        const newlineCount = (raw.match(/\n/g) || []).length;
+
+        tokens.push({ column, line, type: TokenType.TEMPLATE_STRING, value: segments });
+
+        if (newlineCount > 0) {
+          line += newlineCount;
+          column = raw.length - raw.lastIndexOf('\n');
+        } else {
+          column += raw.length;
+        }
+        cursor = endCursor;
+        continue;
+      }
       
       for (const { regex, type } of RULES) {
         regex.lastIndex = cursor;
