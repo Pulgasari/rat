@@ -12,10 +12,19 @@ export function parseExpressionStatement () {
   return ASTNode.ExpressionStatement({ expr });
 }
 
+export function parseBreakStatement () {
+  advance(); // 'break'
+  matchToken(';');
+  return ASTNode.BreakStatement({});
+}
+
+export function parseContinueStatement () {
+  advance(); // 'continue'
+  matchToken(';');
+  return ASTNode.ContinueStatement({});
+}
+
 // :::::: for (...) { ... }
-
-// ERSETZT die bisherige parseForStatement komplett
-
 export function parseForStatement () {
   advance(); // 'for'
   consumeToken('(');
