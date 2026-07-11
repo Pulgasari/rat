@@ -72,15 +72,3 @@ export function consumeToken (typeOrValue, maybeValue, message) {
 // (_fn, _assign, _inc, _is, _proxy, ...) tatsächlich gebraucht wurden,
 // damit generateProgram nur die nötigen Imports voranstellt.
 
-const usedHelpers = new Set;
-export const resetHelpers   = ()     => usedHelpers.clear();
-export const useHelper      = (name) => usedHelpers.add(name);
-export const getUsedHelpers = ()     => [...usedHelpers];
-
-
-
-
-
-
-
-
