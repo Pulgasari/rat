@@ -89,8 +89,12 @@ export function generateIfStatement (node) {
   return `if (${generate(node.test)}) {\n${indent(generateBlockStatement(node.consequent))}\n}` + generateElseBranch(node.alternate);
 }
 
-// :::::: sift { init: ..., cond: ... }
+export function generateReturnStatement (node) {
+  if (node.argument === null) return `return;`;
+  return `return ${generate(node.argument)};`;
+}
 
+// :::::: sift { init: ..., cond: ... }
 export function generateSiftStatement (node) {
   let js = `(() => {\n`;
 
