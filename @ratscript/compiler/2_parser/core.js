@@ -124,6 +124,8 @@ export function parsePrimary () {
       const token = peek();
       throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte '(' oder '[' nach '#' (Gefunden: '${token.value}')`);
     }
+  } else if (isToken('[')) {
+    expr = ASTNode.ArrayExpression({ elements: parseBracketedElements('[', ']') });
   } else if (isToken('{')) {
     expr = ASTNode.ObjectExpression({ properties: parsed.ObjectProperties });
   } else if (matchToken('new')) {
