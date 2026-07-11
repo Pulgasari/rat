@@ -1,70 +1,15 @@
 // @ratscript/compiler/generator/index.js
-//
-// Zentraler Dispatcher: node.type -> generate-Funktion.
-// statements.js/declarations.js/expressions.js importieren `generate` von
-// hier zurück (für verschachtelte Knoten) -> zyklischer Import, funktioniert
-// in ESM problemlos, weil die Funktionen erst zur Laufzeit aufgerufen werden.
 
-import {
-  generateProgram,
-  generateExpressionStatement,
-  generateBlockStatement,
-  generateForStatement,
-  generateSiftStatement,
-  generateMoldStatement,
-} from './statements.js';
+import { evilFactory }   from './../utils.js'|
+import * as declarations from './declarations.js';
+import * as expressions  from './expressions.js';
+import * as statements   from './statements.js';
 
-import {
-  generateAliasDeclaration,
-  generateFunctionDeclaration,
-  generateTraitDeclaration,
-  generateVariableDeclaration
-} from './declarations.js';
+export const generated = evilFactory({ 
+  prefix: 'generate',
+  source: [declarations, expressions, statements]
+});
 
-import {
-  generateIdentifier,
-  generateLiteral,
-
-  generateAssignmentExpression,
-  generateCallExpression,
-  generateMemberExpression,
-  generateRangeExpression,
-  generateTraitUseExpression,
-
-  generateObjectPattern,
-} from './expressions.js';
-
-const generators = {
-  Program              : generateProgram,
-  Identifier           : generateIdentifier,
-  Literal              : generateLiteral,
-
-  // Declarations
-  FunctionDeclaration  : generateFunctionDeclaration,
-  TraitDeclaration     : generateTraitDeclaration,
-  VariableDeclaration  : generateVariableDeclaration,
-  
-  // Expressions
-  CallExpression       : generateCallExpression,
-  CompoundAssignmentExpression : generateCompoundAssignmentExpression,
-  AssignmentExpression : generateAssignmentExpression,
-  RangeExpression      : generateRangeExpression,
-  TraitUseExpression   : generateTraitUseExpression,
-
-  // Patterns
-  ObjectPattern        : generateObjectPattern,
-
-  // Placeholders
-  PipePlaceholder      : generatePipePlaceholder,
-
-  // Statements
-  ExpressionStatement  : generateExpressionStatement,
-  BlockStatement       : generateBlockStatement,
-  ForStatement         : generateForStatement,
-  SiftStatement        : generateSiftStatement,
-  MoldStatement        : generateMoldStatement,
-  TryStatement         : generateTryStatement,
-};
 
 export function generate (node) {
   if (!node) return '';
