@@ -23,6 +23,15 @@ export function generateCallExpression ({ expr, args }) {
   return `${generate(expr)}(${argsList})`;
 }
 
+export function generateCallExpression (node) {
+  if (node.namedArgs) {
+    const props = node.namedArgs.map(({ name, value }) => `${name}: ${generate(value)}`).join(', ');
+    return `${generate(node.expr)}({ __isNamed: true, ${props} })`;
+  }
+  const args = node.args.map(generate).join(', ');
+  return `${generate(node.expr)}(${args})`;
+}
+
 export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
 }
