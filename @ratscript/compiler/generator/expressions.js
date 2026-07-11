@@ -8,6 +8,10 @@ export function generateAssignmentExpression ({ left, right }) {
   return `${generate(left)} = ${generate(right)}`;
 }
 
+export function generateBinaryExpression (node) {
+  return `${generate(node.left)} ${node.operator} ${generate(node.right)}`;
+}
+
 export function generateCallExpression ({ expr, args }) {
   const argsList = args.map(generate).join(', ');
   return `${generate(expr)}(${argsList})`;
@@ -72,6 +76,14 @@ export function generateTupleExpression (node) {
   useHelper('Tuple');
   return `new Tuple(${node.elements.map(generate).join(', ')})`;
 }
+
+export function generateUnaryExpression (node) {
+  // Wort-Operatoren (typeof/void/delete) brauchen ein Leerzeichen, Symbol-Operatoren (!/~) nicht
+  const spacer = /^[a-z]/.test(node.operator) ? ' ' : '';
+  return `${node.operator}${spacer}${generate(node.argument)}`;
+}
+
+
 
 
 
