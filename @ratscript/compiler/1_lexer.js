@@ -35,6 +35,83 @@ const RULES = [
   { regex: /[a-zA-Z_$][a-zA-Z0-9_$]*/y, type: TokenType.IDENTIFIER }
 ];
 
+// :::::: HELPERS: TEMPLATE STRINGS
+
+// (Backtick-Strings mit ${...}-Interpolation)
+// Eigenständig, weil Template-Literale nicht mit einer einzelnen Regex erfassbar sind:
+// ${...} kann beliebig verschachtelte Strings, Klammern und sogar weitere
+// Template-Literale enthalten -> braucht echtes Balancing statt Regex-Matching.
+
+function skipStringLiteral (source, i, quoteChar) {
+  i++; // öffnendes Anführungszeichen
+  while (i < source.length) {
+    if (source[i] === '\\') { i += 2; continue; }
+    if (source[i] === quoteChar) { i++; break; }
+    i++;
+  }
+  return i;
+}
+
+function skipBraceExpr (source, i) {
+  // i steht direkt HINTER '${' -> sucht das passende '}' auf Tiefe 0
+  let depth = 1;
+  while (i < source.length && depth > 0) {
+    const ch = source[i];
+    if (ch === "'" || ch === '"') { i = skipStringLiteral(source, i, ch); continue; }
+    if (ch === '`') { i = skipTemplateLiteral(source, i); continue; }
+    if (ch === '{') { depth++; i++; continue; }
+    if (ch === '}') { depth--; i++; continue; }
+    i++;
+  }
+  return i; // Index NACH dem passenden '}'
+}
+
+function skipTemplateLiteral (source, i) {
+  // i steht auf dem öffnenden Backtick -> überspringt das GESAMTE Template-Literal
+  // (wird für verschachtelte Template-Literale innerhalb von ${...} gebraucht)
+  i++; // `
+  while (i < source.length) {
+    if (source[i] === '\\') { i += 2; continue; }
+    if (source[i] === '`') { i++; break; }
+    if (source[i] === '$' && source[i + 1] === '{') { i = skipBraceExpr(source, i + 2); continue; }
+    i++;
+  }
+  return i;
+}
+
+function scanTemplateString (source, startCursor) {
+  let i = startCursor + 1; // öffnendes Backtick
+  const segments = [];
+  let buffer = '';
+
+  const flush = () => { segments.push({ kind: 'string', value: buffer }); buffer = ''; };
+
+  while (i < source.length) {
+    const ch = source[i];
+
+    if (ch === '\\') { buffer += source[i + 1] ?? ''; i += 2; continue; }
+    if (ch === '`') { i++; break; } // schließendes Backtick
+
+    if (ch === '$' && source[i + 1] === '{') {
+      flush();
+      const exprStart = i + 2;
+      const exprEnd   = skipBraceExpr(source, exprStart) - 1; // ohne schließendes '}'
+      const exprSource = source.slice(exprStart, exprEnd);
+      segments.push({ kind: 'expr', tokens: Lexer(exprSource).tokenize() }); // rekursiver Lexer-Aufruf
+      i = exprEnd + 1;
+      continue;
+    }
+
+    buffer += ch;
+    i++;
+  }
+
+  flush();
+  return { segments, endCursor: i };
+}
+
+// :::::: THE LEXER (MAIN EXPORT)
+
 export function Lexer (source) {
   let cursor = 0;
   let line   = 1;
