@@ -103,6 +103,19 @@ export function parseMoldStatement () {
   return ASTNode.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
 }
 
+// :::::: return <expr>?;
+export function parseReturnStatement () {
+  advance(); // 'return'
+
+  let argument = null;
+  if (!isToken(';') && !isToken('}') && !isEOF()) {
+    argument = parsed.Expression;
+  }
+  matchToken(';');
+
+  return ASTNode.ReturnStatement({ argument });
+}
+
 // try           [{...}|stmt] 
 // catch   [(e)] [{...}|stmt]? 
 // finally       [{...}|stmt]?
