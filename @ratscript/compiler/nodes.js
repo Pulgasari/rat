@@ -95,6 +95,11 @@ MemberExpression = {
   // property: einfacher String-Name der Property (nur '.'-Zugriff, kein '[...]' bisher)
 },
 
+NewExpression = { 
+  type: 'NewExpression', 
+  args: ['callee', 'args'] 
+},
+
 ObjectExpression = { 
   type: 'ObjectExpression', 
   args: ['properties'] 
