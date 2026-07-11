@@ -44,21 +44,33 @@ export function parseAliasDeclaration () {
   throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte 'as' oder '=' nach 'alias' (Gefunden: '${token.value}')`);
 }
 
+// :::::: class Name [use Trait] { method1() {...} method2() {...} ... }
+export function parseClassDeclaration () {
+  advance(); // 'class'
+  const nameToken = consumeToken('IDENTIFIER');
+
+  const traits = [];
+  if (isToken('use')) {
+    advance(); // 'use'
+    traits.push(consumeToken('IDENTIFIER').value);
+  }
+
+  consumeToken('{');
+  const methods = [];
+  while (!isToken('}') && !isEOF()) {
+    methods.push(parseMethodLike());
+  }
+  consumeToken('}');
+
+  return ASTNode.ClassDeclaration({ name: nameToken.value, methods, traits });
+}
+
 // :::::: fn name (args) use Trait { ... }
 export function parseFunctionDeclaration () {
   advance(); // 'fn'
   const nameToken = consumeToken('IDENTIFIER');
+  const params = parseParamList();
 
-  consumeToken('(');
-  const params = [];
-  if (!isToken(')')) {
-    do {
-      params.push(consumeToken('IDENTIFIER').value);
-    } while (matchToken(','));
-  }
-  consumeToken(')');
-
-  // Optionale Traits via 'use' abfangen
   const traits = [];
   if (isToken('use')) {
     advance(); // 'use'
@@ -73,8 +85,8 @@ export function parseFunctionDeclaration () {
 export function parseTraitDeclaration () {
   advance(); // 'trait'
   const nameToken = consumeToken('IDENTIFIER');
-  const body      = parsed.Block;
-  return ASTNode.TraitDeclaration({ name: nameToken.value, body });
+  const properties = parsed.ObjectProperties;
+  return ASTNode.TraitDeclaration({ name: nameToken.value, properties });
 }
 
 // :::::: let/const/var <id | {pattern}> = <init>?;
@@ -95,24 +107,4 @@ export function parseVariableDeclaration () {
   return ASTNode.VariableDeclaration({ kind: kindToken.value, id, init });
 }
 
-function parseObjectPattern () {
-  consumeToken('{');
-  const properties = [];
 
-  if (!isToken('}')) {
-    do {
-      const keyToken = consumeToken('IDENTIFIER');
-      let valueName = keyToken.value;
-
-      if (isToken('as')) {
-        advance(); // 'as'
-        valueName = consumeToken('IDENTIFIER').value;
-      }
-
-      properties.push({ key: keyToken.value, value: valueName });
-    } while (matchToken(','));
-  }
-
-  consumeToken('}');
-  return ASTNode.ObjectPattern({ properties });
-}
