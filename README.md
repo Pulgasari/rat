@@ -268,6 +268,23 @@ String $name = 'Heiko';
 String name = 'Heiko';
 ```
 
+## todo
+
+```markdown
+[ ] in, inc, is
+[ ] += -= usw. (CompoundAssignmentExpression)
+[ ] Template-Strings/Interpolation
+[ ] JSX
+[ ] Multine-Strings
+[ ] Array-Literale
+[ ] break/continue in Loops
+[ ] cond, match, guard
+[ ] enum, struct
+[ ] async, await, yield
+[ ] export, import
+[ ] extends, super, static
+```
+
 ## reads
 
 - https://github.com/tc39/proposal-pattern-matching/blob/main/README.md
