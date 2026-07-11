@@ -34,11 +34,13 @@ export function generateFunctionDeclaration (node) {
   const params    = node.params.join(', ');
   const bodyCode  = generateBlockStatement(node.body);
   const paramList = JSON.stringify(node.params);
+  const asyncKw   = node.isAsync ? 'async ' : '';
+  const starKw    = node.isGenerator ? '*' : '';
 
-  let js = `const ${node.name} = _fn(function (${params}) {\n${indent(bodyCode)}\n}, ${paramList});`;
+  let js = `const ${node.name} = _fn(${asyncKw}function${starKw} (${params}) {\n${indent(bodyCode)}\n}, ${paramList});`;
 
   for (const traitName of node.traits) {
-    useHelper('Trait'); // via Trait.apply() referenziert -> Import muss vorhanden sein
+    useHelper('Trait');
     js += `\n${traitName}.apply(${node.name});`;
   }
 
