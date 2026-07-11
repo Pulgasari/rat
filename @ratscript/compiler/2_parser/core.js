@@ -48,20 +48,21 @@ export function parseObjectProperties () {
 export function parseStatement () {
   if (isToken('KEYWORD')) {
     switch (peek().value) {
-      case 'alias' : return parsed.AliasDeclaration;
-      case 'class' : return parsed.ClassDeclaration;
-      case 'const' : return parsed.VariableDeclaration;
-      case 'fn'    : return parsed.FunctionDeclaration;
-      case 'for'   : return parsed.ForStatement;
-      case 'if'    : return parsed.IfStatement;
-      case 'let'   : return parsed.VariableDeclaration;
-      case 'mold'  : return parsed.MoldStatement;
-      case 'sift'  : return parsed.SiftStatement;
-      case 'trait' : return parsed.TraitDeclaration;
-      case 'try'   : return parsed.TryStatement;
-      case 'union' : return parsed.UnionDeclaration;
-      case 'var'   : return parsed.VariableDeclaration;
-      case 'while' : return parsed.WhileStatement;
+      case 'alias'  : return parsed.AliasDeclaration;
+      case 'class'  : return parsed.ClassDeclaration;
+      case 'const'  : return parsed.VariableDeclaration;
+      case 'fn'     : return parsed.FunctionDeclaration;
+      case 'for'    : return parsed.ForStatement;
+      case 'if'     : return parsed.IfStatement;
+      case 'let'    : return parsed.VariableDeclaration;
+      case 'mold'   : return parsed.MoldStatement;
+      case 'return' : return parsed.ReturnStatement;
+      case 'sift'   : return parsed.SiftStatement;
+      case 'trait'  : return parsed.TraitDeclaration;
+      case 'try'    : return parsed.TryStatement;
+      case 'union'  : return parsed.UnionDeclaration;
+      case 'var'    : return parsed.VariableDeclaration;
+      case 'while'  : return parsed.WhileStatement;
     }
   }
   return parsed.ExpressionStatement;
