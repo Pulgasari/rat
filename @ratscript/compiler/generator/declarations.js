@@ -1,6 +1,7 @@
 // @ratscript/compiler/generator/declarations.js
 
 import { indent } from './helpers.js';
+import { useHelper } from './state.js';
 import { generateBlockStatement } from './statements.js';
 
 export function generateAliasDeclaration (node) {
@@ -12,9 +13,11 @@ export function generateAliasDeclaration (node) {
 }
 
 export function generateFunctionDeclaration (node) {
+  useHelper('_fn');
+
   const params    = node.params.join(', ');
   const bodyCode  = generateBlockStatement(node.body);
-  const paramList = JSON.stringify(node.params); // z.B. ["name","x"]
+  const paramList = JSON.stringify(node.params);
 
   const traitsNote = node.traits.length
     ? indent(`// TODO: traits nicht implementiert -> uses: ${node.traits.join(', ')}\n`)
