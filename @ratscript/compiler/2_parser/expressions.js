@@ -6,15 +6,15 @@ import { advance, peek, peekNext, previous, isToken, matchToken, consumeToken } 
 // :::::: Entry Point
 
 export function parseExpression () {
-  return parseAssignment();
+  return parsed.Assignment;
 }
 
 // :::::: Assignment
 
 export function parseAssignment () {
-  const expr = parseTraitUse();
+  const expr = parsed.TraitUse;
   if (matchToken('=')) {
-    const right = parseAssignment();
+    const right = parsed.Assignment;
     return ASTNode.AssignmentExpression({ left: expr, right });
   }
   return expr;
@@ -23,7 +23,7 @@ export function parseAssignment () {
 // :::::: 'use' Trait
 
 export function parseTraitUse () { // Expression 'use' TraitName
-  let expr = parseRange();
+  let expr = parsed.Range;
   if (isToken('use')) {
     advance(); // 'use'
     const traitName = consumeToken('IDENTIFIER').value;
@@ -35,9 +35,9 @@ export function parseTraitUse () { // Expression 'use' TraitName
 // :::::: Range (From '..' To)
 
 export function parseRange () {
-  let from = parsePrimary();
+  let from = parsed.Primary;
   if (matchToken('..')) {
-    const to = parsePrimary();
+    const to = parsed.Primary;
     return ASTNode.RangeExpression({ from, to });
   }
   return from;
@@ -60,18 +60,12 @@ export function parsePrimary () {
       if (matchToken('.')) {
         const propToken = consumeToken('IDENTIFIER');
         expr = ASTNode.MemberExpression({ object: expr, property: propToken.value });
-      } else if (matchToken('(')) {
-        const args = [];
-        if (!isToken(')')) {
-          do {
-            args.push(parseExpression());
-          } while (matchToken(':')); // einfaches Argument-Splitting
-        }
-        consumeToken(')');
-        expr = ASTNode.CallExpression({ expr, args });
-      } else {
-        break;
+      } 
+      else if (matchToken('(')) {
+        const { args, namedArgs } = parsed.CallArguments;
+        expr = ASTNode.CallExpression({ expr, args, namedArgs });
       }
+      else break;
     }
 
     return expr;
@@ -87,7 +81,7 @@ export function parsePrimary () {
 // Beide Formen dürfen NICHT gemischt werden (der Runtime-Helper _fn erwartet entweder
 // reine Positional-Args ODER ein einzelnes { __isNamed: true, ... }-Objekt).
 
-function parseCallArguments () {
+expoet function parseCallArguments () {
   const args = [];
   const namedArgs = [];
 
@@ -96,9 +90,9 @@ function parseCallArguments () {
       if (isToken('IDENTIFIER') && peekNext()?.value === ':') {
         const nameToken = advance();
         consumeToken(':');
-        namedArgs.push({ name: nameToken.value, value: parseExpression() });
+        namedArgs.push({ name: nameToken.value, value: parsed.Expression });
       } else {
-        args.push(parseExpression());
+        args.push(parsed.Expression);
       }
     } while (matchToken(','));
   }
