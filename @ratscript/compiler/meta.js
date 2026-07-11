@@ -192,3 +192,41 @@ export const TokenType = {
   STRING     : 'STRING',
 };
 
+
+
+
+/*
+import { JavaScript } from '@cosmonaut/presets';
+
+export const globals  = JavaScript.globals;
+export const literals = JavaScript.literals;
+export const puncts   = JavaScript.puncts;
+export const builtins = [ ...JavaScript.builtins, 'Enum', 'List', 'Record', 'Struct', 'Tuple', 'Union' ];
+export const keywords = [ ...JavaScript.keywords, 'alias', 'enum', 'fn', 'inc', 'is', 'match', 'mold', 'proxy', 'sift', 'struct', 'union', 'use' ];
+
+export const operators = { ...JavaScript.operators,
+  // RatScript
+  '|>'  : { precedence:  2, associativity: 'left' },
+  '..'  : { precedence:  7, associativity: 'left' },
+  'is'  : { precedence:  7, associativity: 'left' },
+  'inc' : { precedence: 15, associativity: 'right' },
+};
+
+export const runtimeHelpers = {
+  '_assign' : { token: '_assign', from: './../runtime/index.js' },
+  '_fn'     : { token: '_fn',     from: './../runtime/index.js' },
+  '_inc'    : { token: '_inc',    from: './../runtime/index.js' },
+  '_is'     : { token: '_is',     from: './../runtime/index.js' },
+  '_proxy'  : { token: '_proxy',  from: './../runtime/index.js' }
+};
+
+export const TokenType = {
+  EOF        : 'EOF', // 'end of line'
+  IDENTIFIER : 'IDENTIFIER',
+  KEYWORD    : 'KEYWORD',
+  NUMBER     : 'NUMBER',
+  OPERATOR   : 'OPERATOR',
+  PUNCT      : 'PUNCT',
+  STRING     : 'STRING',
+};
+*/
