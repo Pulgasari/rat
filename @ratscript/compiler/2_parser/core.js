@@ -109,52 +109,39 @@ export function parseConditionTest () {
 
 // :::::: Primary (Literale, Identifier, Calls)
 export function parsePrimary () {
+  let expr;
+
   if (matchToken('NUMBER')) {
-    return ASTNode.Literal({ type: 'NUMBER', value: previous().value });
-  }
-  if (matchToken('STRING')) {
-    return ASTNode.Literal({ type: 'STRING', value: previous().value });
-  }
-  if (isToken('{')) {
-    const properties = parsed.ObjectProperties;
-    return ASTNode.ObjectExpression({ properties });
-  }
-  if (matchToken('#')) {
-    if (isToken('(')) return ASTNode.TupleExpression ({ elements: parseBracketedElements('(', ')') });
-    if (isToken('[')) return ASTNode.ListExpression  ({ elements: parseBracketedElements('[', ']') });
-    const token = peek();
-    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte '(' oder '[' nach '#' (Gefunden: '${token.value}')`);
-  }
-  // Pipe-Platzhalter '_' -> eigener, transienter Node
-  if (isToken('IDENTIFIER') && peek().value === '_') {
-    advance();
-    return ASTNode.PipePlaceholder({});
-  }
-  if (matchToken('IDENTIFIER')) {
-    let expr = ASTNode.Identifier({ name: previous().value });
-
-    // Member-Zugriffe (z.B. console.log) oder Funktionsaufrufe () kaskadieren
-    while (true) {
-      if (matchToken('.')) {
-        const propToken = consumeToken('IDENTIFIER');
-        expr = ASTNode.MemberExpression({ object: expr, property: propToken.value });
-      } 
-      else if (matchToken('(')) {
-        const { args, namedArgs } = parsed.CallArguments;
-        expr = ASTNode.CallExpression({ expr, args, namedArgs });
-      }
-      else break;
+    expr = ASTNode.Literal({ kind: 'NUMBER', value: previous().value });
+  } else if (matchToken('STRING')) {
+    expr = ASTNode.Literal({ kind: 'STRING', value: previous().value });
+  } else if (matchToken('#')) {
+    if (isToken('(')) {
+      expr = ASTNode.TupleExpression({ elements: parseBracketedElements('(', ')') });
+    } else if (isToken('[')) {
+      expr = ASTNode.ListExpression({ elements: parseBracketedElements('[', ']') });
+    } else {
+      const token = peek();
+      throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte '(' oder '[' nach '#' (Gefunden: '${token.value}')`);
     }
-
-    return expr;
+  } else if (isToken('{')) {
+    expr = ASTNode.ObjectExpression({ properties: parsed.ObjectProperties });
+  } else if (isToken('IDENTIFIER') && peek().value === '_') {
+    advance();
+    expr = ASTNode.PipePlaceholder({});
+  } else if (matchToken('IDENTIFIER')) {
+    expr = ASTNode.Identifier({ name: previous().value });
+  } else {
+    const token = peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
   }
 
-  const token = peek();
-  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
+  return parsePostfix(expr);
 }
 
-// :::::: gemeinsame Param-Liste (fn + class-Methoden)
 
+
+// :::::: gemeinsame Param-Liste (fn + class-Methoden)
 export function parseParamList () {
   consumeToken('(');
   const params = [];
@@ -195,4 +182,26 @@ export function parseObjectPattern () {
 
   consumeToken('}');
   return ASTNode.ObjectPattern({ properties });
+}
+
+// :::::: INTERNAL HELPERS
+// can't be exported to avoid conflicts with 'evilObject' because they have arguments
+// TODO: maybe find a solution to change this
+
+// :::::: .property und (...) beliebig kaskadierbar, auf JEDER Primary-Form.
+// Zentralisiert statt pro Branch dupliziert -> jede neue Primary-Form (Tuple, List, ...)
+// bekommt Verkettung automatisch mit, ohne dass man's dort explizit einbauen muss.
+function parsePostfix (expr) {
+  while (true) {
+    if (matchToken('.')) {
+      const propToken = consumeToken('IDENTIFIER');
+      expr = ASTNode.MemberExpression({ object: expr, property: propToken.value });
+    } else if (matchToken('(')) {
+      const { args, namedArgs } = parseCallArguments();
+      expr = ASTNode.CallExpression({ expr, args, namedArgs });
+    } else {
+      break;
+    }
+  }
+  return expr;
 }
