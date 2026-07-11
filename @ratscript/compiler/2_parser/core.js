@@ -53,6 +53,7 @@ export function parseStatement () {
       case 'sift'  : return parsed.SiftStatement;
       case 'trait' : return parsed.TraitDeclaration;
       case 'try'   : return parsed.TryStatement;
+      case 'union' : return parsed.UnionDeclaration;
       case 'var'   : return parsed.VariableDeclaration;
       case 'while' : return parsed.WhileStatement;
     }
