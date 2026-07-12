@@ -10,6 +10,14 @@ A while ago I became interested in Programming Language design and was looking i
 
 What **Ratscript** is not: It's not an attempt to "fix JavaScript" or even replace it (like other projects tried before).
 
+### So, what does RatScript offer?
+
+- improved syntax
+- improved control flow
+- several builtins
+- pattern matching
+- jsx-support
+
 ## Index
 
 - [Aliasing](#as)
@@ -193,8 +201,8 @@ fn person (name, age) {
   console.log(`${name} is ${age} years old.);
 }
 
-person('Max', 18);
-person(age: 60, name: 'Udo');
+person('Max', 18); // positional
+person(age: 60, name: 'Udo'); // via named arguments
 ```
 
 ## Loops
@@ -308,8 +316,6 @@ for (let x of 1..10) { ... }
 // usage in naked loops
 for (1..10) { ... }
 ```
-
-## Named Arguments
 
 ## Keyword: `cond`
 
