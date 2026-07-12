@@ -40,7 +40,7 @@ export const ASTNode = new Proxy({}, {
 // :::::: Evil Factory
 
 export function createEvilFactory ({ prefix, source, applyCaller = true }) {
-  const sources   = Array.isArray(source) : source : [source];
+  const sources   = Array.isArray(source) ? source : [source];
   const targetObj = {};
   sources.forEach( sourceObj => {
     for (const [key, body] of Object.entries(sourceObj)) {
@@ -53,7 +53,7 @@ export function createEvilFactory ({ prefix, source, applyCaller = true }) {
       });
       
       //delete sourceObj[key];
-    }
+    });
   }
 
   // apply caller
