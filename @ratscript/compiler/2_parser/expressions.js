@@ -167,37 +167,14 @@ export function parseUnary () {
   return parsed.Range;
 }
 
+// todo: problem wegen argument + export lösen
 export function parseBinaryExpression (minPrecedence = 0) {
   let left = parsed.Unary;
+  //let left = parser.parse('Unary');
 
   while (true) {
-    const match = matchBinaryOperator(minPrecedence);
-    if (!match) break;
-
-    // Alle verbleibenden Operatoren sind laut Tabelle linksassoziativ -> +1 rechts
-    const right = parseBinaryExpression(match.precedence + 1); // direkter Aufruf, NICHT parsed.X (braucht Parameter)
-    left = ASTNode.BinaryExpression({ operator: match.operator, left, right });
-  }
-
-  return left;
-}
-
-export function parseBinaryExpression (minPrecedence = 0) {
-  let left = parsed.Unary;
-
-  while (true) {
-    const match = matchBinaryOperator(minPrecedence);
-    if (!match) break;
-
+    const match = matchBinaryOperator(minPrecedence); if (!match) break;
     const right = parseBinaryExpression(match.precedence + 1);
-
-    if (match.operator === 'is') {
-      left = ASTNode.IsExpression({ left, right });
-    } else if (match.operator === 'inc') {
-      left = ASTNode.IncExpression({ left, right });
-    } else {
-      left = ASTNode.BinaryExpression({ operator: match.operator, left, right });
-    }
 
     switch (match.operator) {
       case 'inc' : left = ASTNode.IncExpression ({ left, right }); break;
