@@ -59,9 +59,11 @@ export function parseStatement () {
       case 'class'    : return parsed.ClassDeclaration;
       case 'const'    : return parsed.VariableDeclaration;
       case 'continue' : return parsed.ContinueStatement;
+      case 'export'   : return parsed.ExportDeclaration;
       case 'fn'       : return parsed.FunctionDeclaration;
       case 'for'      : return parsed.ForStatement;
       case 'if'       : return parsed.IfStatement;
+      case 'import'   : return parsed.ImportDeclaration;
       case 'let'      : return parsed.VariableDeclaration;
       case 'mold'     : return parsed.MoldStatement;
       case 'return'   : return parsed.ReturnStatement;
