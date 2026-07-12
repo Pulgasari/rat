@@ -1,6 +1,6 @@
 // @ratscript/compiler/generator/expressions.js
 
-import { generate } from './index.js';
+import { generate, useHelper } from './index.js';
 
 // ::::::
 
@@ -42,6 +42,16 @@ export function generateCompoundAssignmentExpression (node) {
   // Alle anderen ('-=', '*=', '/=', '%=', '<<=', '>>=', '>>>=', '&=', '^=', '|=')
   // haben keine RatScript-eigene Semantik -> natives JS reicht 1:1 durch.
   return `${generate(node.left)} ${node.operator} ${generate(node.right)}`;
+}
+
+export function generateIsExpression (node) {
+  useHelper('_is');
+  return `_is(${generate(node.left)}, ${generate(node.right)})`;
+}
+
+export function generateIncExpression (node) {
+  useHelper('_inc');
+  return `_inc(${generate(node.left)}, ${generate(node.right)})`;
 }
 
 export function generateListExpression (node) {
