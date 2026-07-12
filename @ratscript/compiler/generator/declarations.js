@@ -28,6 +28,29 @@ export function generateClassDeclaration (node) {
   return js;
 }
 
+export function generateExportAllDeclaration (node) {
+  return node.exported
+    ? `export * as ${node.exported} from '${node.source}';`
+    : `export * from '${node.source}';`;
+}
+
+export function generateExportDefaultDeclaration (node) {
+  // Unser fn-Codegen erzeugt eine const-Zuweisung (wegen _fn-Wrapper), keine echte
+  // Function-Declaration -> 'export default' kann nicht direkt davorstehen.
+  if (node.declaration.type === 'FunctionDeclaration') {
+    return `${generate(node.declaration)}\nexport default ${node.declaration.name};`;
+  }
+  return `export default ${generate(node.declaration)};`;
+}
+
+export function generateExportNamedDeclaration (node) {
+  if (node.declaration) return `export ${generate(node.declaration)}`;
+
+  const specs = node.specifiers.map(s => s.local === s.exported ? s.local : `${s.local} as ${s.exported}`).join(', ');
+  const fromClause = node.source ? ` from '${node.source}'` : '';
+  return `export { ${specs} }${fromClause};`;
+}
+
 export function generateFunctionDeclaration (node) {
   useHelper('_fn');
 
@@ -45,6 +68,24 @@ export function generateFunctionDeclaration (node) {
   }
 
   return js;
+}
+
+export function generateImportDeclaration (node) {
+  if (node.specifiers.length === 0) return `import '${node.source}';`;
+
+  const defaultSpec   = node.specifiers.find(s => s.kind === 'default');
+  const namespaceSpec = node.specifiers.find(s => s.kind === 'namespace');
+  const namedSpecs    = node.specifiers.filter(s => s.kind === 'named');
+
+  const parts = [];
+  if (defaultSpec)   parts.push(defaultSpec.local);
+  if (namespaceSpec) parts.push(`* as ${namespaceSpec.local}`);
+  if (namedSpecs.length) {
+    const named = namedSpecs.map(s => s.imported === s.local ? s.imported : `${s.imported} as ${s.local}`).join(', ');
+    parts.push(`{ ${named} }`);
+  }
+
+  return `import ${parts.join(', ')} from '${node.source}';`;
 }
 
 export function generateTraitDeclaration (node) {
