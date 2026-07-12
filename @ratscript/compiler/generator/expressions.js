@@ -39,7 +39,9 @@ export function generateCompoundAssignmentExpression (node) {
     useHelper('_assign');
     return `${generate(node.left)} = _assign(${generate(node.left)}, ${generate(node.right)})`;
   }
-  throw new Error(`[Generator-Fehler]: Compound-Assignment-Operator '${node.operator}' ist noch nicht implementiert (bisher nur '+=' via _assign).`);
+  // Alle anderen ('-=', '*=', '/=', '%=', '<<=', '>>=', '>>>=', '&=', '^=', '|=')
+  // haben keine RatScript-eigene Semantik -> natives JS reicht 1:1 durch.
+  return `${generate(node.left)} ${node.operator} ${generate(node.right)}`;
 }
 
 export function generateListExpression (node) {
