@@ -182,12 +182,37 @@ export function parseBinaryExpression (minPrecedence = 0) {
   return left;
 }
 
+// :::::: match [(cond1, cond2, ...)] { key(s): value, ... }
+// -- EXPRESSION, liefert einen Wert
+export function parseMatchExpression () {
+  advance(); // 'match'
+
+  let discriminants = [];
+  if (matchToken('(')) {
+    discriminants = [parsed.Expression];
+    while (matchToken(',')) discriminants.push(parsed.Expression);
+    consumeToken(')');
+  }
+
+  consumeToken('{');
+  const cases = parseMatchCases(discriminants.length > 1, false); // false = keine Block-Values erlaubt
+  consumeToken('}');
+
+  const isAsync = cases.some(c => containsAwait(c.value));
+  return ASTNode.MatchExpression({ discriminants, cases, isAsync });
+}
+
 // :::::: INTERNAL HELPERS
+
+function containsAwait (node) {
+  if (!node || typeof node !== 'object') return false;
+  if (node.type === 'AwaitExpression') return true;
+  return Object.values(node).some(v => Array.isArray(v) ? v.some(containsAwait) : containsAwait(v));
+}
 
 // :::::: Call-Argumente: positional ODER named ('key: value', komma-getrennt)
 // Beide Formen dürfen NICHT gemischt werden (der Runtime-Helper _fn erwartet entweder
 // reine Positional-Args ODER ein einzelnes { __isNamed: true, ... }-Objekt).
-
 expoet function parseCallArguments () {
   const args = [];
   const namedArgs = [];
@@ -215,7 +240,6 @@ expoet function parseCallArguments () {
 
 // :::::: Binär-Operatoren via Precedence-Climbing (nutzt die Tabelle aus meta.js direkt,
 // statt für jede Präzedenzstufe eine eigene handgeschriebene Funktion zu brauchen)
-
 function matchBinaryOperator (minPrecedence) {
   for (const [op, info] of Object.entries(operators)) {
     if (EXCLUDED_FROM_GENERIC.has(op)) continue;
