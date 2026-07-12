@@ -152,6 +152,19 @@ ListExpression  = {
   args: ['elements'] 
 },
 
+MatchExpression = {
+  type: 'MatchExpression',
+  args: {
+    discriminants : {required: true}, 
+    cases         : {required: true}, 
+    isAsyncv      : {default: false} 
+  }
+  // cases: Array<{ isDefault:bool, keys:Expression[], value:Expression, isBlock?:bool }>
+  // - Tuple-Modus (>1 Discriminant): keys = EIN Tupel '(a,b)', Arity == Discriminants
+  // - Klassisch (1 Discriminant):    keys = 1+ Alternativ-Keys 'a, b: ...' (Fallthrough)
+  // - Prädikat (0 Discriminants, nur match): keys = 1 Bool-Ausdruck (oder Nullary-Funktion)
+},
+
 MemberExpression = {
   type: 'MemberExpression',
   args: ['object', 'property']
@@ -269,6 +282,11 @@ ReturnStatement = {
 SiftStatement = {
   type: 'SiftStatement', 
   args: ['init', 'cases', 'catchBlock', 'finallyBlock'],
+},
+
+SwitchStatement = { 
+  type: 'SwitchStatement', 
+  args: ['discriminants','cases']
 },
 
 TryStatement = {
