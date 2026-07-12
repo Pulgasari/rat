@@ -186,6 +186,9 @@ export const runtimeImports = {
   '_inc'    : { token: '_inc',    from: 'index.js' },
   '_is'     : { token: '_is',     from: 'index.js' },
   '_proxy'  : { token: '_proxy',  from: 'index.js' },
+
+  // Vendors
+  'html' : { token: 'html', from: 'htm/preact' }, // HTM
 };
 
 export const TokenType = {
@@ -197,6 +200,7 @@ export const TokenType = {
   PUNCT      : 'PUNCT',
   STRING     : 'STRING',
   TEMPLATE_STRING : 'TEMPLATE_STRING',
+  JSX_TEMPLATE    : 'JSX_TEMPLATE',
 };
 
 
