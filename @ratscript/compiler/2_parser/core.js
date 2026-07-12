@@ -125,6 +125,9 @@ export function parsePrimary () {
     expr = ASTNode.Literal({ kind: 'STRING', value: previous().value });
   } else if (isToken('TEMPLATE_STRING')) {
     expr = parsed.TemplateLiteral;
+  } else if (isToken('JSX_TEMPLATE')) {
+    const quasi = parsed.TemplateLiteral;
+    expr = ASTNode.TaggedTemplateExpression({ callee: ASTNode.Identifier({ name: 'html' }), quasi });
   } else if (matchToken('(')) {
     // Geklammerte Gruppierung, z.B. (1 + 2) * 3 -> gibt einfach den inneren Ausdruck zurück
     expr = parsed.Expression;
@@ -162,6 +165,9 @@ export function parsePrimary () {
     expr = ASTNode.PipePlaceholder({});
   } else if (matchToken('IDENTIFIER')) {
     expr = ASTNode.Identifier({ name: previous().value });
+  } else if (isToken('TEMPLATE_STRING')) {
+    const quasi = parsed.TemplateLiteral;
+    expr = ASTNode.TaggedTemplateExpression({ callee: expr, quasi });
   } else {
     const token = peek();
     throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
