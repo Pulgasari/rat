@@ -1,9 +1,9 @@
-// @ratscript/compiler/lexer.js
+// @ratscript/compiler/lexer/index.js
 
 // :::::: IMPORTS
 
 import { keywords, puncts, operators, TokenType } from './../meta.js';
-import { scanTemplateString } from './helpers.js';
+import { scanJSXElement, scanTemplateString } from './helpers.js';
 
 // :::::: HELPERS
 
@@ -86,6 +86,20 @@ export function Lexer (source) {
         } else {
           column += raw.length;
         }
+        cursor = endCursor;
+        continue;
+      }
+
+      // JSX-Sugar -> gescannt wie ein Template-String, nur mit spitzen statt runden Klammern
+      if (isJSXStart(source, cursor)) {
+        const { segments, endCursor } = scanJSXElement(source, cursor);
+        const raw = source.slice(cursor, endCursor);
+        const newlineCount = (raw.match(/\n/g) || []).length;
+
+        tokens.push({ column, line, type: TokenType.JSX_TEMPLATE, value: segments });
+
+        if (newlineCount > 0) { line += newlineCount; column = raw.length - raw.lastIndexOf('\n'); }
+        else { column += raw.length; }
         cursor = endCursor;
         continue;
       }
