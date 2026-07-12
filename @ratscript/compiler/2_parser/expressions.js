@@ -119,7 +119,7 @@ export function parseRange () {
 }
 
 export function parseTemplateLiteral () {
-  const token = advance(); // TEMPLATE_STRING-Token
+  const token = advance(); // JSX_TEMPLATE or TEMPLATE_STRING
   const quasis = [];
   const expressions = [];
 
