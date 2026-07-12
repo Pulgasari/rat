@@ -67,6 +67,60 @@ export function parseClassDeclaration () {
   return ASTNode.ClassDeclaration({ name: nameToken.value, methods, traits });
 }
 
+// :::::: export <decl>;  /  export { a, b as c } [from '...'];  /  export * [as ns] from '...';  /  export default <expr|decl>;
+export function parseExportDeclaration () {
+  advance(); // 'export'
+
+  if (isToken('default')) {
+    advance();
+    let declaration;
+    if (isToken('KEYWORD') && (peek().value === 'fn' || peek().value === 'async')) {
+      declaration = parsed.FunctionDeclaration;
+    } else if (isToken('KEYWORD') && peek().value === 'class') {
+      declaration = parsed.ClassDeclaration;
+    } else {
+      declaration = parsed.Expression;
+      matchToken(';');
+    }
+    return ASTNode.ExportDefaultDeclaration({ declaration });
+  }
+
+  if (matchToken('*')) {
+    let exported = null;
+    if (isToken('as')) { advance(); exported = consumeToken('IDENTIFIER').value; }
+    consumeToken('IDENTIFIER', 'from');
+    const source = consumeToken('STRING').value;
+    matchToken(';');
+    return ASTNode.ExportAllDeclaration({ exported, source });
+  }
+
+  if (isToken('{')) {
+    consumeToken('{');
+    const specifiers = [];
+    if (!isToken('}')) {
+      do {
+        if (isToken('}')) break;
+        const localToken = consumeToken('IDENTIFIER');
+        let exported = localToken.value;
+        if (isToken('as')) { advance(); exported = consumeToken('IDENTIFIER').value; }
+        specifiers.push({ local: localToken.value, exported });
+      } while (matchToken(','));
+    }
+    consumeToken('}');
+
+    let source = null;
+    if (isToken('IDENTIFIER') && peek().value === 'from') {
+      advance();
+      source = consumeToken('STRING').value;
+    }
+    matchToken(';');
+    return ASTNode.ExportNamedDeclaration({ declaration: null, specifiers, source });
+  }
+
+  const declaration = parsed.Statement; // let/const/fn/class/trait/union/alias
+  return ASTNode.ExportNamedDeclaration({ declaration, specifiers: [], source: null });
+}
+
 // :::::: fn name (args) use Trait { ... }
 export function parseFunctionDeclaration () {
   let isAsync = false;
@@ -88,6 +142,42 @@ export function parseFunctionDeclaration () {
 
   const body = parsed.Block;
   return ASTNode.FunctionDeclaration({ name: nameToken.value, params, traits, body, isAsync, isGenerator });
+}
+
+// :::::: import Default, { a, b as c }, * as ns from 'module';   /   import 'module';
+export function parseImportDeclaration () {
+  advance(); // 'import'
+
+  if (isToken('STRING')) { // reiner Side-Effect-Import, keine Bindings
+    const source = consumeToken('STRING').value;
+    matchToken(';');
+    return ASTNode.ImportDeclaration({ specifiers: [], source });
+  }
+
+  const specifiers = [];
+
+  if (matchToken('*')) {
+    consumeToken('IDENTIFIER', 'as');
+    specifiers.push({ kind: 'namespace', local: consumeToken('IDENTIFIER').value });
+  } else if (isToken('IDENTIFIER')) {
+    specifiers.push({ kind: 'default', local: consumeToken('IDENTIFIER').value });
+    if (matchToken(',')) {
+      if (matchToken('*')) {
+        consumeToken('IDENTIFIER', 'as');
+        specifiers.push({ kind: 'namespace', local: consumeToken('IDENTIFIER').value });
+      } else {
+        specifiers.push(...parseNamedImportSpecifiers());
+      }
+    }
+  } else {
+    specifiers.push(...parseNamedImportSpecifiers());
+  }
+
+  consumeToken('IDENTIFIER', 'from');
+  const source = consumeToken('STRING').value;
+  matchToken(';');
+
+  return ASTNode.ImportDeclaration({ specifiers, source });
 }
 
 // :::::: trait Name { ... }
@@ -131,4 +221,20 @@ export function parseVariableDeclaration () {
   return ASTNode.VariableDeclaration({ kind: kindToken.value, id, init });
 }
 
+// :::::: INTERNAL HELPERS
 
+function parseNamedImportSpecifiers () {
+  consumeToken('{');
+  const specifiers = [];
+  if (!isToken('}')) {
+    do {
+      if (isToken('}')) break;
+      const importedToken = consumeToken('IDENTIFIER');
+      let local = importedToken.value;
+      if (isToken('as')) { advance(); local = consumeToken('IDENTIFIER').value; }
+      specifiers.push({ kind: 'named', imported: importedToken.value, local });
+    } while (matchToken(','));
+  }
+  consumeToken('}');
+  return specifiers;
+}
