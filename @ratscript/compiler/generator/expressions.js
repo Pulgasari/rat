@@ -85,6 +85,13 @@ export function generateRangeExpression ({ from, to ) {
   return `_range(${generate(from)}, ${generate(to)})`;
 }
 
+export function generateTaggedTemplateExpression (node) {
+  if (node.callee.type === 'Identifier' && node.callee.name === 'html') {
+    useHelper('html');
+  }
+  return `${generate(node.callee)}${generate(node.quasi)}`;
+}
+
 export function generateTemplateLiteral (node) {
   let js = '`';
   node.quasis.forEach((str, i) => {
