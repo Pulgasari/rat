@@ -243,6 +243,39 @@ function parseBracketedElements (open, close) {
   return elements;
 }
 
+// :::::: Gemeinsames Case-Parsing für switch/match.
+// allowBlockValue=true erlaubt '{ ... }' als Case-Body (nur bei switch sinnvoll -> Statement-Block,
+// match braucht immer genau EINEN Ausdruck als Rückgabewert).
+export function parseMatchCases (isTupleMode, allowBlockValue) {
+  const cases = [];
+
+  while (!isToken('}') && !isEOF()) {
+    let keys = [], isDefault = false;
+
+    if (isToken('default')) {
+      advance();
+      isDefault = true;
+    } else if (isTupleMode) {
+      keys = parseBracketedElements('(', ')');
+    } else {
+      keys = [parsed.Assignment];
+      while (!isToken(':')) {
+        consumeToken(',');
+        keys.push(parsed.Assignment);
+      }
+    }
+
+    consumeToken(':');
+    const isBlock = allowBlockValue && isToken('{');
+    const value   = isBlock ? parsed.Block : parsed.Assignment;
+
+    cases.push({ isDefault, keys, value, isBlock });
+    matchToken(',');
+  }
+
+  return cases;
+}
+
 // :::::: .property und (...) beliebig kaskadierbar, auf JEDER Primary-Form.
 // Zentralisiert statt pro Branch dupliziert -> jede neue Primary-Form (Tuple, List, ...)
 // bekommt Verkettung automatisch mit, ohne dass man's dort explizit einbauen muss.
