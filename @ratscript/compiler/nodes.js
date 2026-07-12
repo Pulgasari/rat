@@ -103,6 +103,16 @@ CompoundAssignmentExpression = {
   // operator: '+=' | '-=' | '*=' | ... (aktuell nur '+=' semantisch implementiert)
 },
 
+IncExpression = { // TODO: rename to 'in' ?
+  type: 'IncExpression', 
+  args: ['left','right']
+};
+
+IsExpression  = {
+  type: 'IsExpression',
+  args: ['left','right']
+};
+
 ListExpression  = { 
   type: 'ListExpression',  
   args: ['elements'] 
