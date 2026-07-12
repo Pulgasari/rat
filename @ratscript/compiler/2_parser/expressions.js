@@ -8,15 +8,15 @@ const COMPOUND_ASSIGN_OPERATORS = ['+=','-=','*=','/=','%=','<<=','>>=','>>>=','
 // Range ('..' bleibt die eigene, dedizierte Node), 'is'/'in'/'inc'.
 const EXCLUDED_FROM_GENERIC = new Set([
   '=','+=','-=','*=','/=','%=','<<=','>>=','>>>=','&=','^=','|=',
-  '|>', '..', 'is', 'in', 'inc',
+  '|>', '..', 'in',
 ]);
 const UNARY_OPERATORS = [
-  { token: '+', operator: 'unary+' },
-  { token: '-', operator: 'unary-' },
-  { token: '!', operator: '!' },
-  { token: '~', operator: '~' },
+  { token: '+',      operator: 'unary+' },
+  { token: '-',      operator: 'unary-' },
+  { token: '!',      operator: '!'      },
+  { token: '~',      operator: '~'      },
   { token: 'typeof', operator: 'typeof' },
-  { token: 'void', operator: 'void' },
+  { token: 'void',   operator: 'void'   },
   { token: 'delete', operator: 'delete' },
 ];
 
@@ -74,11 +74,9 @@ function buildPipeStep (left, step) {
 
   if (step.namedArgs) {
     const hasPlaceholder = step.namedArgs.some(a => a.value.type === 'PipePlaceholder');
-    if (!hasPlaceholder) {
-      throw new SyntaxError(`Pipe-Schritt mit Named Arguments braucht einen '_'-Platzhalter (z.B. 'fn(x: _)').`);
-    }
-    const namedArgs = step.namedArgs.map(a =>
-      a.value.type === 'PipePlaceholder' ? { name: a.name, value: left } : a
+    if (!hasPlaceholder) throw new SyntaxError(`Pipe-Schritt mit Named Arguments braucht einen '_'-Platzhalter (z.B. 'fn(x: _)').`);
+    const namedArgs = step.namedArgs.map(
+      a => a.value.type === 'PipePlaceholder' ? { name: a.name, value: left } : a
     );
     return ASTNode.CallExpression({ expr: step.expr, args: [], namedArgs });
   }
@@ -115,11 +113,9 @@ export function parseTraitUse () {
 // :::::: Range (From '..' To)
 export function parseRange () {
   let from = parsed.Primary;
-  if (matchToken('..')) {
-    const to = parsed.Primary;
-    return ASTNode.RangeExpression({ from, to });
-  }
-  return from;
+  return matchToken('..')
+    ? ASTNode.RangeExpression({ from, to: parsed.Primary })
+    : from;
 }
 
 export function parseTemplateLiteral () {
