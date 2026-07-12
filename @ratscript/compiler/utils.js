@@ -42,6 +42,33 @@ export const ASTNode = new Proxy({}, {
 export function createEvilFactory ({ prefix, source, applyCaller = true }) {
   const sources   = Array.isArray(source) ? source : [source];
   const targetObj = {};
+
+  sources.forEach(sourceObj => {
+    for (const [key, body] of Object.entries(sourceObj)) {
+      if (!key.startsWith(prefix)) continue;
+      const name = key.replace(new RegExp(`^${prefix}`), '');
+
+      if (body.length === 0) {
+        // getter (no arguments)
+        Object.defineProperty(targetObj, name, {
+          get () { return body(); },
+          enumerable: true,
+        });
+      } else {
+        // regular method (with arguments)
+        targetObj[name] = (...args) => body(...args);
+      }
+    }
+  });
+
+  if (applyCaller) targetObj.call = name => targetObj[name];
+  return targetObj;
+}
+
+/*
+export function createEvilFactory ({ prefix, source, applyCaller = true }) {
+  const sources   = Array.isArray(source) ? source : [source];
+  const targetObj = {};
   sources.forEach( sourceObj => {
     for (const [key, body] of Object.entries(sourceObj)) {
       const name = prefix ? key.replace(new RegExp(`^${prefix}`), '') : key;
@@ -61,3 +88,4 @@ export function createEvilFactory ({ prefix, source, applyCaller = true }) {
   // done!
   return targetObj;
 };
+*/
