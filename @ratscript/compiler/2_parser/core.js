@@ -68,6 +68,7 @@ export function parseStatement () {
       case 'mold'     : return parsed.MoldStatement;
       case 'return'   : return parsed.ReturnStatement;
       case 'sift'     : return parsed.SiftStatement;
+      case 'switch'   : return parsed.SwitchStatement; 
       case 'trait'    : return parsed.TraitDeclaration;
       case 'try'      : return parsed.TryStatement;
       case 'union'    : return parsed.UnionDeclaration;
