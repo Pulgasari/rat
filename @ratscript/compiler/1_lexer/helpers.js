@@ -1,5 +1,7 @@
 // @ratscript/compiler/lexer/helpers.js
 
+import { Lexer } from './index.js';
+
 // :::::: HELPERS: TEMPLATE STRINGS
 
 // (Backtick-Strings mit ${...}-Interpolation)
