@@ -7,7 +7,7 @@
 // ${...} kann beliebig verschachtelte Strings, Klammern und sogar weitere
 // Template-Literale enthalten -> braucht echtes Balancing statt Regex-Matching.
 
-export function skipStringLiteral (source, i, quoteChar) {
+function skipStringLiteral (source, i, quoteChar) {
   i++; // öffnendes Anführungszeichen
   while (i < source.length) {
     if (source[i] === '\\') { i += 2; continue; }
@@ -17,7 +17,7 @@ export function skipStringLiteral (source, i, quoteChar) {
   return i;
 }
 
-export function skipBraceExpr (source, i) {
+function skipBraceExpr (source, i) {
   // i steht direkt HINTER '${' -> sucht das passende '}' auf Tiefe 0
   let depth = 1;
   while (i < source.length && depth > 0) {
@@ -31,7 +31,7 @@ export function skipBraceExpr (source, i) {
   return i; // Index NACH dem passenden '}'
 }
 
-export function skipTemplateLiteral (source, i) {
+function skipTemplateLiteral (source, i) {
   // i steht auf dem öffnenden Backtick -> überspringt das GESAMTE Template-Literal
   // (wird für verschachtelte Template-Literale innerhalb von ${...} gebraucht)
   i++; // `
