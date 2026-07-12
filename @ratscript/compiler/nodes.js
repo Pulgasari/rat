@@ -143,6 +143,11 @@ RangeExpression = {
   args: ['from', 'to']
 },
 
+TaggedTemplateExpression = {
+  type: 'TaggedTemplateExpression',
+  args: ['callee', 'quasi']
+},
+
 TraitUseExpression = {
   type: 'TraitUseExpression',
   args: ['expr', 'traitNames']
