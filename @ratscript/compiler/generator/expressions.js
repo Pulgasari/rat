@@ -59,6 +59,58 @@ export function generateListExpression (node) {
   return `new List(${node.elements.map(generate).join(', ')})`;
 }
 
+export function generateMatchExpression (node) {
+  const asyncKw = node.isAsync ? 'async ' : '';
+  const awaitKw = node.isAsync ? 'await ' : '';
+  let body;
+
+  if (node.discriminants.length > 1) {
+    const temps = node.discriminants.map((_, i) => `__mt_tmp${i}`);
+    const setup = node.discriminants.map((d, i) => `let ${temps[i]} = ${generate(d)};`).join('\n');
+    let js = `switch (true) {\n`;
+    for (const c of node.cases) {
+      if (c.isDefault) js += `  default:\n    return ${generate(c.value)};\n`;
+      else {
+        const cond = c.keys.map((k, i) => `${temps[i]} === ${generate(k)}`).join(' && ');
+        js += `  case ${cond}:\n    return ${generate(c.value)};\n`;
+      }
+    }
+    js += '}';
+    body = `${setup}\n${js}`;
+
+  } else if (node.discriminants.length === 1) {
+    const target = generate(node.discriminants[0]);
+    let js = `switch (${target}) {\n`;
+    for (const c of node.cases) {
+      if (c.isDefault) js += `  default:\n    return ${generate(c.value)};\n`;
+      else {
+        for (const key of c.keys) js += `  case ${generate(key)}:\n`;
+        js += `    return ${generate(c.value)};\n`;
+      }
+    }
+    js += '}';
+    body = js;
+
+  } else {
+    // Prädikat-Modus: Case-Key ist ein Bool-Ausdruck (oder Nullary-Funktion, die aufgerufen wird)
+    let js = `switch (true) {\n`;
+    for (const c of node.cases) {
+      if (c.isDefault) js += `  default:\n    return ${generate(c.value)};\n`;
+      else {
+        const cond = c.keys.map(k => {
+          const code = generate(k);
+          return `(typeof ${code} === 'function' ? ${code}() : ${code})`;
+        }).join(' || ');
+        js += `  case ${cond}:\n    return ${generate(c.value)};\n`;
+      }
+    }
+    js += '}';
+    body = js;
+  }
+
+  return `${awaitKw}(${asyncKw}() => {\n${indent(body)}\n})()`;
+}
+
 export function generateMemberExpression ({ object, property }) {
   return `${generate(object)}.${property}`;
 }
