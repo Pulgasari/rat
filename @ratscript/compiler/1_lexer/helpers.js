@@ -77,11 +77,11 @@ export function scanTemplateString (source, startCursor) {
 
 // :::::: JSX
 
-export function isJSXStart (source, i) {
+function isJSXStart (source, i) {
   return source[i] === '<' && /[a-zA-Z_$/>]/.test(source[i + 1] ?? '');
 }
 
-export function readTagName (source, i) {
+function readTagName (source, i) {
   let name = '';
   while (i < source.length && /[a-zA-Z0-9_$.]/.test(source[i])) { name += source[i]; i++; }
   return { name, end: i };
@@ -89,7 +89,7 @@ export function readTagName (source, i) {
 
 // Balanciertes '{'-Skip für Expression-Inseln in JSX (kein '${' wie bei Template-Strings,
 // hier ist's rohes '{...}' -> respektiert verschachtelte Strings/Template-Literale/JSX).
-export function skipCurlyExpr (source, i) {
+function skipCurlyExpr (source, i) {
   let depth = 1;
   while (i < source.length && depth > 0) {
     const ch = source[i];
