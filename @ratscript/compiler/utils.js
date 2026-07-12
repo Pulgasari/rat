@@ -44,8 +44,7 @@ export function createEvilFactory ({ prefix, source, applyCaller = true }) {
   const targetObj = {};
   sources.forEach( sourceObj => {
     for (const [key, body] of Object.entries(sourceObj)) {
-      const prefix = 'generate';
-      const name   = key.replace(new RegExp(`^${prefix}`), '');
+      const name = prefix ? key.replace(new RegExp(`^${prefix}`), '') : key;
       
       Object.defineProperty(targetObj, name, { 
         get () { return body(); },
