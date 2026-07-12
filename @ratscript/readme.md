@@ -39,12 +39,6 @@ What **Ratscript** is not: It's not an attempt to "fix JavaScript" or even repla
 - [JSX](#jsx)
 - [](#)
 
-- Keywords
-  - Statement Introducer Keywords
-    - alias, struct
-  - Infix Keywords
-    - is
-
 ---
 
 ## Aliasing (`as` and `alias`)
