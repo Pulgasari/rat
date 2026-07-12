@@ -147,6 +147,8 @@ export function parsePrimary () {
     expr = ASTNode.ArrayExpression({ elements: parseBracketedElements('[', ']') });
   } else if (isToken('{')) {
     expr = ASTNode.ObjectExpression({ properties: parsed.ObjectProperties });
+  } else if (isToken('match')) {
+    expr = parsed.MatchExpression;
   } else if (matchToken('new')) {
     let callee = ASTNode.Identifier({ name: consumeToken('IDENTIFIER').value });
     while (matchToken('.')) {
