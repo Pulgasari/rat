@@ -22,6 +22,7 @@ export const builtins = [
   'Record',
   'Struct',
   'Tuple',
+  'Type',
   'Union',
 ];
 
@@ -172,11 +173,12 @@ export const puncts = '()[]{}.:,;?#|'.split('');
 
 export const runtimeImports = {
   // Builtins
-  'Enum'  : { token: 'Enum',  from: 'types/Enum.js'  },
-  'List'  : { token: 'List',  from: 'types/List.js'  },
-  'Trait' : { token: 'Trait', from: 'types/Trait.js' },
-  'Tuple' : { token: 'Tuple', from: 'types/Tuple.js' },
-  'Union' : { token: 'Union', from: 'types/Union.js' },
+  'Enum'  : { token: 'Enum',  from: 'builtin/Enum.js'  },
+  'List'  : { token: 'List',  from: 'builtin/List.js'  },
+  'Trait' : { token: 'Trait', from: 'builtin/Trait.js' },
+  'Tuple' : { token: 'Tuple', from: 'builtin/Tuple.js' },
+  'Type'  : { token: 'Type',  from: 'builtin/Type.js'  },
+  'Union' : { token: 'Union', from: 'builtin/Union.js' },
   
   // Helpers
   '_assign' : { token: '_assign', from: 'index.js' },
