@@ -91,7 +91,6 @@ export function parseSiftStatement () {
 }
 
 // :::::: mold(target) { init: ..., cond: ... }
-
 export function parseMoldStatement () {
   advance(); // 'mold'
   consumeToken('(');
@@ -127,6 +126,22 @@ export function parseReturnStatement () {
   matchToken(';');
 
   return ASTNode.ReturnStatement({ argument });
+}
+
+// :::::: switch (cond1, cond2, ...) { key(s): action, ... }   -- STATEMENT
+// (Bewusst OHNE bedingungslose Form -> deckt 'sift' bereits ab)
+export function parseSwitchStatement () {
+  advance(); // 'switch'
+  consumeToken('(');
+  const discriminants = [parsed.Expression];
+  while (matchToken(',')) discriminants.push(parsed.Expression);
+  consumeToken(')');
+
+  consumeToken('{');
+  const cases = parseMatchCases(discriminants.length > 1, true); // true = Block-Bodies erlaubt
+  consumeToken('}');
+
+  return ASTNode.SwitchStatement({ discriminants, cases });
 }
 
 // try           [{...}|stmt] 
