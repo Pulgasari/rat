@@ -142,6 +142,7 @@ export const operators = {
   '<='         : { precedence: 8, associativity: 'left' },
   '>='         : { precedence: 8, associativity: 'left' },
   'in'         : { precedence: 8, associativity: 'left' },
+  'inc'        : { precedence: 8, associativity: 'left' },
   'instanceof' : { precedence: 8, associativity: 'left' },
 
   // bitwise shifts
@@ -159,7 +160,6 @@ export const operators = {
   '%' : { precedence: 13, associativity: 'left' },
 
   // unary (highest)
-  'inc'    : { precedence: 15, associativity: 'right' }, // Dein Dialekt
   '!'      : { precedence: 15, associativity: 'right' },
   '~'      : { precedence: 15, associativity: 'right' },
   'typeof' : { precedence: 15, associativity: 'right' },
