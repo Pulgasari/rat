@@ -3,7 +3,10 @@
 // :::::: PLACEHOLDERS
 // transient - taucht nie im finalen AST auf, wird schon beim Parsen aufgelöst
 
-PipePlaceholder = { type: 'PipePlaceholder', args: [] },
+PipePlaceholder = { 
+  type: 'PipePlaceholder', 
+  args: []
+},
 
 // :::::: DECLARATIONS
 
@@ -19,14 +22,38 @@ AliasDeclaration = {
 ClassDeclaration = {
   type: 'ClassDeclaration',
   args: { 
-    name: {required:true}, 
-    methods: {required:true}, 
-    traits: {default: []} 
+    name    : {required: true}, 
+    methods : {required: true}, 
+    traits  : {default: []} 
+  }
+  // methods: Array<{ name:string, params:string[], body:BlockStatement }>
+  // (Constructor ist einfach die Methode mit name === 'constructor')
+},
+
+ExportAllDeclaration = { // 'export * [as ns] from ...'
+  type: 'ExportAllDeclaration',
+  args: { 
+    exported : {default: null}, 
+    source   : {required: true} 
   }
 },
-// methods: Array<{ name:string, params:string[], body:BlockStatement }>
-// (Constructor ist einfach die Methode mit name === 'constructor')
-
+  
+ExportDefaultDeclaration = { 
+  type: 'ExportDefaultDeclaration', 
+  args: ['declaration']
+},
+  
+ExportNamedDeclaration = {
+  type: 'ExportNamedDeclaration',
+  args: { 
+    declaration : {default: null}, 
+    specifiers  : {default: []}, 
+    source      : {default: null}
+  }
+  // declaration gesetzt XOR specifiers gesetzt 
+  // (declaration = 'export const x=...', specifiers = 'export {a,b} [from ...]')
+},
+  
 FunctionDeclaration = {
   type: 'FunctionDeclaration',
   args: {
@@ -39,18 +66,15 @@ FunctionDeclaration = {
   }
 },
 
-AwaitExpression = { 
-  type: 'AwaitExpression', 
-  args: ['argument'] 
-},
-  
-YieldExpression = { 
-  type: 'YieldExpression', 
-  args: {
-    argument: {default: null}
-  } 
+ImportDeclaration = {
+  type: 'ImportDeclaration',
+  args: { 
+    specifiers : {required: true}, 
+    source     : {required:true}
+  }
+  // specifiers: Array<{kind:'default'|'named'|'namespace', imported?:string, local:string}>
 };
- 
+
 // ERSETZT die bisherige (nie fertig implementierte) Version -> body wurde zu properties,
 // weil ein Trait-Body kein Statement-Block ist, sondern Objekt-Literal-Syntax
 // (comma-getrennte properties/methods, kein Statement-Loop wie bei BlockStatement).
@@ -65,8 +89,8 @@ TraitDeclaration = {
 UnionDeclaration = {
   type: 'UnionDeclaration',
   args: { 
-    name    : {required:true}, 
-    members : {required:true} 
+    name    : {required: true}, 
+    members : {required: true} 
   }
 },
 
@@ -91,7 +115,17 @@ AsBindingExpression = {
   args: ['expr', 'name']
   // nur gültig als 'test' von IfStatement/WhileStatement
 },
+  
+AwaitExpression = { 
+  type: 'AwaitExpression', 
+  args: ['argument'] 
+},
 
+BinaryExpression = {
+  type: 'BinaryExpression', 
+  args: ['operator', 'left', 'right']
+},
+  
 CallExpression = {
   type: 'CallExpression', 
   args: ['callee', 'args', 'namedArgs'],
@@ -132,11 +166,11 @@ NewExpression = {
 ObjectExpression = { 
   type: 'ObjectExpression', 
   args: ['properties'] 
+  // properties: Array<
+  //   { kind:'init',   key:string, value:Expression } |
+  //   { kind:'method', key:string, params:string[], body:BlockStatement }
+  // >
 },
-// properties: Array<
-//   { kind:'init',   key:string, value:Expression } |
-//   { kind:'method', key:string, params:string[], body:BlockStatement }
-// >
 
 RangeExpression = {
   type: 'RangeExpression',
@@ -158,8 +192,17 @@ TupleExpression = {
   args: ['elements']
 },
 
-BinaryExpression = { type: 'BinaryExpression', args: ['operator', 'left', 'right'] },
-UnaryExpression  = { type: 'UnaryExpression',  args: ['operator', 'argument'] },
+UnaryExpression  = { 
+  type: 'UnaryExpression',  
+  args: ['operator', 'argument']
+},
+
+YieldExpression = { 
+  type: 'YieldExpression', 
+  args: {
+    argument: {default: null}
+  } 
+},
 
 // :::::: STATEMENTS
   
@@ -186,10 +229,10 @@ ExpressionStatement = {
 ForStatement = {
   type: 'ForStatement',
   args: {
-    id:       { default: null },  // Identifier | null (null = naked, keine Bindung im Body)
-    kind:     { default: null },  // 'let' | 'const' | 'var' | null (nur bei gesetztem id)
-    iterable: { required: true }, // Expression (Range, Array, beliebiges Iterable)
-    body:     { required: true }
+    id       : { default: null },  // Identifier | null (null = naked, keine Bindung im Body)
+    kind     : { default: null },  // 'let' | 'const' | 'var' | null (nur bei gesetztem id)
+    iterable : { required: true }, // Expression (Range, Array, beliebiges Iterable)
+    body     : { required: true }
   }
 },
 
@@ -265,10 +308,10 @@ TemplateLiteral = {
   args: ['quasis', 'expressions']
 }, // quasis: string[] (Länge = expressions.length + 1)
 
-Program: {
+Program = {
   type: 'Program',
   args: { 
-    body: { required: true } 
+    body: {required: true} 
   }
 },
 
