@@ -177,6 +177,40 @@ export function generateMoldStatement (node) {
   return js;
 }
 
+export function generateSwitchStatement (node) {
+  const isTupleMode = node.discriminants.length > 1;
+
+  if (isTupleMode) {
+    const temps = node.discriminants.map((_, i) => `__sw_tmp${i}`);
+    const setup = node.discriminants.map((d, i) => `const ${temps[i]} = ${generate(d)};`).join('\n');
+
+    let js = `switch (true) {\n`;
+    for (const c of node.cases) {
+      const body = c.isBlock ? generateBlockStatement(c.value) : `${generate(c.value)};`;
+      if (c.isDefault) js += `  default:\n${indent(body, 2)}\n    break;\n`;
+      else {
+        const cond = c.keys.map((k, i) => `${temps[i]} === ${generate(k)}`).join(' && ');
+        js += `  case ${cond}:\n${indent(body, 2)}\n    break;\n`;
+      }
+    }
+    js += '}';
+    return `${setup}\n${js}`;
+  }
+
+  const target = generate(node.discriminants[0]);
+  let js = `switch (${target}) {\n`;
+  for (const c of node.cases) {
+    const body = c.isBlock ? generateBlockStatement(c.value) : `${generate(c.value)};`;
+    if (c.isDefault) js += `  default:\n${indent(body, 2)}\n    break;\n`;
+    else {
+      for (const key of c.keys) js += `  case ${generate(key)}:\n`;
+      js += `${indent(body, 2)}\n    break;\n`;
+    }
+  }
+  js += '}';
+  return js;
+}
+
 // :::::: try/catch/finally
 // Standalone-Try (weder catch noch finally) -> automatischer Silent Fail via 'catch {}',
 // exakt wie im alten Regex-Compiler.
