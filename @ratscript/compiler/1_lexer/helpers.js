@@ -76,6 +76,16 @@ export function scanTemplateString (source, startCursor) {
 }
 
 // :::::: JSX
+/*
+Wichtige, bekannte Einschränkung (bewusst nicht gelöst): 
+Die Heuristik < + direkt folgender Buchstabe///> kollidiert 
+mit Vergleichen ohne Leerzeichen, 
+z. B. a<b würde fälschlich als JSX-Start (<b) erkannt. 
+Mit Leerzeichen (a < b) ist es eindeutig. 
+Schwachstelle benannt — bleibt bestehen, 
+da eine kontextsensitive Lösung (Parser-Zustand im Lexer) 
+unsere Architektur aufbrechen würde.
+*/
 
 function isJSXStart (source, i) {
   return source[i] === '<' && /[a-zA-Z_$/>]/.test(source[i + 1] ?? '');
