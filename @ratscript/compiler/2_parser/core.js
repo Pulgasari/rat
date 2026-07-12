@@ -225,11 +225,9 @@ export function parseObjectPattern () {
 }
 
 // :::::: INTERNAL HELPERS
-// can't be exported to avoid conflicts with 'evilObject' because they have arguments
-// TODO: maybe find a solution to change this
 
 // :::::: gemeinsamer Helper für #(...) und #[...]
-function parseBracketedElements (open, close) {
+export function parseBracketedElements (open, close) {
   consumeToken(open);
   const elements = [];
 
@@ -280,7 +278,7 @@ export function parseMatchCases (isTupleMode, allowBlockValue) {
 // :::::: .property und (...) beliebig kaskadierbar, auf JEDER Primary-Form.
 // Zentralisiert statt pro Branch dupliziert -> jede neue Primary-Form (Tuple, List, ...)
 // bekommt Verkettung automatisch mit, ohne dass man's dort explizit einbauen muss.
-function parsePostfix (expr) {
+export function parsePostfix (expr) {
   while (true) {
     if (matchToken('.')) {
       const propToken = consumeToken('IDENTIFIER');
@@ -293,4 +291,30 @@ function parsePostfix (expr) {
     }
   }
   return expr;
+}
+
+// :::::: TEST / CONCEPT
+
+export function parseParamList () {
+  consumeToken('(');
+  const params = parseBrackedElements('[', ']', consumeToken('IDENTIFIER').value);
+  consumeToken(')');
+  return params;
+
+  return parser.$
+    .consume('(')
+    .parseBrackedElements('[', ']', consume('IDENTIFIER'))
+    .consume(')');
+}
+
+export function parseParamList () {
+  consumeToken('(');
+  const params = [];
+  if (!isToken(')')) {
+    do {
+      params.push(consumeToken('IDENTIFIER').value);
+    } while (matchToken(','));
+  }
+  consumeToken(')');
+  return params;
 }
