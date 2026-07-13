@@ -46,9 +46,9 @@ export function parseStatement (ctx) {
 
 // :::::: PATTERNS
 
-export function parseBody () {
+export function parseBody (ctx) {
   const body = [];
-  while (!isToken('}') && !isEOF()) {
+  while (!ctx.checkAny('}', 'EOF')) {
     body.push(parsed.Statement);
   }
   return body;
@@ -58,7 +58,7 @@ export function parseBody () {
 
 // :::::: STATEMENTS
 
-function parseLabeledStatement () {
+function parseLabeledStatement (ctx) {
   const labelToken = advance(); // Label-Identifier
   advance(); // ':'
   const body = ctx.parseStatement();
