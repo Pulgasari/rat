@@ -1,37 +1,12 @@
 // @ratscript/parser/methods.js
 
 export function parseStatement (ctx) {
-  // Labeled Statements
-  if (ctx.check('IDENTIFIER') && ctx.peekNext()?.value === ':') {
+  // case 1: labeled statements
+  if (ctx.checkSequence('IDENTIFIER', ':')) {
     return ctx.parseLabeledStatement();
   }
-  
-  if (ctx.check('KEYWORD')) {
-    switch (ctx.peek().value) {
-      case 'alias'    : return ctx.parseAliasDeclaration;
-      case 'async'    : return ctx.parseFunctionDeclaration;
-      case 'break'    : return ctx.parseBreakStatement;
-      case 'class'    : return ctx.parseClassDeclaration;
-      case 'const'    : return ctx.parseVariableDeclaration;
-      case 'continue' : return ctx.parseContinueStatement;
-      case 'export'   : return ctx.parseExportDeclaration;
-      case 'fn'       : return ctx.parseFunctionDeclaration;
-      case 'for'      : return ctx.parseForStatement;
-      case 'if'       : return ctx.parseIfStatement;
-      case 'import'   : return ctx.parseImportDeclaration;
-      case 'let'      : return ctx.parseVariableDeclaration;
-      case 'mold'     : return ctx.parseMoldStatement;
-      case 'return'   : return ctx.parseReturnStatement;
-      case 'sift'     : return ctx.parseSiftStatement;
-      case 'switch'   : return ctx.parseSwitchStatement; 
-      case 'trait'    : return ctx.parseTraitDeclaration;
-      case 'try'      : return ctx.parseTryStatement;
-      case 'union'    : return ctx.parseUnionDeclaration;
-      case 'var'      : return ctx.parseVariableDeclaration;
-      case 'while'    : return ctx.parseWhileStatement;
-    }
-  }
 
+  // case 2: regular statements
   if (ctx.check('KEYWORD')) {
     const tkn = ctx.peek().value;
     const method = {
@@ -62,7 +37,8 @@ export function parseStatement (ctx) {
     }[tkn];
     return method ? method() : null;
   }
-  
+
+  // case 3: expression
   return ctx.parseExpressionStatement();
 }
 
