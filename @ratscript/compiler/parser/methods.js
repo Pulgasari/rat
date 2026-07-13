@@ -1,5 +1,7 @@
 // @ratscript/parser/methods.js
 
+// ::::::
+
 export function parseStatement (ctx) {
   // case 1: labeled statements
   if (ctx.checkSequence('IDENTIFIER', ':')) {
@@ -42,9 +44,27 @@ export function parseStatement (ctx) {
   return ctx.parseExpressionStatement();
 }
 
+// :::::: PATTERNS
+
+export function parseBody () {
+  const body = [];
+  while (!isToken('}') && !isEOF()) {
+    body.push(parsed.Statement);
+  }
+  return body;
+}
+
+// :::::: DECLARATIONS
+
+// :::::: STATEMENTS
+
 function parseLabeledStatement () {
   const labelToken = advance(); // Label-Identifier
   advance(); // ':'
   const body = ctx.parseStatement();
   return ASTNode.LabeledStatement({ label: labelToken.value, body });
 }
+
+// :::::: EXPRESSIONS
+
+// :::::: INTERNAL HELPERS
