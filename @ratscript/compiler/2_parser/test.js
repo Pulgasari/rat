@@ -1,3 +1,62 @@
+// :::::: DONE
+
+function normalizeWrapper (wrapper) {
+  if (!wrapper)               return [null, null];
+  if (Array.isArray(wrapper)) return wrapper;
+
+  const named = {
+    braces   : ['{', '}'],
+    brackets : ['[', ']'],
+    parens   : ['(', ')'],
+  };
+
+  if (named[wrapper]) return named[wrapper];
+
+  if (typeof wrapper === 'string' && wrapper.length === 2)
+    return [wrapper[0], wrapper[1]];
+
+  throw new Error("Invalid wrapper");
+}
+
+function parseList (cb, options = {}) {
+  const {
+    trailing   = true,
+    wrapper    = null,
+    closeToken = null,
+  } = options;
+
+  const [openToken, wrapperClose] = normalizeWrapper(wrapper);
+
+  const actualClose = wrapperClose ?? closeToken;
+  if (!actualClose) throw new Error("parseList requires a closeToken when wrapper is null");
+
+  const elements = [];
+
+  // wrapped list
+  if (openToken && wrapperClose) {
+    consumeToken(openToken);
+
+    if (!isToken(wrapperClose)) {
+      do {
+        if (isToken(wrapperClose)) break;
+        elements.push(cb());
+      } while (matchToken(','));
+    }
+
+    consumeToken(wrapperClose);
+  }
+
+  // unwrapped list
+  else do {
+    if (isToken(actualClose)) break;
+    elements.push(cb());
+  } while (matchToken(','));
+  
+
+  return elements;
+}
+
+
 // :::::: ORIGINAL
 
 export function parseBracketedElements (open, close) {
