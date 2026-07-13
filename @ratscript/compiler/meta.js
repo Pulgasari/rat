@@ -9,6 +9,11 @@ export const puncts   = javascript.puncts;
 export const builtins = [ ...javascript.builtins, 'Enum', 'List', 'Record', 'Struct', 'Trait', 'Tuple', 'Type', 'Union' ];
 export const keywords = [ ...javascript.keywords, 'alias', 'enum', 'fn', 'inc', 'is', 'match', 'mold', 'proxy', 'sift', 'struct', 'union', 'use' ];
 export const puncts   = '()[]{}.:,;?#|'.split('');
+export const wrappers = {
+  braces   : '{}',
+  brackets : '[]',
+  parens   : '()',
+};
 
 export const operators = {
   ...JavaScript.operators,
