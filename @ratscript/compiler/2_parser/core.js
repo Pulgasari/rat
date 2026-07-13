@@ -293,28 +293,3 @@ export function parsePostfix (expr) {
   return expr;
 }
 
-// :::::: TEST / CONCEPT
-
-export function parseParamList () {
-  consumeToken('(');
-  const params = parseBrackedElements('[', ']', consumeToken('IDENTIFIER').value);
-  consumeToken(')');
-  return params;
-
-  return parser.$
-    .consume('(')
-    .parseBrackedElements('[', ']', consume('IDENTIFIER'))
-    .consume(')');
-}
-
-export function parseParamList () {
-  consumeToken('(');
-  const params = [];
-  if (!isToken(')')) {
-    do {
-      params.push(consumeToken('IDENTIFIER').value);
-    } while (matchToken(','));
-  }
-  consumeToken(')');
-  return params;
-}
