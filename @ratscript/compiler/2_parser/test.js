@@ -18,6 +18,37 @@ function normalizeWrapper (wrapper) {
   throw new Error("Invalid wrapper");
 }
 
+function parseListPattern (cb, options = {}) {
+  const {
+    closeToken     = null,
+    separatorToken = ',',
+    trailing       = true,
+    wrapper        = null,
+    
+  } = options;
+
+  const [openToken, wrapperClose] = normalizeWrapper(wrapper);
+  const actualClose = wrapperClose ?? closeToken;
+  if (!actualClose) throw new Error("parseList requires a closeToken when wrapper is null");
+
+  const elements = [];
+  const checkTrailingToken = tkn => (!trailing && isToken(tkn)) && throw new Error("Trailing separator not allowed");
+  const isWrapped = openToken && wrapperClose;
+
+  if (isWrapped) consumeToken(openToken);
+  if (!isWrapped || !isToken(wrapperClose)) {
+    do {
+      elements.push(cb());
+      if (!matchToken(seperatorToken)) break;
+      checkTrailingToken(actualClose);
+    } while (!isToken(actualClose));
+  }
+  if (isWrapped) consumeToken(wrapperClose);
+
+  // done!
+  return elements;
+}
+
 function parseList (cb, options = {}) {
   const {
     trailing   = true,
