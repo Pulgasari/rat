@@ -77,11 +77,34 @@ export function parseBody (ctx) {
   return body;
 }
 
+export function parseObjectPattern (p) {
+  p.consume('{');
+  const properties = [];
+
+  if (!p.check('}')) {
+    do {
+      let key   = p.consume('IDENTIFIER')?.value;
+      let value = key;
+
+      if (p.check('as')) {
+        p.advance(); // 'as'
+        value = p.consume('IDENTIFIER').value;
+      }
+
+      properties.push({ key, value });
+    } while (p.match(','));
+  }
+
+  p.consume('}');
+  return ASTNode.ObjectPattern({ properties });
+}
+
+
 // :::::: DECLARATIONS
 
 // :::::: STATEMENTS
 
-function parseLabeledStatement (ctx) {
+export function parseLabeledStatement (ctx) {
   const labelToken = advance(); // Label-Identifier
   ctx.advance(); // ':'
   const body = ctx.parseStatement();
@@ -89,6 +112,19 @@ function parseLabeledStatement (ctx) {
 }
 
 // :::::: EXPRESSIONS
+
+// :::::: PARTS
+
+export function parseMethodLike (p) {
+  const name   = p.consume('IDENTIFIER')?.value;
+  const params = p.parseParamList();
+  const body   = p.parseBlock();
+  return { name, params, body };
+}
+
+export function parseParamList (p) {
+  return p.parseList('IDENTIFIER', { wrapper: '()' });
+}
 
 // :::::: KINDA WEIRD
 
@@ -100,6 +136,12 @@ export function parseConditionTest (ctx) {
     return ASTNode.AsBindingExpression({ expr, name });
   }
   return expr;
+}
+
+// :::::: DEPRECATED (MAYBE)
+
+export function parseBracketedElements (open, close) {
+  return p.parseList(() => p.parseExpression(), { wrapper: [open, close] });
 }
 
 // :::::: INTERNAL HELPERS
