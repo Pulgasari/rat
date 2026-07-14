@@ -550,10 +550,7 @@ export function parseTryStatement (p) {
     handler      = p.parse('ActionBlock');
   }
 
-  if (p.check('finally')) {
-    p.advance(); // 'finally'
-    finalizer = p.parse('ActionBlock');
-  }
+  if (p.match('finally')) finalizer = p.parse('ActionBlock');
 
   return ASTNode.TryStatement({ block, handlerParam, handler, finalizer });
 }
@@ -733,7 +730,7 @@ export function parseUnaryExpr (p) {
   if (p.match('await')) return ASTNode.AwaitExpr({ argument: p.parse('UnaryExpr') });
 
   if (p.match('yield')) {
-    let argument = !p.checkAny(';', ')', '}', 'EOF') ? p.parse('UnaryExpr') : null;
+    let argument = !p.checkAny('; ) } EOF') ? p.parse('UnaryExpr') : null;
     return ASTNode.YieldExpr({ argument });
   }
 
@@ -752,19 +749,19 @@ export function parseUnaryExpr (p) {
 export function parseMatchCases (p, isTupleMode, allowBlockValue) {
   const cases = [];
 
-  while (!p.checkAny('}', 'EOF')) {
+  while (!p.checkAny('} EOF')) {
     let keys = [], isDefault = false;
 
     if (p.check('default')) {
       p.advance();
       isDefault = true;
     } else if (isTupleMode) {
-      keys = p.parseBracketedElements('()');
+      keys = p.parse('BracketedElements', '()');
     } else {
-      keys = [p.parseAssignment()];
+      keys = [p.parse('Assignment')];
       while (!p.check(':')) {
         p.consume(',');
-        keys.push(p.parseAssignment());
+        keys.push(p.parse('Assignment'));
       }
     }
 
@@ -811,9 +808,8 @@ export function parsePostfix (p, expr) {
 // :::::: KINDA WEIRD
 
 export function parseConditionTest (ctx) {
-  const expr = ctx.parse('Expression');
-  if (ctx.check('as')) {
-    ctx.advance(); // 'as'
+  const expr = ctx.parse('Expr');
+  if (ctx.match('as')) {
     const name = ctx.consume('IDENTIFIER').value;
     return ASTNode.AsBindingExpression({ expr, name });
   }
@@ -822,8 +818,8 @@ export function parseConditionTest (ctx) {
 
 // :::::: DEPRECATED (MAYBE)
 
-export function parseBracketedElements (wrapper) {
-  return p.parseList(() => p.parseExpression(), { wrapper });
+export function parseBracketedElements (p, wrapper) {
+  return p.parse('List', 'Expr', { wrapper });
 }
 
 // :::::: INTERNAL HELPERS
