@@ -185,8 +185,43 @@ export function parseObjectProperties (p) {
   return properties;
 }
 
-
 // :::::: DECLARATIONS
+
+// trait Name { ... }
+export function parseTraitDeclaration (p) {
+  p.advance(); // 'trait'
+  const name  = p.consume('IDENTIFIER')?.value;
+  const props = p.parse('ObjectProperties');
+  return ASTNode.TraitDeclaration({ name, props });
+}
+
+// :::::: union Name = a | b | c;
+export function parseUnionDeclaration (p) {
+  p.advance(); // 'union'
+  const name = p.consume('IDENTIFIER')?.value;
+  p.consume('=');
+
+  const members = [p.parse('Primary')];
+  while (p.match('|')) members.push(p.parse('Primary'));
+  p.match(';');
+
+  return ASTNode.UnionDeclaration({ name, members });
+}
+
+// :::::: let/const/var <id | {pattern}> = <init>?;
+export function parseVariableDeclaration (p) {
+  const kind = p.advance().value; // 'const' | 'let' | 'var'
+
+  const id = p.check('{')
+    ? p.parse('ObjectPattern')
+    : ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
+
+  let init = null;
+  if (p.match('=')) init = p.parse('Expression');
+  p.match(';');
+
+  return ASTNode.VariableDeclaration({ kind, id, init });
+}
 
 // :::::: STATEMENTS
 
