@@ -850,3 +850,20 @@ function matchBinaryOperator (p, minPrecedence) {
   }
   return null;
 }
+
+// interner Helper, kein Grammatik-Eintrag -> nicht über 'p.parse(...)' aufgerufen,
+// genau wie 'buildPipeStep'/'containsAwait' weiter unten in der Datei.
+function parseNamedImportSpecifiers (p) {
+  p.consume('{');
+  const specifiers = [];
+  if (!p.check('}')) {
+    do {
+      if (p.check('}')) break;
+      const imported = p.consume('IDENTIFIER').value;
+      const local    = p.match('as') ? p.consume('IDENTIFIER').value : imported;
+      specifiers.push({ kind: 'named', imported, local });
+    } while (p.match(','));
+  }
+  p.consume('}');
+  return specifiers;
+}
