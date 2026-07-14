@@ -360,6 +360,58 @@ export function parsePipeExpr (p) {
   return left;
 }
 
+export function parseRangeExpr (p) {
+  const from = p.parse('PrimaryExpr');
+  return p.match('..')
+    ? ASTNode.RangeExpr({ from, to: p.parse('PrimaryExpr') })
+    : from;
+}
+
+export function parseTemplateLiteralExpr (p) {
+  const token       = p.advance(); // JSX_TEMPLATE or TEMPLATE_STRING
+  const quasis      = [];
+  const expressions = [];
+
+  for (const segment of token.value) {
+    if (segment.kind === 'string') {
+      quasis.push(segment.value);
+    } else {
+      p.pushState(segment.tokens);
+      expressions.push(p.parse('Expr'));
+      p.popState();
+    }
+  }
+
+  return ASTNode.TemplateLiteralExpr({ quasis, expressions });
+}
+
+export function parseTraitUseExpr (p) {
+  let expr = p.parse('BinaryExpr');
+
+  if (p.match('use')) {
+    const traitNames = [p.consume('IDENTIFIER').value];
+    while (p.match(',')) traitNames.push(p.consume('IDENTIFIER').value);
+    expr = ASTNode.TraitUseExpr({ expr, traitNames });
+  }
+
+  return expr;
+}
+
+export function parseUnaryExpr (p) {
+  if (p.match('await')) return ASTNode.AwaitExpr({ argument: p.parse('UnaryExpr') });
+
+  if (p.match('yield')) {
+    let argument = !p.checkAny(';', ')', '}', 'EOF') ? p.parse('UnaryExpr') : null;
+    return ASTNode.YieldExpr({ argument });
+  }
+
+  for (const { token, operator } of UNARY_OPERATORS) {
+    if (p.match(token)) return ASTNode.UnaryExpr({ operator, argument: p.parse('UnaryExpr') });
+  }
+
+  return p.parse('RangeExpr');
+}
+
 // :::::: PARTS
 
 // :::::: Gemeinsames Case-Parsing für switch/match.
