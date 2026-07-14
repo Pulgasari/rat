@@ -418,7 +418,7 @@ export function parseForStatement (p) {
   let id = null, kind = null;
 
   // for (let n of <iterable>) { ... }
-  if (p.checkAny('const let var')) {
+  if (p.is('const let var')) {
     kind = p.advance().value;
     id   = ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
     p.consume(['IDENTIFIER', 'of']); // 'of' ist kontextuell, kein globales Keyword
@@ -492,7 +492,7 @@ export function parseSiftStatement (p) {
 
   let init = null, cases = [], catchBlock = null, finallyBlock = null;
 
-  while (!p.checkAny('}', 'EOF')) {
+  while (!p.is('} EOF')) {
     const name = p.advance().value;
     p.consume(':');
     const body = p.parse('ActionBlock');
