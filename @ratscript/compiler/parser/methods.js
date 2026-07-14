@@ -171,16 +171,11 @@ export function parseObjectProperties (p) {
         const { name, params, body } = p.parse('MethodLike');
         properties.push({ kind: 'method', key: name, params, body });
       } else {
-        const keyToken = p.consume('IDENTIFIER');
-        let value;
-
-        if (p.match(':')) {
-          value = p.parse('Assignment');
-        } else { // Shorthand: { x } -> { x: x }
-          value = ASTNode.Identifier({ name: keyToken.value });
-        }
-
-        properties.push({ kind: 'init', key: keyToken.value, value });
+        const key   = p.consume('IDENTIFIER').value;
+        const value = p.match(':') ? p.parse('Assignment') : ASTNode.Identifier({ name: key
+                                                                                
+                                                                                });
+        properties.push({ kind: 'init', key, value });
       }
     } while (p.match(','));
   }
@@ -202,11 +197,11 @@ export function parseAliasDeclaration (p) {
 
   // form 1: alias database.users.save as saveUser;
   if (p.match('as')) {
-    const aliasNameToken = p.consume('IDENTIFIER');
+    const name = p.consume('IDENTIFIER').value;
     p.match(';'); // optionales Semikolon
 
     return ASTNode.AliasDeclaration({
-      name     : aliasNameToken.value,
+      name     : name,
       source   : first,
       autoBind : first.type === 'MemberExpression', // TODO: 'MemberExpr' sobald nodes.js umbenannt ist
     });
@@ -241,7 +236,7 @@ export function parseClassDeclaration (p) {
 
   p.consume('{');
   const methods = [];
-  while (!p.checkAny('}', 'EOF')) {
+  while (!p.check('} EOF')) {
     methods.push(p.parse('MethodLike'));
   }
   p.consume('}');
@@ -270,10 +265,9 @@ export function parseExportDeclaration (p) {
                     : p.parse('Expr');
     p.match(';');
 
-    let decl = p.switchParse({
-      'fn'    : 'FunctionDeclaration',
-      'async' : 'FunctionDeclaration',
-      'class' : 'ClassDeclaration',
+    let decl = p.dispatch({
+      'fn async' : 'FunctionDeclaration',
+      'class'    : 'ClassDeclaration',
     }, 'Expr');
     
     return ASTNode.ExportDefaultDeclaration({ declaration });
@@ -318,7 +312,8 @@ export function parseFunctionDeclaration (p) {
   const params = p.parse('ParamList');
   const traits = [];
   if (p.match('use')) do { traits.push(p.consume('IDENTIFIER').value); } while (p.match(','));
-
+  //const traits = $(p).if('use').doWhile(',').consume('IDENTIFIER');
+  
   const body = p.parse('Block');
   return ASTNode.FunctionDeclaration({ name, params, traits, body, isAsync, isGenerator });
 }
