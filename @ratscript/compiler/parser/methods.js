@@ -115,6 +115,39 @@ export function parseLabeledStatement (ctx) {
 
 // :::::: PARTS
 
+// :::::: Gemeinsames Case-Parsing für switch/match.
+// allowBlockValue=true erlaubt '{ ... }' als Case-Body (nur bei switch sinnvoll -> Statement-Block,
+// match braucht immer genau EINEN Ausdruck als Rückgabewert).
+export function parseMatchCases (p, isTupleMode, allowBlockValue) {
+  const cases = [];
+
+  while (!p.checkAny('}', 'EOF')) {
+    let keys = [], isDefault = false;
+
+    if (p.check('default')) {
+      p.advance();
+      isDefault = true;
+    } else if (isTupleMode) {
+      keys = p.parseBracketedElements('()');
+    } else {
+      keys = [p.parseAssignment()];
+      while (!p.check(':')) {
+        p.consume(',');
+        keys.push(p.parseAssignment());
+      }
+    }
+
+    p.consume(':');
+    const isBlock = allowBlockValue && p.check('{');
+    const value   = isBlock ? p.parseBlock() : p.parseAssignment();
+
+    cases.push({ isDefault, keys, value, isBlock });
+    p.match(',');
+  }
+
+  return cases;
+}
+
 export function parseMethodLike (p) {
   const name   = p.consume('IDENTIFIER')?.value;
   const params = p.parseParamList();
@@ -124,6 +157,24 @@ export function parseMethodLike (p) {
 
 export function parseParamList (p) {
   return p.parseList('IDENTIFIER', { wrapper: '()' });
+}
+
+// :::::: .property und (...) beliebig kaskadierbar, auf JEDER Primary-Form.
+// Zentralisiert statt pro Branch dupliziert -> jede neue Primary-Form (Tuple, List, ...)
+// bekommt Verkettung automatisch mit, ohne dass man's dort explizit einbauen muss.
+export function parsePostfix (p, expr) {
+  while (true) {
+    if (p.match('.')) {
+      const property = p.consume('IDENTIFIER')?.value;
+      expr = ASTNode.MemberExpression({ object: expr, property });
+    } else if (p.match('(')) {
+      const { args, namedArgs } = p.parseCallArguments();
+      expr = ASTNode.CallExpression({ expr, args, namedArgs });
+    } else {
+      break;
+    }
+  }
+  return expr;
 }
 
 // :::::: KINDA WEIRD
@@ -140,8 +191,8 @@ export function parseConditionTest (ctx) {
 
 // :::::: DEPRECATED (MAYBE)
 
-export function parseBracketedElements (open, close) {
-  return p.parseList(() => p.parseExpression(), { wrapper: [open, close] });
+export function parseBracketedElements (wrapper) {
+  return p.parseList(() => p.parseExpression(), { wrapper });
 }
 
 // :::::: INTERNAL HELPERS
