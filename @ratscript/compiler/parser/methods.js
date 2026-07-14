@@ -218,6 +218,29 @@ export function parseContinueStatement (p) {
   return ASTNode.ContinueStatement({ label });
 }
 
+// :::::: for (...) { ... }
+export function parseForStatement (p) {
+  p.advance(); // 'for'
+  p.consume('(');
+
+  let id = null, kind = null;
+
+  // for (let n of <iterable>) { ... }
+  if (p.checkAny('const', 'let', 'var')) {
+    kind = p.advance().value;
+    id   = ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
+    p.consume(['IDENTIFIER', 'of']); // 'of' ist kontextuell, kein globales Keyword
+  }
+  // sonst: naked for (<iterable>) { ... } -> kein id/kind
+
+  const iterable = p.parse('Expression');
+  p.consume(')');
+  const body = p.parse('Block');
+
+  return ASTNode.ForStatement({ id, kind, iterable, body });
+}
+
+
 export function parseIfStatement (p) {
   p.advance(); // 'if'
   
@@ -300,6 +323,42 @@ export function parseWhileStatement (p) {
 }
 
 // :::::: EXPRESSIONS
+
+export function parseExpr (p) {
+  return p.parse('Assignment');
+}
+
+// ::::::
+
+export function parseAssignment (p) {
+  const left = p.parse('Pipe');
+
+  if (p.match('=')) {
+    const right = p.parse('Assignment');
+    return ASTNode.AssignmentExpr({ left, right });
+  }
+
+  for (const operator of COMPOUND_ASSIGN_OPERATORS) {
+    if (p.match(operator)) {
+      const right = p.parse('Assignment');
+      return ASTNode.CompoundAssignmentExpr({ operator, left, right });
+    }
+  }
+
+  return left;
+}
+
+// Pipe (a |> b(...) |> c(_, x) |> ...)
+export function parsePipeExpr (p) {
+  let left = p.parse('TraitUse');
+
+  while (p.match('|>')) {
+    const step = p.parse('TraitUseExpr');
+    left = buildPipeStep(left, step);
+  }
+
+  return left;
+}
 
 // :::::: PARTS
 
