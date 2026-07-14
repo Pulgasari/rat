@@ -99,57 +99,36 @@ export function parsePrimary (p) {
 
 // :::::: PATTERNS
 
-export function parseBlock (ctx) {
-  ctx.consume('{');
-  const body = ctx.parseBody();
-  ctx.consume('}');
-  return ASTNode.BlockStatement({ body });
-  
-  // const body = ctx.parseWrapped('braces', () => ctx.parseBody());
-  // return ASTNode.BlockStatement({ body });
-
-  // return ASTNode.BlockStatement({ 
-  //   body: ctx.parseWrapped('braces', () => ctx.parseBody())
-  // });
+export function parseBlock (p) {
+  return ASTNode.BlockStatement({ 
+    body: p.parse('Wrapped', '{}', 'Body')
+  });
 }
 
-export function parseActionBlock (ctx) {
-  if (ctx.match('{')) {
-    const body = ctx.parseBody();
-    ctx.consume('}');
-    return ASTNode.BlockStatement({ body });
-  }
-  return ASTNode.BlockStatement({ body: [ctx.parseStatement()] });
+export function parseActionBlock (p) {
+  return p.check('{')
+    ? p.parse('Block')
+    : ASTNode.BlockStatement({ body: [p.parse('Statement')] });
 }
+
+// ActionBlock = p => p.is('{') ? p.parse('Block') : ASTNode.BlockStatement({ body: [p.parse('Statement')] }),
 
 export function parseBody (p) {
   const body = [];
   while (!p.checkAny('}', 'EOF')) {
-    body.push(p.parseStatement());
+    body.push(p.parse('Statement'));
   }
   return body;
 }
 
 export function parseObjectPattern (p) {
-  p.consume('{');
-  const properties = [];
-
-  if (!p.check('}')) {
-    do {
-      let key   = p.consume('IDENTIFIER')?.value;
-      let value = key;
-
-      if (p.check('as')) {
-        p.advance(); // 'as'
-        value = p.consume('IDENTIFIER').value;
-      }
-
-      properties.push({ key, value });
-    } while (p.match(','));
+  const fn = (p) => {
+    let key   = p.consume('IDENTIFIER')?.value;
+    let value = p.match('as') ? p.consume('IDENTIFIER').value : key;
+    return { key, value );
   }
-
-  p.consume('}');
-  return ASTNode.ObjectPattern({ properties });
+  const props = p.parseList(fn, { wrapper: '{}' };
+  return ASTNode.ObjectPattern({ props });
 }
 
 // :::::: { key: value, method (params) { ... }, ... }
