@@ -44,6 +44,59 @@ export function parseStatement (ctx) {
   return ctx.parseExpressionStatement();
 }
 
+// :::::: Primary (Literale, Identifier, Calls)
+export function parsePrimary (p) {
+  let expr;
+
+       if (p.match('NUMBER'))          expr = ASTNode.Literal({ kind: 'NUMBER', value: p.prev().value });
+  else if (p.match('STRING'))          expr = ASTNode.Literal({ kind: 'STRING', value: p.prev().value });
+  else if (p.match('IDENTIFIER'))      expr = ASTNode.Identifier({ name: p.prev().value });
+  else if (p.check('TEMPLATE_STRING')) expr = p.parseTemplateLiteral();
+  else if (p.check('TEMPLATE_STRING')) expr = ASTNode.TaggedTemplateExpression({ callee: expr, quasi: p.parseTemplateLiteral() });
+  else if (p.check('JSX_TEMPLATE'))    expr = ASTNode.TaggedTemplateExpression({ callee: ASTNode.Identifier({ name: 'html' }), quasi: p.parseTemplateLiteral() });
+  else if (p.check('match'))           expr = p.parseMatchExpression();
+  else if (p.check('['))               expr = ASTNode.ArrayExpression({ elements: p.parseBracketedElements('[]') });
+  else if (p.check('{'))               expr = ASTNode.ObjectExpression({ properties: p.parseObjectProperties() });
+  else if (p.match('(')) {
+    // Geklammerte Gruppierung, z.B. (1 + 2) * 3 -> gibt einfach den inneren Ausdruck zurück
+    expr = p.parseExpression();
+    p.consume(')');
+  } else if (p.match('#')) {
+         if (p.check('(')) expr = ASTNode.TupleExpression ({ elements: p.parseBracketedElements('()') });
+    else if (p.check('[')) expr = ASTNode.ListExpression  ({ elements: p.parseBracketedElements('[]') });
+    else {
+      const token = p.peek();
+      throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte '(' oder '[' nach '#' (Gefunden: '${token.value}')`);
+    }
+  } 
+  else if (p.match('new')) {
+    let callee = ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
+    while (p.match('.')) {
+      callee = ASTNode.MemberExpression({ object: callee, property: p.consume('IDENTIFIER').value });
+    }
+
+    let args = [];
+    if (p.match('(')) {
+      if (!p.check(')')) {
+        do { args.push(p.parseExpression()); } 
+        while (p.match(','));
+      }
+      p.consume(')');
+    }
+
+    expr = ASTNode.NewExpression({ callee, args });
+  } else if (p.check('IDENTIFIER') && p.peek().value === '_') {
+    p.advance();
+    expr = ASTNode.PipePlaceholder({});
+  }
+  else {
+    const token = p.peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Unerwartetes Token '${token.value}' beim Parsen eines Ausdrucks.`);
+  }
+
+  return p.parsePostfix(expr);
+}
+
 // :::::: PATTERNS
 
 export function parseBlock (ctx) {
