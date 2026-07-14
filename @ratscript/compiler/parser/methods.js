@@ -44,6 +44,31 @@ export function parseStatement (ctx) {
   return ctx.parseExprStatement();
 }
 
+export function parseStatement (p) {
+  if (p.checkSequence('IDENTIFIER', ':')) return p.parse('LabeledStatement');
+
+  return p.switch({
+    'alias'         : 'AliasDeclaration',
+    'fn async'      : 'FunctionDeclaration',
+    'break'         : 'BreakStatement',
+    'class'         : 'ClassDeclaration',
+    'const let var' : 'VariableDeclaration',
+    'continue'      : 'ContinueStatement',
+    'export'        : 'ExportDeclaration',
+    'for'           : 'ForStatement',
+    'if'            : 'IfStatement',
+    'import'        : 'ImportDeclaration',
+    'mold'          : 'MoldStatement',
+    'return'        : 'ReturnStatement',
+    'sift'          : 'SiftStatement',
+    'switch'        : 'SwitchStatement',
+    'trait'         : 'TraitDeclaration',
+    'try'           : 'TryStatement',
+    'union'         : 'UnionDeclaration',
+    'while'         : 'WhileStatement',
+  }).or('ExprStatement');
+}
+
 // :::::: Primary (Literale, Identifier, Calls)
 export function parsePrimary (p) {
   let expr;
