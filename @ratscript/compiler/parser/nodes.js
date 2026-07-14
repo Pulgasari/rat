@@ -1,5 +1,7 @@
 // @ratscript/compiler/parser/nodes.js
 
+export const
+
 // :::::: PLACEHOLDERS
 // transient - taucht nie im finalen AST auf, wird schon beim Parsen aufgelöst
 
@@ -105,55 +107,60 @@ VariableDeclaration = {
 
 // :::::: EXPRESSION
 
-ArrayExpression = { 
-  type: 'ArrayExpression', 
+ArrayExpr = { 
+  type: 'ArrayExpr', 
   args: ['elements']
 },
 
-AsBindingExpression = {
+AsBindingExpr = {
   type: 'AsBindingExpression',
   args: ['expr', 'name']
   // nur gültig als 'test' von IfStatement/WhileStatement
 },
-  
-AwaitExpression = { 
-  type: 'AwaitExpression', 
+
+AssignmentExpr = {
+  type: 'AssignmentExpr',
+  args: ['left', 'right']
+},
+
+AwaitExpr = { 
+  type: 'AwaitExpr', 
   args: ['argument'] 
 },
 
-BinaryExpression = {
-  type: 'BinaryExpression', 
+BinaryExpr = {
+  type: 'BinaryExpr', 
   args: ['operator', 'left', 'right']
 },
   
-CallExpression = {
-  type: 'CallExpression', 
+CallExpr = {
+  type: 'CallExpr', 
   args: ['callee', 'args', 'namedArgs'],
 },
 
-CompoundAssignmentExpression = {
-  type: 'CompoundAssignmentExpression',
+CompoundAssignmentExpr = {
+  type: 'CompoundAssignmentExpr',
   args: ['operator', 'left', 'right']
-  // operator: '+=' | '-=' | '*=' | ... (aktuell nur '+=' semantisch implementiert)
+  // operator: '+=' | '-=' | '*=' | ... (aktuell hat nur '+=' echte Laufzeit-Semantik im Generator)
 },
 
-IncExpression = { // TODO: rename to 'in' ?
-  type: 'IncExpression', 
+IncExpr = { // TODO: rename to 'in' ?
+  type: 'IncExpr', 
   args: ['left','right']
 };
 
-IsExpression  = {
-  type: 'IsExpression',
+IsExpr  = {
+  type: 'IsExpr',
   args: ['left','right']
 };
 
-ListExpression  = { 
-  type: 'ListExpression',  
+ListExpr  = { 
+  type: 'ListExpr',  
   args: ['elements'] 
 },
 
-MatchExpression = {
-  type: 'MatchExpression',
+MatchExpr = {
+  type: 'MatchExpr',
   args: {
     discriminants : {required: true}, 
     cases         : {required: true}, 
@@ -165,19 +172,19 @@ MatchExpression = {
   // - Prädikat (0 Discriminants, nur match): keys = 1 Bool-Ausdruck (oder Nullary-Funktion)
 },
 
-MemberExpression = {
-  type: 'MemberExpression',
+MemberExpr = {
+  type: 'MemberExpr',
   args: ['object', 'property']
   // property: einfacher String-Name der Property (nur '.'-Zugriff, kein '[...]' bisher)
 },
 
-NewExpression = { 
-  type: 'NewExpression', 
+NewExpr = { 
+  type: 'NewExpr', 
   args: ['callee', 'args'] 
 },
 
-ObjectExpression = { 
-  type: 'ObjectExpression', 
+ObjectExpr = { 
+  type: 'ObjectExpr', 
   args: ['properties'] 
   // properties: Array<
   //   { kind:'init',   key:string, value:Expression } |
@@ -185,33 +192,33 @@ ObjectExpression = {
   // >
 },
 
-RangeExpression = {
-  type: 'RangeExpression',
+RangeExpr = {
+  type: 'RangeExpr',
   args: ['from', 'to']
 },
 
-TaggedTemplateExpression = {
-  type: 'TaggedTemplateExpression',
+TaggedTemplateExpr = {
+  type: 'TaggedTemplateExpr',
   args: ['callee', 'quasi']
 },
 
-TraitUseExpression = {
-  type: 'TraitUseExpression',
+TraitUseExpr = {
+  type: 'TraitUseExpr',
   args: ['expr', 'traitNames']
 },
 
-TupleExpression = { 
-  type: 'TupleExpression', 
+TupleExpr = { 
+  type: 'TupleExpr', 
   args: ['elements']
 },
 
-UnaryExpression  = { 
-  type: 'UnaryExpression',  
+UnaryExpr  = { 
+  type: 'UnaryExpr',  
   args: ['operator', 'argument']
 },
 
-YieldExpression = { 
-  type: 'YieldExpression', 
+YieldExpr = { 
+  type: 'YieldExpr', 
   args: {
     argument: {default: null}
   } 
@@ -340,7 +347,7 @@ ObjectPattern = {
   args: ['properties']
   // properties: Array<{ key: string, value: string }>
   // key === value ohne Alias; sonst 'x as y' -> { key: 'x', value: 'y' }
-},
+};
 
 
 
