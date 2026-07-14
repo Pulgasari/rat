@@ -348,6 +348,72 @@ export function parseAssignment (p) {
   return left;
 }
 
+export function parseBinaryExpr (p, minPrecedence = 0) {
+  let left = p.parse('UnaryExpr');
+
+  while (true) {
+    const match = matchBinaryOperator(p, minPrecedence);
+    if (!match) break;
+
+    const right = p.parse('BinaryExpr', match.precedence + 1);
+
+    switch (match.operator) {
+      case 'inc' : left = ASTNode.IncExpr({ left, right }); break;
+      case 'is'  : left = ASTNode.IsExpr({ left, right }); break;
+      default    : left = ASTNode.BinaryExpr({ operator: match.operator, left, right });
+    }
+  }
+
+  return left;
+}
+
+export function parseCallArgumentsExpr (p) {
+  const args      = [];
+  const namedArgs = [];
+
+  if (!p.check(')')) {
+    do {
+      if (p.check('IDENTIFIER') && p.peekNext()?.value === ':') {
+        const nameToken = p.advance();
+        p.consume(':');
+        namedArgs.push({ name: nameToken.value, value: p.parse('Expr') });
+      } else {
+        args.push(p.parse('Expr'));
+      }
+    } while (p.match(','));
+  }
+
+  p.consume(')');
+
+  if (namedArgs.length && args.length) {
+    const token = p.peek();
+    throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Named und positionale Argumente können nicht gemischt werden.`);
+  }
+
+  return namedArgs.length
+    ? { args: [], namedArgs }
+    : { args, namedArgs: null };
+}
+
+export function parseMatchExpr (p) {
+  p.advance(); // 'match'
+
+  let discriminants = [];
+
+  if (p.match('(')) {
+    discriminants = [p.parse('Expr')];
+    while (p.match(',')) discriminants.push(p.parse('Expr'));
+    p.consume(')');
+  }
+
+  p.consume('{');
+  const cases = parseMatchCases(p, discriminants.length > 1, false);
+  p.consume('}');
+
+  const isAsync = cases.some(c => containsAwait(c.value));
+  return ASTNode.MatchExpr({ discriminants, cases, isAsync });
+}
+
 // Pipe (a |> b(...) |> c(_, x) |> ...)
 export function parsePipeExpr (p) {
   let left = p.parse('TraitUse');
