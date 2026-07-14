@@ -41,7 +41,7 @@ export function parseStatement (ctx) {
   }
 
   // case 3: expression
-  return ctx.parseExpressionStatement();
+  return ctx.parseExprStatement();
 }
 
 // :::::: Primary (Literale, Identifier, Calls)
@@ -218,6 +218,12 @@ export function parseContinueStatement (p) {
   return ASTNode.ContinueStatement({ label });
 }
 
+export function parseExprStatement (p) {
+  const expr = p.parse('Expr');
+  p.match(':');
+  return ASTNode.ExprStatement({ expr });
+}
+
 // :::::: for (...) { ... }
 export function parseForStatement (p) {
   p.advance(); // 'for'
@@ -263,6 +269,29 @@ export function parseLabeledStatement (p) {
   return ASTNode.LabeledStatement({ label, body });
 }
 
+// :::::: mold(target) { init: ..., cond: ... }
+export function parseMoldStatement (p) {
+  p.advance(); // 'mold'
+  const targetExpr = p.parse('Wrapped', '()', 'Expr');
+  p.consume('{');
+
+  let init = null, cases = [], catchBlock = null, finallyBlock = null;
+
+  while (!p.checkAny('}', 'EOF')) {
+    const keyToken = p.advance().value;
+    p.consume(':');
+    const body = p.parse('ActionBlock');
+
+         if (name === 'init')                init = body;
+    else if (name === 'finally')     finallyBlock = body;
+    else if (name.startsWith('catch')) catchBlock = body;
+    else cases.push({ condition: ASTNode.Identifier({ name }), body });
+  }
+
+  p.consume('}');
+  return ASTNode.MoldStatement({ targetExpr, init, cases, catchBlock, finallyBlock });
+}
+
 // :::::: return <expr>?;
 export function parseReturnStatement (p) {
   p.advance(); // 'return'
@@ -271,6 +300,28 @@ export function parseReturnStatement (p) {
   p.match(';');
 
   return ASTNode.ReturnStatement({ argument });
+}
+
+// :::::: sift { init: ..., cond: ... }
+export function parseSiftStatement (p) {
+  p.advance(); // 'sift'
+  p.consume('{');
+
+  let init = null, cases = [], catchBlock = null, finallyBlock = null;
+
+  while (!p.checkAny('}', 'EOF')) {
+    const name = p.advance().value;
+    p.consume(':');
+    const body = p.parse('ActionBlock');
+
+         if (name === 'init')                init = body;
+    else if (name === 'finally')     finallyBlock = body;
+    else if (name.startsWith('catch')) catchBlock = body;
+    else cases.push({ condition: ASTNode.Identifier({ name }), body });
+  }
+
+  p.consume('}');
+  return ASTNode.SiftStatement({ init, cases, catchBlock, finallyBlock });
 }
 
 // :::::: switch (cond1, cond2, ...) { key(s): action, ... }   -- STATEMENT
