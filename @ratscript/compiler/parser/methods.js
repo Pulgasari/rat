@@ -225,14 +225,14 @@ export function parseVariableDeclaration (p) {
 
 // :::::: STATEMENTS
 
-export function parseBreakStatement () {
+export function parseBreakStatement (p) {
   p.advance(); // 'break'
   let label = p.check('IDENTIFIER') ? p.advance().value : null;
   p.match(';');
   return ASTNode.BreakStatement({ label });
 }
 
-export function parseContinueStatement () {
+export function parseContinueStatement (p) {
   p.advance(); // 'continue'
   let label = p.check('IDENTIFIER') ? p.advance().value : null;
   p.match(';');
@@ -244,6 +244,38 @@ export function parseLabeledStatement (p) {
   p.advance(); // ':'
   const body = p.parse('Statement');
   return ASTNode.LabeledStatement({ label, body });
+}
+
+// try           [{...}|stmt] 
+// catch   [(e)] [{...}|stmt]? 
+// finally       [{...}|stmt]?
+export function parseTryStatement (p) {
+  p.advance(); // 'try'
+  const block = p.parse('ActionBlock');
+
+  let handlerParam = null;
+  let handler      = null;
+  let finalizer    = null;
+
+  if (p.check('catch')) {
+    p.advance(); // 'catch'
+    handlerParam = p.parse('Wrapped', '()', 'IDENTIFIER');
+    handler      = parsed.ActionBlock;
+  }
+
+  if (p.check('finally')) {
+    p.advance(); // 'finally'
+    finalizer = p.parse('ActionBlock');
+  }
+
+  return ASTNode.TryStatement({ block, handlerParam, handler, finalizer });
+}
+
+export function parseWhileStatement (p) {
+  p.advance(); // 'while'
+  const test = p.parse('Wrapped', '()', 'ConditionTest');
+  const body = p.parse('Block');
+  return ASTNode.WhileStatement({ test, body });
 }
 
 // :::::: EXPRESSIONS
