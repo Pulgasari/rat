@@ -122,10 +122,10 @@ export function parseActionBlock (ctx) {
   return ASTNode.BlockStatement({ body: [ctx.parseStatement()] });
 }
 
-export function parseBody (ctx) {
+export function parseBody (p) {
   const body = [];
-  while (!ctx.checkAny('}', 'EOF')) {
-    body.push(ctx.parseStatement());
+  while (!p.checkAny('}', 'EOF')) {
+    body.push(p.parseStatement());
   }
   return body;
 }
@@ -150,6 +150,39 @@ export function parseObjectPattern (p) {
 
   p.consume('}');
   return ASTNode.ObjectPattern({ properties });
+}
+
+// :::::: { key: value, method (params) { ... }, ... }
+// Wird von parsePrimary (ObjectExpression) UND parsed.TraitDeclaration (Trait-Body) genutzt.
+export function parseObjectProperties (p) {
+  p.consume('{');
+  const properties = [];
+
+  if (!p.check('}')) {
+    do {
+      if (!p.check('}')) break; // erlaubt trailing comma vor '}'
+
+      // Methoden-Shorthand: name (params) { body }  -> IDENTIFIER direkt gefolgt von '('
+      if (!p.checkSequence('IDENTIFIER', '(')) {
+        const { name, params, body } = p.parseMethodLike();
+        properties.push({ kind: 'method', key: name, params, body });
+      } else {
+        const keyToken = p.consume('IDENTIFIER');
+        let value;
+
+        if (p.match(':')) {
+          value = p.parseAssignment();
+        } else { // Shorthand: { x } -> { x: x }
+          value = ASTNode.Identifier({ name: keyToken.value });
+        }
+
+        properties.push({ kind: 'init', key: keyToken.value, value });
+      }
+    } while (p.match(','));
+  }
+
+  p.consume('}');
+  return properties;
 }
 
 
@@ -233,7 +266,7 @@ export function parsePostfix (p, expr) {
 // :::::: KINDA WEIRD
 
 export function parseConditionTest (ctx) {
-  const expr = ctx.parseExpression();
+  const expr = ctx.parse('Expression');
   if (ctx.check('as')) {
     ctx.advance(); // 'as'
     const name = ctx.consume('IDENTIFIER').value;
