@@ -283,12 +283,61 @@ export function parseExportDeclaration (p) {
   return ASTNode.ExportNamedDeclaration({ declaration, specifiers: [], source: null });
 }
 
+// :::::: fn name (args) use Trait { ... }
+export function parseFunctionDeclaration (p) {
+  let isAsync = p.match('async');
+  p.advance(); // 'fn'
+  let isGenerator = p.match('*'); // fn* name(...) { ... }
+
+  const name   = p.consume('IDENTIFIER').value;
+  const params = p.parse('ParamList');
+  const traits = [];
+  if (p.match('use')) do { traits.push(p.consume('IDENTIFIER').value); } while (p.match(','));
+
+  const body = p.parse('Block');
+  return ASTNode.FunctionDeclaration({ name, params, traits, body, isAsync, isGenerator });
+}
+ 
 // trait Name { ... }
 export function parseTraitDeclaration (p) {
   p.advance(); // 'trait'
   const name  = p.consume('IDENTIFIER')?.value;
   const props = p.parse('ObjectProperties');
   return ASTNode.TraitDeclaration({ name, props });
+}
+
+// :::::: import Default, { a, b as c }, * as ns from 'module';   /   import 'module';
+export function parseImportDeclaration (p) {
+  p.advance(); // 'import'
+
+  if (p.check('STRING')) { // reiner Side-Effect-Import, keine Bindings
+    const source = p.consume('STRING').value;
+    p.match(';');
+    return ASTNode.ImportDeclaration({ specifiers: [], source });
+  }
+
+  const specifiers = [];
+
+  if (p.match('*')) {
+    p.consume(['IDENTIFIER', 'as']);
+    specifiers.push({ kind: 'namespace', local: p.consume('IDENTIFIER').value });
+  } else if (p.check('IDENTIFIER')) {
+    specifiers.push({ kind: 'default', local: p.consume('IDENTIFIER').value });
+    if (p.match(',')) {
+      if (p.match('*')) {
+        p.consume(['IDENTIFIER', 'as']);
+        specifiers.push({ kind: 'namespace', local: p.consume('IDENTIFIER').value });
+      } 
+      else specifiers.push(...parseNamedImportSpecifiers(p));
+    }
+  } 
+  else specifiers.push(...parseNamedImportSpecifiers(p));
+
+  p.consume(['IDENTIFIER', 'from']);
+  const source = p.consume('STRING').value;
+  p.match(';');
+
+  return ASTNode.ImportDeclaration({ specifiers, source });
 }
 
 // :::::: union Name = a | b | c;
