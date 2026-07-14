@@ -239,11 +239,53 @@ export function parseContinueStatement (p) {
   return ASTNode.ContinueStatement({ label });
 }
 
+export function parseIfStatement (p) {
+  p.advance(); // 'if'
+  
+  const test       = p.parse('Wrapped', '()', 'ConditionTest');
+  const consequent = parsed.Block;
+
+  let alternate = null;
+  if (p.check('else')) {
+    p.advance(); // 'else'
+    alternate = p.check('if') ? p.parse('IfStatement') : p.parse('Block');
+  }
+
+  return ASTNode.IfStatement({ test, consequent, alternate });
+}
+
 export function parseLabeledStatement (p) {
   const label = p.advance().value; // identifier
   p.advance(); // ':'
   const body = p.parse('Statement');
   return ASTNode.LabeledStatement({ label, body });
+}
+
+// :::::: return <expr>?;
+export function parseReturnStatement (p) {
+  p.advance(); // 'return'
+  
+  let argument = !p.checkAny(';', '}', 'EOF') ? p.parse('Expression') : null;
+  p.match(';');
+
+  return ASTNode.ReturnStatement({ argument });
+}
+
+// :::::: switch (cond1, cond2, ...) { key(s): action, ... }   -- STATEMENT
+// (Bewusst OHNE bedingungslose Form -> deckt 'sift' bereits ab)
+export function parseSwitchStatement (p) {
+  p.advance(); // 'switch'
+  
+  p.consume('(');
+  const discriminants = [p.parse('Expression')];
+  while (p.match(',')) discriminants.push(p.parse('Expression'));
+  p.consume(')');
+
+  p.consume('{');
+  const cases = p.parse('MatchCases', discriminants.length > 1, true); // true = Block-Bodies erlaubt
+  p.consume('}');
+
+  return ASTNode.SwitchStatement({ discriminants, cases });
 }
 
 // try           [{...}|stmt] 
