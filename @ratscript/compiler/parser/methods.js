@@ -47,7 +47,7 @@ export function parseStatement (ctx) {
 export function parseStatement (p) {
   if (p.checkSequence('IDENTIFIER', ':')) return p.parse('LabeledStatement');
 
-  return p.switch({
+  return p.dispatch({
     'alias'         : 'AliasDeclaration',
     'fn async'      : 'FunctionDeclaration',
     'break'         : 'BreakStatement',
@@ -76,19 +76,19 @@ export function parsePrimary (p) {
        if (p.match('NUMBER'))          expr = ASTNode.Literal({ kind: 'NUMBER', value: p.prev().value });
   else if (p.match('STRING'))          expr = ASTNode.Literal({ kind: 'STRING', value: p.prev().value });
   else if (p.match('IDENTIFIER'))      expr = ASTNode.Identifier({ name: p.prev().value });
-  else if (p.check('TEMPLATE_STRING')) expr = p.parseTemplateLiteral();
-  else if (p.check('TEMPLATE_STRING')) expr = ASTNode.TaggedTemplateExpression({ callee: expr, quasi: p.parseTemplateLiteral() });
-  else if (p.check('JSX_TEMPLATE'))    expr = ASTNode.TaggedTemplateExpression({ callee: ASTNode.Identifier({ name: 'html' }), quasi: p.parseTemplateLiteral() });
+  else if (p.check('TEMPLATE_STRING')) expr = p.parse('TemplateLiteral'));
+  else if (p.check('TEMPLATE_STRING')) expr = ASTNode.TaggedTemplateExpr({ callee: expr, quasi: p.parse('TemplateLiteral') });
+  else if (p.check('JSX_TEMPLATE'))    expr = ASTNode.TaggedTemplateExpr({ callee: ASTNode.Identifier({ name: 'html' }), quasi: p.parse('TemplateLiteral') });
   else if (p.check('match'))           expr = p.parseMatchExpression();
-  else if (p.check('['))               expr = ASTNode.ArrayExpression({ elements: p.parseBracketedElements('[]') });
-  else if (p.check('{'))               expr = ASTNode.ObjectExpression({ properties: p.parseObjectProperties() });
+  else if (p.check('['))               expr = ASTNode.ArrayExpr({ elements: p.parseBracketedElements('[]') });
+  else if (p.check('{'))               expr = ASTNode.ObjectExpr({ properties: p.parseObjectProperties() });
   else if (p.match('(')) {
     // Geklammerte Gruppierung, z.B. (1 + 2) * 3 -> gibt einfach den inneren Ausdruck zurück
     expr = p.parseExpression();
     p.consume(')');
   } else if (p.match('#')) {
-         if (p.check('(')) expr = ASTNode.TupleExpression ({ elements: p.parseBracketedElements('()') });
-    else if (p.check('[')) expr = ASTNode.ListExpression  ({ elements: p.parseBracketedElements('[]') });
+         if (p.check('(')) expr = ASTNode.TupleExpr ({ elements: p.parse('BracketedElements, '()') });
+    else if (p.check('[')) expr = ASTNode.ListExpr  ({ elements: p.parse('BracketedElements, '[]') });
     else {
       const token = p.peek();
       throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte '(' oder '[' nach '#' (Gefunden: '${token.value}')`);
@@ -97,19 +97,19 @@ export function parsePrimary (p) {
   else if (p.match('new')) {
     let callee = ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
     while (p.match('.')) {
-      callee = ASTNode.MemberExpression({ object: callee, property: p.consume('IDENTIFIER').value });
+      callee = ASTNode.MemberExpr({ object: callee, property: p.consume('IDENTIFIER').value });
     }
 
     let args = [];
     if (p.match('(')) {
       if (!p.check(')')) {
-        do { args.push(p.parseExpression()); } 
+        do { args.push(p.parse('Expr')); } 
         while (p.match(','));
       }
       p.consume(')');
     }
 
-    expr = ASTNode.NewExpression({ callee, args });
+    expr = ASTNode.NewExpr({ callee, args });
   } else if (p.check('IDENTIFIER') && p.peek().value === '_') {
     p.advance();
     expr = ASTNode.PipePlaceholder({});
@@ -168,14 +168,14 @@ export function parseObjectProperties (p) {
 
       // Methoden-Shorthand: name (params) { body }  -> IDENTIFIER direkt gefolgt von '('
       if (!p.checkSequence('IDENTIFIER', '(')) {
-        const { name, params, body } = p.parseMethodLike();
+        const { name, params, body } = p.parse('MethodLike');
         properties.push({ kind: 'method', key: name, params, body });
       } else {
         const keyToken = p.consume('IDENTIFIER');
         let value;
 
         if (p.match(':')) {
-          value = p.parseAssignment();
+          value = p.parse('Assignment');
         } else { // Shorthand: { x } -> { x: x }
           value = ASTNode.Identifier({ name: keyToken.value });
         }
@@ -424,7 +424,7 @@ export function parseForStatement (p) {
   let id = null, kind = null;
 
   // for (let n of <iterable>) { ... }
-  if (p.checkAny('const', 'let', 'var')) {
+  if (p.checkAny('const let var')) {
     kind = p.advance().value;
     id   = ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
     p.consume(['IDENTIFIER', 'of']); // 'of' ist kontextuell, kein globales Keyword
@@ -443,7 +443,7 @@ export function parseIfStatement (p) {
   p.advance(); // 'if'
   
   const test       = p.parse('Wrapped', '()', 'ConditionTest');
-  const consequent = parsed.Block;
+  const consequent = p.parse('Block');
 
   let alternate = null;
   if (p.check('else')) {
@@ -477,7 +477,7 @@ export function parseMoldStatement (p) {
          if (name === 'init')                init = body;
     else if (name === 'finally')     finallyBlock = body;
     else if (name.startsWith('catch')) catchBlock = body;
-    else cases.push({ condition: ASTNode.Identifier({ name }), body });
+    else cases.push({ body, condition: ASTNode.Identifier({ name }) });
   }
 
   p.consume('}');
@@ -488,7 +488,7 @@ export function parseMoldStatement (p) {
 export function parseReturnStatement (p) {
   p.advance(); // 'return'
   
-  let argument = !p.checkAny(';', '}', 'EOF') ? p.parse('Expression') : null;
+  let argument = !p.checkAny(';', '}', 'EOF') ? p.parse('Expr') : null;
   p.match(';');
 
   return ASTNode.ReturnStatement({ argument });
@@ -547,7 +547,7 @@ export function parseTryStatement (p) {
   if (p.check('catch')) {
     p.advance(); // 'catch'
     handlerParam = p.parse('Wrapped', '()', 'IDENTIFIER');
-    handler      = parsed.ActionBlock;
+    handler      = p.parse('ActionBlock');
   }
 
   if (p.check('finally')) {
@@ -616,7 +616,7 @@ export function parseCallArgumentsExpr (p) {
 
   if (!p.check(')')) {
     do {
-      if (p.check('IDENTIFIER') && p.peekNext()?.value === ':') {
+      if (p.checkSequence('IDENTIFIER', ':')) {
         const nameToken = p.advance();
         p.consume(':');
         namedArgs.push({ name: nameToken.value, value: p.parse('Expr') });
