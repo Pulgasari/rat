@@ -225,11 +225,25 @@ export function parseVariableDeclaration (p) {
 
 // :::::: STATEMENTS
 
-export function parseLabeledStatement (ctx) {
-  const labelToken = advance(); // Label-Identifier
-  ctx.advance(); // ':'
-  const body = ctx.parseStatement();
-  return ASTNode.LabeledStatement({ label: labelToken.value, body });
+export function parseBreakStatement () {
+  p.advance(); // 'break'
+  let label = p.check('IDENTIFIER') ? p.advance().value : null;
+  p.match(';');
+  return ASTNode.BreakStatement({ label });
+}
+
+export function parseContinueStatement () {
+  p.advance(); // 'continue'
+  let label = p.check('IDENTIFIER') ? p.advance().value : null;
+  p.match(';');
+  return ASTNode.ContinueStatement({ label });
+}
+
+export function parseLabeledStatement (p) {
+  const label = p.advance().value; // identifier
+  p.advance(); // ':'
+  const body = p.parse('Statement');
+  return ASTNode.LabeledStatement({ label, body });
 }
 
 // :::::: EXPRESSIONS
