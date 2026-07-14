@@ -95,10 +95,9 @@ export function parsePrimary (p) {
     }
   } 
   else if (p.match('new')) {
+    // pattern for utils (
     let callee = ASTNode.Identifier({ name: p.consume('IDENTIFIER').value });
-    while (p.match('.')) {
-      callee = ASTNode.MemberExpr({ object: callee, property: p.consume('IDENTIFIER').value });
-    }
+    while (p.match('.')) callee = ASTNode.MemberExpr({ object: callee, property: p.consume('IDENTIFIER').value });
 
     let args = [];
     if (p.match('(')) {
@@ -251,7 +250,7 @@ export function parseExportDeclaration (p) {
   if (p.match('default')) {
     
     let declaration;
-    if (p.checkAny('fn', 'async')) {
+    if (p.is('fn', 'async')) {
       declaration = p.parse('FunctionDeclaration');
     } else if (p.check('class')) {
       declaration = p.parse('ClassDeclaration');
@@ -286,7 +285,7 @@ export function parseExportDeclaration (p) {
     if (!p.check('}')) {
       do {
         if (p.check('}')) break;
-        const local = p.consume('IDENTIFIER')?.value;
+        const local    = p.consume('IDENTIFIER')?.value;
         const exported = p.match('as') ? p.consume('IDENTIFIER').value : local;
         specifiers.push({ local, exported });
       } while (p.match(','));
@@ -441,10 +440,7 @@ export function parseIfStatement (p) {
   const consequent = p.parse('Block');
 
   let alternate = null;
-  if (p.check('else')) {
-    p.advance(); // 'else'
-    alternate = p.check('if') ? p.parse('IfStatement') : p.parse('Block');
-  }
+  if (p.match('else')) alternate = p.is('if') ? p.parse('IfStatement') : p.parse('Block');
 
   return ASTNode.IfStatement({ test, consequent, alternate });
 }
