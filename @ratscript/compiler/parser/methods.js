@@ -166,6 +166,123 @@ export function parseObjectProperties (p) {
 
 // :::::: DECLARATIONS
 
+// alias <source> as <name>;
+// alias <name> = <source>;
+export function parseAliasDeclaration (p) {
+  p.advance(); // 'alias'
+
+  // Erst mal nur Identifier/Member-Chain lesen (kein '=', kein 'as' -> Primary reicht,
+  // KEIN Expr, sonst würde Assignment das '=' schon vorzeitig selbst konsumieren).
+  const first = p.parse('Primary');
+
+  // form 1: alias database.users.save as saveUser;
+  if (p.match('as')) {
+    const aliasNameToken = p.consume('IDENTIFIER');
+    p.match(';'); // optionales Semikolon
+
+    return ASTNode.AliasDeclaration({
+      name     : aliasNameToken.value,
+      source   : first,
+      autoBind : first.type === 'MemberExpression', // TODO: 'MemberExpr' sobald nodes.js umbenannt ist
+    });
+  }
+
+  // form 2: alias saveCustom = database.users.save.bind(alternativeContext);
+  if (p.match('=')) {
+    if (first.type !== 'Identifier') {
+      const token = p.peek();
+      throw new SyntaxError(`[Parser ${token.line}:${token.column}]: 'alias <name> = ...' erwartet einen einfachen Namen vor '=', kein Member-Chain.`);
+    }
+    const source = p.parse('Expr');
+    p.match(';');
+    return ASTNode.AliasDeclaration({ name: first.name, source, autoBind: false });
+  }
+
+  const token = p.peek();
+  throw new SyntaxError(`[Parser ${token.line}:${token.column}]: Erwarte 'as' oder '=' nach 'alias' (Gefunden: '${token.value}')`);
+}
+
+// :::::: class Name [use Trait] { method1() {...} method2() {...} ... }
+export function parseClassDeclaration (p) {
+  p.advance(); // 'class'
+  const name = p.consume('IDENTIFIER').value;
+
+  const traits = [];
+  if (p.match('use')) {
+    do {
+      traits.push(p.consume('IDENTIFIER').value);
+    } while (p.match(','));
+  }
+
+  p.consume('{');
+  const methods = [];
+  while (!p.checkAny('}', 'EOF')) {
+    methods.push(p.parse('MethodLike'));
+  }
+  p.consume('}');
+
+  return ASTNode.ClassDeclaration({ name, methods, traits });
+}
+
+// :::::: export <decl>;  /  export { a, b as c } [from '...'];  /  export * [as ns] from '...';  /  export default <expr|decl>;
+export function parseExportDeclaration (p) {
+  p.advance(); // 'export'
+
+  if (p.match('default')) {
+    
+    let declaration;
+    if (p.checkAny('fn', 'async')) {
+      declaration = p.parse('FunctionDeclaration');
+    } else if (p.check('class')) {
+      declaration = p.parse('ClassDeclaration');
+    } else {
+      declaration = p.parse('Expr');
+      p.match(';');
+    }
+    
+    let declaration = p.checkAny('fn', 'async') ? p.parse('FunctionDeclaration')
+                    : p.check('class')          ? p.parse('ClassDeclaration')
+                    : p.parse('Expr');
+    p.match(';');
+
+    let decl = p.switchParse({
+      'fn'    : 'FunctionDeclaration',
+      'async' : 'FunctionDeclaration',
+      'class' : 'ClassDeclaration',
+    }, 'Expr');
+    
+    return ASTNode.ExportDefaultDeclaration({ declaration });
+  }
+
+  if (p.match('*')) {
+    const exported = p.match('as') ? p.consume('IDENTIFIER').value : null;
+    p.consume(['IDENTIFIER', 'from']);
+    const source = p.consume('STRING').value;
+    p.match(';');
+    return ASTNode.ExportAllDeclaration({ exported, source });
+  }
+
+  if (p.match('{')) {
+    const specifiers = [];
+    if (!p.check('}')) {
+      do {
+        if (p.check('}')) break;
+        const local = p.consume('IDENTIFIER')?.value;
+        const exported = p.match('as') ? p.consume('IDENTIFIER').value : local;
+        specifiers.push({ local, exported });
+      } while (p.match(','));
+    }
+    p.consume('}');
+
+    let source = p.match('from') ? p.consume('STRING').value : null;
+    p.match(';');
+    return ASTNode.ExportNamedDeclaration({ declaration: null, specifiers, source });
+  }
+
+  const declaration = p.parse('Statement'); // let/const/fn/class/trait/union/alias
+  return ASTNode.ExportNamedDeclaration({ declaration, specifiers: [], source: null });
+}
+
 // trait Name { ... }
 export function parseTraitDeclaration (p) {
   p.advance(); // 'trait'
