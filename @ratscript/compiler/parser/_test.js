@@ -41,4 +41,12 @@ const members = p.$.sequence('Primary', '|').match(';');
 
 const members = $(p).sequence('Primary', '|').match(';');
 
+// :::::: KINDA CHAIN
+
+// or maybe some of the helpers get some optional chainable stuff
+// like the `switchParse()` could get an `or` for the fallback
+
+p.switchParse({ ... }).or('Expr');
+p.switchParse({ ... }).or(() => doSomething());
+
  
