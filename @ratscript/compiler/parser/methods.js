@@ -414,6 +414,29 @@ export function parseMatchExpr (p) {
   return ASTNode.MatchExpr({ discriminants, cases, isAsync });
 }
 
+export function parseMatchCasesExpr (p, isTuple, allowBlockValues) {
+  const cases = [];
+
+  while (!p.check('}')) {
+    const conditions = [];
+
+    // cond1, cond2, ...
+    do {
+      conditions.push(p.parse('Expr'));
+    } while (p.match(','));
+
+    p.consume(':');
+
+    const value = allowBlockValues && p.check('{')
+                ? p.parse('Wrapped', '{}', 'Expr')
+                : p.parse('Expr');
+
+    cases.push({ conditions, value });
+  }
+
+  return cases;
+}
+
 // Pipe (a |> b(...) |> c(_, x) |> ...)
 export function parsePipeExpr (p) {
   let left = p.parse('TraitUse');
@@ -561,3 +584,52 @@ export function parseBracketedElements (wrapper) {
 }
 
 // :::::: INTERNAL HELPERS
+
+function buildPipeStep (left, step) {
+  if (step.type === 'Identifier') return ASTNode.CallExpr({ expr: step, args: [left], namedArgs: null });
+  if (step.type !== 'CallExpr') throw new SyntaxError(`Pipe-Ziel muss ein Funktionsname oder Funktionsaufruf sein, nicht '${step.type}'.`);
+
+  if (step.namedArgs) {
+    const hasPlaceholder = step.namedArgs.some(a => a.value.type === 'PipePlaceholder');
+    if (!hasPlaceholder) throw new SyntaxError(`Pipe-Schritt mit Named Arguments braucht einen '_'-Platzhalter.`);
+
+    const namedArgs = step.namedArgs.map(
+      a => a.value.type === 'PipePlaceholder' ? { name: a.name, value: left } : a
+    );
+
+    return ASTNode.CallExpr({ expr: step.expr, args: [], namedArgs });
+  }
+
+  const placeholderCount = step.args.filter(a => a.type === 'PipePlaceholder').length;
+
+  if (placeholderCount > 0) {
+    const args = step.args.map(a =>
+      a.type === 'PipePlaceholder' ? left : a
+    );
+    return ASTNode.CallExpr({ expr: step.expr, args, namedArgs: null });
+  }
+
+  const args = step.args.length === 0
+    ? [left]
+    : [left, ...step.args];
+
+  return ASTNode.CallExpr({ expr: step.expr, args, namedArgs: null });
+}
+
+function containsAwait (node) {
+  if (!node || typeof node !== 'object') return false;
+  if (node.type === 'AwaitExpr')         return true;
+
+  return Object.values(node).some(
+    v => isArray(v) ? v.some(containsAwait) : containsAwait(v)
+  );
+}
+
+function matchBinaryOperator (p, minPrecedence) {
+  for (const [op, info] of Object.entries(operators)) {
+    if (EXCLUDED_FROM_GENERIC.has(op))   continue;
+    if (info.precedence < minPrecedence) continue;
+    if (p.match(op)) return { operator: op, precedence: info.precedence };
+  }
+  return null;
+}
