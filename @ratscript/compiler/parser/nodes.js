@@ -1,5 +1,28 @@
 // @ratscript/compiler/parser/nodes.js
 
+// NEW
+PipePlaceholder = {},
+
+// the both old/original formats
+// (these formats should still work)
+AliasDeclaration = [ 'autoBind', 'name', 'source' ];
+AliasDeclaration = { autoBind: { default: false }, name: { required: true }, source: { required: true } },    
+
+// the new formats
+// `!` means "required: true" and means "default: null"
+// and both could be used in combination '?!'
+// if sb. notates it as '!?'it should still be understood
+AliasDeclaration = [ '!autoBind', '?name', '!source' ];
+// key/value format could be used to define a default value
+AliasDeclaration = [ {'!autoBind': false }, 'name', '!source' ]; // if notated
+
+
+    
+},
+
+
+// OLD
+
 export const
 
 // :::::: PLACEHOLDERS
