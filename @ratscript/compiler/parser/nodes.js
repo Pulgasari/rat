@@ -12,6 +12,7 @@ AliasDeclaration = { autoBind: { default: false }, name: { required: true }, sou
 // `!` means "required: true" and means "default: null"
 // and both could be used in combination '?!'
 // if sb. notates it as '!?'it should still be understood
+// maybe also the position (notated as prefix or suffix) shouldnt matter ???
 AliasDeclaration = [ '!autoBind', '?name', '!source' ];
 // key/value format could be used to define a default value
 AliasDeclaration = [ {'!autoBind': false }, 'name', '!source' ]; // if notated
