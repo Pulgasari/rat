@@ -17,10 +17,9 @@ AliasDeclaration = [ '!autoBind', '?name', '!source' ];
 // key/value format could be used to define a default value
 AliasDeclaration = [ {'!autoBind': false }, 'name', '!source' ]; // if notated
 
-
-    
-},
-
+// Cosmonaut Grammar Notation Syntax | CGNS
+NODE AliasDeclaration = !autoBind ?name !source
+NODE AliasDeclaration = autoBind name source <> !?!
 
 // OLD
 
