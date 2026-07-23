@@ -35,46 +35,14 @@ PipePlaceholder = {
 
 // :::::: DECLARATIONS
 
-AliasDeclaration     = [ 'name!', 'source!', { autobind: false } ],
-ClassDeclaration     = [ 'name!', 'source!', { traits: [] } ],
-ExportAllDeclaration = [ 'exported?', '!source' ],
-  
-ExportDefaultDeclaration = { 
-  type: 'ExportDefaultDeclaration', 
-  args: ['declaration']
-},
-  
-ExportNamedDeclaration = {
-  type: 'ExportNamedDeclaration',
-  args: { 
-    declaration : {default: null}, 
-    specifiers  : {default: []}, 
-    source      : {default: null}
-  }
-  // declaration gesetzt XOR specifiers gesetzt 
-  // (declaration = 'export const x=...', specifiers = 'export {a,b} [from ...]')
-},
-  
-FunctionDeclaration = {
-  type: 'FunctionDeclaration',
-  args: {
-    name        : {required: true}, 
-    params      : {required: true}, 
-    traits      : {default: []},
-    body        : {required: true}, 
-    isAsync     : {default: false}, 
-    isGenerator : {default: false},
-  }
-},
+AliasDeclaration         = [ 'name!', 'source!', { autobind: false } ],
+ClassDeclaration         = [ 'name!', 'source!', { traits: [] } ],
+ExportAllDeclaration     = [ 'exported?', '!source' ],
+ExportDefaultDeclaration = [ 'declaration' ],
+ExportNamedDeclaration   = [ 'declaration?', { specifiers: [] }, 'source?' ],
+FunctionDeclaration      = [ '!name', '!params', { traits: {} }, '!body', {isAsync: false}, {isGenerator: false} ],   
+ImportDeclaration        = [ '!specifiers','!source' ], 
 
-ImportDeclaration = {
-  type: 'ImportDeclaration',
-  args: { 
-    specifiers : {required: true}, 
-    source     : {required:true}
-  }
-  // specifiers: Array<{kind:'default'|'named'|'namespace', imported?:string, local:string}>
-};
 
 
 
