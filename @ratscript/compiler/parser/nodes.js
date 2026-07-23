@@ -35,17 +35,9 @@ PipePlaceholder = {
 
 // :::::: DECLARATIONS
 
-AliasDeclaration = [ 'name!', 'source!', { autobind: false } ],
-ClassDeclaration = [ 'name!', 'source!', { traits: [] } ],
-
-
-ExportAllDeclaration = { // 'export * [as ns] from ...'
-  type: 'ExportAllDeclaration',
-  args: { 
-    exported : {default: null}, 
-    source   : {required: true} 
-  }
-},
+AliasDeclaration     = [ 'name!', 'source!', { autobind: false } ],
+ClassDeclaration     = [ 'name!', 'source!', { traits: [] } ],
+ExportAllDeclaration = [ 'exported?', '!source' ],
   
 ExportDefaultDeclaration = { 
   type: 'ExportDefaultDeclaration', 
