@@ -123,6 +123,8 @@ export function parsePrimary (p) {
 
 // :::::: PATTERNS
 
+//export const parseBlock = p => p.parse('Wrapped', '{}', 'Body').toNode('BlockStatement', { body });
+
 export function parseBlock (p) {
   return ASTNode.BlockStatement({ 
     body: p.parse('Wrapped', '{}', 'Body')
@@ -139,7 +141,7 @@ export function parseActionBlock (p) {
 
 export function parseBody (p) {
   const body = [];
-  while (!p.checkAny('}', 'EOF')) {
+  while (!p.check('}', 'EOF')) {
     body.push(p.parse('Statement'));
   }
   return body;
@@ -798,10 +800,10 @@ export function parsePostfix (p, expr) {
 
 // :::::: KINDA WEIRD
 
-export function parseConditionTest (ctx) {
-  const expr = ctx.parse('Expr');
-  if (ctx.match('as')) {
-    const name = ctx.consume('IDENTIFIER').value;
+export function parseConditionTest (p) {
+  const expr = p.parse('Expr');
+  if (p.match('as')) {
+    const name = p.consume('IDENTIFIER').value;
     return ASTNode.AsBindingExpression({ expr, name });
   }
   return expr;
