@@ -28,7 +28,72 @@ export const
 // :::::: PLACEHOLDERS
 // transient - taucht nie im finalen AST auf, wird schon beim Parsen aufgelöst
 
-PipePlaceholder = { 
+PipePlaceholder = {
+  type: 'PipePlaceholder', 
+  args: []
+},
+
+// :::::: DECLARATIONS
+
+AliasDeclaration = [ 'name!', 'source!', { autobind: false } ],
+ClassDeclaration = [ 'name!', 'source!', { traits: [] } ],
+
+
+ExportAllDeclaration = { // 'export * [as ns] from ...'
+  type: 'ExportAllDeclaration',
+  args: { 
+    exported : {default: null}, 
+    source   : {required: true} 
+  }
+},
+  
+ExportDefaultDeclaration = { 
+  type: 'ExportDefaultDeclaration', 
+  args: ['declaration']
+},
+  
+ExportNamedDeclaration = {
+  type: 'ExportNamedDeclaration',
+  args: { 
+    declaration : {default: null}, 
+    specifiers  : {default: []}, 
+    source      : {default: null}
+  }
+  // declaration gesetzt XOR specifiers gesetzt 
+  // (declaration = 'export const x=...', specifiers = 'export {a,b} [from ...]')
+},
+  
+FunctionDeclaration = {
+  type: 'FunctionDeclaration',
+  args: {
+    name        : {required: true}, 
+    params      : {required: true}, 
+    traits      : {default: []},
+    body        : {required: true}, 
+    isAsync     : {default: false}, 
+    isGenerator : {default: false},
+  }
+},
+
+ImportDeclaration = {
+  type: 'ImportDeclaration',
+  args: { 
+    specifiers : {required: true}, 
+    source     : {required:true}
+  }
+  // specifiers: Array<{kind:'default'|'named'|'namespace', imported?:string, local:string}>
+};
+
+
+
+// OLD
+
+export const
+
+// :::::: PLACEHOLDERS
+// transient - taucht nie im finalen AST auf, wird schon beim Parsen aufgelöst
+
+PipePlaceholder = {
   type: 'PipePlaceholder', 
   args: []
 },
