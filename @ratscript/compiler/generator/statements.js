@@ -5,6 +5,15 @@ import { indent } from './helpers.js';
 import { resetHelpers, getUsedHelpers } from './state.js';
 import { runtimeHelpers } from './../meta.js';
 
+// NEW
+
+BlockStatement      = { body  }       => body.map(generate).join('\n'),
+BreakStatement      = { label }       => label ?    `break ${label};` :    'break;',
+ContinueStatement   = { label }       => label ? `continue ${label};` : 'continue;',
+ExpressionStatement = { expr  }       => `${generate(expr)};`,
+LabeledStatement    = { body, label } => `${label}: ${generate(body)}`,
+
+
 // :::::: Program / Block
 
 export function generateProgram (node) {
