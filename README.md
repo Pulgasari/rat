@@ -10,6 +10,7 @@ https://pulgasari.github.io/rat/
 let animals = #['bird', 'cat', 'dog'];
 let animals = new List (['bird', 'cat', 'dog']);
 let animals = new StringList (['bird', 'cat', 'dog']);
+let animals = new List of String (['bird', 'cat', 'dog']);
 ```
 
 #### Tuple
