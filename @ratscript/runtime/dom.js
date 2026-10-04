@@ -1,1 +1,0 @@
-// @ratscript/runtime/dom.js
