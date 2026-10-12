@@ -12,10 +12,10 @@ repository     = "https://github.com/pulgasari/rat"
 
 [grammars.rat]
 repository = "https://github.com/pulgasari/rat"
-rev        = "REV"
+rev        = "75ce2d2bf474bd698d6ccbaacd4fec08d2b83ce6"
 path       = "packages/syntax/zed/grammars/rat"
 
 [grammars.ratjs]
 repository = "https://github.com/pulgasari/rat"
-rev        = "REV"
+rev        = "75ce2d2bf474bd698d6ccbaacd4fec08d2b83ce6"
 path       = "packages/syntax/zed/grammars/ratjs"
