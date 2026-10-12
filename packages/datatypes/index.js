@@ -164,6 +164,86 @@ type.props (List, {
 
 
 
+type.delegate = function (TargetType, propKey, methods) {
+  const descriptors = Object.getOwnPropertyDescriptors(methods);
+
+  for (const key in descriptors) {
+    const desc = descriptors[key];
+    desc.enumerable = false;
+
+    if (typeof desc.value === 'function') {
+      const origFn = desc.value;
+      // Pass internal target (e.g. this._items) as 1st arg, instance as 2nd arg
+      desc.value = function (...args) {
+        return origFn(this[propKey], ...args, this);
+      };
+    }
+  }
+
+  Object.defineProperties(TargetType.prototype, descriptors);
+};
+
+// ::::: DEFINITION WITH TARGET INJECTION
+
+type.delegate(List, '_items', {
+  // `it` is directly `this._items`
+  has     : (it, item) => it.includes (item),
+  indexOf : (it, item) => it.indexOf  (item),
+  pop     : (it)       => it.pop   (),
+  shift   : (it)       => it.shift (),
+
+  // `s` (last parameter) is the List instance if needed
+  filter : (it, fn, s) => new s.constructor(it.filter(fn)),
+  map    : (it, fn, s) => new s.constructor(it.map(fn)),
+  clear  : (it,  _, s) => (it.length = 0, s),
+});
+
+
+
+
+
+
+type.props = function (TargetType, methods) {
+  const descriptors = Object.getOwnPropertyDescriptors(methods);
+  const proto = TargetType.prototype;
+
+  for (const key in methods) {
+    const val = methods[key];
+
+    if (typeof val === 'string') {
+      // String shortcut: Forward directly to this._items[val]
+      proto[key] = function (...args) {
+        return this._items[val](...args);
+      };
+    } else if (typeof val === 'function') {
+      // Arrow function: Pass `this` as 1st parameter
+      proto[key] = function (...args) {
+        return val(this, ...args);
+      };
+    }
+  }
+};
+
+// ::::: DEFINITION WITH SMART DSL
+
+type.props(List, {
+  // 1. Strings = Direct 1:1 delegation to this._items
+  has     : 'includes',
+  indexOf : 'indexOf',
+  pop     : 'pop',
+  shift   : 'shift',
+  find    : 'find',
+
+  // 2. Arrows = Custom logic where `s` is the instance
+  add     : (s, ...items) => s.merge(items),
+  clear   : (s)           => (s._items.length = 0, s),
+  filter  : (s, fn)       => new s.constructor(s._items.filter(fn)),
+  toArray : (s)           => [...s._items],
+});
+
+
+
+
 
 
 // ======================================
