@@ -516,6 +516,18 @@ RatType.prototype.toArray = function () { return toArray (this); };
 // Static helper on RatType for direct utility calls: RatType.toArray(anything)
 RatType.toArray = toArray;
 
+// Single Source of Truth for Array Coercion
+const toArray = (source) => {
+  if (isNullish(source))    return [];
+  if (isFn(source.toArray)) return source.toArray();
+  if (isIterable(source))   return Array.from(source);
+  if (isObj(source))        return Object.values(source);
+  return [source];
+};
+
+RatType.prototype.toArray = function () { return toArray(this); };
+RatType.toArray = toArray;
+
 
 
 
