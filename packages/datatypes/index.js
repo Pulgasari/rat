@@ -102,6 +102,7 @@ immu.attach (Tuple  , []);
 // :::::: INTERNAL HELPERS
 
 const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
+const isFn       = (sth) => typeof sth === 'function';
 const P = (Target) => Target.prototype;
 
 // :::::: IMMUTABLE METHOD GENERATOR
@@ -124,10 +125,9 @@ immu.make = (key) => function (...args) {
 
 // Converts mutation key (e.g., 'removeByIndex') to immutable key ('toRemovedByIndex')
 immu.name = (key) => {
-  const match = key.match(/^([a-z]+)(.*)$/);
-  if (!match) return key;
+  const match = key.match(/^([a-z]+)(.*)$/); if (!match) return key;
   const [, verb, rest] = match;
-  const pastVerb = verb.endsWith('e') ? `${verb}d` : `${verb}ed`;
+  const pastVerb    = verb.endsWith('e') ? `${verb}d` : `${verb}ed`;
   const capitalized = pastVerb.charAt(0).toUpperCase() + pastVerb.slice(1);
   return `to${capitalized}${rest}`;
 };
@@ -137,47 +137,32 @@ immu.name = (key) => {
 function RatType() {}
 
 // Dynamic type check works for all extended types
-RatType.is = function (sth) {
-  return sth instanceof this;
-};
+RatType.is = function (sth) { return sth instanceof this; };
 
 // Wire prototype chain and static inheritance
 function extendType(NewType, BaseType = RatType) {
-  P(NewType).constructor = NewType;
-  Object.setPrototypeOf(P(NewType), P(BaseType));
+  NewType.prototype.constructor = NewType;
+  Object.setPrototypeOf(NewType.prototype, BaseType.prototype);
   Object.setPrototypeOf(NewType, BaseType);
 }
 
-/**
- * Higher-order type builder
- * 
- * @param {string|Function} Target - Type constructor function or Type name string
- * @param {Object} options
- * @param {Function} [options.base=RatType] - Base class/type to inherit from
- * @param {Object} [options.methods={}] - Prototype methods
- * @param {Array<string>} [options.mutations=[]] - Mutating method names to convert to `to*` counterparts
- * @param {Object} [options.statics={}] - Static methods/properties
- */
-function createType(Target, { base = RatType, methods = {}, mutations = [], statics = {} } = {}) {
+function createType (Target, {
+  baseType  = RatType, 
+  methods   = {},
+  mutations = [], 
+  statics   = {} 
+} = {}) {
   // If Target is a string, construct a named function dynamically
-  const NewType = typeof Target === 'function' 
-    ? Target 
-    : { [Target]: function (...args) { base.call(this, ...args); } }[Target];
-
-  // 1. Inherit prototype & static properties
-  extendType(NewType, base);
-
-  // 2. Attach instance methods to prototype
-  Object.assign(P(NewType), methods);
-
-  // 3. Auto-generate immutable counterpart methods
-  if (mutations.length) {
-    immu.attach(NewType, mutations);
-  }
-
-  // 4. Attach static methods
+  const NewType = isFn(Target) ? Target : { [Target]: function (...args) { base.call(this, ...args); } }[Target];
+  // 1. inherit prototype & static properties
+  extendType(NewType, baseType);
+  // 2. attach instance methods to prototype
+  Object.assign(NewType.prototype, methods);
+  // 3. auto-generate immutable counterpart methods
+  if (mutations.length) immu.attach(NewType, mutations);
+  // 4. attach static methods
   Object.assign(NewType, statics);
-
+  // done!
   return NewType;
 }
 
@@ -185,19 +170,17 @@ function createType(Target, { base = RatType, methods = {}, mutations = [], stat
 
 const List = createType('List', {
   methods: {
-    clone() {
-      return new this.constructor(this);
-    },
-    merge(...args) { /* mutation impl */ },
-    remove(...args) { /* mutation impl */ },
-    removeByIndex(...args) { /* mutation impl */ },
-    reverse() { /* mutation impl */ },
-    shift() { /* mutation impl */ },
-    slice(...args) { /* mutation impl */ },
-    splice(...args) { /* mutation impl */ },
-    shuffle() { /* mutation impl */ },
-    sort(...args) { /* mutation impl */ },
-    unshift(...args) { /* mutation impl */ }
+    clone         ()        { return new this.constructor(this); },
+    merge         (...args) { /* mutation impl */ },
+    remove        (...args) { /* mutation impl */ },
+    removeByIndex (...args) { /* mutation impl */ },
+    reverse       ()        { /* mutation impl */ },
+    shift         ()        { /* mutation impl */ },
+    slice         (...args) { /* mutation impl */ },
+    splice        (...args) { /* mutation impl */ },
+    shuffle       ()        { /* mutation impl */ },
+    sort          (...args) { /* mutation impl */ },
+    unshift       (...args) { /* mutation impl */ }
   },
   mutations: [
     'merge', 'remove', 'removeByIndex', 'reverse', 
