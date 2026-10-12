@@ -140,8 +140,20 @@ immu.name = (key) => {
 
 // :::::: RAT MOTHER PROTOTYPE
 
+const BRAND = Symbol.for('rat.type');
 function RatType () {}
 RatType.is = function (sth) { return sth instanceof this; };
+
+// Custom instanceof logic for all subtypes without Object.setPrototypeOf
+Object.defineProperty (RatType, Symbol.hasInstance, {
+  value (instance) { return instance != null && Boolean(instance[BRAND]); }
+});
+
+// Every type created gets tagged with the BRAND symbol once
+function markType (Target) {
+  Target.prototype[BRAND] = true;
+  Target.is = (sth) => sth instanceof Target;
+}
 
 // :::::: RAT PROTOTYPES
 
