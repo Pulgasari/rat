@@ -5,9 +5,16 @@ import '@htx/js';
 
 const $app = document.createElement('rat-app'); 
 
-const warn = (...args) => console.warn('[RAT] ', ...args);
+const // logging
+error = (...args) => console.error ('[RAT] ', ...args),
+info  = (...args) => console.info  ('[RAT] ', ...args),
+log   = (...args) => console.log   ('[RAT] ', ...args),
+warn  = (...args) => console.warn  ('[RAT] ', ...args);
 
-const rat = { warn };
+const rat = {
+  $app,
+  error, info, log, warn,
+};
 
 class CommandRegistry {
   #commands = new $Map ({ normalizeKey: toUndashed });
