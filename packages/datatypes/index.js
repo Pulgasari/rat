@@ -14,6 +14,7 @@ const typeOf     = (sth) => (typeName)  => typeof sth === typeName;
 const isArray    = Array.isArray;
 const isFn       = typeOf('function');
 const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
+const isObj      = (sth) => sth && typeof sth === 'object';
 const isRegExp   = instanceOf(RegExp);
 
 const P = (Target) => Target.prototype;
@@ -196,6 +197,36 @@ type.props (List, {
 
 
 
+
+// --- hmmmm
+// Helper to normalize strings, arrays, and objects into [method, target] entries
+const normalizeDefs = (...definitions) => {
+  const result = [];
+  for (let def of definitions) {
+         if (isString(def)) def = def.split(/\s+/);
+         if  (isArray(def)) for (const key of def) if (key) result.push([key, key]);
+    else if    (isObj(def)) for (const key in def)          result.push([key, def[key]]);
+    }
+  }
+  return result;
+};
+
+
+// Higher-Order Delegator Factory
+const createDelegator = (resolver) => (TargetType, targetKey, ...definitions) => {
+  for (const [method, target] of normalizeDefs(...definitions)) {
+    TargetType.prototype[method] = function (...args) {
+      const result = this[targetKey][target](...args);
+      return resolver ? resolver(result, this) : result;
+    };
+  }
+};
+
+type.delegateMethods = createDelegator();
+type.chainMethods    = createDelegator((result, self) => self);
+type.wrapMethods     = createDelegator((result, self) => new self.constructor(result));
+
+// --- end of hmmm
 
 
 
