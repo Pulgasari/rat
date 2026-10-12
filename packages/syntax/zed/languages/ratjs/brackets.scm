@@ -1,0 +1,7 @@
+(braces "{" @open "}" @close)
+(brackets "[" @open "]" @close)
+(parens "(" @open ")" @close)
+(expression "{" @open "}" @close)
+(template_substitution "${" @open "}" @close)
+(start_tag "<" @open [">" "/>"] @close)
+(end_tag "</" @open ">" @close)

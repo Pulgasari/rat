@@ -1,0 +1,11 @@
+{
+  "id"             : "dev.pulgasari.rat",
+  "name"           : "RAT",
+  "main"           : "main.js",
+  "version"        : "0.0.1",
+  "readme"         : "readme.md",
+  "license"        : "MIT",
+  "keywords"       : ["rat", "syntax", "highlighting"],
+  "author"         : { "name": "pulgasari", "github": "pulgasari" },
+  "files"          : ["main.js", "plugin.json", "readme.md"]
+}

@@ -1,0 +1,16 @@
+{
+  "grammars": [
+    {
+      "name"           : "rat",
+      "scope"          : "source.rat",
+      "path"           : ".",
+      "file-types"     : ["rat"],
+      "injection-regex": "^rat$"
+    }
+  ],
+  "metadata": {
+    "version"    : "0.0.1",
+    "license"    : "MIT",
+    "description": "highlighting grammar for rat, generated parser from @rat/syntax"
+  }
+}

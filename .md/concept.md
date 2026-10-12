@@ -259,5 +259,5 @@ app.hotkeys.set('ctrl+b', 'toggleSidebar');
 3. `@rat/core` gegen die runtime: commands, hotkeys, router.
 4. `@rat/types` v1: schemas + reaktive varianten, anbindung an `$`-deklarationen.
 5. build-adapter (vite, esbuild, node-hook), `dom:clone`-target.
-6. editor-support: syntax-highlighting für `.rat` (hljs-sprache für `<write-code>`, tm-grammar).
+6. ~~editor-support: syntax-highlighting für `.rat`~~ → `@rat/syntax` (eine spec, ableitungen für hljs, monaco, codemirror/acode, zed, textmate).
 7. erste echte app (kandidat: ein kleines zugriff-tool) komplett in rat.
