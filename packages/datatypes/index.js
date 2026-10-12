@@ -202,20 +202,22 @@ type.props (List, {
 
 // ::::: USAGE
 
-type.delegate(List, '_items', { has: 'includes' }, ['indexOf', 'pop', 'shift', 'find']);
+type.delegateMethods(List, '_items', { has: 'includes' }, ['indexOf', 'pop', 'shift', 'find']);
+type.   chainMethods(List, '_items', ['reverse', 'sort']);
+type.    wrapMethods(List, '_items', ['filter', 'map']);
 
 type.props (List, {
   get size () { return this._items.length; },
 
   clone   () { return new this.constructor(this._items); },
   clear   () { this._items.length = 0; return this; },
-  reverse () { this._items.reverse();  return this; },
+  //reverse () { this._items.reverse();  return this; },
   toArray () { return [...this._items]; },
   toSet   () { return new Set(this._items); },
 
-  filter (fn) { return new this.constructor(this._items.filter(fn)); },
-  map    (fn) { return new this.constructor(this._items.map(fn)); },
-  sort   (fn) { this._items.sort(fn); return this; },
+  //filter (fn) { return new this.constructor(this._items.filter(fn)); },
+  //map    (fn) { return new this.constructor(this._items.map(fn)); },
+  //sort   (fn) { this._items.sort(fn); return this; },
       
   
   add  (...items) { return this.merge(items); },
