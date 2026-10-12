@@ -140,29 +140,6 @@ initType ('$Tree'  , Tree);
 
 // ------------ List
 
-List.prototype.has     = function (item) { return this._items.includes(item); };
-List.prototype.indexOf = function (item) { return this._items.indexOf(item); }
-
-List.prototype.add     = function (...items) { return this.merge(items); }
-List.prototype.push    = function (...items) { return this.merge(items); }
-
-List.prototype.clone   = function () { return new this.constructor(this._items); }
-List.prototype.clear   = function () { this._items.length = 0; return this; },
-List.prototype.pop     = function () { return this._items.pop(); },
-List.prototype.reverse = function () { this._items.reverse(); return this; },
-List.prototype.shift   = function () { return this._items.shift(); },
-List.prototype.toArray = function () { return [...this._items]; }
-List.prototype.toSet   = function () { return new Set(this._items); }
-
-List.prototype.filter = function (fn) { return new this.constructor(this._items.filter(fn)); },
-List.prototype.find   = function (fn) { return this._items.find(fn); },
-List.prototype.map    = function (fn) { return new this.constructor(this._items.map(fn)); },
-List.prototype.sort   = function (fn) { this._items.sort(fn); return this; },
-  
-List.prototype.forEach = function (fn, thisArg) { this._items.forEach(fn, thisArg); },
-
-List.prototype.slice = function (start, end) { this._items = this._items.slice(start, end); return this; },
-
 type.props (List, {
   get size () { return this._items.length; },
 
@@ -509,48 +486,6 @@ RatType.toArray = toArray;
 
 
 // ======================================
-// RAT DATA TYPES CONSTRUCTION APPROACH 2
-// ======================================
-
-// :::::: IMMUTABLE METHOD GENERATOR
-
-const immu = {};
-
-// Bulk attaches immutable 'to*' methods to a prototype based on mutation method names
-immu.attach = (TypeName, methods = []) => {
-  for (const key of methods) {
-    P(TypeName)[immu.name(key)] = immu.make(key);
-  }
-};
-
-// Creates an immutable wrapper function that operates on a copy of 'this'
-immu.make = (key) => function (...args) {
-  const copy = this.clone();
-  copy[key](...args);
-  return copy;
-};
-
-// Converts mutation key (e.g., 'removeByIndex') to immutable key ('toRemovedByIndex')
-immu.name = (key) => {
-  const match = key.match(/^([a-z]+)(.*)$/); if (!match) return key;
-  const [, verb, rest] = match;
-  const pastVerb    = verb.endsWith('e') ? `${verb}d` : `${verb}ed`;
-  const capitalized = pastVerb.charAt(0).toUpperCase() + pastVerb.slice(1);
-  return `to${capitalized}${rest}`;
-};
-
-// :::::: RAT MOTHER PROTOTYPE
-
-function RatType() {}
-// dynamic type check works for all extended types
-RatType.is = function (sth) { return sth instanceof this; };
-
-// Wire prototype chain and static inheritance
-function extendType(NewType, BaseType = RatType) {
-  NewType.prototype.constructor = NewType;
-  Object.setPrototypeOf(NewType.prototype, BaseType.prototype);
-  Object.setPrototypeOf(NewType, BaseType);
-}
 
 function createType (Target, {
   baseType  = RatType, 
@@ -572,63 +507,15 @@ function createType (Target, {
   return NewType;
 }
 
-// :::::: RAT PROTOTYPES DEFINITION
-
-const List = createType('List', {
-  methods: {
-    clone         ()        { return new this.constructor(this); },
-    merge         (...args) { /* mutation impl */ },
-    remove        (...args) { /* mutation impl */ },
-    removeByIndex (...args) { /* mutation impl */ },
-    reverse       ()        { /* mutation impl */ },
-    shift         ()        { /* mutation impl */ },
-    slice         (...args) { /* mutation impl */ },
-    splice        (...args) { /* mutation impl */ },
-    shuffle       ()        { /* mutation impl */ },
-    sort          (...args) { /* mutation impl */ },
-    unshift       (...args) { /* mutation impl */ }
-  },
-  mutations: [
-    'merge', 'remove', 'removeByIndex', 'reverse', 
-    'shift', 'slice', 'splice', 'shuffle', 'sort', 'unshift'
-  ]
-});
-
-const Point = createType (function Point (x = 0, y = 0) {
-  RatType.call(this);
-  this.x = x;
-  this.y = y;
-});
-
-const Record = createType('Record');
-const Tree   = createType('Tree');
-const Tuple  = createType('Tuple');
-
-// :::::: REACTIVE VARIANTS
-
-const $List  = createType('$List',  { base: List });
-const $Point = createType('$Point', { base: Point });
-const $Tree  = createType('$Tree',  { base: Tree });
-
-
-
-
-
-
-
-
-
-
-// @rat/datatypes
 
 // :::::: KEY NORMALIZATION ENGINE
 
-const BUILTIN_FORMS = {
-  camel:      (s) => s.replace(/[-_]+(.)?/g, (_, c) => (c ? c.toUpperCase() : '')),
-  kebab:      (s) => s.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase(),
-  snake:      (s) => s.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s-]+/g, '_').toLowerCase(),
-  pascal:     (s) => s.replace(/(^\w|[-_]\w)/g, (m) => m.replace(/[-_]/, '').toUpperCase()),
-  stripFlags: (s) => s.replace(/^--?/, ''), // Converts '--custom-command' -> 'custom-command'
+const CASES = {
+  camel  : str.toCamelCase,
+  kebab  : str.toKebabCase,
+  snake  : str.toSnakeCase,
+  pascal : str.toPascalCase,
+  stripFlags : (s) => s.replace(/^--?/, ''), // '--custom-command' -> 'custom-command'
 };
 
 /**
@@ -636,7 +523,7 @@ const BUILTIN_FORMS = {
  */
 const toTransformer = (form) => {
   if (isFn(form)) return form;
-  if (isString(form) && BUILTIN_FORMS[form]) return BUILTIN_FORMS[form];
+  if (isString(form) && CASES[form]) return CASES[form];
   if (isRegExp(form)) return (s) => s.replace(form, '');
   return (s) => s;
 };
@@ -651,12 +538,12 @@ const createKeyPipeline = (config) => {
   else if (isArray(config)) transformers = config.map(toTransformer);
   else if (config && typeof config === 'object') {
     const { stripFlags = true, forms = ['camel', 'kebab', 'snake'], custom } = config;
-    if (stripFlags) transformers.push(BUILTIN_FORMS.stripFlags);
+    if (stripFlags) transformers.push(CASES.stripFlags);
     if (custom)     transformers.push(toTransformer(custom));
     transformers.push(...forms.map(toTransformer));
   }
   // Default pipeline: strip CLI flags, then support camel, kebab, snake
-  else transformers = [BUILTIN_FORMS.stripFlags, BUILTIN_FORMS.camel, BUILTIN_FORMS.kebab, BUILTIN_FORMS.snake];
+  else transformers = [CASES.stripFlags, CASES.camel, CASES.kebab, CASES.snake];
   
 
   return {
@@ -774,7 +661,7 @@ const MapType = createType(function Map(source, options = {}) {
     },
 
     // Iterators
-    keys    () { return this._store.keys  (); },
+    keys    () { return this._store.keys    (); },
     values  () { return this._store.values  (); },
     entries () { return this._store.entries (); },
     [Symbol.iterator]() { return this._store[Symbol.iterator](); }
@@ -787,180 +674,3 @@ const MapType = createType(function Map(source, options = {}) {
 // :::::: REACTIVE VARIANT
 
 const $Map = createType('$Map', { base: MapType });
-
-
-
-// @rat/datatypes
-
-// :::::: LIST PROTOTYPE (ORDERED SET / UNIQUE ARRAY)
-
-const List = createType(function List(source) {
-  RatType.call(this);
-
-  this._items = [];
-
-  if (source != null) {
-    this.merge(source);
-  }
-}, {
-  methods: {
-    // ::::: READ & UTILITIES
-
-    has(item) { return this._items.includes(item); },
-
-    get(index) {
-      // Support negative index (-1 = last item)
-      const normalized = index < 0 ? this._items.length + index : index;
-      return this._items[normalized];
-    },
-
-    indexOf (item) { return this._items.indexOf(item); },
-    get size   () { return this._items.length; },
-    get length () { return this._items.length; },
-
-    clone   () { return new this.constructor(this._items); },
-    toArray () { return [...this._items]; },
-    toSet   () { return new Set(this._items); },
-
-    // ::::: MUTATIONS (Set-like Uniqueness + Array Operations)
-
-    add  (...items) { return this.merge(items); },
-    push (...items) { return this.merge(items); },
-
-    merge(...sources) {
-      for (const source of sources) {
-        const entries = source == null ? [] 
-          : typeof source[Symbol.iterator] === 'function' ? source 
-          : Object.values(source);
-
-        for (const item of entries) {
-          if (!this.has(item)) {
-            this._items.push(item);
-          }
-        }
-      }
-      return this;
-    },
-
-    remove(...items) {
-      for (const item of items) {
-        const idx = this.indexOf(item);
-        if (idx !== -1) {
-          this._items.splice(idx, 1);
-        }
-      }
-      return this;
-    },
-
-    removeByIndex(...indices) {
-      // Sort indices descending to avoid shift offset issues during deletion
-      const sorted = [...indices].sort((a, b) => b - a);
-
-      for (const idx of sorted) {
-        const normalized = idx < 0 ? this._items.length + idx : idx;
-        if (normalized >= 0 && normalized < this._items.length) {
-          this._items.splice(normalized, 1);
-        }
-      }
-      return this;
-    },
-    
-    clear   () { this._items.length = 0; return this; },
-    pop     () { return this._items.pop(); },
-    reverse () { this._items.reverse(); return this; },
-    shift   () { return this._items.shift(); },
-
-
-    unshift(...items) {
-      // Insert items at the front while ensuring uniqueness
-      for (let i = items.length - 1; i >= 0; i--) {
-        const item = items[i];
-        const idx = this.indexOf(item);
-        if (idx !== -1) this._items.splice(idx, 1);
-        this._items.unshift(item);
-      }
-      return this;
-    },
-
-    slice (start, end) { this._items = this._items.slice(start, end); return this; },
-    sort (fn) { this._items.sort(fn); return this; },
-    
-    splice(start, deleteCount, ...items) {
-      // Remove duplicates from existing elements before inserting new ones
-      for (const item of items) {
-        const idx = this.indexOf(item);
-        if (idx !== -1) this._items.splice(idx, 1);
-      }
-      this._items.splice(start, deleteCount, ...items);
-      return this;
-    },
-
-    shuffle() {
-      // Fisher-Yates shuffle algorithm
-      for (let i = this._items.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [this._items[i], this._items[j]] = [this._items[j], this._items[i]];
-      }
-      return this;
-    },
-
-    
-
-    
-
-    // ::::: SET ALGEBRA
-
-    intersect(other) {
-      const otherSet = new Set(
-        other == null ? [] 
-        : typeof other[Symbol.iterator] === 'function' ? other 
-        : Object.values(other)
-      );
-      this._items = this._items.filter(item => otherSet.has(item));
-      return this;
-    },
-
-    difference(other) {
-      const otherSet = new Set(
-        other == null ? [] 
-        : typeof other[Symbol.iterator] === 'function' ? other 
-        : Object.values(other)
-      );
-      this._items = this._items.filter(item => !otherSet.has(item));
-      return this;
-    },
-
-    // ::::: ITERATION & FUNCTIONAL METHODS
-
-    forEach (fn, thisArg) { this._items.forEach(fn, thisArg); },
-    
-    filter (fn) { return new this.constructor(this._items.filter(fn)); },
-    find   (fn) { return this._items.find(fn); },
-    map    (fn) { return new this.constructor(this._items.map(fn)); },
-
-    [Symbol.iterator]() {
-      return this._items[Symbol.iterator]();
-    }
-  },
-
-  // Auto-generate immutable counterpart methods ('to*')
-  mutations: [
-    'add',
-    'push',
-    'merge',
-    'remove',
-    'removeByIndex',
-    'reverse',
-    'shift',
-    'pop',
-    'unshift',
-    'slice',
-    'splice',
-    'shuffle',
-    'sort',
-    'clear',
-    'intersect',
-    'difference'
-  ]
-});
-
