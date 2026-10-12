@@ -102,9 +102,13 @@ immu.attach (Tuple  , []);
 // :::::: INTERNAL HELPERS
 
 const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
+const typeOf     = (sth) => (typeName)  => typeof sth === typeName;
+
 const isArray    = Array.isArray;
-const isFn       = (sth) => typeof sth === 'function';
+const isFn       = typeOf('function');
 const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
+const isRegExp   = instanceOf(RegExp);
+
 const P = (Target) => Target.prototype;
 
 // :::::: IMMUTABLE METHOD GENERATOR
@@ -231,9 +235,9 @@ const BUILTIN_FORMS = {
  * Resolves a form definition (string, regex, function) into a transformer function.
  */
 const toTransformer = (form) => {
-  if (typeof form === 'function') return form;
-  if (typeof form === 'string' && BUILTIN_FORMS[form]) return BUILTIN_FORMS[form];
-  if (form instanceof RegExp) return (s) => s.replace(form, '');
+  if (isFn(form)) return form;
+  if (isString(form) && BUILTIN_FORMS[form]) return BUILTIN_FORMS[form];
+  if (isRegExp(form)) return (s) => s.replace(form, '');
   return (s) => s;
 };
 
@@ -304,8 +308,8 @@ const MapType = createType(function Map(source, options = {}) {
       return canonicalKey;
     },
 
-    set(rawKey, value) {
-      if (typeof rawKey !== 'string') {
+    set (rawKey, value) {
+      if (!isString(rawKey)) {
         this._store.set(rawKey, value);
         return this;
       }
