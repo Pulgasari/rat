@@ -33,19 +33,33 @@ const P = (Target) => Target.prototype;
 
 // ::: type
 
-function extendType (NewType, BaseType = RatType) {
+const type = {};
+
+type.create = function (NewType, BaseType = RatType) {}
+
+type.extend = function (NewType, BaseType = RatType) {
   NewType.prototype             = Object.create(BaseType.prototype);
   NewType.prototype.constructor = NewType;
   Object.setPrototypeOf(NewType, BaseType);
 }
 
-function initType (Target, baseType  = RatType) {
+type.init = function (Target, baseType  = RatType) {
   const NewType = isFn(Target) ? Target : { [Target]: function (...args) { baseType.call(this, ...args); } }[Target];
-  extendType(NewType, baseType);
+  type.extend(NewType, baseType);
   return NewType;
 }
 
-function createType (NewType, BaseType = RatType) {}
+type.props = function (TargetType, methods) {
+  const descriptors = Object.getOwnPropertyDescriptors(methods);
+  for (const key in descriptors) descriptors[key].enumerable = false;
+  Object.defineProperties(TargetType.prototype, descriptors);
+};
+
+type.statics = function (TargetType, methods) {
+  const descriptors = Object.getOwnPropertyDescriptors(methods);
+  for (const key in descriptors) descriptors[key].enumerable = false;
+  Object.defineProperties(TargetType, descriptors);
+};
 
 // ::: immu
 
@@ -94,9 +108,6 @@ immu.attach (Record , []);
 immu.attach (Tree   , []);
 immu.attach (Tuple  , []);
 
-Object.assign(NewType.prototype, methods);
-Object.assign(NewType, statics);
-
 // ------------ List
 
 List.prototype.has     = function (item) { return this._items.includes(item); };
@@ -123,15 +134,37 @@ List.prototype.forEach = function (fn, thisArg) { this._items.forEach(fn, thisAr
 List.prototype.slice = function (start, end) { this._items = this._items.slice(start, end); return this; },
 
 
-Object.assign (List.prototype, {
+
+type.props (List, {
+  get size () { return this._items.length; },
+
+  clone   () { return new this.constructor(this._items); },
+  clear   () { this._items.length = 0; return this; },
+  pop     () { return this._items.pop(); },
+  reverse () { this._items.reverse(); return this; },
+  shift   () { return this._items.shift(); },
+  toArray () { return [...this._items]; },
+  toSet   () { return new Set(this._items); },
+
+  filter (fn) { return new this.constructor(this._items.filter(fn)); },
+  find   (fn) { return this._items.find(fn); },
+  map    (fn) { return new this.constructor(this._items.map(fn)); },
+  sort   (fn) { this._items.sort(fn); return this; },
+      
   has     (item) { return this._items.includes (item); },
   indexOf (item) { return this._items.indexOf  (item); },
-};
 
-Object.assign (List.prototype, {
-  has     : this._items.includes,
-  indexOf : this._items.indexOf,
-};
+  add  (...items) { return this.merge(items); },
+  push (...items) { return this.merge(items); },
+});
+
+
+
+
+
+
+
+
 
 // ======================================
 // RAT DATA TYPES CONSTRUCTION APPROACH 2
