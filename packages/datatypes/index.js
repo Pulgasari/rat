@@ -102,6 +102,7 @@ immu.attach (Tuple  , []);
 // :::::: INTERNAL HELPERS
 
 const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
+const isArray    = Array.isArray;
 const isFn       = (sth) => typeof sth === 'function';
 const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
 const P = (Target) => Target.prototype;
@@ -242,29 +243,27 @@ const toTransformer = (form) => {
 const createKeyPipeline = (config) => {
   let transformers = [];
 
-  if (typeof config === 'function') {
-    transformers = [config];
-  } else if (Array.isArray(config)) {
-    transformers = config.map(toTransformer);
-  } else if (config && typeof config === 'object') {
+       if    (isFn(config)) transformers = [config];
+  else if (isArray(config)) transformers = config.map(toTransformer);
+  else if (config && typeof config === 'object') {
     const { stripFlags = true, forms = ['camel', 'kebab', 'snake'], custom } = config;
     if (stripFlags) transformers.push(BUILTIN_FORMS.stripFlags);
-    if (custom) transformers.push(toTransformer(custom));
+    if (custom)     transformers.push(toTransformer(custom));
     transformers.push(...forms.map(toTransformer));
-  } else {
-    // Default pipeline: strip CLI flags, then support camel, kebab, snake
-    transformers = [BUILTIN_FORMS.stripFlags, BUILTIN_FORMS.camel, BUILTIN_FORMS.kebab, BUILTIN_FORMS.snake];
   }
+  // Default pipeline: strip CLI flags, then support camel, kebab, snake
+  else transformers = [BUILTIN_FORMS.stripFlags, BUILTIN_FORMS.camel, BUILTIN_FORMS.kebab, BUILTIN_FORMS.snake];
+  
 
   return {
     // Primary transformer to compute canonical key
     canonical: (key) => {
-      if (typeof key !== 'string') return key;
+      if (!isString(key)) return key;
       return transformers.reduce((acc, fn) => fn(acc), key);
     },
     // Generates all alias forms for a key
     generateAliases: (key) => {
-      if (typeof key !== 'string') return [key];
+      if (!isString(key)) return [key];
       const variants = new Set([key]);
       
       let current = key;
@@ -292,7 +291,7 @@ const MapType = createType(function Map(source, options = {}) {
   methods: {
     // Resolve any key (raw, alias, flag) to its canonical key
     key(rawKey) {
-      if (typeof rawKey !== 'string') return rawKey;
+      if (!isString(rawKey)) return rawKey;
 
       const alias = this._aliases.get(rawKey);
       if (alias !== undefined) return alias;
@@ -325,13 +324,8 @@ const MapType = createType(function Map(source, options = {}) {
       return this;
     },
 
-    get(rawKey) {
-      return this._store.get(this.key(rawKey));
-    },
-
-    has(rawKey) {
-      return this._store.has(this.key(rawKey));
-    },
+    get (rawKey) { return this._store.get(this.key(rawKey)); },
+    has (rawKey) { return this._store.has(this.key(rawKey)); },
 
     delete(rawKey) {
       const canonicalKey = this.key(rawKey);
@@ -362,7 +356,7 @@ const MapType = createType(function Map(source, options = {}) {
 
     toObject(transformForm) {
       const convert = transformForm ? toTransformer(transformForm) : null;
-      const result = {};
+      const result  = {};
       for (const [k, v] of this._store) {
         result[convert ? convert(k) : k] = v;
       }
@@ -371,14 +365,14 @@ const MapType = createType(function Map(source, options = {}) {
 
     clone() {
       const copy = new this.constructor(null, this._pipeline);
-      for (const [k, v] of this._store) copy.set(k, v);
+      for (const [k,v] of this._store) copy.set(k,v);
       return copy;
     },
 
     // Iterators
-    keys    () { return this._store.keys(); },
-    values  () { return this._store.values(); },
-    entries () { return this._store.entries(); },
+    keys    () { return this._store.keys  (); },
+    values  () { return this._store.values  (); },
+    entries () { return this._store.entries (); },
     [Symbol.iterator]() { return this._store[Symbol.iterator](); }
   },
 
