@@ -4,34 +4,57 @@
 
 # features
 
+- funktioniert direkt im browser
+- funktioniert mit node, deno, bun,vite usw.
+- funktioniert in js-files (`.js` + `.rat.js`)
+- funktioniert in eigene file-ext (`.rat`) ( (inkl. erweiterter syntax)
+
+## components
 - reusable components
 - mit auto-import
+
+## app
 - app singleton
 - mit commands/actions registry
 - mit hotkeys registry
-- mit reactive stores für Map (aber anderer name), Set (name: List) und Tree (quasi nested objekte)
-- signals
 - router
-- funktioniert in plain js-files
-- funktioniert in eigenen files (inkl. erweiterter syntax)
+
+## `@rat/types` :: data types and flow
+- eigene data-types
+- + reaktive varianten
+- signals (bzw. signals-like?)
 
 ## use
 
+dieses zeug wird direkt genutzt bzw. teilweise nur als grundlage/orientierung?
+
 ```md
-@aufbau/commands
+# ist tendenziell solide
+# kann safe stellenweise verbessert werden
+# oder überhaupt im zuge der arbeit am fw erweitert
 @aufbau/elements
 @aufbau/filters
 @aufbau/gestures
+@bunker
+@domina/prototype
+
+# braucht RAT auch nicht selbst erfinden,
+# aber bedarf sicherlich noch überarbetung
 @aufbau/gui
 @aufbau/hotkeys
 @aufbau/import
 @aufbau/patterns
-@aufbau/signals
 @aufbau/webfonts
-@bunker
-@domina/prototype
-@htx/js
+
+## nur grundlage/orientierung ?
+@aufbau/bundler (?)
+@aufbau/commands (gibts noch nich, aber iwo geistert ne skizze rum)
+@aufbau/signals
 @htx/htx
+@htx/js
+
+## anfangs evtl. (bis man eigene renderlogikhat?)
+preact
 ```
 
 # stuff
