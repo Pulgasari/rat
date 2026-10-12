@@ -19,6 +19,7 @@
 
 ```md
 @aufbau/commands
+@aufbau/elements
 @aufbau/filters
 @aufbau/gestures
 @aufbau/gui
@@ -27,12 +28,9 @@
 @aufbau/patterns
 @aufbau/signals
 @aufbau/webfonts
+@bunker
 @domina/prototype
 @htx/js
-
-# from @aufbau/elements
-<rat-app>
-<rat-view>
 ```
 
 # stuff
@@ -53,7 +51,7 @@ app.router
 
 die `commands` dienen als eingebauter mechanismus aktionen innerhalb der app dx-freundlich zu steuern.
 
-jedes registrierte command kann überall dort wo für gewöhnlich event-handler-funktionen angegen werden als einfacher string referenziert werden.
+jedes registrierte command kann überall dort wo für gewöhnlich event-handler-funktionen angegeben werden als einfacher string referenziert werden.
 
 ```js
 element.on('click', 'toggleSidebar');
