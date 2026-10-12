@@ -103,6 +103,7 @@ immu.attach (Tuple  , []);
 
 const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
 const isFn       = (sth) => typeof sth === 'function';
+const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
 const P = (Target) => Target.prototype;
 
 // :::::: IMMUTABLE METHOD GENERATOR
@@ -204,3 +205,187 @@ const $List  = createType('$List',  { base: List });
 const $Point = createType('$Point', { base: Point });
 const $Tree  = createType('$Tree',  { base: Tree });
 
+
+
+
+
+
+
+
+
+
+// @rat/datatypes
+
+// :::::: KEY NORMALIZATION ENGINE
+
+const BUILTIN_FORMS = {
+  camel:      (s) => s.replace(/[-_]+(.)?/g, (_, c) => (c ? c.toUpperCase() : '')),
+  kebab:      (s) => s.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase(),
+  snake:      (s) => s.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s-]+/g, '_').toLowerCase(),
+  pascal:     (s) => s.replace(/(^\w|[-_]\w)/g, (m) => m.replace(/[-_]/, '').toUpperCase()),
+  stripFlags: (s) => s.replace(/^--?/, ''), // Converts '--custom-command' -> 'custom-command'
+};
+
+/**
+ * Resolves a form definition (string, regex, function) into a transformer function.
+ */
+const toTransformer = (form) => {
+  if (typeof form === 'function') return form;
+  if (typeof form === 'string' && BUILTIN_FORMS[form]) return BUILTIN_FORMS[form];
+  if (form instanceof RegExp) return (s) => s.replace(form, '');
+  return (s) => s;
+};
+
+/**
+ * Creates a composite key normalizer pipeline and alias generator.
+ */
+const createKeyPipeline = (config) => {
+  let transformers = [];
+
+  if (typeof config === 'function') {
+    transformers = [config];
+  } else if (Array.isArray(config)) {
+    transformers = config.map(toTransformer);
+  } else if (config && typeof config === 'object') {
+    const { stripFlags = true, forms = ['camel', 'kebab', 'snake'], custom } = config;
+    if (stripFlags) transformers.push(BUILTIN_FORMS.stripFlags);
+    if (custom) transformers.push(toTransformer(custom));
+    transformers.push(...forms.map(toTransformer));
+  } else {
+    // Default pipeline: strip CLI flags, then support camel, kebab, snake
+    transformers = [BUILTIN_FORMS.stripFlags, BUILTIN_FORMS.camel, BUILTIN_FORMS.kebab, BUILTIN_FORMS.snake];
+  }
+
+  return {
+    // Primary transformer to compute canonical key
+    canonical: (key) => {
+      if (typeof key !== 'string') return key;
+      return transformers.reduce((acc, fn) => fn(acc), key);
+    },
+    // Generates all alias forms for a key
+    generateAliases: (key) => {
+      if (typeof key !== 'string') return [key];
+      const variants = new Set([key]);
+      
+      let current = key;
+      for (const fn of transformers) {
+        current = fn(current);
+        variants.add(current);
+      }
+      return Array.from(variants);
+    }
+  };
+};
+
+// :::::: MAP / DICT PROTOTYPE
+
+const MapType = createType(function Map(source, options = {}) {
+  RatType.call(this);
+
+  this._store    = new Map();
+  this._aliases  = new Map();
+  this._cache    = new Map();
+  this._pipeline = createKeyPipeline(options);
+
+  if (source != null) this.merge(source);
+}, {
+  methods: {
+    // Resolve any key (raw, alias, flag) to its canonical key
+    key(rawKey) {
+      if (typeof rawKey !== 'string') return rawKey;
+
+      const alias = this._aliases.get(rawKey);
+      if (alias !== undefined) return alias;
+
+      const cached = this._cache.get(rawKey);
+      if (cached !== undefined) return cached;
+
+      const canonicalKey = this._pipeline.canonical(rawKey);
+      this._cache.set(rawKey, canonicalKey);
+      return canonicalKey;
+    },
+
+    set(rawKey, value) {
+      if (typeof rawKey !== 'string') {
+        this._store.set(rawKey, value);
+        return this;
+      }
+
+      const canonicalKey = this.key(rawKey);
+
+      if (!this._store.has(canonicalKey)) {
+        // Register all alias variations pointing to the canonical key
+        const aliases = this._pipeline.generateAliases(rawKey);
+        for (const alias of aliases) {
+          this._aliases.set(alias, canonicalKey);
+        }
+      }
+
+      this._store.set(canonicalKey, value);
+      return this;
+    },
+
+    get(rawKey) {
+      return this._store.get(this.key(rawKey));
+    },
+
+    has(rawKey) {
+      return this._store.has(this.key(rawKey));
+    },
+
+    delete(rawKey) {
+      const canonicalKey = this.key(rawKey);
+      
+      // Clean up associated aliases
+      for (const [alias, target] of this._aliases) {
+        if (target === canonicalKey) this._aliases.delete(alias);
+      }
+
+      return this._store.delete(canonicalKey);
+    },
+
+    clear() {
+      this._aliases.clear();
+      this._cache.clear();
+      this._store.clear();
+      return this;
+    },
+
+    merge (source) {
+      const entries = source == null ? [] 
+        : isIterable(source) ? source 
+        : Object.entries(source);
+
+      for (const [k, v] of entries) this.set(k, v);
+      return this;
+    },
+
+    toObject(transformForm) {
+      const convert = transformForm ? toTransformer(transformForm) : null;
+      const result = {};
+      for (const [k, v] of this._store) {
+        result[convert ? convert(k) : k] = v;
+      }
+      return result;
+    },
+
+    clone() {
+      const copy = new this.constructor(null, this._pipeline);
+      for (const [k, v] of this._store) copy.set(k, v);
+      return copy;
+    },
+
+    // Iterators
+    keys    () { return this._store.keys(); },
+    values  () { return this._store.values(); },
+    entries () { return this._store.entries(); },
+    [Symbol.iterator]() { return this._store[Symbol.iterator](); }
+  },
+
+  // Auto-generate immutable variants: toSet, toDeleted, toCleared, toMerged
+  mutations: ['set', 'delete', 'clear', 'merge']
+});
+
+// :::::: REACTIVE VARIANT
+
+const $Map = createType('$Map', { base: MapType });
