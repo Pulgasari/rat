@@ -75,6 +75,29 @@ type.delegate = function (TargetType, targetKey, ...definitions) {
   }
 };
 
+const normalizeDefs = (...defs) => {
+  const result = [];
+  for (let def of defs) {
+         if (isString(def)) def = def.split(/\s+/);
+         if  (isArray(def)) for (const key of def) if (key) result.push([key, key]);
+    else if    (isObj(def)) for (const key in def)          result.push([key, def[key]]);
+  }
+  return result;
+};
+
+const createDelegator = (resolver) => (TargetType, targetKey, ...definitions) => {
+  for (const [method, target] of normalizeDefs(...definitions)) {
+    TargetType.prototype[method] = function (...args) {
+      const result = this[targetKey][target](...args);
+      return resolver ? resolver(result, this) : result;
+    };
+  }
+};
+
+type.delegateMethods = createDelegator();
+type.chainMethods    = createDelegator((result, self) => self);
+type.wrapMethods     = createDelegator((result, self) => new self.constructor(result));
+
 // ::: immu
 
 const immu = {};
@@ -95,6 +118,8 @@ immu.name = (key) => {
   const capitalized    = pastVerb.charAt(0).toUpperCase() + pastVerb.slice(1);
   return `to${capitalized}${rest}`;
 };
+
+// ************* STEP 1: create the types *************
 
 // :::::: RAT MOTHER PROTOTYPE
 
@@ -121,6 +146,8 @@ immu.attach (Point  , []);
 immu.attach (Record , []);
 immu.attach (Tree   , []);
 immu.attach (Tuple  , []);
+
+// ************* STEP 2: attach props and methods *************
 
 // ------------ List
 
@@ -195,38 +222,6 @@ type.props (List, {
   push (...items) { return this.merge(items); },
 });
 
-
-
-
-// --- hmmmm
-// Helper to normalize strings, arrays, and objects into [method, target] entries
-const normalizeDefs = (...definitions) => {
-  const result = [];
-  for (let def of definitions) {
-         if (isString(def)) def = def.split(/\s+/);
-         if  (isArray(def)) for (const key of def) if (key) result.push([key, key]);
-    else if    (isObj(def)) for (const key in def)          result.push([key, def[key]]);
-    }
-  }
-  return result;
-};
-
-
-// Higher-Order Delegator Factory
-const createDelegator = (resolver) => (TargetType, targetKey, ...definitions) => {
-  for (const [method, target] of normalizeDefs(...definitions)) {
-    TargetType.prototype[method] = function (...args) {
-      const result = this[targetKey][target](...args);
-      return resolver ? resolver(result, this) : result;
-    };
-  }
-};
-
-type.delegateMethods = createDelegator();
-type.chainMethods    = createDelegator((result, self) => self);
-type.wrapMethods     = createDelegator((result, self) => new self.constructor(result));
-
-// --- end of hmmm
 
 
 
