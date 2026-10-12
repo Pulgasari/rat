@@ -4,7 +4,7 @@
 
 ---
 
-## docs & demos
+## docs
 - [compiler v0](.md/compiler.md)
 - [concept](.md/concept.md)
 - [syntax v0](.md/syntax.md)
