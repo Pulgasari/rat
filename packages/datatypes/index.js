@@ -61,14 +61,16 @@ type.statics = function (TargetType, methods) {
   Object.defineProperties(TargetType, descriptors);
 };
 
-// explicitly delegate a list of method mappings to a named property on 'this'
-type.delegate = function (TargetType, targetKey, mapping) {
+type.delegate = function (TargetType, targetKey, ...definitions) {
   const proto = TargetType.prototype;
 
-  for (const [methodName, targetMethod] of Object.entries(mapping)) {
-    proto[methodName] = function (...args) {
-      return this[targetKey][targetMethod](...args);
-    };
+  for (const def of definitions) {
+    const keys    = isString(def) ? def.split(/\s+/).filter(Boolean) : def;
+    const entries = isArray(keys) ? keys.map(key => [key, key]) : Object.entries(def ?? {});
+
+    for (const [method, target] of entries) {
+      proto[method] = function (...args) { return this[targetKey][target](...args); };
+    }
   }
 };
 
@@ -172,8 +174,33 @@ type.props (List, {
 
 // ::::: USAGE
 
-type.delegate(List,    '_items', { has: 'includes', indexOf, pop, shift, find });
-type.delegate(MapType, '_store', { keys, values });
+type.delegate(List, '_items', { has: 'includes' }, ['indexOf', 'pop', 'shift', 'find']);
+
+type.props (List, {
+  get size () { return this._items.length; },
+
+  clone   () { return new this.constructor(this._items); },
+  clear   () { this._items.length = 0; return this; },
+  reverse () { this._items.reverse();  return this; },
+  toArray () { return [...this._items]; },
+  toSet   () { return new Set(this._items); },
+
+  filter (fn) { return new this.constructor(this._items.filter(fn)); },
+  map    (fn) { return new this.constructor(this._items.map(fn)); },
+  sort   (fn) { this._items.sort(fn); return this; },
+      
+  
+  add  (...items) { return this.merge(items); },
+  push (...items) { return this.merge(items); },
+});
+
+
+
+
+
+
+
+type.delegate(MapType, '_store', ['keys', 'values']);
 
 
 
