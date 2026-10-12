@@ -1,5 +1,33 @@
 # @rat/types
 
+---
+
+[Dict](#dict)
+[List](#list)
+[Point](#point)
+
+---
+
+## usage
+
+```js
+import { Dict, List, Point } from '@rat/types';
+```
+
+```js
+import '@rat/types/Dict.js';
+import '@rat/types/List.js';
+import '@rat/types/Point.js';
+```
+
+```js
+import '@rat/types/index.js';
+```
+
+---
+
+# scratch
+
 ```
 union
 
