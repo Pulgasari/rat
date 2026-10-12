@@ -19,13 +19,6 @@ const isRegExp   = instanceOf(RegExp);
 
 const P = (Target) => Target.prototype;
 
-
-
-
-
-
-
-
 // ======================================
 // RAT DATA TYPES CONSTRUCTION APPROACH 1
 // ======================================
@@ -143,13 +136,6 @@ initType ('$List'  , List);
 initType ('$Point' , Point);
 initType ('$Tree'  , Tree);
 
-// define mutating methods list
-immu.attach (List   , ['merge', 'remove', 'removeByIndex', 'reverse', 'shift', 'slice', 'splice', 'shuffle', 'sort', 'unshift']);      
-immu.attach (Point  , []);
-immu.attach (Record , []);
-immu.attach (Tree   , []);
-immu.attach (Tuple  , []);
-
 // ************* STEP 2: attach props and methods *************
 
 // ------------ List
@@ -219,9 +205,305 @@ type.props (List, {
   push (...items) { return this.merge(items); },
 });
 
+// ------ Point
+// ::::: POINT PROTOTYPE
+
+const Point = type.init (function Point (x = 0, y = 0) {
+  RatType.call(this);
+  this.x = Number(x) || 0;
+  this.y = Number(y) || 0;
+});
+
+type.props(Point, {
+  
+  get angle     () { return Math.atan2(this.y, this.x); },
+  get magnitude () { return Math.hypot(this.x, this.y); },
+
+  clone    ()      { return new this.constructor(this.x, this.y); },
+  equals   (other) { return !other ? false : (this.x === other.x && this.y === other.y),
+  distance (other = { x: 0, y: 0 }) { return Math.hypot(other.x - this.x, other.y - this.y); },
+  toArray  () { return [this.x, this.y]; },
+  toObject () { return { x: this.x, y: this.y }; },
+
+  // ::::: MUTATIONS (In-Place)
+
+  set(x = this.x, y = this.y) {
+    this.x = Number(x) || 0;
+    this.y = Number(y) || 0;
+    return this;
+  },
+
+  add (other) {
+    const ox = isNumber(other) ? other : (other?.x ?? 0);
+    const oy = isNumber(other) ? other : (other?.y ?? 0);
+    this.x += ox;
+    this.y += oy;
+    return this;
+  },
+
+  subtract (other) {
+    const ox = typeof other === 'number' ? other : (other?.x ?? 0);
+    const oy = typeof other === 'number' ? other : (other?.y ?? 0);
+    this.x -= ox;
+    this.y -= oy;
+    return this;
+  },
+
+  multiply (scalar) {
+    const factor = Number(scalar) || 0;
+    this.x *= factor;
+    this.y *= factor;
+    return this;
+  },
+
+  divide (scalar) {
+    const factor = Number(scalar) || 1;
+    this.x /= factor;
+    this.y /= factor;
+    return this;
+  },
+
+  negate () {
+    this.x = -this.x;
+    this.y = -this.y;
+    return this;
+  },
+
+  clamp (min, max) {
+    this.x = Math.max(min.x ?? min, Math.min(max.x ?? max, this.x));
+    this.y = Math.max(min.y ?? min, Math.min(max.y ?? max, this.y));
+    return this;
+  },
+
+  round () {
+    this.x = Math.round(this.x);
+    this.y = Math.round(this.y);
+    return this;
+  }
+});
+
+// @rat/datatypes
+
+// ::::: RECORD PROTOTYPE
+
+const Record = type.init(function Record(source) {
+  RatType.call(this);
+  this._data = {};
+  if (source != null) this.merge(source);
+});
+
+type.props (Record, {
+  get size() { return Object.keys(this._data).length; },
+
+  get (key) { return this._data[key]; },
+  has (key) { return Object.prototype.hasOwnProperty.call(this._data, key); },
+  
+  clone   () { return new this.constructor(this._data); },
+  entries () { return Object.entries (this._data); },
+  keys    () { return Object.keys    (this._data); },
+  values  () { return Object.values  (this._data); },
+
+  toObject() { return { ...this._data }; },
+
+  equals(other) {
+    if (!other || typeof other !== 'object') return false;
+    const otherObj = isFn(other.toObject) ? other.toObject() : other;
+    const keysA = this.keys();
+    const keysB = Object.keys(otherObj);
+    if (keysA.length !== keysB.length) return false;
+    return keysA.every((key) => this._data[key] === otherObj[key]);
+  },
+
+  // ::::: MUTATIONS
+
+  set    (key, value) { this._data[key] = value; return this; },
+  delete (key)        { delete this._data[key]; return this; },
+
+  merge(...sources) {
+    for (const source of sources) {
+      if (isNullish(source)) continue;
+      const entries = isFn(source.entries)
+        ? source.entries()
+        : isIterable(source)
+          ? source
+          : Object.entries(source);
+
+      for (const [key, value] of entries) this._data[key] = value;
+    }
+    return this;
+  },
+
+  clear () { this._data = {}; return this; },
+
+  [Symbol.iterator] () { return this.entries () [Symbol.iterator] (); }
+});
+
+// ::::: TUPLE PROTOTYPE
+
+const Tuple = type.init (function Tuple (...items) {
+  RatType.call(this);
+  // Support both spread arguments or a single array parameter
+  this._items = (items.length === 1 && isArray(items[0])) ? [...items[0]] : items;
+});
+
+// Direct pass-through delegations to internal array
+
+type.props(Tuple, {
+  get length () { return this._items.length; },
+  get size   () { return this._items.length; },
+
+  get(index) {
+    const normalized = index < 0 ? this._items.length + index : index;
+    return this._items[normalized];
+  },
+
+  clone() {
+    return new this.constructor(...this._items);
+  },
+
+  equals (other) {
+    if (!other) return false;
+    const arr = isFn(other.toArray) ? other.toArray() : Array.from(other);
+    if (this._items.length !== arr.length) return false;
+    return this._items.every((val, i) => val === arr[i]);
+  },
+
+  // ::::: MUTATIONS
+
+  set (index, value) {
+    const normalized = index < 0 ? this._items.length + index : index;
+    if (normalized >= 0) {
+      this._items[normalized] = value;
+    }
+    return this;
+  },
+
+  swap(i, j) {
+    const len = this._items.length;
+    const idxA = i < 0 ? len + i : i;
+    const idxB = j < 0 ? len + j : j;
+    if (idxA >= 0 && idxA < len && idxB >= 0 && idxB < len) {
+      const temp = this._items[idxA];
+      this._items[idxA] = this._items[idxB];
+      this._items[idxB] = temp;
+    }
+    return this;
+  },
+
+  fill (value, start, end) { this._items.fill(value, start, end); return this; },
+
+  clear () { this._items = []; return this; },
+
+  [Symbol.iterator] () { return this._items[Symbol.iterator](); }
+});
+
+type.delegateMethods(Tuple, '_items', { has: 'includes' }, ['indexOf', 'find', 'slice']);
+
+// ::::: TREE PROTOTYPE
+
+const Tree = type.init (function Tree (value, children = []) {
+  RatType.call(this);
+  this.value = value;
+  this.children = [];
+  if (children && children.length) this.addChildren(children);
+});
+
+type.props(Tree, {
+  get isLeaf () { return this.children.length === 0; },
+
+  get depth() {
+    if (this.isLeaf) return 0;
+    return 1 + Math.max(...this.children.map((c) => c.depth));
+  },
+
+  clone() {
+    return new this.constructor(
+      this.value,
+      this.children.map((child) => child.clone())
+    );
+  },
+
+  find(predicate) {
+    if (predicate(this.value, this)) return this;
+    for (const child of this.children) {
+      const found = child.find(predicate);
+      if (found) return found;
+    }
+    return null;
+  },
+
+  traverse(fn) {
+    fn(this.value, this);
+    for (const child of this.children) child.traverse(fn);
+    
+  },
+
+  // ::::: MUTATIONS
+
+  setValue (val) { this.value = val; return this; },
+
+  addChild (child) {
+    const node = child instanceof Tree ? child : new this.constructor(child);
+    this.children.push(node);
+    return this;
+  },
+
+  addChildren (children) {
+    for (const child of children) this.addChild(child);
+    return this;
+  },
+
+  removeChild (childOrValue) {
+    this.children = this.children.filter(
+      (c) => c !== childOrValue && c.value !== childOrValue
+    );
+    return this;
+  },
+
+  clear () { this.children = []; return this; }
+});
 
 
 
+// ************ STEP 3 ************
+// Auto-generate 'to*' immutable counterparts (toAdded, toSubtracted, toMultiplied, etc.)
+// define mutating methods list
+immu.attach (List   , ['merge', 'remove', 'removeByIndex', 'reverse', 'shift', 'slice', 'splice', 'shuffle', 'sort', 'unshift']);      
+immu.attach (Point  , ['add', 'clamp', 'divide', 'multiply', 'negate', 'round', 'set', 'subtract']);
+immu.attach (Record , ['set', 'delete', 'merge', 'clear']);
+immu.attach (Tree   , ['setValue', 'addChild', 'addChildren', 'removeChild', 'clear']);
+immu.attach (Tuple  , ['set', 'swap', 'fill', 'clear']);
+
+
+
+
+// @rat/datatypes
+
+// ::::: UNIVERSAL ARRAY COERCING HELPER
+
+/**
+ * Coerces any given source/shape into a plain Array based on its type.
+ * 
+ * @param {any} source - Input value of any shape or type
+ * @returns {Array} - Coerced plain array
+ */
+const toArray = (source) => {
+  if (source == null) return [];
+  // 1. Delegate if the target already implements custom toArray logic
+  if (isFn(source.toArray)) return source.toArray();
+  // 2. Handle Iterables (Arrays, Sets, Maps, custom Iterables)
+  if (isIterable(source[Symbol.iterator])) return Array.from(source);
+  // 3. Handle Plain Objects / Key-Value structures
+  if (isObj(source)) return Object.values(source);
+  // 4. Fallback for primitives (number, string, boolean, symbol)
+  return [source];
+};
+
+// ::::: INTEGRATION INTO RAT MOTHER PROTOTYPE
+// Base fallback for all RatType instances
+RatType.prototype.toArray = function () { return toArray (this); };
+// Static helper on RatType for direct utility calls: RatType.toArray(anything)
+RatType.toArray = toArray;
 
 
 
