@@ -1,0 +1,16 @@
+{
+  "grammars": [
+    {
+      "name"           : "ratjs",
+      "scope"          : "source.rat.js",
+      "path"           : ".",
+      "file-types"     : ["rat.js"],
+      "injection-regex": "^ratjs$"
+    }
+  ],
+  "metadata": {
+    "version"    : "0.0.1",
+    "license"    : "MIT",
+    "description": "highlighting grammar for rat, generated parser from @rat/syntax"
+  }
+}

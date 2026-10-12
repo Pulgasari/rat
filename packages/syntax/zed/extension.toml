@@ -1,0 +1,21 @@
+id             = "rat"
+name           = "RAT"
+version        = "0.0.1"
+schema_version = 1
+authors        = ["pulgasari"]
+description    = "syntax highlighting for rat (.rat, .rat.js), generated from @rat/syntax"
+repository     = "https://github.com/pulgasari/rat"
+
+# rev: a commit that contains the generated parsers (zed/grammars/*/src).
+# `node build.js zed-rev` writes the current commit here. working on the grammar
+# locally: repository = "file:///path/to/rat" plus the sha of a local commit
+
+[grammars.rat]
+repository = "https://github.com/pulgasari/rat"
+rev        = "REV"
+path       = "packages/syntax/zed/grammars/rat"
+
+[grammars.ratjs]
+repository = "https://github.com/pulgasari/rat"
+rev        = "REV"
+path       = "packages/syntax/zed/grammars/ratjs"

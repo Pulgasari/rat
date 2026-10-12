@@ -7,7 +7,8 @@ leaking between two compiles. the compiled module goes in as a blob url, the
 iframe's own import map resolves @rat/runtime.
 */
 
-import { compile } from '../../packages/compiler/index.js';
+import { compile }    from '../../packages/compiler/index.js';
+import { rat, ratjs } from '../../packages/syntax/targets/hljs.js';
 
 // :::::: SETUP
 
@@ -46,6 +47,8 @@ async function editors () {
   try {
     await import('@aufbau/elements/webcomponents/write-code.js');
     await customElements.whenDefined('write-code');
+    // straight from this repo, so a change to the spec shows here without a deploy of aufbau
+    customElements.get('write-code').registerLanguage('rat', rat).registerLanguage('ratjs', ratjs);
   } catch (error) {
     console.warn('[rat] <write-code> unavailable, falling back to textarea:', error);
     customElements.define('write-code', class extends HTMLElement {
@@ -165,7 +168,7 @@ addEventListener('message', ({ data }) => {
 async function load (example, fresh = false) {
   state.example = example;
   ui.filename.textContent = example.file;
-  ui.source.setAttribute('lang', example.file.endsWith('.js') ? 'javascript' : 'html');
+  ui.source.setAttribute('lang', example.file.endsWith('.js') ? 'ratjs' : 'rat');
 
   const saved  = fresh ? null : stored(example.file);
   const source = saved ?? await fetch(new URL(`../examples/${example.file}`, import.meta.url)).then(response => response.text());
