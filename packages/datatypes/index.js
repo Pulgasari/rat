@@ -188,7 +188,7 @@ const List = createType('List', {
   ]
 });
 
-const Point = createType(function Point(x = 0, y = 0) {
+const Point = createType (function Point (x = 0, y = 0) {
   RatType.call(this);
   this.x = x;
   this.y = y;
