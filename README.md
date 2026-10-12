@@ -1,6 +1,6 @@
 # rat
 
-![Logo](logo.webp)
+![Logo](rat.webp)
 
 ---
 
