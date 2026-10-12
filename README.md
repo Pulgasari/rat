@@ -1,5 +1,7 @@
 # rat
 
+![Logo](logo.webp)
+
 ---
 
 ## docs & demos
