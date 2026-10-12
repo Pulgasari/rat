@@ -681,3 +681,16 @@ const MapType = createType(function Map(source, options = {}) {
 // :::::: REACTIVE VARIANT
 
 const $Map = createType('$Map', { base: MapType });
+
+/*
+delegator
+iterator
+mutator
+normalizer
+transformer
+validator
+wrapper
+
+getter
+setter
+*/
