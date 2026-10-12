@@ -85,6 +85,20 @@ const normalizeDefs = (...defs) => {
   return result;
 };
 
+const normalizeDefs = (...defs) => {
+  const result = [];
+  for (const def of defs) {
+    if (!def) continue;
+    const list = isString(def) ? def.split(/\s+/).filter(Boolean) : def;
+
+         if (isArray(list)) for (const key of list) if (key) result.push([key, key]);
+    else if   (isObj(list)) for (const key in list)          result.push([key, list[key]]);
+    
+  }
+  return result;
+};
+
+
 const createDelegator = (resolver) => (TargetType, targetKey, ...definitions) => {
   for (const [method, target] of normalizeDefs(...definitions)) {
     TargetType.prototype[method] = function (...args) {
@@ -217,7 +231,7 @@ type.props (Point, {
   get magnitude () { return Math.hypot(this.x, this.y); },
 
   clone    ()      { return new this.constructor(this.x, this.y); },
-  equals   (other) { return !other ? false : (this.x === other.x && this.y === other.y),
+  equals   (other) { return isObj(other) && this.x === other.x && this.y === other.y; },
   distance (other = { x: 0, y: 0 }) { return Math.hypot(other.x - this.x, other.y - this.y); },
   toArray  () { return [this.x, this.y]; },
   toObject () { return { x: this.x, y: this.y }; },
