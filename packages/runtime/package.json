@@ -1,0 +1,11 @@
+{
+  "name"        : "@rat/runtime",
+  "version"     : "0.0.1",
+  "description" : "signals and fine-grained dom for compiled rat components",
+  "type"        : "module",
+  "main"        : "./index.js",
+  "types"       : "./index.d.ts",
+  "exports"     : { ".": "./index.js" },
+  "sideEffects" : false,
+  "license"     : "MIT"
+}

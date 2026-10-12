@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang='de'>
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <title>RAT Playground</title>
+  <link rel='preconnect' href='https://fonts.googleapis.com' />
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Hubot+Sans:wght@400;700;900&display=swap' />
+  <link rel='stylesheet' href='./playground.css' />
+  <script src='https://code.pulgasari.dev/importmap.js'></script>
+</head>
+<body>
+  <header>
+    <a class='brand' href='../'>RAT <small>playground</small></a>
+
+    <label>
+      <span>beispiel</span>
+      <select id='example'></select>
+    </label>
+
+    <button id='reset' type='button' title='beispiel zurücksetzen'>reset</button>
+
+    <output id='status'></output>
+  </header>
+
+  <main>
+    <section class='pane' id='source-pane'>
+      <h2 id='filename'>source</h2>
+      <write-code id='source' lang='html' editable actions='copy clear'></write-code>
+    </section>
+
+    <section class='pane' id='output-pane'>
+      <h2>
+        <button type='button' data-view='code' aria-pressed='true'>js</button>
+        <button type='button' data-view='ast'  aria-pressed='false'>ast</button>
+      </h2>
+      <write-code id='output' lang='javascript'></write-code>
+    </section>
+
+    <section class='pane' id='preview-pane'>
+      <h2>preview</h2>
+      <iframe id='preview' title='preview'></iframe>
+      <ol id='console'></ol>
+    </section>
+  </main>
+
+  <script type='module' src='./playground.js'></script>
+</body>
+</html>
