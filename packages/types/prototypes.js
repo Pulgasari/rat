@@ -192,13 +192,26 @@ type.props (List, {
 // ------ Point
 // ::::: POINT PROTOTYPE
 
+const PointPT = new PrototypeMaker ('Point');
+PointPT.addStatics({ xy });
+PointPT.addProps();
+
+// Unpacks (x, y) from point object, scalar, or fallback
+const xy = (val, fallbackX = 0, fallbackY = fallbackX) => {
+  if (isNumber(val)) return [val, val];
+  if    (isObj(val)) return [Number(val.x) || 0, Number(val.y) || 0];
+  return [fallbackX, fallbackY];
+};
+
 const Point = type.init (function Point (x = 0, y = 0) {
   RatType.call(this);
   this.x = Number(x) || 0;
   this.y = Number(y) || 0;
 });
 
-type.props(Point, {
+type.statics (Point, { xy });
+
+type.props (Point, {
   
   get angle     () { return Math.atan2(this.y, this.x); },
   get magnitude () { return Math.hypot(this.x, this.y); },
@@ -218,17 +231,15 @@ type.props(Point, {
   },
 
   add (other) {
-    const ox = isNumber(other) ? other : (other?.x ?? 0);
-    const oy = isNumber(other) ? other : (other?.y ?? 0);
-    this.x += ox;
+    const [ox, oy] = xy (other);
+    this.x += ox; 
     this.y += oy;
     return this;
   },
-
+  
   subtract (other) {
-    const ox = typeof other === 'number' ? other : (other?.x ?? 0);
-    const oy = typeof other === 'number' ? other : (other?.y ?? 0);
-    this.x -= ox;
+    const [ox, oy] = xy(other);
+    this.x -= ox; 
     this.y -= oy;
     return this;
   },
@@ -254,10 +265,12 @@ type.props(Point, {
   },
 
   clamp (min, max) {
-    this.x = Math.max(min.x ?? min, Math.min(max.x ?? max, this.x));
-    this.y = Math.max(min.y ?? min, Math.min(max.y ?? max, this.y));
+    const [minX, minY] = xy(min, -Infinity);
+    const [maxX, maxY] = xy(max,  Infinity);
+    this.x = Math.max(minX, Math.min(maxX, this.x));
+    this.y = Math.max(minY, Math.min(maxY, this.y));
     return this;
-  },
+  }
 
   round () {
     this.x = Math.round(this.x);
@@ -694,3 +707,45 @@ wrapper
 getter
 setter
 */
+
+function createType(Target, {
+  base      = RatType,
+  props     = {},
+  delegate  = null, // [targetKey, ...defs]
+  chain     = null, // [targetKey, ...defs]
+  wrap      = null, // [targetKey, ...defs]
+  mutations = [],
+  statics   = {}
+} = {}) {
+  const NewType = type.init(Target, base);
+
+  if (delegate) type.delegateMethods(NewType, ...delegate);
+  if (chain)    type.chainMethods   (NewType, ...chain);
+  if (wrap)     type.wrapMethods    (NewType, ...wrap);
+
+  type.props(NewType, props);
+  type.statics(NewType, statics);
+
+  if (mutations.length) immu.attach(NewType, mutations);
+
+  return NewType;
+}
+
+// ::::: 
+
+const List = createType('List', {
+  delegate: ['_items', { has: 'includes' }, 'indexOf pop shift find'],
+  chain:    ['_items', 'reverse sort'],
+  wrap:     ['_items', 'filter map'],
+  mutations: ['add', 'push', 'merge', 'remove', 'reverse', 'sort', 'clear'],
+  props: {
+    get size () { return this._items.length; },
+    clear   () { this._items.length = 0; return this; },
+    clone   () { return new this.constructor(this._items); },
+    toArray () { return [...this._items]; },
+    toSet   () { return new Set(this._items); },
+    add     (...items) { return this.merge(items); },
+    push    (...items) { return this.merge(items); }
+  }
+});
+
