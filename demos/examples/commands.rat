@@ -1,0 +1,38 @@
+<script>
+  // a string as event handler is a command: it fires 'rat:command' upwards.
+  // later @rat/core listens at the app root, here the component does it itself
+  const commands = [
+    { name: 'toggleSidebar', label: 'sidebar umschalten' },
+    { name: 'save',          label: 'speichern'          },
+    { name: 'openSettings',  label: 'einstellungen'      },
+  ];
+
+  let $sidebar = false;
+  let $last    = null;
+
+  function run (event) {
+    $last = event.detail.name;
+    if ($last === 'toggleSidebar') $sidebar = !$sidebar;
+  }
+</script>
+
+<div.app on:rat:command={run}>
+  <aside @if={$sidebar}>sidebar</aside>
+
+  <data-list>
+    @for (cmd of commands) {
+      <li><button onclick={cmd.name}>{cmd.label}</button></li>
+    } @else {
+      <div.empty>nothing here ...</div.empty>
+    }
+  </data-list>
+
+  <p>letztes command: <code>{$last ?? '–'}</code></p>
+</div.app>
+
+<style>
+  .app      { display: grid; gap: .75rem; grid-template-columns: auto 1fr; }
+  aside     { background: #c003; padding: .5rem 1rem; }
+  data-list { display: grid; gap: .25rem; list-style: none; }
+  p         { grid-column: 1 / -1; }
+</style>

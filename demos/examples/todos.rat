@@ -1,0 +1,70 @@
+<script module>
+  // module level: one signal shared by every instance, a store without a store api
+  let $todos = [
+    { id: 1, title: 'rat konzipieren',  done: true  },
+    { id: 2, title: 'playground bauen', done: false },
+  ];
+</script>
+
+<script>
+  let   $draft  = '';
+  let   $filter = 'all';
+  const $open   = $todos.filter(todo => !todo.done).length;
+  const $shown  = $todos |> select($filter);
+
+  function select (todos, filter) {
+    if (filter === 'open') return todos.filter(todo => !todo.done);
+    if (filter === 'done') return todos.filter(todo => todo.done);
+    return todos;
+  }
+
+  function add (event) {
+    event.preventDefault();
+    if (!$draft.trim()) return;
+    $todos = [...$todos, { id: Date.now(), title: $draft.trim(), done: false }];
+    $draft = '';
+  }
+
+  const toggle = todo => $todos = $todos.map(item => item === todo ? { ...item, done: !item.done } : item);
+  const remove = todo => $todos = $todos.filter(item => item !== todo);
+</script>
+
+<section.todos>
+  <form onsubmit={add}>
+    <input bind:value={$draft} placeholder="was steht an?" />
+    <button>add</button>
+  </form>
+
+  <nav>
+    @for (name of ['all', 'open', 'done']) {
+      <button class:active={$filter === name} onclick={() => $filter = name}>{name}</button>
+    }
+  </nav>
+
+  <ul>
+    @for (todo of $shown) {
+      <li class:done={todo.done}>
+        <input type="checkbox" checked={todo.done} onchange={() => toggle(todo)} />
+        <span>{todo.title}</span>
+        <button.remove onclick={() => remove(todo)}>×</button.remove>
+      </li>
+    } @else {
+      <li.empty>nichts zu tun</li.empty>
+    }
+  </ul>
+
+  <p.count>{$open} offen</p.count>
+</section.todos>
+
+<style>
+  .todos  { display: grid; gap: .75rem; max-width: 24rem; }
+  form    { display: flex; gap: .5rem; }
+  input   { flex: 1; }
+  nav     { display: flex; gap: .25rem; }
+  ul      { display: grid; gap: .25rem; list-style: none; margin: 0; padding: 0; }
+  li      { align-items: center; display: flex; gap: .5rem; }
+  .active { outline: 2px solid currentcolor; }
+  .done   { opacity: .5; text-decoration: line-through; }
+  .empty  { font-style: italic; opacity: .6; }
+  .remove { margin-left: auto; }
+</style>

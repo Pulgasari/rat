@@ -2,6 +2,20 @@
 
 ---
 
+## docs & demos
+
+- [konzept](.md/concept.md) · [syntax v0](.md/syntax.md) · [compiler v0](.md/compiler.md)
+- [demos](demos/) · [playground](demos/playground/) (`.rat` links, compilat + ast mitte, preview rechts)
+
+| paket | pfad | status |
+|---|---|---|
+| `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0 |
+| `@rat/runtime` | [`packages/runtime`](packages/runtime) | v0 |
+| `@rat/core` | [`packages/core`](packages/core) | skizze |
+| `@rat/types` | [`packages/types`](packages/types) | skizze |
+
+---
+
 # features
 
 - funktioniert direkt im browser

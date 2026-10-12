@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang='de'>
+<head>
+  <meta charset='utf-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1' />
+  <title>RAT Demos</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Hubot+Sans:wght@400;700;900&display=swap' />
+  <style>
+    :root { --accent: #e5222f; color-scheme: light dark; }
+    body  { font: 15px/1.5 'Hubot Sans', system-ui, sans-serif; margin: 0 auto; max-width: 44rem; padding: 2rem 16px; }
+    h1    { color: var(--accent); font-weight: 900; letter-spacing: .05em; margin: 0 0 1.5rem; }
+    a     { color: inherit; }
+    ul    { display: grid; gap: .75rem; list-style: none; padding: 0; }
+    li a  { font-weight: 700; }
+    li p  { margin: .1rem 0 0; opacity: .7; }
+  </style>
+</head>
+<body>
+  <h1>RAT demos</h1>
+
+  <ul>
+    <li>
+      <a href='./playground/'>playground</a>
+      <p>.rat / .rat.js links eingeben, compilierter code und ast in der mitte, live-preview rechts.</p>
+    </li>
+    <li>
+      <a href='./playground/#counter.rat'>counter</a>
+      <p><code>$</code>-signale, computed, events.</p>
+    </li>
+    <li>
+      <a href='./playground/#todos.rat'>todos</a>
+      <p>geteilter state im <code>&lt;script module&gt;</code>, <code>bind:value</code>, <code>@for … @else</code>, pipe.</p>
+    </li>
+    <li>
+      <a href='./playground/#commands.rat'>commands</a>
+      <p>string-handler als command, <code>rat:command</code>, <code>@if</code> als attribut.</p>
+    </li>
+    <li>
+      <a href='./playground/#syntax.rat'>syntax-tour</a>
+      <p>tag-selektoren, prop-gruppen, <code>@switch</code>, <code>@for</code> mit index, svg.</p>
+    </li>
+    <li>
+      <a href='./playground/#pipes.rat.js'>.rat.js</a>
+      <p>plain js mit sugar, <code>html`…`</code> als compiliertes markup.</p>
+    </li>
+  </ul>
+</body>
+</html>
