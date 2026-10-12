@@ -1,7 +1,13 @@
 // @rat/core
+
+// :::::: IMPORT
+
 import '@aufbau/elements';
 import '@domina/prototype';
 import '@htx/js';
+
+// :::
+import { $Map } from './datatypes.js';
 
 const $app = document.createElement('rat-app'); 
 
