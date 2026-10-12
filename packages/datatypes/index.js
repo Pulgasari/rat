@@ -94,10 +94,44 @@ immu.attach (Record , []);
 immu.attach (Tree   , []);
 immu.attach (Tuple  , []);
 
+Object.assign(NewType.prototype, methods);
+Object.assign(NewType, statics);
+
+// ------------ List
+
+List.prototype.has     = function (item) { return this._items.includes(item); };
+List.prototype.indexOf = function (item) { return this._items.indexOf(item); }
+
+List.prototype.add     = function (...items) { return this.merge(items); }
+List.prototype.push    = function (...items) { return this.merge(items); }
+
+List.prototype.clone   = function () { return new this.constructor(this._items); }
+List.prototype.clear   = function () { this._items.length = 0; return this; },
+List.prototype.pop     = function () { return this._items.pop(); },
+List.prototype.reverse = function () { this._items.reverse(); return this; },
+List.prototype.shift   = function () { return this._items.shift(); },
+List.prototype.toArray = function () { return [...this._items]; }
+List.prototype.toSet   = function () { return new Set(this._items); }
+
+List.prototype.filter = function (fn) { return new this.constructor(this._items.filter(fn)); },
+List.prototype.find   = function (fn) { return this._items.find(fn); },
+List.prototype.map    = function (fn) { return new this.constructor(this._items.map(fn)); },
+List.prototype.sort   = function (fn) { this._items.sort(fn); return this; },
+  
+List.prototype.forEach = function (fn, thisArg) { this._items.forEach(fn, thisArg); },
+
+List.prototype.slice = function (start, end) { this._items = this._items.slice(start, end); return this; },
 
 
+Object.assign (List.prototype, {
+  has     (item) { return this._items.includes (item); },
+  indexOf (item) { return this._items.indexOf  (item); },
+};
 
-
+Object.assign (List.prototype, {
+  has     : this._items.includes,
+  indexOf : this._items.indexOf,
+};
 
 // ======================================
 // RAT DATA TYPES CONSTRUCTION APPROACH 2
@@ -378,3 +412,180 @@ const MapType = createType(function Map(source, options = {}) {
 // :::::: REACTIVE VARIANT
 
 const $Map = createType('$Map', { base: MapType });
+
+
+
+// @rat/datatypes
+
+// :::::: LIST PROTOTYPE (ORDERED SET / UNIQUE ARRAY)
+
+const List = createType(function List(source) {
+  RatType.call(this);
+
+  this._items = [];
+
+  if (source != null) {
+    this.merge(source);
+  }
+}, {
+  methods: {
+    // ::::: READ & UTILITIES
+
+    has(item) { return this._items.includes(item); },
+
+    get(index) {
+      // Support negative index (-1 = last item)
+      const normalized = index < 0 ? this._items.length + index : index;
+      return this._items[normalized];
+    },
+
+    indexOf (item) { return this._items.indexOf(item); },
+    get size   () { return this._items.length; },
+    get length () { return this._items.length; },
+
+    clone   () { return new this.constructor(this._items); },
+    toArray () { return [...this._items]; },
+    toSet   () { return new Set(this._items); },
+
+    // ::::: MUTATIONS (Set-like Uniqueness + Array Operations)
+
+    add  (...items) { return this.merge(items); },
+    push (...items) { return this.merge(items); },
+
+    merge(...sources) {
+      for (const source of sources) {
+        const entries = source == null ? [] 
+          : typeof source[Symbol.iterator] === 'function' ? source 
+          : Object.values(source);
+
+        for (const item of entries) {
+          if (!this.has(item)) {
+            this._items.push(item);
+          }
+        }
+      }
+      return this;
+    },
+
+    remove(...items) {
+      for (const item of items) {
+        const idx = this.indexOf(item);
+        if (idx !== -1) {
+          this._items.splice(idx, 1);
+        }
+      }
+      return this;
+    },
+
+    removeByIndex(...indices) {
+      // Sort indices descending to avoid shift offset issues during deletion
+      const sorted = [...indices].sort((a, b) => b - a);
+
+      for (const idx of sorted) {
+        const normalized = idx < 0 ? this._items.length + idx : idx;
+        if (normalized >= 0 && normalized < this._items.length) {
+          this._items.splice(normalized, 1);
+        }
+      }
+      return this;
+    },
+    
+    clear   () { this._items.length = 0; return this; },
+    pop     () { return this._items.pop(); },
+    reverse () { this._items.reverse(); return this; },
+    shift   () { return this._items.shift(); },
+
+
+    unshift(...items) {
+      // Insert items at the front while ensuring uniqueness
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        const idx = this.indexOf(item);
+        if (idx !== -1) this._items.splice(idx, 1);
+        this._items.unshift(item);
+      }
+      return this;
+    },
+
+    slice (start, end) { this._items = this._items.slice(start, end); return this; },
+    sort (fn) { this._items.sort(fn); return this; },
+    
+    splice(start, deleteCount, ...items) {
+      // Remove duplicates from existing elements before inserting new ones
+      for (const item of items) {
+        const idx = this.indexOf(item);
+        if (idx !== -1) this._items.splice(idx, 1);
+      }
+      this._items.splice(start, deleteCount, ...items);
+      return this;
+    },
+
+    shuffle() {
+      // Fisher-Yates shuffle algorithm
+      for (let i = this._items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [this._items[i], this._items[j]] = [this._items[j], this._items[i]];
+      }
+      return this;
+    },
+
+    
+
+    
+
+    // ::::: SET ALGEBRA
+
+    intersect(other) {
+      const otherSet = new Set(
+        other == null ? [] 
+        : typeof other[Symbol.iterator] === 'function' ? other 
+        : Object.values(other)
+      );
+      this._items = this._items.filter(item => otherSet.has(item));
+      return this;
+    },
+
+    difference(other) {
+      const otherSet = new Set(
+        other == null ? [] 
+        : typeof other[Symbol.iterator] === 'function' ? other 
+        : Object.values(other)
+      );
+      this._items = this._items.filter(item => !otherSet.has(item));
+      return this;
+    },
+
+    // ::::: ITERATION & FUNCTIONAL METHODS
+
+    forEach (fn, thisArg) { this._items.forEach(fn, thisArg); },
+    
+    filter (fn) { return new this.constructor(this._items.filter(fn)); },
+    find   (fn) { return this._items.find(fn); },
+    map    (fn) { return new this.constructor(this._items.map(fn)); },
+
+    [Symbol.iterator]() {
+      return this._items[Symbol.iterator]();
+    }
+  },
+
+  // Auto-generate immutable counterpart methods ('to*')
+  mutations: [
+    'add',
+    'push',
+    'merge',
+    'remove',
+    'removeByIndex',
+    'reverse',
+    'shift',
+    'pop',
+    'unshift',
+    'slice',
+    'splice',
+    'shuffle',
+    'sort',
+    'clear',
+    'intersect',
+    'difference'
+  ]
+});
+
