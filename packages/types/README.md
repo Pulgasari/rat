@@ -2,9 +2,42 @@
 
 ---
 
+[Color](#color)
 [Dict](#dict)
 [List](#list)
 [Point](#point)
+[Tree](#tree)
+
+#### reactive variants
+[$Array](#)
+[$Bool](#)
+[$Color](#)
+[$Dict](#)
+[$Map](#)
+[$List](#list)
+[$Point](#point)
+[$Set](#)
+[$Tree](#)
+
+---
+
+# types
+
+## Color
+
+## Dict
+
+map like
+
+## List
+
+flat array-like sequence of unique values of the same type. optionally auto-sorted.
+
+## Point
+
+## Tree
+
+nested nodes-like structure
 
 ---
 
