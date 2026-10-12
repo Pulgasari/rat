@@ -3,36 +3,27 @@ import '@aufbau/elements';
 import '@domina/prototype';
 import '@htx/js';
 
+const $app = document.createElement('rat-app'); 
+
 const warn = (...args) => console.warn('[RAT] ', ...args);
 
 const rat = { warn };
 
 class CommandRegistry {
-  #commands = new Map;
+  #commands = new $Map ({ normalizeKey: toUndashed });
 
-  constructor (rootElement = document) {
-    // Listen for native HTML command events globally
-    rootElement.addEventListener('command', (event) => {
-      const cleanName = toUndashed(event.command);
-
-      // If the command is registered in JS, execute it
-      if (this.#commands.has(cleanName)) {
-        this.exec(cleanName, { event, source: event.source });
-      }
-    });
+  constructor (ctx = $app) {
+    ctx.addEventListener('command', this.exec);
   }
 
-  register (name, handler) {
-    this.#commands.set(toUndashed(name), handler);
+  register ({ name, handler }) {
+    this.#commands.set(name, handler);
     return this;
   }
 
-  exec (name, ...args) {
-    const handler = this.#commands.get(toUndashed(name));
-    
-    return handler 
-      ? handler(...args)
-      : rat.warn(`unknown command: "${name}"`);
+  exec ({ command: name, ...args }) {
+    return this.#commands.get(name)?.(...args)
+        ?? rat.warn(`unknown command: "${name}"`);
   }
 }
 
