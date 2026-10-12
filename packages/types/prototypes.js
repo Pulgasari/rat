@@ -1,4 +1,4 @@
-// @rat/datatypes
+// @rat/types :: prototypes.js
 
 // :::::: IMPORT
 
@@ -8,16 +8,23 @@ import str   from '@pulgasari/str';
 
 // :::::: INTERNAL HELPERS
 
-const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
-const typeOf     = (sth) => (typeName)  => typeof sth === typeName;
+const P = (Target) => Target.prototype;
+
+// ::: INTERNAL TYPE GUARDS
+
+const isInstanceOf = (sth) => (ClassName) => sth instanceof ClassName;
+const isTypeOf     = (sth) => (typeName)  => typeof sth === typeName;
 
 const isArray    = Array.isArray;
-const isFn       = typeOf('function');
-const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
-const isObj      = (sth) => sth && typeof sth === 'object';
-const isRegExp   = instanceOf(RegExp);
+const isFn       = isTypeOf('function');
+const isNullish  = (sth) => typeof sth === 'undefined' || typeof sth === 'null';
+const isNumber   = (sth) => typeof sth === 'number' && !Number.isNaN(v);
+const isObj      = (sth) => sth !== null && typeof sth === 'object';
+const isRegExp   = isInstanceOf(RegExp);
+const isString   = isTypeOf('string');
 
-const P = (Target) => Target.prototype;
+const hasIterator = (sth) => isFn(sth[Symbol.iterator]);
+const isIterable  = hasIterator;
 
 // ======================================
 // RAT DATA TYPES CONSTRUCTION APPROACH 1
