@@ -12,7 +12,9 @@ export const isIterable = (v) => v != null && isFn(v[Symbol.iterator]);
 export const isRegExp   = (v) => v instanceof RegExp;
 
 // Normalizes negative indices relative to target length (-1 -> length - 1)
-export const normIdx = (idx, len) => (idx < 0 ? len + idx : idx);
+export const normIdx = (idx, len) => (idx < 0 ? len + idx : idx); // deprected
+export const normalizeIndex = (index, length) => (index < 0 ? length + index : index);
+
 
 // ::::: IMMUTABLE METHOD ATTACHER
 
