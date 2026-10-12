@@ -1,10 +1,22 @@
 // @rat/datatypes
 
+// :::::: IMPORT
+
+// may gonna be inlined later
+import shift from '@pulgasari/shift';
+import str   from '@pulgasari/str';
+
 // :::::: INTERNAL HELPERS
 
 const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
+const typeOf     = (sth) => (typeName)  => typeof sth === typeName;
 
+const isArray    = Array.isArray;
+const isFn       = typeOf('function');
+const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
+const isRegExp   = instanceOf(RegExp);
 
+const P = (Target) => Target.prototype;
 
 
 
@@ -17,8 +29,6 @@ const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
 
 
 // :::::: HELPER FUNCTIONS
-
-const P = Name => Name.prototype;
 
 const immu = {};
 // remove -> toRemoved
@@ -50,35 +60,27 @@ function extendType (NewType, BaseType = RatType) {
   Object.setPrototypeOf(NewType, BaseType);
 }
 
+function initType (Target, baseType  = RatType) {
+  const NewType = isFn(Target) ? Target : { [Target]: function (...args) { baseType.call(this, ...args); } }[Target];
+  extendType(NewType, baseType);
+  return NewType;
+}
+
 function createType (NewType, BaseType = RatType) {}
 
 // :::::: RAT PROTOTYPES
 
-function List () {}
-extendType (List, RatType);
-
-function Point () { RatType.call(this); }
-extendType (Point, RatType);
-
-function Record () { RatType.call(this); }
-extendType (Record, RatType);
-
-function Tree () { RatType.call(this); }
-extendType (Tree, RatType);
-
-function Tuple () { RatType.call(this); }
-extendType (Tuple, RatType);
+initType ('List'   , RatType);
+initType ('Point'  , RatType);
+initType ('Record' , RatType);
+initType ('Tree'   , RatType);
+initType ('Tuple'  , RatType);
 
 // :::::: REACTIVE VARIANTS OF RAT PROTOTYPES
 
-function $List () { List.call(this); }
-extendType ($List, List);
-
-function $Point () { Point.call(this); }
-extendType ($Point, Point);
-
-function $Tree () { Tree.call(this); }
-extendType ($Tree, Tree);
+initType ('$List'  , List);
+initType ('$Point' , Point);
+initType ('$Tree'  , Tree);
 
 // define mutating methods list
 immu.attach (List   , ['merge', 'remove', 'removeByIndex', 'reverse', 'shift', 'slice', 'splice', 'shuffle', 'sort', 'unshift']);      
@@ -99,17 +101,7 @@ immu.attach (Tuple  , []);
 
 // @rat/datatypes
 
-// :::::: INTERNAL HELPERS
 
-const instanceOf = (sth) => (ClassName) => sth instanceof ClassName;
-const typeOf     = (sth) => (typeName)  => typeof sth === typeName;
-
-const isArray    = Array.isArray;
-const isFn       = typeOf('function');
-const isIterable = (sth) => typeof sth[Symbol.iterator] === 'function';
-const isRegExp   = instanceOf(RegExp);
-
-const P = (Target) => Target.prototype;
 
 // :::::: IMMUTABLE METHOD GENERATOR
 
