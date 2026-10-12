@@ -61,6 +61,17 @@ type.statics = function (TargetType, methods) {
   Object.defineProperties(TargetType, descriptors);
 };
 
+// explicitly delegate a list of method mappings to a named property on 'this'
+type.delegate = function (TargetType, targetKey, mapping) {
+  const proto = TargetType.prototype;
+
+  for (const [methodName, targetMethod] of Object.entries(mapping)) {
+    proto[methodName] = function (...args) {
+      return this[targetKey][targetMethod](...args);
+    };
+  }
+};
+
 // ::: immu
 
 const immu = {};
@@ -159,7 +170,10 @@ type.props (List, {
 });
 
 
+// ::::: USAGE
 
+type.delegate(List,    '_items', { has: 'includes', indexOf, pop, shift, find });
+type.delegate(MapType, '_store', { keys, values });
 
 
 
