@@ -25,10 +25,29 @@ const P = (Target) => Target.prototype;
 
 
 
-
-
+// ======================================
+// RAT DATA TYPES CONSTRUCTION APPROACH 1
+// ======================================
 
 // :::::: HELPER FUNCTIONS
+
+// ::: type
+
+function extendType (NewType, BaseType = RatType) {
+  NewType.prototype             = Object.create(BaseType.prototype);
+  NewType.prototype.constructor = NewType;
+  Object.setPrototypeOf(NewType, BaseType);
+}
+
+function initType (Target, baseType  = RatType) {
+  const NewType = isFn(Target) ? Target : { [Target]: function (...args) { baseType.call(this, ...args); } }[Target];
+  extendType(NewType, baseType);
+  return NewType;
+}
+
+function createType (NewType, BaseType = RatType) {}
+
+// ::: immu
 
 const immu = {};
 // remove -> toRemoved
@@ -53,20 +72,6 @@ immu.name = (key) => {
 
 function RatType () {}
 RatType.is = function (sth) { return sth instanceof this; };
-
-function extendType (NewType, BaseType = RatType) {
-  NewType.prototype             = Object.create(BaseType.prototype);
-  NewType.prototype.constructor = NewType;
-  Object.setPrototypeOf(NewType, BaseType);
-}
-
-function initType (Target, baseType  = RatType) {
-  const NewType = isFn(Target) ? Target : { [Target]: function (...args) { baseType.call(this, ...args); } }[Target];
-  extendType(NewType, baseType);
-  return NewType;
-}
-
-function createType (NewType, BaseType = RatType) {}
 
 // :::::: RAT PROTOTYPES
 
@@ -94,14 +99,9 @@ immu.attach (Tuple  , []);
 
 
 
-
-
-
-
-
-// @rat/datatypes
-
-
+// ======================================
+// RAT DATA TYPES CONSTRUCTION APPROACH 2
+// ======================================
 
 // :::::: IMMUTABLE METHOD GENERATOR
 
@@ -133,8 +133,7 @@ immu.name = (key) => {
 // :::::: RAT MOTHER PROTOTYPE
 
 function RatType() {}
-
-// Dynamic type check works for all extended types
+// dynamic type check works for all extended types
 RatType.is = function (sth) { return sth instanceof this; };
 
 // Wire prototype chain and static inheritance
