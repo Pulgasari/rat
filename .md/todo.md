@@ -15,6 +15,10 @@
 
 # syntax
 
+- [ ] `<p @if={$error}>{$error}</p>` das mag ich derart am element überhaupt nicht und durch die direktiven drumherum auch unnötig. können wir ausbauen.
+- [ ] ich hab in `ideas.md` und `decisions.md` bisschen was aufgeschrieben, entschieden, angemerkt. da gibts also zumindest bisschen was zum abarbeiten. guck ersma dort.
+- [ ] wenn `use`/`@` sitzt könnten wa direkt mal `@aufbau/patterns` und `@aufbau/filters` in demo-seite für diese syntax nutzen
+
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
 - [x] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
@@ -80,6 +84,7 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 ## sonstiges
 - [x] evtl. mal bzgl. gute/passende ideen oder inspiration schauen bei: haskell, php, svelte, jquery, latte, laravel, lit, rescript oder andere solide projekte
   - `ideas.md#2-inspiration`
+- [ ] selbe aufgabe again, aber schau diesmal bei 10 anderen sprachen. such selber aus. überrasch mich. ^^
 
 ---
 
