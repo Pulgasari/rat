@@ -39,6 +39,7 @@ const tag = mapper({
   'keyword.control.block'                : 'controlKeyword.special',
   'keyword.operator'                     : 'operator',
   'keyword.operator.pipe'                : 'operatorKeyword',
+  'keyword.operator.range'               : 'operatorKeyword',
   'keyword.other.directive'              : 'modifier',
   'punctuation'                          : 'punctuation',
   'punctuation.definition.tag'           : 'angleBracket',
@@ -51,6 +52,7 @@ const tag = mapper({
   'support.function'                     : 'variableName.standard',
   'support.type.property-name'           : 'propertyName',
   'variable.language'                    : 'self',
+  'variable.language.topic'              : 'self.special',
   'variable.other'                       : 'variableName',
   'variable.other.custom-property'       : 'propertyName.special',
   'variable.other.reactive'              : 'variableName.special',
@@ -67,11 +69,12 @@ function compile (pattern, scope) {
   };
 }
 
-// every state compiled once: { end, rules: [{ regex, tokens, groups, push }], scope }
+// every state compiled once: { end, eol, rules: [{ regex, tokens, groups, push }], scope }
 const machine = Object.fromEntries(Object.keys(states).map(name => {
   const state = states[name];
   return [name, {
     end   : state.end ? compile(state.end, state.endToken) : null,
+    eol   : !!state.eol,
     rules : flatten(name).map(rule => rule.match
       ? compile(rule.match, rule.token)
       : { ...compile(rule.begin, rule.token), push: rule.state }),
@@ -120,6 +123,9 @@ function parser (language) {
         stream.pos = end;
         return token;
       }
+
+      // a block head without { or : ends with its line
+      if (stream.sol()) while (state.stack.length > 1 && machine[state.stack[state.stack.length - 1]].eol) state.stack.pop();
 
       const current = machine[state.stack[state.stack.length - 1]];
 

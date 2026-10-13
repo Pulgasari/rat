@@ -1,68 +1,65 @@
-# rat :: konzept
+# rat :: concept
 
-stand: entwurf v0. alles hier ist vorschlag, nicht beschluss. entscheidungen, die
-schon im prototyp stecken, sind mit **(v0)** markiert, offene fragen stehen am ende
-jedes abschnitts.
+status: draft v0. everything here is a proposal, not a decision. what the prototype
+already does is marked **(v0)**. open questions live in [decisions.md](decisions.md),
+each section points to its entries.
 
-- [1. haltung](#1-haltung)
-- [2. die drei eingänge](#2-die-drei-eingänge)
-- [3. architektur](#3-architektur)
-- [4. reaktivität: `$` ist das signal](#4-reaktivität--ist-das-signal)
-- [5. types sind werte](#5-types-sind-werte)
+- [1. stance](#1-stance)
+- [2. three entrances](#2-three-entrances)
+- [3. architecture](#3-architecture)
+- [4. reactivity: `$` is the signal](#4-reactivity--is-the-signal)
+- [5. types are values](#5-types-are-values)
 - [6. app: commands, hotkeys, router](#6-app-commands-hotkeys-router)
-- [7. was aus dem bestand kommt](#7-was-aus-dem-bestand-kommt)
+- [7. what comes from existing work](#7-what-comes-from-existing-work)
 - [8. roadmap](#8-roadmap)
 
 ---
 
-## 1. haltung
+## 1. stance
 
-| prinzip | konsequenz |
+| principle | consequence |
 |---|---|
-| browser zuerst | compiler und runtime laufen nativ im browser, ohne build. ein build ist eine optimierung, keine voraussetzung |
-| build power trotzdem | derselbe compiler läuft als esbuild-/vite-/node-hook. im build darf er mehr: statische analyse, template-cloning, tree-shaking |
-| compiler statt runtime-magie | was zur compilezeit entschieden werden kann, wird dort entschieden. die runtime bleibt klein und dumm |
-| syntax ist produkt | die schreibweise ist kein nebeneffekt, sondern der kern. jede regel muss sich lesen lassen, ohne die doku zu kennen |
-| sichtbare semantik | keine versteckte reaktivität. was reaktiv ist, sieht man am namen (`$count`), nicht an der stelle, an der es deklariert wurde |
-| plattform statt abstraktion | native apis, wo sie reichen: `@scope` für css, custom elements, invoker commands, `adoptedStyleSheets` |
-| types ohne typescript | schemas sind laufzeitwerte. sie validieren, koerzieren, persistieren und sind vom compiler lesbar |
+| browser first | compiler and runtime run natively in the browser, no build. a build is an optimization, not a requirement |
+| build power anyway | the same compiler runs as esbuild / vite / node hook. in a build it may do more: static analysis, template cloning, tree shaking |
+| compiler over runtime magic | what can be decided at compile time is decided there. the runtime stays small and dumb |
+| syntax is the product | the notation is not a side effect but the core. every rule must read without knowing the docs |
+| visible semantics | no hidden reactivity. what is reactive shows in its name (`$count`), not only where it is declared |
+| platform over abstraction | native apis where they suffice: `@scope` for css, custom elements, invoker commands, `adoptedStyleSheets` |
+| types without typescript | schemas are runtime values. they validate, coerce, persist and can be read by the compiler |
 
-was ausdrücklich **nicht** das ziel ist: kompatibilität zu react/svelte-ökosystemen,
-ein vdom, jsx-1:1-parität, typescript-support als erste klasse.
+explicitly **not** the goal: compatibility with react / svelte ecosystems, a vdom,
+jsx parity, typescript as a first class citizen.
 
 ---
 
-## 2. die drei eingänge
+## 2. three entrances
 
-ein kern, drei schreibweisen. alle landen im selben ast und in derselben codegen.
+one core, three notations. all end up in the same ast and the same codegen.
 
-| eingang | datei | build nötig | was er kann |
+| entrance | file | build needed | what it does |
 |---|---|---|---|
-| vanilla | `.js` | nein | `html\`…\`` über htx zur laufzeit. die einstiegsdroge, nichts wird transformiert |
-| sugar | `.rat.js` | ja (oder browser-compile) | plain js plus sugar: `\|>`, implizites `const` in `for…of`, `$`-signale, `html\`…\`` mit `{…}`-holes wird compiliert **(v0)** |
-| component | `.rat` | ja (oder browser-compile) | markup first: `<script>`, `<script module>`, `<style>`, control flow im markup **(v0)** |
+| vanilla | `.js` | no | ``html`…` `` through htx at runtime. the gateway drug, nothing is transformed |
+| sugar | `.rat.js` | yes (or compile in the browser) | plain js plus sugar: `\|>`, `..`, implicit `const` in `for…of`, `$` signals. ``html`…` `` with `{…}` holes is compiled **(v0)** |
+| component | `.rat` | yes (or compile in the browser) | markup first: `<script>`, `<script module>`, `<style>`, control flow in the markup **(v0)** |
 
-der unterschied zu "einem framework mit einem compiler": `.js` bleibt ein vollwertiger
-weg. wer keinen compiler will, verliert die sugar, nicht das framework.
+the difference to "a framework with a compiler": `.js` stays a full way in. whoever does
+not want the compiler loses the sugar, not the framework.
 
-### offen
-- bekommt `.rat.js` einen eigenen namen für den tag (`rat\`…\``) oder bleibt es `html`?
-- soll vanilla-`html\`…\`` (laufzeit) dieselbe `{…}`-hole-syntax verstehen? technisch
-  möglich (string-parse zur laufzeit, gecacht wie htm), aber teurer.
+open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{…}` holes in vanilla.
 
 ---
 
-## 3. architektur
+## 3. architecture
 
 ```
            ┌──────────── @rat/compiler ───────────┐
 .rat —————►│ parse      markup → ast (+ scripts)     │
-.rat.js ——►│ script     |>, for…of, $-signale         |
-           │ analyze    reaktive namen, scopes        │
+.rat.js ——►│ script     |>, for…of, $ signals         |
+           │ analyze    reactive names, scopes        │
            │ generate   ast → js  (target: dom)      │──► es module
            │ style      <style> → @scope (native)    │
            └───────────────────────────────────┘
-                                                   │ importiert
+                                                   │ imports
                                                    ▼
                  ┌──────────── @rat/runtime ─────────────┐
                  │ signals    signal computed effect     │
@@ -84,42 +81,40 @@ weg. wer keinen compiler will, verliert die sugar, nicht das framework.
                  └───────────────────────────────────────┘
 ```
 
-### pakete
+### packages
 
-| paket | rolle | status |
+| package | role | status |
 |---|---|---|
-| `@rat/compiler` | `.rat` / `.rat.js` → es module. läuft in browser, node, deno, bun | v0, im repo |
-| `@rat/runtime` | signals + fine-grained dom. kein vdom, kein diff von bäumen | v0, im repo |
-| `@rat/core` | app-singleton, commands, hotkeys, router | skizze |
-| `@rat/types` | schemas + reaktive datentypen | skizze (readme) |
-| `@rat/vite`, `@rat/esbuild`, `@rat/node` | build-adapter, dünne hüllen um `compile()` | geplant |
-| `@rat/elements` | brücke zu `@aufbau/elements`, components als custom elements | geplant |
+| `@rat/compiler` | `.rat` / `.rat.js` → es module. runs in browser, node, deno, bun | v0 |
+| `@rat/runtime` | signals + fine-grained dom. no vdom, no tree diffing | v0 |
+| `@rat/syntax` | highlighting from one spec: hljs, monaco, codemirror/acode, zed, textmate | v0 |
+| `@rat/core` | app singleton, commands, hotkeys, router | sketch |
+| `@rat/types` | schemas + reactive data types | sketch (readme) |
+| `@rat/vite`, `@rat/esbuild`, `@rat/node` | build adapters, thin shells around `compile()` | planned |
+| `@rat/elements` | bridge to `@aufbau/elements`, components as custom elements | planned |
 
-### targets der codegen
+### codegen targets
 
-| target | ausgabe | wann |
+| target | output | when |
 |---|---|---|
-| `dom` | lesbare `$$.el(…)`-aufrufe, reaktive closures | **(v0)**, default, dev + playground |
-| `dom:clone` | statische teilbäume als `<template>` einmal geparst, dann `cloneNode` + gezieltes binden | build, performance |
-| `ssr` | string-ausgabe, hydration-marker | später |
-| `htx` | `html\`…\``-ausgabe für bestehende htx/preact-projekte (migration, zugriff) | evtl. |
+| `dom` | readable `$$.el(…)` calls, reactive closures | **(v0)**, default, dev + playground |
+| `dom:clone` | static subtrees parsed once as `<template>`, then `cloneNode` + targeted binding | build, performance |
+| `ssr` | string output, hydration markers | later |
+| `htx` | ``html`…` `` output for existing htx/preact projects (migration, zugriff) | maybe |
 
-### offen
-- `@rat/core` und `@rat/runtime` zusammenlegen? die runtime ist ohne app nutzbar,
-  das spricht für trennung.
-- eigener ast-typ für `.rat.js`-templates oder exakt derselbe wie `.rat`? (v0: derselbe)
+open: [d-18](decisions.md#d-18) core and runtime as one package.
 
 ---
 
-## 4. reaktivität: `$` ist das signal
+## 4. reactivity: `$` is the signal
 
-dein bestehendes muster (`$bool`, `$Bool`, "syntax from god") wird zur sprachregel:
+the existing pattern (`$bool`, `$Bool`, "syntax from god") becomes a language rule:
 
 ```html
 <script>
   let   $count  = 0;            // signal
-  const $double = $count * 2;   // computed (abgeleitet)
-  const step    = 1;            // ganz normales js
+  const $double = $count * 2;   // computed (derived)
+  const step    = 1;            // plain js
 
   function inc () { $count += step; }
 </script>
@@ -127,41 +122,36 @@ dein bestehendes muster (`$bool`, `$Bool`, "syntax from god") wird zur sprachreg
 <button onclick={inc}>{$count} × 2 = {$double}</button>
 ```
 
-| geschrieben | compiliert zu |
+| written | compiled to |
 |---|---|
 | `let $x = v` | `let $x = $$.signal(v)` |
 | `const $x = expr` | `const $x = $$.computed(() => expr)` |
-| `$x` lesen | `$x.value` |
-| `$x = v`, `$x++`, `$x += v` | `$x.value = v` usw. |
-| `{expr}` im markup | `() => expr`, die runtime bindet fein-granular |
-| `bind:value={$x}` | das signal selbst, nicht sein wert |
+| reading `$x` | `$x.value` |
+| `$x = v`, `$x++`, `$x += v` | `$x.value = v` etc. |
+| `{expr}` in markup | `() => expr`, the runtime binds fine-grained |
+| `bind:value={$x}` | the signal itself, not its value |
 
-**warum `$` und nicht svelte-`let`:** reaktivität ist an jeder lese- und schreibstelle
-sichtbar, nicht nur an der deklaration. man liest eine zeile und weiß, ob sie ein
-update auslöst. und es ist dieselbe konvention wie in `@aufbau/signals`.
+**why `$` and not svelte's `let`:** reactivity is visible at every read and write, not
+only at the declaration. one line tells whether it triggers an update. and it is the
+same convention as in `@aufbau/signals`.
 
-**regeln (v0):**
-- nur deklarierte `$`-namen werden umgeschrieben. ein importiertes `$bool` oder jquery-`$`
-  bleibt unangetastet.
-- `$`-signale im `<script module>` sind modulweit geteilt, also ein store für alle
-  instanzen, ohne store-api.
-- mutation in place (`$todos.push(x)`) benachrichtigt nicht. v0: neu zuweisen
-  (`$todos = [...$todos, x]`). später: reaktive typen aus `@rat/types` (`$List`).
+**rules (v0):**
+- only declared `$` names are rewritten. an imported `$bool` or jquery's `$` stays as is.
+- `$` signals in `<script module>` are shared module wide: a store for every instance,
+  without a store api.
+- mutation in place (`$todos.push(x)`) does not notify. v0: reassign
+  (`$todos = [...$todos, x]`). later: reactive types from `@rat/types` (`$List`).
 
-### offen
-- shadowing: ein parameter `$x` in einer inneren funktion wird v0 trotzdem umgeschrieben.
-  der compiler braucht eine scope-analyse (geplant in `analyze`).
-- props: v0 ist `props` ein objekt mit gettern (reaktiv beim lesen von `props.x`).
-  destructuring (`const { x } = props`) liest einmalig. alternative: `$`-destructuring
-  (`let { $title } = props` → reaktiv), oder ein `@props`-block.
-- index in `@for`: v0 ein einfacher wert, nach umsortierung veraltet. als signal?
+open: [d-13](decisions.md#d-13) props, [d-15](decisions.md#d-15) `@for` index,
+[d-23](decisions.md#d-23) mutation. shadowing (a parameter `$x` in an inner function is
+still rewritten in v0) needs scope analysis in the compiler, no decision needed.
 
 ---
 
-## 5. types sind werte
+## 5. types are values
 
-kein typescript. stattdessen schemas, die zur laufzeit existieren, und die der
-compiler lesen kann, wenn sie statisch sind.
+no typescript. schemas instead, which exist at runtime and which the compiler can read
+when they are static.
 
 ```js
 import { Bool, Enum, List, Num, Record, Str } from '@rat/types';
@@ -179,46 +169,42 @@ export const Settings = Record({
 });
 ```
 
-was ein schema können soll:
+what a schema should do:
 
-| fähigkeit | zweck |
+| ability | purpose |
 |---|---|
-| `validate` / `coerce` | eingaben, storage, netzwerk |
-| `default` | initialwerte, reset |
-| `reactive()` | macht aus dem schema einen reaktiven typ (`$Record`, `$List` …) mit passenden verben (`toggle`, `cycle`, `push`) |
-| `persist` | über `@bunker` |
-| `describe` | introspektion: formulare, devtools, `@aufbau/gui`-controls generieren |
-| statisch lesbar | compiler kennt die form: autocompletion, warnungen, gezielte updates |
+| `validate` / `coerce` | input, storage, network |
+| `default` | initial values, reset |
+| `reactive()` | turns the schema into a reactive type (`$Record`, `$List` …) with fitting verbs (`toggle`, `cycle`, `push`) |
+| `persist` | through `@bunker` |
+| `describe` | introspection: generate forms, devtools, `@aufbau/gui` controls |
+| statically readable | the compiler knows the shape: completion, warnings, targeted updates |
 
-idee für die notation im `.rat`-script, noch nicht entschieden:
+notation in a `.rat` script: [d-14](decisions.md#d-14).
 
 ```js
-let $view = Enum('grid', 'list');          // a) schema als initialwert, wert = default
-let $view : Enum('grid', 'list') = 'grid'; // b) annotation, compiler entfernt sie
+let $view = Enum('grid', 'list');          // a) schema as initial value, value = default
+let $view : Enum('grid', 'list') = 'grid'; // b) annotation, removed by the compiler
 ```
 
-(a) ist plain js und braucht keinen compiler. (b) liest sich besser, ist aber
-neue syntax. tendenz: (a) zuerst.
-
-### offen
-- verhältnis zu `@aufbau/store` (typisierter multi-key-store) und `@aufbau/signals`
-  (typisierte signale): `@rat/types` als vereinheitlichung beider?
-- datenfluss über grenzen (worker, server, storage): schema als vertrag, der überall
-  identisch geprüft wird.
+further open points (no decision yet, need more design first):
+- relation to `@aufbau/store` (typed multi-key store) and `@aufbau/signals` (typed
+  signals): `@rat/types` as the unification of both?
+- data flow across boundaries (worker, server, storage): the schema as a contract that is
+  checked the same way everywhere.
 
 ---
 
 ## 6. app: commands, hotkeys, router
 
-aus dem readme übernommen, der compiler und die runtime haben die einstiegspunkte
-schon:
+taken from the readme, compiler and runtime already have the entry points:
 
-- ein **string** als event-handler ist ein command: `<button onclick='toggleSidebar'>`
-  löst `rat:command` mit `{ name, event }` aus (bubbling). **(v0)**
-- `@rat/core` hört am app-root darauf und führt aus dem registry aus.
-- hotkeys referenzieren commands: `app.hotkeys.set('ctrl+b', 'toggleSidebar')`.
-- natives `command`/`commandfor` (invoker commands api) wird ebenfalls gehört, `--toggle-sidebar`
-  ↔ `toggleSidebar`.
+- a **string** as event handler is a command: `<button onclick='toggleSidebar'>` fires
+  `rat:command` with `{ name, event }` (bubbling). **(v0)**
+- `@rat/core` listens for it at the app root and runs it from the registry.
+- hotkeys reference commands: `app.hotkeys.set('ctrl+b', 'toggleSidebar')`.
+- native `command` / `commandfor` (invoker commands api) is heard as well,
+  `--toggle-sidebar` ↔ `toggleSidebar`.
 
 ```js
 import { createApp } from '@rat/core';
@@ -229,35 +215,35 @@ app.commands.set('toggleSidebar', () => $sidebar = !$sidebar);
 app.hotkeys.set('ctrl+b', 'toggleSidebar');
 ```
 
-### offen
-- commands mit argumenten im markup: `onclick='open:settings'` oder `onclick={['open', 'settings']}`?
-- router: datei-basiert (`views/*.rat`) im build, registry im browser?
+open: [d-16](decisions.md#d-16) commands with arguments, [d-17](decisions.md#d-17) router.
 
 ---
 
-## 7. was aus dem bestand kommt
+## 7. what comes from existing work
 
-| quelle | übernahme |
+| source | taken over |
 |---|---|
-| htx | tag-selektoren (`<div#id.a.b>`), prop-gruppen (`a\|b=`), `class:`-props, merge statt overwrite **(v0, im compiler)**. positional values und `$`-shorthand-tags folgen |
-| htx compiler | blockaufteilung (`<script module>`, `<script>`, `<style>`), import-lifting, fehlermeldungen mit zeile/spalte **(v0)** |
-| latte | `n:`-attribute → `@if`/`@for` als attribut, `{foreach}…{else}` → `@for … @else` **(v0)** |
-| svelte | single-file component, compiler statt vdom |
-| preact/signals | fein-granulare reaktivität, `.value`-modell (vom compiler versteckt) |
-| php | pragmatismus, markup und logik dürfen nebeneinander stehen |
-| `@aufbau/elements` | ui-bausteine, `<write-code>` im playground |
-| `@aufbau/store`, `@aufbau/signals` | grundlage für `@rat/types` |
-| `@domina` | dom-helfer für runtime und core, wo sinnvoll |
-| `@bunker` | persistenz für typen und app-state |
+| htx | tag selectors (`<div#id.a.b>`), prop groups (`a\|b=`), `class:` props, merge instead of overwrite **(v0, in the compiler)**. positional values and shorthand tags follow |
+| htx compiler | block split (`<script module>`, `<script>`, `<style>`), import lifting, errors with line/column **(v0)** |
+| latte | `n:` attributes → `@if`/`@for` as attributes, `{foreach}…{else}` → `@for … @else` **(v0)** |
+| svelte | single file component, compiler instead of vdom |
+| preact/signals | fine-grained reactivity, the `.value` model (hidden by the compiler) |
+| php | pragmatism, markup and logic may stand side by side |
+| `@aufbau/elements` | ui building blocks, `<write-code>` in the playground |
+| `@aufbau/store`, `@aufbau/signals` | basis for `@rat/types` |
+| `@domina` | dom helpers for runtime and core, where sensible |
+| `@bunker` | persistence for types and app state |
+
+more inspiration, sorted by what rat could take: [ideas.md](ideas.md#2-inspiration).
 
 ---
 
 ## 8. roadmap
 
-1. **v0 (jetzt):** compiler (`dom`-target), runtime, playground in `demos/`.
-2. scope-analyse im compiler (shadowing, unbekannte `$`-namen warnen), source maps.
-3. `@rat/core` gegen die runtime: commands, hotkeys, router.
-4. `@rat/types` v1: schemas + reaktive varianten, anbindung an `$`-deklarationen.
-5. build-adapter (vite, esbuild, node-hook), `dom:clone`-target.
-6. ~~editor-support: syntax-highlighting für `.rat`~~ → `@rat/syntax` (eine spec, ableitungen für hljs, monaco, codemirror/acode, zed, textmate).
-7. erste echte app (kandidat: ein kleines zugriff-tool) komplett in rat.
+1. ~~v0: compiler (`dom` target), runtime, playground in `demos/`~~
+2. ~~editor support~~ → `@rat/syntax` (one spec, derived for hljs, monaco, codemirror/acode, zed, textmate)
+3. scope analysis in the compiler (shadowing, warn on unknown `$` names), source maps.
+4. `@rat/core` on top of the runtime: commands, hotkeys, router.
+5. `@rat/types` v1: schemas + reactive variants, wired to `$` declarations.
+6. build adapters (vite, esbuild, node hook), `dom:clone` target.
+7. a first real app (candidate: a small zugriff tool) entirely in rat.

@@ -41,6 +41,7 @@ const token = mapper({
   'keyword.control.block'                : 'keyword.block',
   'keyword.operator'                     : 'delimiter.operator',
   'keyword.operator.pipe'                : 'keyword.pipe',
+  'keyword.operator.range'               : 'keyword.range',
   'keyword.other.directive'              : 'keyword.directive',
   'meta'                                 : '',
   'punctuation'                          : 'delimiter',
@@ -51,6 +52,7 @@ const token = mapper({
   'support.function'                     : 'predefined',
   'support.type.property-name'           : 'attribute.name.css',
   'variable.language'                    : 'variable.predefined',
+  'variable.language.topic'              : 'variable.predefined.topic',
   'variable.other'                       : 'identifier',
   'variable.other.custom-property'       : 'variable',
   'variable.other.reactive'              : 'variable.reactive',
@@ -81,6 +83,8 @@ function monarch (language) {
       continue;
     }
 
+    // monarch never runs a rule at the end of a line, so an eol state ends at the start of the next one
+    if (state.eol) rules.push([/^/, { next: '@pop', token: '' }]);
     if (state.end) rules.push([regex(state.end), action(state.end, state.endToken, { next: '@pop' })]);
 
     for (const rule of flatten(stateName)) {

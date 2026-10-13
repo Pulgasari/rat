@@ -8,7 +8,8 @@
 ---
 
 # repo
-- [ ] md-files (ausser `todo.md`) sollten englisch sein (alles möglichst lowercase außer bei hervorhebungen, eigennamen usw.)
+- [x] md-files (ausser `todo.md`) sollten englisch sein (alles möglichst lowercase außer bei hervorhebungen, eigennamen usw.)
+  - neu: `ideas.md` (pipe-familie, inspiration, style-sprachen), `decisions.md` (deine entscheidungen zum ankreuzen)
 
 ---
 
@@ -16,8 +17,10 @@
 
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
-- [ ] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
-- [ ] syntax 3: alternative, falls sich oneliner mal anbiedet. (unklar: doppelpunkt wirklich nötig? brauchts endmarker? mehrere direkten in one line?)
+- [x] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
+  - compiler + highlighting, beispiel: `demos/examples/blocks.rat`. tabs/spaces: `decisions.md` d-04
+- [x] syntax 3: alternative, falls sich oneliner mal anbiedet. (unklar: doppelpunkt wirklich nötig? brauchts endmarker? mehrere direkten in one line?)
+  - gebaut mit doppelpunkt, ende = zeilenende oder `@else`, mehrere direktiven erlaubt. die drei fragen: `decisions.md` d-01 bis d-03
 
 ```html
 <!-- syntax 1 -->
@@ -46,13 +49,15 @@
 </ul>
 ```
 
-- [ ] range literals `1..10` `a..d` (evtl. auch im js falls es sich bewährt?)
+- [x] range literals `1..10` `a..d` (evtl. auch im js falls es sich bewährt?)
+  - `1..10`, `5..1`, `'a'..'d'`, `0..$count`, überall wo script-sugar gilt. offen: exklusiv, schritte, nackte buchstaben (`decisions.md` d-05 bis d-07)
 
 ## htx
 * [ ] shorthand-syntax `<$xyz>` mit `$` sollte evtl. neu konzipiert bzw. ersetzt werden
 * [ ] (?) `cmd='name'` -> `command='--name'`
 * [ ] (?) `cmd:#sidebar` -> `command='--name' commandfor='#sidebar'`
-- [ ] prüfen: ist der pipe-operator korrekt implementiert?
+- [x] prüfen: ist der pipe-operator korrekt implementiert?
+  - war er nicht: `x |> f(a)` hat `x` als erstes argument eingesetzt. jetzt: implizit (`|> fn`), explizit mit `#` (mehrfach erlaubt, wert wird einmal gebunden), `|> eene()` ist ein fehler mit hinweis
 
 ```javascript
 // implicit
@@ -65,13 +70,16 @@ let bla = 'Some Example' |> doThis(#) |> doThat(33, #) |> doMore({ a: #, b: null
 let bla = 'Some Example' |> eene() |> meene() |> muh();
 ```
 
-- [ ] überlegung und ggf. konzept für weitere pipe-operators (reduce `|*`, pluck `|.`, filter `|?` + `|!`, find `|1` map `|`). überhaupt sinnvoll?
+- [x] überlegung und ggf. konzept für weitere pipe-operators (reduce `|*`, pluck `|.`, filter `|?` + `|!`, find `|1` map `|`). überhaupt sinnvoll?
+  - `ideas.md#1-a-pipe-family`: `|!`, `|1`, `|` und einige andere sind schon gültiges js (`a | !b`). entscheidung: `decisions.md` d-10
 
 ## `.rat` files
-- [ ] prüfen inwiefern `<style type='scss'>...</style>` (umd andere mäglich wäre ohne viel tamtam
+- [x] prüfen inwiefern `<style type='scss'>...</style>` (umd andere mäglich wäre ohne viel tamtam
+  - gebaut als hook: `compile(source, { styles: { scss } })`, `lang=` oder `type=`. einordnung: `ideas.md#3-style-languages`, entscheidung: `decisions.md` d-20
 
 ## sonstiges
-- [ ] evtl. mal bzgl. gute/passende ideen oder inspiration schauen bei: haskell, php, svelte, jquery, latte, laravel, lit, rescript oder andere solide projekte
+- [x] evtl. mal bzgl. gute/passende ideen oder inspiration schauen bei: haskell, php, svelte, jquery, latte, laravel, lit, rescript oder andere solide projekte
+  - `ideas.md#2-inspiration`
 
 ---
 

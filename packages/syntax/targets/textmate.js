@@ -29,7 +29,7 @@ function pattern (rule) {
   const out   = {
     begin         : source(rule.begin),
     beginCaptures : captures(rule.begin, rule.token),
-    end           : source(state.end),
+    end           : state.eol ? `(?:${source(state.end)})|$` : source(state.end),
     endCaptures   : captures(state.end, state.endToken),
     patterns      : [{ include: state.embed ? `source.${state.embed}` : `#${rule.state}` }],
   };

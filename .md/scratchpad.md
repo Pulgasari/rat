@@ -2,56 +2,56 @@
 
 # features
 
-- funktioniert direkt im browser
-- funktioniert mit node, deno, bun,vite usw.
-- funktioniert in js-files (`.js` + `.rat.js`)
-- funktioniert in eigene file-ext (`.rat`) ( (inkl. erweiterter syntax)
+- works directly in the browser
+- works with node, deno, bun, vite etc.
+- works in js files (`.js` + `.rat.js`)
+- works in its own file extension (`.rat`), incl. extended syntax
 
 ## components
 - reusable components
-- mit auto-import
+- with auto-import
 
 ## app
 - app singleton
-- mit commands/actions registry
-- mit hotkeys registry
+- with a commands/actions registry
+- with a hotkeys registry
 - router
 
 ## `@rat/types` :: data types and flow
-- eigene data-types
-- + reaktive varianten
-- signals (bzw. signals-like?)
+- own data types
+- + reactive variants
+- signals (or signals-like?)
 
 ## use
 
-dieses zeug wird direkt genutzt bzw. teilweise nur als grundlage/orientierung?
+this stuff is used directly, or partly only as a basis/orientation?
 
 ```md
-# ist tendenziell solide
-# kann safe stellenweise verbessert werden
-# oder überhaupt im zuge der arbeit am fw erweitert
+# tends to be solid
+# can safely be improved in places
+# or extended while working on the framework
 @aufbau/elements
 @aufbau/filters
 @aufbau/gestures
 @bunker
 @domina/prototype
 
-# braucht RAT auch nicht selbst erfinden,
-# aber bedarf sicherlich noch überarbetung
+# RAT does not need to reinvent this,
+# but it surely needs rework
 @aufbau/gui
 @aufbau/hotkeys
 @aufbau/import
 @aufbau/patterns
 @aufbau/webfonts
 
-## nur grundlage/orientierung ?
+## only basis/orientation ?
 @aufbau/bundler (?)
-@aufbau/commands (gibts noch nich, aber iwo geistert ne skizze rum)
+@aufbau/commands (does not exist yet, but a sketch floats around somewhere)
 @aufbau/signals
 @htx/htx
 @htx/js
 
-## anfangs evtl. (bis man eigene renderlogikhat?)
+## maybe at first (until there is an own render logic?)
 preact
 ```
 
@@ -71,9 +71,9 @@ app.router
 
 # commands
 
-die `commands` dienen als eingebauter mechanismus um aktionen innerhalb der app dx-freundlich zu steuern.
+`commands` are a built-in mechanism to control actions within the app in a dx-friendly way.
 
-jedes registrierte command kann überall dort wo für gewöhnlich event-handler-funktionen angegeben werden als einfacher string referenziert werden.
+every registered command can be referenced as a plain string wherever event handler functions usually go.
 
 ```js
 element.on('click', 'toggleSidebar');
@@ -86,7 +86,7 @@ element.on('click', 'toggleSidebar');
 # syntax
 
 ## vanilla
-- basiert auf (bzw. ist anfangs quasi) [htx](https://github.com/pulgasari/htx)
+- based on (or at first basically is) [htx](https://github.com/pulgasari/htx)
 
 ```js
 const CommandsListItem = cmd => html`
@@ -109,9 +109,9 @@ export const default = () => app.commands ? CommandsList : Empty;
 ```
 
 ## extended
-- `.rat` und `.rat.js` files
-- man kann `{...}` statt `${...}` schreiben
-- js-sugar wie pipe-operator funktioniert überall
+- `.rat` and `.rat.js` files
+- `{...}` can be written instead of `${...}`
+- js sugar like the pipe operator works everywhere
 
 ```html
 <script></script>

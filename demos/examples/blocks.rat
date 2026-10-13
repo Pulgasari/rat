@@ -1,0 +1,50 @@
+<script>
+  let $count = 3;
+
+  const words = ['ratte', 'maus', 'hamster'];
+  const shout = text => text.toUpperCase() + '!';
+</script>
+
+<section.blocks>
+  <h3>syntax 1: braces</h3>
+  <ul>
+    @for (n of 1..$count) {
+      <li>{n}</li>
+    } @else {
+      <li>leer</li>
+    }
+  </ul>
+
+  <h3>syntax 2: indentation</h3>
+  <ul>
+    @for (word, index of words)
+      <li>{index + 1}: {word |> shout}</li>
+    @else
+      <li>leer</li>
+  </ul>
+
+  <h3>syntax 3: one line</h3>
+  <p>
+    @if ($count > 3): <b>viele</b> @else: <i>wenige</i>
+  </p>
+
+  <h3>switch, indented</h3>
+  @switch ($count % 3)
+    @case 0
+      <p>durch drei teilbar</p>
+    @case 1: <p>rest eins</p>
+    @default
+      <p>rest zwei</p>
+
+  <h3>ranges + pipe placeholder</h3>
+  <p>{'a'..'e' |> #.join(' · ')}</p>
+  <p>{1..$count |> #.reduce((a, b) => a + b, 0) |> `summe: ${#}`}</p>
+
+  <button onclick={() => $count++}>+1</button>
+  <button onclick={() => $count--} disabled={$count <= 0}>-1</button>
+</section.blocks>
+
+<style>
+  .blocks { display: grid; gap: .5rem; }
+  h3      { font-size: .8rem; margin: .75rem 0 0; opacity: .6; text-transform: uppercase; }
+</style>

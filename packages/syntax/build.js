@@ -144,7 +144,7 @@ async function checkRegexTargets (examples) {
       const stream = parser(language);
       const state  = stream.startState();
       for (const line of code.split('\n')) {
-        const cursor = { pos: 0, string: line, next () { return this.string[this.pos++]; } };
+        const cursor = { pos: 0, string: line, next () { return this.string[this.pos++]; }, sol () { return this.pos === 0; } };
         let guard = line.length + 1;
         while (cursor.pos < line.length) {
           const before = cursor.pos;

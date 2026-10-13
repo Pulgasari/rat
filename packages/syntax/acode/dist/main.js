@@ -82,8 +82,8 @@
       { match: "&(?:[a-zA-Z]+|#\\d+|#x[\\da-fA-F]+);", token: "constant.character.entity" }
     ] },
     markupComment: { end: "-->", endToken: "comment.block", scope: "comment.block", rules: [] },
-    // @if (…) {   @for (…) {   @case 'x' {   @else {   the { opens the markup body
-    blockHead: { end: "\\{", endToken: "keyword.control.block", rules: [
+    // @if (…) {   @if (…):   @if (…)⏎   the head ends where the body starts: {, : or the line end
+    blockHead: { end: "\\{|:", endToken: "keyword.control.block", eol: true, rules: [
       { begin: "\\(", token: "punctuation.section.parens", state: "parens" },
       { include: "atoms" }
     ] },
@@ -139,6 +139,8 @@
       { match: `${IDENT}(?=\\s*\\()`, token: "entity.name.function" },
       { match: IDENT, token: "variable.other" },
       { match: escape(pipe), token: "keyword.operator.pipe" },
+      { match: "(?<!\\.)\\.\\.(?!\\.)", token: "keyword.operator.range" },
+      { match: "#(?![\\w$])", token: "variable.language.topic" },
       { match: either(operators), token: "keyword.operator" },
       { match: "[;,.\\[\\]]", token: "punctuation" }
     ] },
@@ -221,6 +223,7 @@
     "keyword.control.block": "controlKeyword.special",
     "keyword.operator": "operator",
     "keyword.operator.pipe": "operatorKeyword",
+    "keyword.operator.range": "operatorKeyword",
     "keyword.other.directive": "modifier",
     "punctuation": "punctuation",
     "punctuation.definition.tag": "angleBracket",
@@ -233,6 +236,7 @@
     "support.function": "variableName.standard",
     "support.type.property-name": "propertyName",
     "variable.language": "self",
+    "variable.language.topic": "self.special",
     "variable.other": "variableName",
     "variable.other.custom-property": "propertyName.special",
     "variable.other.reactive": "variableName.special"
@@ -249,6 +253,7 @@
     const state = states[name];
     return [name, {
       end: state.end ? compile(state.end, state.endToken) : null,
+      eol: !!state.eol,
       rules: flatten(name).map((rule) => rule.match ? compile(rule.match, rule.token) : { ...compile(rule.begin, rule.token), push: rule.state }),
       scope: tag(state.scope)
     }];
@@ -282,6 +287,7 @@
           stream.pos = end;
           return token;
         }
+        if (stream.sol()) while (state.stack.length > 1 && machine[state.stack[state.stack.length - 1]].eol) state.stack.pop();
         const current = machine[state.stack[state.stack.length - 1]];
         const ending = attempt(stream, current.end);
         if (ending) {

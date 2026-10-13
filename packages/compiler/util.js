@@ -37,6 +37,10 @@ function tokens (code, offset = 0) {
   return out;
 }
 
+// a lone # (the pipe placeholder) is no js token. scanning only needs the shape of the
+// code, so it becomes a name of the same length and every position stays true
+const scannable = code => code.replace(/#(?![\w$\\])/g, '_');
+
 const OPEN  = new Set([tt.braceL, tt.bracketL, tt.parenL, tt.dollarBraceL]);
 const CLOSE = new Set([tt.braceR, tt.bracketR, tt.parenR]);
 
@@ -45,7 +49,7 @@ const CLOSE = new Set([tt.braceR, tt.bracketR, tt.parenR]);
 function scanClose (source, start, close = tt.braceR) {
   let depth = 0;
   try {
-    for (const token of tokenizer(source.slice(start), ACORN)) {
+    for (const token of tokenizer(scannable(source.slice(start)), ACORN)) {
       if (OPEN.has(token.type)) depth++;
       else if (CLOSE.has(token.type)) {
         if (depth === 0) {
@@ -65,7 +69,7 @@ function scanClose (source, start, close = tt.braceR) {
 function scanUntil (source, start, type) {
   let depth = 0;
   try {
-    for (const token of tokenizer(source.slice(start), ACORN)) {
+    for (const token of tokenizer(scannable(source.slice(start)), ACORN)) {
       if (depth === 0 && token.type === type) return { index: start + token.start };
       if (OPEN.has(token.type)) depth++;
       else if (CLOSE.has(token.type)) depth--;
@@ -75,6 +79,25 @@ function scanUntil (source, start, type) {
     return { error: reason(error), index: start + (error.pos ?? 0) };
   }
   return { error: 'unexpected end of input', index: source.length };
+}
+
+// the end of a @case value: a { or : on the top level, or the end of its line
+function scanCase (source, start) {
+  let depth = 0;
+  let last  = start;
+  try {
+    for (const token of tokenizer(scannable(source.slice(start)), ACORN)) {
+      const at = start + token.start;
+      if (depth === 0 && source.slice(last, at).includes('\n')) return { index: last };
+      if (depth === 0 && (token.type === tt.braceL || token.type === tt.colon)) return { index: at };
+      if (OPEN.has(token.type)) depth++;
+      else if (CLOSE.has(token.type)) depth--;
+      last = start + token.end;
+    }
+  } catch (error) {
+    return { error: reason(error), index: start + (error.pos ?? 0) };
+  }
+  return { index: source.length };
 }
 
 // ::: edits
@@ -104,4 +127,4 @@ function nameOf (filename) {
   return IDENTIFIER.test(name) ? name : 'Component';
 }
 
-export { ACORN, CompileError, IDENTIFIER, applyEdits, key, nameOf, reason, scanClose, scanUntil, tokens, tt };
+export { ACORN, CompileError, IDENTIFIER, applyEdits, key, nameOf, reason, scanCase, scanClose, scanUntil, tokens, tt };

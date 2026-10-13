@@ -34,6 +34,7 @@ const scope = mapper({
   'keyword.control.block'                : 'keyword.block',
   'keyword.operator'                     : 'operator',
   'keyword.operator.pipe'                : 'operator.pipe',
+  'keyword.operator.range'               : 'operator.range',
   'keyword.other.directive'              : 'keyword.directive',
   'meta.embedded.expression'             : 'subst',
   'meta.template.expression'             : 'subst',
@@ -44,6 +45,7 @@ const scope = mapper({
   'support.function'                     : 'built_in',
   'support.type.property-name'           : 'attribute',
   'variable.language'                    : 'variable.language',
+  'variable.language.topic'              : 'variable.language.topic',
   'variable.other.custom-property'       : 'variable',
   'variable.other.reactive'              : 'variable.reactive',
 });
@@ -76,14 +78,16 @@ function definition (hljs, language) {
   // end priority, the way every other engine treats it
   const enders = new Map;
 
-  function enderOf (stateName) {
+  // eol states (a block head without { or :) also end at the line break
+  function endersOf (stateName) {
     if (enders.has(stateName)) return enders.get(stateName);
     const state = states[stateName];
     const ender = { begin: regex(state.end), endsParent: true, relevance: 0 };
     const name  = scopes(state.end, state.endToken);
     if (name) ender.beginScope = name;
-    enders.set(stateName, ender);
-    return ender;
+    const list = state.eol ? [ender, { begin: /\n/, endsParent: true, relevance: 0 }] : [ender];
+    enders.set(stateName, list);
+    return list;
   }
 
   function modeOf (rule) {
@@ -108,7 +112,7 @@ function definition (hljs, language) {
     if (state.scope && scope(state.scope)) mode.scope = scope(state.scope);
 
     if (state.embed && hljs.getLanguage(state.embed)) mode.subLanguage = state.embed;
-    else mode.contains = [enderOf(rule.state), ...containsOf(rule.state)];
+    else mode.contains = [...endersOf(rule.state), ...containsOf(rule.state)];
 
     return mode;
   }

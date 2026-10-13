@@ -24,11 +24,12 @@ becomes
   }
 */
 
-import { generate }                       from './generate.js';
-import { parse }                          from './parse.js';
-import { forOf, pipes, sugar, transformExpression, transformScript, walk } from './script.js';
-import { hash, scopeStyle }               from './style.js';
-import { CompileError, nameOf }           from './util.js';
+import { generate }             from './generate.js';
+import { parse }                from './parse.js';
+import { hash, scopeStyle }     from './style.js';
+import { CompileError, nameOf } from './util.js';
+
+import { forOf, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
 
 const RUNTIME = '$$';
 
@@ -37,14 +38,33 @@ const trimBlock = code => code.replace(/^\s*\n/, '').trimEnd();
 
 // ::: .rat
 
-function compileComponent (source, { filename = 'component.rat', runtime = '@rat/runtime' } = {}) {
+// <style lang="scss"> / type="text/scss" -> 'scss'. no attribute is css
+const langOf = attributes => /\b(?:lang|type)\s*=\s*["']?(?:text\/)?([\w-]+)/.exec(attributes)?.[1] ?? 'css';
+
+/*
+a <style> in another language goes through options.styles[lang], a function
+(code, { filename }) => css. synchronous on purpose: compile() stays sync, so
+the preprocessor is loaded before (await import('sass') once, then pass
+sass.compileString(code).css along).
+*/
+function stylesOf (ast, { filename, source, styles = {} }) {
+  return ast.styles.map(block => {
+    const lang = langOf(block.attributes ?? '');
+    if (lang === 'css') return block.code;
+    const preprocess = styles[lang];
+    if (!preprocess) throw new CompileError(`no preprocessor for <style lang="${lang}">, pass compile(source, { styles: { ${lang}: code => css } })`, { filename, index: block.start, source });
+    return String(preprocess(block.code, { filename }));
+  }).filter(css => css.trim()).join('\n\n');
+}
+
+function compileComponent (source, { filename = 'component.rat', runtime = '@rat/runtime', styles } = {}) {
   const ast   = parse(source, { filename });
   const names = new Set;
 
   const modules  = ast.scripts.module.map(block => transformScript(block.code, { filename, names, offset: block.start, runtime: RUNTIME, source }).code);
   const instance = ast.scripts.instance.map(block => transformScript(block.code, { filename, lift: true, names, offset: block.start, runtime: RUNTIME, source }));
 
-  const css   = ast.styles.map(block => block.code.trim()).filter(Boolean).join('\n\n');
+  const css   = stylesOf(ast, { filename, source, styles });
   const scope = css ? hash(`${filename}\n${css}`) : null;
   const view  = generate(ast, { filename, names, runtime: RUNTIME, scope, source });
 
@@ -103,5 +123,5 @@ function compile (source, options = {}) {
   return mode === 'module' ? compileModule(source, options) : compileComponent(source, options);
 }
 
-export { CompileError, compile, compileComponent, compileModule, forOf, parse, pipes, sugar, transformExpression, transformScript };
+export { CompileError, compile, compileComponent, compileModule, forOf, parse, pipes, ranges, sugar, topics, transformExpression, transformScript };
 export default compile;
