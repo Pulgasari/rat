@@ -55,13 +55,13 @@ weg. wer keinen compiler will, verliert die sugar, nicht das framework.
 ## 3. architektur
 
 ```
-                 ┌──────────── @rat/compiler ────────────┐
- .rat ──────────►│ parse      markup → ast (+ scripts)   │
- .rat.js ───────►│ script     |>, for…of, $-signale      │
-                 │ analyze    reaktive namen, scopes     │
-                 │ generate   ast → js  (target: dom)    │──► es module
-                 │ style      <style> → @scope (native)  │
-                 └───────────────────────────────────────┘
+           ┌──────────── @rat/compiler ───────────┐
+.rat —————►│ parse      markup → ast (+ scripts)     │
+.rat.js ——►│ script     |>, for…of, $-signale         |
+           │ analyze    reaktive namen, scopes        │
+           │ generate   ast → js  (target: dom)      │──► es module
+           │ style      <style> → @scope (native)    │
+           └───────────────────────────────────┘
                                                    │ importiert
                                                    ▼
                  ┌──────────── @rat/runtime ─────────────┐
