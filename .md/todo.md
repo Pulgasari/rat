@@ -1,5 +1,10 @@
 # RAT :: todo
 
+```
+- aufgabe für claude
+* aufgabe für mich
+```
+
 ---
 
 # repo
@@ -40,3 +45,6 @@
   @else: <li>nichts zu tun</li>
 </ul>
 ```
+
+## htx
+* [ ] shorthand-syntax
