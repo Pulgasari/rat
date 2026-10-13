@@ -65,12 +65,12 @@ let bla = 'Some Example' |> doThis(#) |> doThat(33, #) |> doMore({ a: #, b: null
 let bla = 'Some Example' |> eene() |> meene() |> muh();
 ```
 
-- [ ] überlegung und ggf. konzept für weitere pipe-operators (reduce `|*`, pluck `|.`, filter `|?` + `|!`, map `|`). überhaupt sinnvoll?
+- [ ] überlegung und ggf. konzept für weitere pipe-operators (reduce `|*`, pluck `|.`, filter `|?` + `|!`, find `|1` map `|`). überhaupt sinnvoll?
 
 ---
 
 # notizen
 
 ```
-|? |! |~ |. |: |@ |# |$ |+ |- |* |^ |=
+|? |! |~ |. |: |@ |# |$ |+ |- |* |^ |= |1
 ```
