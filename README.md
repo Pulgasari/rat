@@ -11,7 +11,7 @@ experimental JS-framework.
 - [concept](.md/concept.md)
 - [decisions](.md/decisions.md)
 - [ideas](.md/ideas.md)
-- [study](.md/study.md): jquery, htmx, lit, elm
+- [libs](https://github.com/pulgasari/pulgasari.github.io/tree/main/md/webdev/libs): profiles of jquery, htmx, lit, elm, hyperscript, arrowjs, lynx, tsrx, fresh, ejs
 - [syntax v0](.md/syntax.md)
 - [todo](.md/todo.md)
 
