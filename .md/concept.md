@@ -225,7 +225,7 @@ open: [d-16](decisions.md#d-16) commands with arguments, [d-17](decisions.md#d-1
 |---|---|
 | htx | tag selectors (`<div#id.a.b>`), prop groups (`a\|b=`), `class:` props, merge instead of overwrite **(v0, in the compiler)**. positional values and shorthand tags follow |
 | htx compiler | block split (`<script module>`, `<script>`, `<style>`), import lifting, errors with line/column **(v0)** |
-| latte | `n:` attributes → `@if`/`@for` as attributes, `{foreach}…{else}` → `@for … @else` **(v0)** |
+| latte | `{foreach}…{else}` → `@for … @else` **(v0)**. the `n:` attribute form (`@if` on an element) was tried and removed |
 | svelte | single file component, compiler instead of vdom |
 | preact/signals | fine-grained reactivity, the `.value` model (hidden by the compiler) |
 | php | pragmatism, markup and logic may stand side by side |

@@ -38,7 +38,7 @@ const words = {
   blocks    : ['case', 'default', 'else', 'for', 'if', 'switch'],               // as @if, @for …
   constants : ['Infinity', 'NaN', 'false', 'null', 'true', 'undefined'],
   control   : ['await', 'break', 'case', 'catch', 'continue', 'default', 'do', 'else', 'finally', 'for', 'if', 'return', 'switch', 'throw', 'try', 'while', 'yield'],
-  directives: ['bind', 'class', 'on', 'style'],                                  // as on:click, bind:value …
+  directives: ['bind', 'class', 'on', 'style', 'use'],                           // as on:click, bind:value, use:tooltip …
   keywords  : ['as', 'async', 'delete', 'export', 'extends', 'from', 'import', 'in', 'instanceof', 'new', 'of', 'typeof', 'void'],
   language  : ['props', 'super', 'this'],
   storage   : ['class', 'const', 'function', 'let', 'var'],
@@ -52,6 +52,9 @@ const operators = [
 ];
 
 const pipe = '|>';
+
+// the tags whose templates are rat markup in .rat.js (compiler: TAGS, d-11)
+const templateTags = ['html', 'htx', 'rat'];
 
 const files = {
   rat   : { extensions: ['rat'],    name: 'RAT',    root: 'markup', scopeName: 'source.rat'    },
@@ -104,9 +107,12 @@ const states = {
   tag: { end: '/?>', endToken: 'punctuation.definition.tag', rules: [
     { match: '#[\\w-]+',  token: 'entity.other.attribute-name.id' },
     { match: '\\.[\\w-]+', token: 'entity.other.attribute-name.class' },
-    { match: `@(?:${either(['for', 'if'])})(?![\\w$])`, token: 'keyword.control.block' },
+    { match: ['@[\\w-]+', ':', '[\\w-]+'], token: ['entity.name.function.behavior', 'punctuation.separator.directive', 'variable.parameter.behavior'] },
+    { match: '@[\\w-]+',                   token: 'entity.name.function.behavior' },
     { match: [`(?:${either(words.directives)})`, ':', '[\\w\\-:]+'], token: ['keyword.other.directive', 'punctuation.separator.directive', 'entity.other.attribute-name'] },
-    { match: '[^\\s=/>"\'{}|.#][^\\s=/>"\'{}|]*', token: 'entity.other.attribute-name' },
+    { match: '\\[[^\\]\\n]*\\]',            token: 'constant.other.key-filter' },
+    { match: '!(?=[\\s=/>:])',             token: 'keyword.operator.modifier' },
+    { match: '[^\\s=/>"\'{}|.#\\[!][^\\s=/>"\'{}|\\[!]*', token: 'entity.other.attribute-name' },
     { match: '\\|',                                token: 'punctuation.separator.group' },
     { match: '=',                                  token: 'punctuation.separator.key-value' },
     { begin: '\\{', token: 'punctuation.section.embedded', state: 'expression' },
@@ -136,7 +142,7 @@ const states = {
   script: { rules: [
     { match: '//.*',                 token: 'comment.line' },
     { begin: '/\\*',                 token: 'comment.block', state: 'blockComment' },
-    { begin: ['html', '`'],          token: ['entity.name.function.tagged-template', 'punctuation.definition.string.template'], state: 'markupTemplate' },
+    { begin: [`(?<![\\w$.])(?:${either(templateTags)})`, '`'], token: ['entity.name.function.tagged-template', 'punctuation.definition.string.template'], state: 'markupTemplate' },
     { begin: '`',                    token: 'string.template', state: 'template' },
     { begin: '\\{',                  token: 'punctuation.section.braces', state: 'braces' },
     { begin: '\\(',                  token: 'punctuation.section.parens', state: 'parens' },
@@ -208,5 +214,5 @@ const states = {
   ]},
 };
 
-export { either, escape, files, operators, pipe, states, words };
-export default { files, operators, pipe, states, words };
+export { either, escape, files, operators, pipe, states, templateTags, words };
+export default { files, operators, pipe, states, templateTags, words };

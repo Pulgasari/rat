@@ -5,8 +5,8 @@
     // as @if, @for …
     constants: ["Infinity", "NaN", "false", "null", "true", "undefined"],
     control: ["await", "break", "case", "catch", "continue", "default", "do", "else", "finally", "for", "if", "return", "switch", "throw", "try", "while", "yield"],
-    directives: ["bind", "class", "on", "style"],
-    // as on:click, bind:value …
+    directives: ["bind", "class", "on", "style", "use"],
+    // as on:click, bind:value, use:tooltip …
     keywords: ["as", "async", "delete", "export", "extends", "from", "import", "in", "instanceof", "new", "of", "typeof", "void"],
     language: ["props", "super", "this"],
     storage: ["class", "const", "function", "let", "var"]
@@ -55,6 +55,7 @@
     "..."
   ];
   var pipe = "|>";
+  var templateTags = ["html", "htx", "rat"];
   var files = {
     rat: { extensions: ["rat"], name: "RAT", root: "markup", scopeName: "source.rat" },
     ratjs: { extensions: ["rat.js"], name: "RAT JS", root: "script", scopeName: "source.rat.js" }
@@ -93,9 +94,12 @@
     tag: { end: "/?>", endToken: "punctuation.definition.tag", rules: [
       { match: "#[\\w-]+", token: "entity.other.attribute-name.id" },
       { match: "\\.[\\w-]+", token: "entity.other.attribute-name.class" },
-      { match: `@(?:${either(["for", "if"])})(?![\\w$])`, token: "keyword.control.block" },
+      { match: ["@[\\w-]+", ":", "[\\w-]+"], token: ["entity.name.function.behavior", "punctuation.separator.directive", "variable.parameter.behavior"] },
+      { match: "@[\\w-]+", token: "entity.name.function.behavior" },
       { match: [`(?:${either(words.directives)})`, ":", "[\\w\\-:]+"], token: ["keyword.other.directive", "punctuation.separator.directive", "entity.other.attribute-name"] },
-      { match: `[^\\s=/>"'{}|.#][^\\s=/>"'{}|]*`, token: "entity.other.attribute-name" },
+      { match: "\\[[^\\]\\n]*\\]", token: "constant.other.key-filter" },
+      { match: "!(?=[\\s=/>:])", token: "keyword.operator.modifier" },
+      { match: `[^\\s=/>"'{}|.#\\[!][^\\s=/>"'{}|\\[!]*`, token: "entity.other.attribute-name" },
       { match: "\\|", token: "punctuation.separator.group" },
       { match: "=", token: "punctuation.separator.key-value" },
       { begin: "\\{", token: "punctuation.section.embedded", state: "expression" },
@@ -119,7 +123,7 @@
     script: { rules: [
       { match: "//.*", token: "comment.line" },
       { begin: "/\\*", token: "comment.block", state: "blockComment" },
-      { begin: ["html", "`"], token: ["entity.name.function.tagged-template", "punctuation.definition.string.template"], state: "markupTemplate" },
+      { begin: [`(?<![\\w$.])(?:${either(templateTags)})`, "`"], token: ["entity.name.function.tagged-template", "punctuation.definition.string.template"], state: "markupTemplate" },
       { begin: "`", token: "string.template", state: "template" },
       { begin: "\\{", token: "punctuation.section.braces", state: "braces" },
       { begin: "\\(", token: "punctuation.section.parens", state: "parens" },
@@ -211,8 +215,10 @@
     "constant.character.escape": "escape",
     "constant.language": "atom",
     "constant.numeric": "number",
+    "constant.other.key-filter": "string.special",
     "constant.other.color": "color",
     "entity.name.function": "variableName.function",
+    "entity.name.function.behavior": "macroName",
     "entity.name.function.tagged-template": "macroName",
     "entity.name.tag": "tagName",
     "entity.other.attribute-name": "attributeName",
@@ -236,6 +242,7 @@
     "support.function": "variableName.standard",
     "support.type.property-name": "propertyName",
     "variable.language": "self",
+    "variable.parameter": "labelName",
     "variable.language.topic": "self.special",
     "variable.other": "variableName",
     "variable.other.custom-property": "propertyName.special",

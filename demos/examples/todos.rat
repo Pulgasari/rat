@@ -18,8 +18,7 @@
     return todos;
   }
 
-  function add (event) {
-    event.preventDefault();
+  function add () {
     if (!$draft.trim()) return;
     $todos = [...$todos, { id: Date.now(), title: $draft.trim(), done: false }];
     $draft = '';
@@ -30,8 +29,8 @@
 </script>
 
 <section.todos>
-  <form onsubmit={add}>
-    <input bind:value={$draft} placeholder="was steht an?" />
+  <form on:submit!={add}>
+    <input bind:value={$draft} on:keydown[escape]={() => $draft = ''} placeholder="was steht an? (esc leert)" />
     <button>add</button>
   </form>
 

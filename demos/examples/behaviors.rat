@@ -1,0 +1,68 @@
+<script>
+  import * as patterns from '@aufbau/patterns';
+  import * as filters  from '@aufbau/filters';
+
+  let $pattern = 'dots';
+  let $filter  = 'none';
+  let $color   = '#e5222f';
+  let $log     = [];
+
+  // a behavior: (element, value, arg) => cleanup. it runs again when the value changes
+  const pattern = (element, { id, ...options }) => {
+    patterns.apply(element, id, options);
+    return () => patterns.remove(element);
+  };
+
+  const filter = (element, id) => {
+    if (id !== 'none') filters.apply(element, id);
+    return () => filters.remove(element);
+  };
+
+  // the part after the colon is the arg: @flash:click, @flash:pointerover
+  const flash = (element, color, type) => {
+    const run = () => element.animate([{ background: color }, {}], 500);
+    element.addEventListener(type, run);
+    return () => element.removeEventListener(type, run);
+  };
+
+  const say = text => $log = [text, ...$log].slice(0, 5);
+</script>
+
+<section.stage @pattern={{ id: $pattern, fg: $color, motion: 'down' }}>
+  <h2 use:filter={$filter}>RAT</h2>
+</section.stage>
+
+<fieldset>
+  <label>
+    pattern
+    <select bind:value={$pattern}>
+      @for (id of ['dots', 'grid', 'waves', 'checks', 'stripes', 'diamonds']): <option>{id}</option>
+    </select>
+  </label>
+  <label>
+    filter
+    <select bind:value={$filter}>
+      @for (id of ['none', 'blur', 'glitch-rgb', 'wave', 'grain', 'posterize']): <option>{id}</option>
+    </select>
+  </label>
+  <input type="color" bind:value={$color} />
+</fieldset>
+
+<fieldset>
+  <input placeholder="enter / ctrl+enter / escape" on:keydown[enter]={() => say('enter')} on:keydown[ctrl+enter]={() => say('ctrl+enter')} on:keydown[escape]!={() => say('escape, default prevented')} />
+  <button on:click:once={() => say('once, then never again')} @flash:click="#ffd400">once</button>
+  <button on:click:3={() => say('three times at most')} @flash:pointerover="#7ad">3×</button>
+</fieldset>
+
+<ol>
+  @for (line of $log): <li>{line}</li>
+  @else: <li.empty>press keys, click buttons</li>
+</ol>
+
+<style>
+  .stage   { border-radius: 12px; display: grid; height: 180px; place-items: center; }
+  h2       { font: 900 4rem/1 system-ui; letter-spacing: .1em; margin: 0; }
+  fieldset { align-items: center; border: 0; display: flex; flex-wrap: wrap; gap: .75rem; padding: .75rem 0 0; }
+  input:not([type]) { flex: 1; min-width: 14rem; }
+  .empty   { opacity: .5; }
+</style>

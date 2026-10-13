@@ -15,9 +15,9 @@
 (selector_class) @attribute
 (attribute_name) @attribute
 ((attribute_name) @keyword
-  (#match? @keyword "^@"))
-((attribute_name) @keyword
-  (#match? @keyword "^(on|bind|class|style):"))
+  (#match? @keyword "^(on|bind|class|style|use):"))
+((attribute_name) @function
+  (#match? @function "^@"))
 (attribute_value) @string
 (attribute_string) @string
 (entity) @string.special

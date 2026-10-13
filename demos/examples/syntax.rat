@@ -17,7 +17,7 @@
 
   @switch ($view) {
     @case 'grid' { <.grid>@for (item of items) { <.cell>{item}</.cell> }</.grid> }
-    @case 'list' { <ul><li @for={item of items}>{item}</li></ul> }
+    @case 'list' { <ul>@for (item of items): <li>{item}</li></ul> }
     @default     { <p>"{$view}" gibt es noch nicht</p> }
   }
 

@@ -17,7 +17,7 @@
 </script>
 
 <div.app on:rat:command={run}>
-  <aside @if={$sidebar}>sidebar</aside>
+  @if ($sidebar): <aside>sidebar</aside>
 
   <data-list>
     @for (cmd of commands) {

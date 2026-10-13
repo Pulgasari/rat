@@ -4,21 +4,22 @@
 source (.rat / .rat.js) -> @rat/compiler -> output (js | ast) -> preview.
 the preview is an iframe per run: fresh document, fresh runtime, no state
 leaking between two compiles. the compiled module goes in as a blob url, the
-iframe's own import map resolves @rat/runtime.
+iframe gets the page's import map, with @rat/runtime pointing into this repo.
 */
 
-import { compile }    from '../../packages/compiler/index.js';
-import { rat, ratjs } from '../../packages/syntax/targets/hljs.js';
+import { compileAsync } from '../../packages/compiler/index.js';
+import { rat, ratjs }   from '../../packages/syntax/targets/hljs.js';
 
 // :::::: SETUP
 
 const EXAMPLES = [
-  { file: 'counter.rat',  title: 'counter'      },
-  { file: 'todos.rat',    title: 'todos'        },
-  { file: 'commands.rat', title: 'commands'     },
-  { file: 'syntax.rat',   title: 'syntax-tour'  },
-  { file: 'blocks.rat',   title: 'blocks'       },
-  { file: 'pipes.rat.js', title: '.rat.js'      },
+  { file: 'counter.rat',   title: 'counter'     },
+  { file: 'todos.rat',     title: 'todos'       },
+  { file: 'commands.rat',  title: 'commands'    },
+  { file: 'syntax.rat',    title: 'syntax-tour' },
+  { file: 'blocks.rat',    title: 'blocks'      },
+  { file: 'behaviors.rat', title: 'behaviors'   },
+  { file: 'pipes.rat.js',  title: '.rat.js'     },
 ];
 
 const DELAY   = 250;
@@ -39,7 +40,7 @@ const ui = {
   status   : $('#status'),
 };
 
-const state = { blob: null, example: EXAMPLES[0], result: null, timer: 0, view: 'code' };
+const state = { blob: null, example: EXAMPLES[0], result: null, runs: 0, timer: 0, view: 'code' };
 
 // :::::: EDITORS
 
@@ -77,16 +78,22 @@ const forget = file => { try { localStorage.removeItem(STORAGE + file); } catch 
 
 // :::::: COMPILE
 
-function run () {
+// async because a <style lang="scss"> loads its preprocessor first. a run that is
+// overtaken by a newer one drops its result
+async function run () {
   const source = read();
   const { file } = state.example;
+  const ticket   = ++state.runs;
   store(file, source);
 
   const started = performance.now();
 
   try {
-    state.result = compile(source, { filename: file });
+    const result = await compileAsync(source, { filename: file });
+    if (ticket !== state.runs) return;
+    state.result = result;
   } catch (error) {
+    if (ticket !== state.runs) return;
     state.result = null;
     ui.pane.classList.add('error');
     write(error.message);
@@ -121,7 +128,10 @@ function preview (code) {
   state.blob = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
   ui.console.replaceChildren();
 
-  const map = JSON.stringify({ imports: { '@rat/runtime': RUNTIME } });
+  // the page's own import map (code.pulgasari.dev: aufbau, domina …) with this repo's runtime on top.
+  // one map, since not every browser takes several
+  const page = JSON.parse(document.querySelector('script[type="importmap"]')?.textContent || '{}');
+  const map  = JSON.stringify({ imports: { ...page.imports, '@rat/runtime': RUNTIME } });
 
   ui.preview.srcdoc = `<!DOCTYPE html>
 <html>

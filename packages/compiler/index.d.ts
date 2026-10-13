@@ -5,7 +5,7 @@ export interface CompileOptions {
   mode?     : 'component' | 'module';  // overrides the filename
   runtime?  : string;                  // import specifier of the runtime, default '@rat/runtime'
   styles?   : Record<string, (code: string, context: { filename: string }) => string>; // preprocessors per <style lang>
-  tag?      : string;                  // .rat.js: the template tag compiled as markup, default 'html'
+  tags?     : string[];                // .rat.js: template tags compiled as markup, default ['html', 'htx', 'rat']
 }
 
 export interface CompileResult {
@@ -25,8 +25,10 @@ export class CompileError extends SyntaxError {
 }
 
 export function compile          (source: string, options?: CompileOptions): CompileResult;
+export function compileAsync     (source: string, options?: CompileOptions): Promise<CompileResult>;
 export function compileComponent (source: string, options?: CompileOptions): CompileResult;
 export function compileModule    (source: string, options?: CompileOptions): CompileResult;
+export function loadStyles       (...langs: (string | string[])[]): Promise<unknown[]>;
 export function parse            (source: string, options?: { blocks?: boolean, filename?: string, offset?: number }): Fragment;
 
 export function forOf  (code: string, offset?: number): string;

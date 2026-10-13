@@ -9,7 +9,8 @@ blocks (when, each, match) live between two comment anchors and own a scope
 per branch / item, disposed when the branch or item goes.
 */
 
-import { effect, getOwner, isSignal, scope, untrack } from './signals.js';
+import { isHandler, listener }                                  from './events.js';
+import { effect, getOwner, isSignal, onCleanup, scope, untrack } from './signals.js';
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -68,10 +69,19 @@ function setProp (node, key, value) {
     return;
   }
 
-  // onclick, on:click
+  // @tooltip, @gestures:swipeable (use:tooltip arrives the same way): a behavior
+  if (key[0] === '@') {
+    const colon = key.indexOf(':');
+    use(node, value[0], value[1], colon > 0 ? key.slice(colon + 1) : undefined);
+    return;
+  }
+
+  // onclick, on:click, plus modifiers (events.js)
   if (key.startsWith('on')) {
-    const type = key.slice(key[2] === ':' ? 3 : 2).toLowerCase();
-    node.addEventListener(type, typeof value === 'string' ? command(node, value) : value);
+    // modifiers stay in the key (on:keydown[enter]), so two listeners of one type never collide
+    const type    = key.slice(key[2] === ':' ? 3 : 2).replace(/\[.*$|!.*$|:(?:once|\d+)$/, '').toLowerCase();
+    const resolve = handler => typeof handler === 'string' ? command(node, handler) : handler;
+    node.addEventListener(type, isHandler(value) ? listener(node, type, value, resolve) : resolve(value));
     return;
   }
 
@@ -95,9 +105,10 @@ function setProp (node, key, value) {
 
 // ::: nodes
 
+// children first: a <select> needs its options before bind:value, a behavior sees the content
 function element (node, props, children) {
-  for (const key in props) setProp(node, key, props[key]);
   if (children) insert(node, children);
+  for (const key in props) setProp(node, key, props[key]);
   return node;
 }
 
@@ -303,6 +314,67 @@ function each (list, render, fallback) {
   return fragment;
 }
 
+// ::: behaviors
+
+/*
+a behavior is a function (element, value, arg) and returns nothing, a cleanup
+function, or { update (value), destroy () }. it runs once the element exists;
+when its value changes, update() gets the new one, or (without update) the
+behavior is cleaned up and runs again. the cleanup belongs to the owner the
+element was created in, so it goes with the element's branch.
+*/
+function use (node, behavior, get, arg) {
+  if (typeof behavior !== 'function') throw new TypeError(`[rat] @${arg ?? ''} needs a function, got ${typeof behavior}`);
+  let result  = null;
+  let cleanup = null;
+
+  onCleanup(() => cleanup?.());
+
+  effect(() => {
+    const value = get?.();
+    untrack(() => {
+      if (result && typeof result.update === 'function') { result.update(value); return; }
+      cleanup?.();
+      result  = behavior(node, value, arg) ?? null;
+      cleanup = typeof result === 'function' ? result : result?.destroy ? () => result.destroy() : null;
+    });
+  });
+}
+
+// ::: merge
+
+/*
+props with spreads: { …written }, rest, { …written } in source order. later
+wins, except class and style, which add up (as in htx). a reactive part keeps
+the merged value reactive.
+*/
+const read = value => typeof value === 'function' ? value() : value;
+
+function styleText (value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return Object.entries(value).map(([key, item]) => `${key}: ${item}`).join('; ');
+}
+
+function combine (key, a, b) {
+  if (typeof a === 'function' || typeof b === 'function') return () => combine(key, read(a), read(b));
+  if (key === 'class') return [a, b];
+  if (a && b && typeof a === 'object' && typeof b === 'object') return { ...a, ...b };
+  return [styleText(a), styleText(b)].filter(Boolean).join('; ');
+}
+
+function merge (...parts) {
+  const out = {};
+  for (const part of parts) {
+    if (!part) continue;
+    for (const key of Object.keys(part)) {
+      const value = part[key];
+      out[key] = (key === 'class' || key === 'style') && key in out ? combine(key, out[key], value) : value;
+    }
+  }
+  return out;
+}
+
 // ::: mount + style
 
 function mount (Component, target, props = {}) {
@@ -322,4 +394,4 @@ function style (id, css) {
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
 }
 
-export { each, el, insert, match, mount, style, svg, when };
+export { each, el, insert, match, merge, mount, style, svg, use, when };

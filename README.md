@@ -11,6 +11,7 @@ experimental JS-framework.
 - [concept](.md/concept.md)
 - [decisions](.md/decisions.md)
 - [ideas](.md/ideas.md)
+- [study](.md/study.md): jquery, htmx, lit, elm
 - [syntax v0](.md/syntax.md)
 - [todo](.md/todo.md)
 

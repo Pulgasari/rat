@@ -96,5 +96,10 @@
     "function",
     "let",
     "var"
+  ],
+  "templateTags": [
+    "html",
+    "htx",
+    "rat"
   ]
 }
