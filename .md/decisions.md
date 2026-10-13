@@ -69,16 +69,20 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 <a id="d-08"></a>
 ### d-08 · the placeholder
 
-- [ ] a) `#` **(v0) (rec)**: your proposal, reads well, free in js (except `#private`, which stays untouched)
+- [x] a) `#` **(v0) (rec)**: your proposal, reads well, free in js (except `#private`, which stays untouched)
 - [ ] b) `%` (the tc39 hack proposal), clashes with modulo
 - [ ] c) `^^` or `@`
+
+anmerkung: option a unter vorbehalt. eigtl suboptimal wegen parser, aber `$` wäre doof wegen reactivity-marker und `_` find ich gut, aber wird ja gemeinhin für "überspringen" genutzt. (?) `@` find ich auch ansehnlich. 
 
 <a id="d-09"></a>
 ### d-09 · a call without placeholder: `x |> f()`
 
 - [ ] a) an error with a hint **(v0) (rec)**: your note, it would call `f()` first
-- [ ] b) `f()(x)`: pipe into the result of the call
+- [x] b) `f()(x)`: pipe into the result of the call
 - [ ] c) `f(x)`: insert as first argument (elixir style)
+
+anmerkung: angesichts der bestehenden 2 formen würde hier doch nur b sinn machen ohne verwirrung zu stiften. so wärs einheitlich/konsequent. oder irre ich mich?
 
 <a id="d-10"></a>
 ### d-10 · further pipe operators ([ideas.md](ideas.md#1-a-pipe-family))
@@ -88,6 +92,10 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 - [ ] c) the full set: `|:` `|?` `|.name` `|*` `|@`
 - [ ] d) other: …
 
+anmerkung:
+- noch unsicher. tendenziell will ich aber weitere, weil die den typischen js-code, der durch `filter(...)`, `map(...)` usw entsteht, ich als unfassbar unleserlich, stressig und schwer nachvollziehbar empfinde
+- mögliche operator shapes evtl: `|?>` `>>` `>>>` `|?:` `|!:` `|?|` `|!|`
+
 ---
 
 ## ranges
@@ -95,7 +103,7 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 <a id="d-05"></a>
 ### d-05 · range forms
 
-- [ ] inclusive `1..5` **(v0)**
+- [x] inclusive `1..5` **(v0)**
 - [ ] exclusive `1..<5`
 - [ ] step `1..10 by 2` or `1..10..2`
 - [ ] bare letters `a..d` (clash with variables `a`, `d`; v0 needs `'a'..'d'`)
@@ -105,7 +113,7 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 <a id="d-06"></a>
 ### d-06 · where ranges work
 
-- [ ] a) everywhere script sugar works: holes, `<script>`, `.rat.js` **(v0) (rec)**
+- [x] a) everywhere script sugar works: holes, `<script>`, `.rat.js` **(v0) (rec)**
 - [ ] b) only in markup holes and `@for` heads
 
 <a id="d-07"></a>
@@ -113,6 +121,7 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 
 - [ ] a) an array **(v0) (rec)**: works with every array method and the pipe
 - [ ] b) a lazy iterable: no allocation for `0..1e9`, but no array methods without `[...]`
+- [x] c) (?) vielleicht `0..9` (lazy iterable) und `[0..9]`(array)? oder eigene range-type der lazy-iterable ist aber array-methoden mitbringt?
 
 ---
 
@@ -160,6 +169,7 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 
 - [ ] a) file based (`views/*.rat`) in a build, a registry in the browser **(rec)**
 - [ ] b) a registry only
+- [x] c) aktuell registry. später: + file based (aber schema noch unklar)
 
 ---
 
@@ -185,7 +195,7 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 <a id="d-18"></a>
 ### d-18 · `@rat/core` and `@rat/runtime`
 
-- [ ] a) separate **(rec)**: the runtime works without an app
+- [x] a) separate **(rec)**: the runtime works without an app
 - [ ] b) one package
 
 ---
