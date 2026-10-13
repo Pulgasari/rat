@@ -575,9 +575,31 @@ the call is [d-20](decisions.md#d-20).
 2.7 event modifiers
 ```
 
+## 2.3 async blocks
+
+ja, aber genaue syntax mir noch unklar.
+
+## 2.4 filters on loops
+
+ja, aber genaue syntax mir noch unklar.
+
+## 2.5 pattern matching
+
+ja, aber genaue syntax mir noch unklar. habe in `@pulgasari/shift` und `@pulgasari/typeshift` mit derartigem auch schon etwas experimentiert. aber bin mir da ingesamt unklar.
+
+so ein mechanismus fehlt ja aber sehr.
+
+n weiter ansatz/gedanke von mir diesbzgl. war mal `case` (ausserhalb von switch) in den stand zum declaration zu erheben, um so globale oder im jeweiligen scope referenzierbare/wiederverwendbare case-muster definieren zu können (quasi benannte cases). nutzbar dann auch in `if` und generell conditional contexten. habs nie richtig ausprobiert, aber rein gefühlsmäßig denk ich mir stets, sowas müsste es eigtl geben.
+
+## 2.6 fragments
+
+find ich gut, auch den namen. aber bin mir unsicher, ob evtl bissl dirty, weil gemeinhin dom-fragments eben keine args haben können?
+
 ## 2.7 event modifiers
 
 ### preventDefault()
+
+entwurf, nich sicher.
 
 ```html
 <form on:submit!={add}>
@@ -585,13 +607,16 @@ the call is [d-20](decisions.md#d-20).
 
 ### key events
 
+die shape hab ich schon lang im sinn. können wa umsetzen:
+
 ```html
 <input on:keydown[enter]={send} />
+<input onkeydown[ctrl+c|space+a]={send} />
 ```
 
-bräuchte auch noch eventuelle kopplung mit hotkeys
-
 ### once
+
+unklar. spricht hier was dagegen?
 
 ```html
 <button once:click={init}>
@@ -611,6 +636,8 @@ das kann HTX doch bereits, dafür brauchte es keine ugly variante von laravel al
 
 hier hatte ich schon den gedanken `@` hierfür zu verwenden. so wäre "sonderlogik"/"logik außerhalb" wie auch "verknüpfung" markiert. bei `use` denkt man sich dasverhältnis eigtl eher anders(rum): als würde dem element was reingegeben.
 
+können wkr aber unter vorbehalt mal in beiden formen (also `use:` und `@`) umsetzen (was sich in der praxis besser anfühlt, wird sich dann herausstellen).
+
 ```html
 <button @tooltip={'save the file'}>save</button>
 <textarea @autosize></textarea>
@@ -621,10 +648,10 @@ hier hatte ich schon den gedanken `@` hierfür zu verwenden. so wäre "sonderlog
 
 ## 2.11
 
-proper transition handling wäre nice, aber vllt reicht bereits use/@` ?
+proper transition handling wäre nice, aber vllt reicht bereits use/@` in kombi mit transitionlib?
 
 ## 3.
 
 das hinkt völlig. css kann zwar alles mögliche mittlerweile, und das sogar live, aber lässt sich absolut beschissen schreiben und ist schwer lesbar usw.
 
-scss/ass, sowas sollte out-of-the-box mitgeliefert werden. (`@aufbau/import` hilfreich?
+scss/ass, sowas sollte out-of-the-box mitgeliefert werden. (`@aufbau/import`) hilfreich?
