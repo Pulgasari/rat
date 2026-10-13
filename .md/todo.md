@@ -46,7 +46,31 @@
 </ul>
 ```
 
+- [ ] range literals `1..10` `a..d` (evtl. auch im js falls es sich bewährt?)
+
 ## htx
 * [ ] shorthand-syntax `<$xyz>` mit `$` sollte evtl. neu konzipiert bzw. ersetzt werden
 * [ ] (?) `cmd='name'` -> `command='--name'`
 * [ ] (?) `cmd:#sidebar` -> `command='--name' commandfor='#sidebar'`
+- [ ] prüfen: ist der pipe-operator korrekt implementiert?
+
+```javascript
+// implicit
+let bla = 'Some Example' |> eene |> meene |> muh;
+
+// explicit
+let bla = 'Some Example' |> doThis(#) |> doThat(33, #) |> doMore({ a: #, b: null, c: #);
+
+// das müsste eigtl. nich funktionieren dürfen, sonst krumm, oder?
+let bla = 'Some Example' |> eene() |> meene() |> muh();
+```
+
+- [ ] überlegung und ggf. konzept für weitere pipe-operators (reduce `|*`, pluck `|.`, filter `|?` + `|!`, map `|`). überhaupt sinnvoll?
+
+---
+
+# notizen
+
+```
+|? |! |~ |. |: |@ |# |$ |+ |- |* |^ |=
+```
