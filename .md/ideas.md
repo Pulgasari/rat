@@ -383,9 +383,7 @@ its cleanup when it goes:
 <button use:tooltip={'save the file'}>save</button>
 ```
 
-**problem.** behavior that is not markup (a tooltip, drag and drop, focus trapping,
-autosizing a textarea) otherwise needs a `ref` plus manual setup and teardown in the
-script.
+**problem.** behavior that is not markup (a tooltip, drag and drop, focus trapping, autosizing a textarea) otherwise needs a `ref` plus manual setup and teardown in the script.
 
 **in rat.**
 
@@ -395,10 +393,7 @@ script.
 <section use:pattern={'dots 8%'}>…</section>
 ```
 
-a behavior is a function `(element, value) => cleanup`. it runs again when the value
-changes. this is the same idea as the aufbau controller concept (`pattern=`, `filter=`,
-`hotkey=` as attributes on any element), so `@aufbau/patterns`, `@aufbau/filters` and
-`@aufbau/gestures` could ship rat behaviors directly.
+a behavior is a function `(element, value) => cleanup`. it runs again when the value changes. this is the same idea as the aufbau controller concept (`pattern=`, `filter=`, `hotkey=` as attributes on any element), so `@aufbau/patterns`, `@aufbau/filters` and `@aufbau/gestures` could ship rat behaviors directly.
 
 **cost.** small in the runtime. the larger work is writing the behaviors.
 
@@ -620,4 +615,12 @@ hier hatte ich schon den gedanken `@` hierfür zu verwenden. so wäre "sonderlog
 <button @tooltip={'save the file'}>save</button>
 <textarea @autosize></textarea>
 <section @pattern='dots 8%'>…</section>
+<div @gestures:swipeable on:swipeLeft={...} />
+<div @swipeable:swipeLeft={...} />
 ```
+
+## 3.
+
+das hinkt völlig. css kann zwar alles mögliche mittlerweile, und das sogar live, aber lässt sich absolut beschissen schreiben und ist schwer lesbar usw.
+
+scss/ass, sowas sollte out-of-the-box mitgeliefert werden. (`@aufbau/import` hilfreich?
