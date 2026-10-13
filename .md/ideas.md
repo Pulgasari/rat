@@ -609,3 +609,15 @@ bräuchte auch noch eventuelle kopplung mit hotkeys
 ## 2.9
 
 das kann HTX doch bereits, dafür brauchte es keine ugly variante von laravel als inspiration. aber ja, das in `rat` auch gehen.
+
+## 2.10 use
+
+`use` kenn ich von svelte und mochte das sehr. aber wenn ich mich recht erinnere, war die konstruktion dieser behaviours teilweise unnötig kompliziert. (?)
+
+hier hatte ich schon den gedanken `@` hierfür zu verwenden. so wäre "sonderlogik"/"logik außerhalb" wie auch "verknüpfung" markiert. bei `use` denkt man sich dasverhältnis eigtl eher anders(rum): als würde dem element was reingegeben.
+
+```html
+<button @tooltip={'save the file'}>save</button>
+<textarea @autosize></textarea>
+<section @pattern='dots 8%'>…</section>
+```
