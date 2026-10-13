@@ -177,7 +177,7 @@ anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is
 - [ ] a) preprocessor hook only, nothing bundled **(v0) (rec)**
 - [ ] b) the hook plus `lang="ass"` wired to `@aufbau/ass` out of the box
 - [ ] c) native css only, no `lang` at all
-
+- [x] d) erstmal support für `scss` und `ass` out of the box. wird preprocessed usw, je nach context, bei browser-only via sw. später kommt da grundlegend noch fetter css-sugar meinerseits als builtin hinzu, aber weiss aktuell noch net 100pro in welcher form
 ---
 
 ## packages
