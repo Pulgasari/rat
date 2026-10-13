@@ -52,12 +52,15 @@ notiz bzgl d-01 bis d-04: ich bin aber nich sicher, ob sich in der praxis zeigt,
 - [ ] a) ``html`…` `` **(v0) (rec)**: the same tag as htx, a file reads the same with and without the compiler
 - [ ] b) ``rat`…` ``: shows that it is compiled
 - [ ] c) both
+- [x] d) hier sollten wir temporär sogar ersma `htx`, `html`, `rat` machen
 
 <a id="d-12"></a>
 ### d-12 · `{…}` holes in runtime templates (plain `.js`, no compiler)
 
 - [ ] a) no, at runtime it stays `${…}` **(v0) (rec)**: no string parsing at runtime, the difference is what the compiler buys
 - [ ] b) yes, the runtime parses `{…}` too (cached, like htm)
+
+anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is iwie ungenau.
 
 ---
 
