@@ -619,6 +619,10 @@ hier hatte ich schon den gedanken `@` hierfür zu verwenden. so wäre "sonderlog
 <div @swipeable:swipeLeft={...} />
 ```
 
+## 2.11
+
+proper transition handling wäre nice, aber vllt reicht bereits use/@` ?
+
 ## 3.
 
 das hinkt völlig. css kann zwar alles mögliche mittlerweile, und das sogar live, aber lässt sich absolut beschissen schreiben und ist schwer lesbar usw.
