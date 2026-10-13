@@ -15,9 +15,13 @@
 
 # syntax
 
-- [ ] `<p @if={$error}>{$error}</p>` das mag ich derart am element überhaupt nicht und durch die direktiven drumherum auch unnötig. können wir ausbauen.
-- [ ] ich hab in `ideas.md` und `decisions.md` bisschen was aufgeschrieben, entschieden, angemerkt. da gibts also zumindest bisschen was zum abarbeiten. guck ersma dort.
-- [ ] wenn `use`/`@` sitzt könnten wa direkt mal `@aufbau/patterns` und `@aufbau/filters` in demo-seite für diese syntax nutzen
+- [x] `<p @if={$error}>{$error}</p>` das mag ich derart am element überhaupt nicht und durch die direktiven drumherum auch unnötig. können wir ausbauen.
+  - ausgebaut. `@if`/`@for` als attribut sind jetzt ein fehler mit hinweis, `@name` auf elementen ist frei für behaviors
+- [x] ich hab in `ideas.md` und `decisions.md` bisschen was aufgeschrieben, entschieden, angemerkt. da gibts also zumindest bisschen was zum abarbeiten. guck ersma dort.
+  - umgesetzt: d-04 (tabs/spaces mischen = fehler), d-07 (`Range` + `[a..b]`), d-09 (`x |> f()` = `f()(x)`), d-11 (`html`/`htx`/`rat`), d-20 (`scss`/`ass` eingebaut, `compileAsync`), behaviors (`@name` + `use:name`), event-modifier (`[keys]`, `!`, `:once`/`:N`), spread-merge
+  - entschiedenes steht jetzt unten in `decisions.md` unter "decided", neue fragen: d-24 bis d-30. antworten auf deine notizen: `ideas.md` ("reply:"), named cases: `ideas.md#5-named-cases`
+- [x] wenn `use`/`@` sitzt könnten wa direkt mal `@aufbau/patterns` und `@aufbau/filters` in demo-seite für diese syntax nutzen
+  - `demos/examples/behaviors.rat` (playground: "behaviors"): `@pattern`, `use:filter`, `@flash:click`, dazu key-filter, `!`, `:once`, `:3`
 
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
@@ -84,7 +88,10 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 ## sonstiges
 - [x] evtl. mal bzgl. gute/passende ideen oder inspiration schauen bei: haskell, php, svelte, jquery, latte, laravel, lit, rescript oder andere solide projekte
   - `ideas.md#2-inspiration`
-- [ ] selbe aufgabe again, aber schau diesmal bei 10 anderen sprachen. such selber aus. überrasch mich. ^^
+- [x] selbe aufgabe again, aber schau diesmal bei 10 anderen sprachen. such selber aus. überrasch mich. ^^
+  - `ideas.md#4-inspiration-round-2`: elixir, clojure, f#, swift, kotlin, raku, gleam, zig, imba, ruby
+- [x] (aus dem chat) jquery, htmx, lit und elm genauer anschauen: was sie können, wie, welche konzepte
+  - `study.md`
 
 ---
 

@@ -3,7 +3,7 @@
 what the prototype compiler understands. anything marked *(planned)* is not built yet.
 open choices are linked to [decisions.md](decisions.md).
 
-- [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes)
+- [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes) · [behaviors](#behaviors) · [event modifiers](#event-modifiers)
 - [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@switch`](#switch)
 - [script sugar](#script-sugar): [signals](#signals), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
@@ -77,15 +77,17 @@ a literal `{` in text: `{'{'}`.
 | `style:color={expr}` | a single css property |
 | `onclick={fn}`, `on:click={fn}` | event listener |
 | `onclick='save'` | **command**: fires `rat:command` with `{ name: 'save', event }` |
+| `on:keydown[enter]={fn}`, `on:submit!={fn}`, `on:click:once={fn}` | event with modifiers, see [event modifiers](#event-modifiers) |
+| `@tooltip={text}`, `@flash:click="#ff0"`, `use:tooltip={text}` | a behavior, see [behaviors](#behaviors) |
 | `bind:value={$x}` | two-way binding to a signal (`value`, `checked`, `open` …) |
 | `ref={fn}` / `ref={$el}` | the element, to a function or a signal |
-| `{...obj}` | spread (static, at creation) |
+| `{...obj}` | spread (at creation). on an element `class` and `style` add up, everything else: later wins |
 | `{name}` | short for `name={name}` |
 
 ## control flow
 
-`@if`, `@for` and `@switch` exist as a block and as an attribute (after latte's
-`n:` attributes): `<li @for={todo of $todos}>`, `<p @if={$error}>`.
+`@if`, `@for` and `@switch` are blocks around markup. they are no attributes: an `@`
+on an element is a [behavior](#behaviors).
 
 ### three body forms
 
@@ -113,7 +115,9 @@ every block body can be written three ways, mixed freely, per branch:
 rules (v0):
 
 - **indentation**: a body ends at the first non-blank line indented no deeper than the
-  line of its head. indentation counts spaces and tabs as one each ([d-04](decisions.md#d-04)).
+  line of its head. a block uses tabs or spaces, mixing them is an error ([d-04](decisions.md#d-04)).
+- a closing tag ends an indented or one-line body inside its element:
+  `<ul>@for (x of $xs): <li>{x}</li></ul>`.
 - an **`@else`** belongs to the block whose head is on its own indentation. so a dedented
   `@else` after a nested indented block goes to the outer one.
 - **one line**: the body ends at the end of the line, or where `@else`, `@case` or
@@ -134,7 +138,7 @@ rules (v0):
   <button onclick='login'>login</button>
 }
 
-<p @if={$error}>{$error}</p>
+@if ($error): <p>{$error}</p>
 ```
 
 ### `@for`
@@ -149,8 +153,6 @@ rules (v0):
 @for (todo, index of $todos) { <li>{index + 1}. {todo.title}</li> }
 @for ({ id, title } of $todos) { <li id={id}>{title}</li> }
 @for (n of 1..5): <li>{n}</li>
-
-<li @for={todo of $todos}>{todo.title}</li>
 ```
 
 - `@else` applies to an empty list.
@@ -210,8 +212,8 @@ value |> (x => x * 2);                            // (x => x * 2)(value)
 value |> { a: #, b: null, c: # };                 // the value is bound once, used twice
 $todos |> #.length |> `${#} todos`;               // # works in any expression
 
-// refused: reads like the implicit form, but would call eene() first
-'some example' |> eene();                         // error: use eene(#) or eene
+// a call without #: whatever the right side evaluates to is called (d-09)
+'some example' |> makeFormatter();                // makeFormatter()('some example')
 ```
 
 - the left operand reaches back to the next `=`, `,`, `;`, `(`, `?`, `:`, `return` …
@@ -224,14 +226,18 @@ further pipe operators (`|?`, `|:`, `|*` …) are an idea, not built: [ideas.md]
 ### ranges
 
 ```js
-1..5          // [1, 2, 3, 4, 5]
-5..1          // [5, 4, 3, 2, 1]
-'a'..'e'      // ['a', 'b', 'c', 'd', 'e']
+1..5          // Range 1 2 3 4 5
+5..1          // Range 5 4 3 2 1
+'a'..'e'      // Range a b c d e
 0..$count     // reactive in a hole: () => $$.range(0, $count.value)
 (a + 1)..b    // an operand larger than a number, string or name goes in parens
+[1..5]        // a real array: [1, 2, 3, 4, 5]
 ```
 
-- inclusive on both ends, `..` becomes `$$.range(from, to)` from `@rat/runtime`.
+- inclusive on both ends. `a..b` becomes `$$.range(from, to)` from `@rat/runtime`: a
+  `Range`, lazy (nothing is allocated until it is iterated) but with the usual array
+  methods (`map`, `filter`, `reduce`, `join`, `includes`, `at`, `length` …). `[a..b]`
+  alone in brackets is an array (d-07).
 - works everywhere script sugar does ([d-06](decisions.md#d-06)).
 - `1..toString()` (valid js) now reads as a range. write `(1).toString()`.
 - open: exclusive ranges, steps, bare letters ([d-05](decisions.md#d-05), [d-07](decisions.md#d-07)).
@@ -247,7 +253,8 @@ careful: in plain js this would assign to an outer `item`. in rat never.
 ## `.rat.js`
 
 plain js with everything from [script sugar](#script-sugar). additionally every
-``html`…` `` without a `${…}` of its own is compiled as rat markup, holes as `{…}`:
+``html`…` ``, ``htx`…` `` and ``rat`…` `` without a `${…}` of its own is compiled as
+rat markup, holes as `{…}` (all three for now, d-11):
 
 ```js
 let $count = 0;
@@ -259,10 +266,55 @@ export const Counter = () => html`
 
 a template with `${…}` stays a runtime htx template.
 
+## behaviors
+
+an `@` on an element hands the element to a function: a tooltip, drag and drop,
+autosizing, a pattern or filter from aufbau. `use:` is the same, written the other way
+round (both stay until practice shows which reads better).
+
+```html
+<button @tooltip={'save the file'}>save</button>
+<textarea @autosize></textarea>
+<section @pattern={{ id: 'dots', fg: $color }}>…</section>
+<button @flash:click="#ffd400">…</button>          <!-- an argument after the colon -->
+<h2 use:filter={$filter}>RAT</h2>
+```
+
+```js
+// a behavior: (element, value, arg) => nothing | cleanup | { update (value), destroy () }
+const pattern = (element, { id, ...options }) => {
+  patterns.apply(element, id, options);
+  return () => patterns.remove(element);
+};
+```
+
+- the name is a function in scope: `@auto-size` looks for `autoSize`.
+- it runs once the element exists, with its children. a value change calls `update`,
+  or (without one) cleans up and runs again. the cleanup goes with the element.
+- see `demos/examples/behaviors.rat`.
+
+## event modifiers
+
+```html
+<input on:keydown[enter]={send} />                   <!-- only for that key -->
+<input on:keydown[ctrl+c|space+a]={copy} />          <!-- | alternatives, + a combination -->
+<form on:submit!={add}>                              <!-- event.preventDefault() first -->
+<button on:click:once={init}>                        <!-- once, then the listener is gone -->
+<button on:click:3={tap}>                            <!-- three times -->
+<input on:keydown[escape]!={clear} />                <!-- combined: key, then !, then count -->
+```
+
+- key names are lowercase `event.key` values, plus `space`, `esc`, `up`, `down`,
+  `left`, `right`, `ctrl`. a modifier (`ctrl`, `shift`, `alt`, `meta`) must match
+  exactly: `[enter]` does not fire on shift+enter.
+- in `space+a`, `space` has to be held when `a` is pressed.
+- `!` and `:once` / `:N` are provisional ([d-24](decisions.md#d-24), [d-25](decisions.md#d-25)).
+- modifiers need the `on:` / `on` prefix form on elements.
+
 ## styles
 
-`<style>` is css. another language goes through a preprocessor that is handed to the
-compiler ([d-20](decisions.md#d-20)):
+`<style>` is css. `scss`, `sass` and `ass` ([`@aufbau/ass`](https://github.com/pulgasari/aufbau/tree/main/ass))
+are built in ([d-20](decisions.md#d-20)):
 
 ```html
 <style lang="scss">
@@ -271,15 +323,16 @@ compiler ([d-20](decisions.md#d-20)):
 ```
 
 ```js
-const sass = await import('sass');   // once, before compiling
-compile(source, { styles: { scss: code => sass.compileString(code).css } });
+await compileAsync(source, { filename });      // loads sass / @aufbau/ass on first use
+await loadStyles('scss', 'ass'); compile(…);   // or load once, then compile synchronously
+compile(source, { styles: { less: code => … } }); // any other language: pass a function
 ```
 
-- `lang="scss"` or `type="text/scss"`. without a preprocessor for the language the
-  compiler refuses with a message that says how to pass one.
-- the preprocessor is synchronous on purpose, `compile()` stays sync.
-- most of what scss was used for is native css now (nesting, `@scope`, custom
-  properties, `color-mix()`), see [ideas.md](ideas.md#3-style-languages).
+- `lang="scss"` or `type="text/scss"`.
+- a loader tries the bare specifier first (`sass`, `@aufbau/ass`: an import map or
+  `node_modules`), then a pinned url.
+- *(planned)* a service worker that compiles `.rat` files on request, so a plain browser
+  page can `import './card.rat'` without a build.
 
 ## open
 

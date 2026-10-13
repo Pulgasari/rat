@@ -2,126 +2,143 @@
 
 calls that are yours to make. tick one box per decision (`- [x]`), add a note below it
 if needed, and i build it that way. **(v0)** marks what the prototype does today,
-**(rec)** my recommendation. a decided entry moves to [decided](#decided) at the end.
+**(rec)** my recommendation. a decided entry moves to [decided](#decided) at the end,
+with what was built.
 
-overview: [syntax](#syntax) · [pipe](#pipe) · [ranges](#ranges) · [components](#components) · [app](#app) · [styles](#styles) · [packages](#packages)
+open: [syntax](#syntax) · [pipe](#pipe) · [components](#components) · [app](#app) · [styles](#styles) · [decided](#decided)
 
 ---
 
 ## syntax
 
-<a id="d-01"></a>
-### d-01 · one-line blocks: is the `:` needed?
+<a id="d-12"></a>
+### d-12 · `{…}` holes in plain `.js` files (no compiler involved)
 
-```html
-@for (todo of $shown): <li>…</li>     a) with colon
-@for (todo of $shown) <li>…</li>      b) without
+in `.rat` and `.rat.js` files the compiler turns `{…}` into code, that is settled. the
+question is only about a plain `.js` file that uses ``html`…` `` from htx at runtime,
+without any compile step: should the runtime template understand `{…}` as well?
+
+```js
+// app.js, loaded as is by the browser
+html`<p>${name}</p>`   // works today (htx)
+html`<p>{name}</p>`    // the question: this too?
 ```
 
-- [x] a) colon required **(v0) (rec)**: the head ends visibly, and the colon is what tells a one-line body from an indented one
-- [ ] b) no colon: the body starts after the head
+- [ ] a) no, at runtime it stays `${…}` **(v0) (rec)**: a tagged template only sees the strings, `{name}` would have to be looked up by name at runtime (no access to local variables), so it can not work like in the compiled files
+- [ ] b) yes, for values passed in explicitly: ``html({ name })`<p>{name}</p>` ``
+
+<a id="d-24"></a>
+### d-24 · `preventDefault()` on an event
+
+your draft `on:submit!={add}` is built, provisionally.
+
+- [ ] a) `!` after the event name: `on:submit!={add}` **(v0)**
+- [ ] b) a word: `on:submit:prevent={add}` (reads like `:once`)
 - [ ] c) both
 
-<a id="d-02"></a>
-### d-02 · one-line blocks: where does the body end?
+<a id="d-25"></a>
+### d-25 · once / n times
 
-- [x] a) at the end of the line, or where `@else` / `@case` / `@default` starts on the same line **(v0) (rec)**
-- [ ] b) at the end of the line only, `@else` always on its own line
-- [ ] c) an explicit end marker (`;` or `@end`)
+`on:click:once` and `on:click:3` are built, provisionally.
 
-<a id="d-03"></a>
-### d-03 · several directives on one line
+- [ ] a) `on:click:once`, `on:click:3` **(v0) (rec)**: one form for both, the count is a plain suffix
+- [ ] b) `once:click={…}` as its own prefix
+- [ ] c) `on:click:1` only (no word)
 
-`@if ($a): @for (x of $xs): <li>{x}</li>`
+<a id="d-26"></a>
+### d-26 · behaviors: `@name` or `use:name`
 
-- [x] a) allowed, each takes the rest of the line **(v0) (rec)**
-- [ ] b) one directive per line
+both are built, as you asked, until practice decides.
 
-<a id="d-04"></a>
-### d-04 · indentation: tabs and spaces
+- [ ] a) `@tooltip={…}` only
+- [ ] b) `use:tooltip={…}` only
+- [ ] c) both stay
 
-- [ ] a) every space and tab counts as one **(v0)**
-- [ ] b) a tab counts as 2 spaces
-- [x] c) mixing tabs and spaces in one block is an error **(rec)**: no guessing, and the editor setting does not change the meaning
+<a id="d-27"></a>
+### d-27 · the name for markup fragments with parameters ([ideas.md 2.6](ideas.md#26-markup-fragments-as-values-svelte))
 
-notiz bzgl d-01 bis d-04: ich bin aber nich sicher, ob sich in der praxis zeigt, dass das derartig taug tbzw 100pro stimmig ist. war auch insb. nich sicher ob mit/ohne colon oder mit/ohne eol-marker usw.
+your doubt: a dom `DocumentFragment` has no parameters. a rat fragment is a function
+that *returns* nodes, called with arguments each time.
 
-<a id="d-11"></a>
-### d-11 · the template tag in `.rat.js`
+- [ ] a) `@fragment row (item)`: the result is a fragment, the declaration is its recipe
+- [ ] b) `@snippet row (item)` (svelte's word)
+- [ ] c) `@partial row (item)` (the word from server templates: php, rails, handlebars)
+- [ ] d) `@markup row (item)`
+- [ ] e) other: …
 
-- [ ] a) ``html`…` `` **(v0) (rec)**: the same tag as htx, a file reads the same with and without the compiler
-- [ ] b) ``rat`…` ``: shows that it is compiled
-- [ ] c) both
-- [x] d) hier sollten wir temporär sogar ersma `htx`, `html`, `rat` machen
+<a id="d-28"></a>
+### d-28 · async blocks: the syntax ([ideas.md 2.3](ideas.md#23-async-blocks-svelte))
 
-<a id="d-12"></a>
-### d-12 · `{…}` holes in runtime templates (plain `.js`, no compiler)
+```html
+<!-- a) three keywords, like @if / @else -->
+@await (load($id))
+  <p>loading …</p>
+@then (user)
+  <p>{user.name}</p>
+@catch (error)
+  <p>{error.message}</p>
 
-- [ ] a) no, at runtime it stays `${…}` **(v0) (rec)**: no string parsing at runtime, the difference is what the compiler buys
-- [ ] b) yes, the runtime parses `{…}` too (cached, like htm)
+<!-- b) the value named in the head, pending and failure as clauses -->
+@await (user of load($id))
+  <p>{user.name}</p>
+@pending
+  <p>loading …</p>
+@catch (error)
+  <p>{error.message}</p>
 
-anmerkung: wo? in `.js` files? in `.rat.js` files? in `.rat` files? die frage is iwie ungenau.
+<!-- c) a for-like head, no pending branch: shows nothing until the value is there -->
+@await (user of load($id)): <p>{user.name}</p>
+```
+
+- [ ] a) `@await` / `@then` / `@catch`
+- [ ] b) the value in the head, `@pending` and `@catch` as clauses **(rec)**: the main case comes first, and `user of …` reads like `@for`
+- [ ] c) only the short form
+- [ ] d) b, with c as the one-line form
+
+<a id="d-29"></a>
+### d-29 · filters on loops: the syntax ([ideas.md 2.4](ideas.md#24-filters-on-loops-haskell))
+
+```html
+@for (todo of $todos if !todo.done)       a) if in the head
+@for (todo of $todos where !todo.done)    b) where (sql, haskell, swift)
+@for (todo of $todos |? !#.done)          c) the pipe filter (if d-10 brings |?)
+@for (todo of $todos, !todo.done)         d) a comma, like a comprehension
+```
+
+- [ ] a) `if` **(rec)**: a word every js reader knows, no new keyword
+- [ ] b) `where`
+- [ ] c) only through the pipe family
+- [ ] d) comma
+
+<a id="d-30"></a>
+### d-30 · pattern matching ([ideas.md 2.5](ideas.md#25-pattern-matching-rescript), [named cases](ideas.md#5-named-cases))
+
+two parts: the block, and whether patterns can be named and reused.
+
+- [ ] a) `@match` with object patterns, as in ideas 2.5
+- [ ] b) `@switch` learns patterns (no new keyword): a `@case` with `{ … }` or `[ … ]` is a pattern, anything else compares with `===` **(rec)**
+- [ ] c) both, `@match` exhaustive (warns about unhandled cases), `@switch` not
+
+named cases, your idea:
+
+- [ ] yes, `case` as a declaration (see [ideas.md 5](ideas.md#5-named-cases)), usable in `@switch`, `@if` and script
+- [ ] not yet
 
 ---
 
 ## pipe
 
-<a id="d-08"></a>
-### d-08 · the placeholder
-
-- [x] a) `#` **(v0) (rec)**: your proposal, reads well, free in js (except `#private`, which stays untouched)
-- [ ] b) `%` (the tc39 hack proposal), clashes with modulo
-- [ ] c) `^^` or `@`
-
-anmerkung: option a unter vorbehalt. eigtl suboptimal wegen parser, aber `$` wäre doof wegen reactivity-marker und `_` find ich gut, aber wird ja gemeinhin für "überspringen" genutzt. (?) `@` find ich auch ansehnlich. 
-
-<a id="d-09"></a>
-### d-09 · a call without placeholder: `x |> f()`
-
-- [ ] a) an error with a hint **(v0) (rec)**: your note, it would call `f()` first
-- [x] b) `f()(x)`: pipe into the result of the call
-- [ ] c) `f(x)`: insert as first argument (elixir style)
-
-anmerkung: angesichts der bestehenden 2 formen würde hier doch nur b sinn machen ohne verwirrung zu stiften. so wärs einheitlich/konsequent. oder irre ich mich?
-
 <a id="d-10"></a>
-### d-10 · further pipe operators ([ideas.md](ideas.md#1-a-pipe-family))
+### d-10 · further pipe operators ([ideas.md 1](ideas.md#1-a-pipe-family))
+
+your note: more operators, since `filter(…)` / `map(…)` chains read badly. your shapes
+are checked in [ideas.md 1](ideas.md#your-shapes): `>>` and `>>>` are js shift
+operators; `|?>`, `|?:`, `|!:`, `|?|`, `|!|` are free.
 
 - [ ] a) none, `|>` with `#` covers it
-- [ ] b) `|:` map and `|?` filter only **(rec)**: the 90 % case, both free in js
-- [ ] c) the full set: `|:` `|?` `|.name` `|*` `|@`
+- [ ] b) the `|X>` family: `|>` pipe, `|:>` map, `|?>` filter, `|!>` reject, `|*>` reduce, `|.>` pluck **(rec)**: one visual rule, every member ends in `>` ("flows into"), the middle character is the operation, all free in js
+- [ ] c) two-character forms: `|:` map, `|?` filter, `|*` reduce, `|.name` pluck
 - [ ] d) other: …
-
-anmerkung:
-- noch unsicher. tendenziell will ich aber weitere, weil die den typischen js-code, der durch `filter(...)`, `map(...)` usw entsteht, ich als unfassbar unleserlich, stressig und schwer nachvollziehbar empfinde
-- mögliche operator shapes evtl: `|?>` `>>` `>>>` `|?:` `|!:` `|?|` `|!|`
-
----
-
-## ranges
-
-<a id="d-05"></a>
-### d-05 · range forms
-
-- [x] inclusive `1..5` **(v0)**
-- [ ] exclusive `1..<5`
-- [ ] step `1..10 by 2` or `1..10..2`
-- [ ] bare letters `a..d` (clash with variables `a`, `d`; v0 needs `'a'..'d'`)
-
-(several boxes allowed here)
-
-<a id="d-06"></a>
-### d-06 · where ranges work
-
-- [x] a) everywhere script sugar works: holes, `<script>`, `.rat.js` **(v0) (rec)**
-- [ ] b) only in markup holes and `@for` heads
-
-<a id="d-07"></a>
-### d-07 · what a range is
-
-- [ ] a) an array **(v0) (rec)**: works with every array method and the pipe
-- [ ] b) a lazy iterable: no allocation for `0..1e9`, but no array methods without `[...]`
-- [x] c) (?) vielleicht `0..9` (lazy iterable) und `[0..9]`(array)? oder eigene range-type der lazy-iterable ist aber array-methoden mitbringt?
 
 ---
 
@@ -144,7 +161,8 @@ anmerkung:
 ### d-15 · the index in `@for`
 
 - [ ] a) a plain number, stale after a reorder **(v0)**
-- [ ] b) a signal when the body uses it **(rec)**: correct, and only costs where used
+- [ ] b) a signal when the body uses it
+- [ ] c) `$loop` instead ([ideas.md 2.1](ideas.md#21-loop-metadata-latte)): `$loop.index`, `.number`, `.first`, `.last`, `.length`, always current **(rec)**
 
 <a id="d-23"></a>
 ### d-23 · mutating `$` arrays and objects (`$todos.push(x)`)
@@ -164,13 +182,6 @@ anmerkung:
 - [ ] b) `onclick={['open', 'settings']}`
 - [ ] c) a `command` attribute next to the handler: `command='open' value='settings'` (closer to the invoker commands api)
 
-<a id="d-17"></a>
-### d-17 · router
-
-- [ ] a) file based (`views/*.rat`) in a build, a registry in the browser **(rec)**
-- [ ] b) a registry only
-- [x] c) aktuell registry. später: + file based (aber schema noch unklar)
-
 ---
 
 ## styles
@@ -181,25 +192,69 @@ anmerkung:
 - [ ] a) none: styles reach into children, closer components win **(v0) (rec)**: css-like, slotted content keeps the parent's styles
 - [ ] b) donut scope: `to ([data-rat])`, styles stop at child components
 
-<a id="d-20"></a>
-### d-20 · style languages ([ideas.md](ideas.md#3-style-languages))
-
-- [ ] a) preprocessor hook only, nothing bundled **(v0) (rec)**
-- [ ] b) the hook plus `lang="ass"` wired to `@aufbau/ass` out of the box
-- [ ] c) native css only, no `lang` at all
-- [x] d) erstmal support für `scss` und `ass` out of the box. wird preprocessed usw, je nach context, bei browser-only via sw. später kommt da grundlegend noch fetter css-sugar meinerseits als builtin hinzu, aber weiss aktuell noch net 100pro in welcher form
----
-
-## packages
-
-<a id="d-18"></a>
-### d-18 · `@rat/core` and `@rat/runtime`
-
-- [x] a) separate **(rec)**: the runtime works without an app
-- [ ] b) one package
-
 ---
 
 ## decided
 
-nothing yet.
+<a id="d-01"></a>
+### d-01 · one-line blocks need the `:` → **yes**
+
+<a id="d-02"></a>
+### d-02 · a one-line body ends at the line end or at `@else` / `@case` / `@default` → **yes**
+
+<a id="d-03"></a>
+### d-03 · several directives on one line → **allowed**
+
+<a id="d-04"></a>
+### d-04 · tabs and spaces mixed in one indented block → **an error**
+
+built: the compiler names the line and what the block uses instead.
+
+your note on d-01 to d-04: not sure yet that this holds up in practice, especially
+colon or not and an end marker or not. → they stay easy to change: all of it lives in
+`body()` and `nodes()` in `packages/compiler/parse.js`, plus `blockHead` in the syntax spec.
+
+<a id="d-05"></a>
+### d-05 · range forms → **inclusive `a..b` only**
+
+<a id="d-06"></a>
+### d-06 · ranges work everywhere script sugar works → **yes**
+
+<a id="d-07"></a>
+### d-07 · what a range is → **a lazy range type with array methods; `[a..b]` is an array**
+
+built: `a..b` is a `Range` from `@rat/runtime` (iterable, `length`, `at`, `includes`,
+plus `map`, `filter`, `reduce`, `join` … on a fresh array). `[1..5]` alone in brackets
+compiles to `[...$$.range(1, 5)]`.
+
+<a id="d-08"></a>
+### d-08 · the pipe placeholder → **`#`, provisionally**
+
+your note: `$` is taken by reactivity, `_` usually means "skip", `@` looks good too.
+→ `@` is now the behavior marker in markup and a decorator in js, which would make it
+ambiguous inside holes. `#` stays until something better shows up. worth knowing: gleam
+uses `_` exactly like this (`list |> map(_, double)`), so `_` has a precedent
+([ideas.md 4.7](ideas.md#47-gleam)).
+
+<a id="d-09"></a>
+### d-09 · `x |> f()` → **`f()(x)`: whatever the right side evaluates to is called**
+
+your note: with the two existing forms only this is consistent. → agreed and built. the
+rule is now simple: with `#` the value goes where `#` is; without `#` the right side is
+evaluated and called with the value.
+
+<a id="d-11"></a>
+### d-11 · the template tag in `.rat.js` → **`html`, `htx` and `rat`, all three for now**
+
+<a id="d-17"></a>
+### d-17 · router → **a registry now, file based later (scheme open)**
+
+<a id="d-18"></a>
+### d-18 · `@rat/core` and `@rat/runtime` → **separate**
+
+<a id="d-20"></a>
+### d-20 · style languages → **`scss` and `ass` out of the box**
+
+built: `scss`, `sass` and `ass` load on demand (`compileAsync()`, `loadStyles()`), any
+other language through `options.styles`. still to do: browser-only setups through a
+service worker that compiles `.rat` files on request. your own css sugar comes later.
