@@ -566,3 +566,16 @@ so the remaining reasons for scss are mixins, loops and maps, and existing scss 
 | native only | nothing | the nesting example from scss works unchanged as css |
 
 the call is [d-20](decisions.md#d-20).
+
+
+---
+
+# notes
+
+```
+2.3 async blocks
+2.4 filters on loops
+2.5 pattern matching
+2.6 fragments
+2.7 event modifiers
+```
