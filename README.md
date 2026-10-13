@@ -1,6 +1,8 @@
-# rat
+# RAT
 
-![Logo](rat.webp)
+![RAT](rat.webp)
+
+experimental JS-framework.
 
 ---
 
@@ -18,9 +20,9 @@
 | package         | path                                     | status |
 |-----------------|------------------------------------------|--------|
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
+| `@rat/core`     | [`packages/core`](packages/core)         | skizze |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
 | `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0: hljs, monaco, codemirror/acode, zed, textmate |
-| `@rat/core`     | [`packages/core`](packages/core)         | skizze |
 | `@rat/types`    | [`packages/types`](packages/types)       | skizze |
 
 ---
