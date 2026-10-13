@@ -490,7 +490,7 @@
     },
     "attribute_name": {
       "type": "PATTERN",
-      "value": "[^\\s=\\/>\"'{}|.#][^\\s=\\/>\"'{}|]*"
+      "value": "([^\\s=\\/>\"'{}|.#\\[]|\\[[^\\]\\n]*\\])([^\\s=\\/>\"'{}|\\[]|\\[[^\\]\\n]*\\])*"
     },
     "attribute_value": {
       "type": "PATTERN",
@@ -1060,8 +1060,21 @@
           "content": {
             "type": "TOKEN",
             "content": {
-              "type": "STRING",
-              "value": "html`"
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "html`"
+                },
+                {
+                  "type": "STRING",
+                  "value": "htx`"
+                },
+                {
+                  "type": "STRING",
+                  "value": "rat`"
+                }
+              ]
             }
           },
           "named": true,

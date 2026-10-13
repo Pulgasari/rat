@@ -35,7 +35,11 @@ const template = parts => '`' + parts.map(part => typeof part === 'string'
 // ::: generator
 
 function generate (ast, { filename, names, runtime = '$$', scope = null, source }) {
-  const expression = node => transformExpression(node, { filename, names, source });
+  // an object literal as a value has to be wrapped, or () => { … } reads as a block
+  const expression = node => {
+    const code = transformExpression(node, { filename, names, source });
+    return code.trimStart().startsWith('{') ? `(${code})` : code;
+  };
 
   function nodes (children, depth, root) {
     return children.map(child => node(child, depth, root));
@@ -88,16 +92,31 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
   function element (child, depth, root) {
     if (child.tag === 'slot') return 'props.children';
 
-    const props    = properties(child, root);
+    const parts    = properties(child, root);
     const children = nodes(child.children, depth + 1, false);
     const fn       = child.svg ? 'svg' : 'el';
     const tag      = child.component ? child.tag : `'${child.tag}'`;
     const args     = [tag];
 
-    if (props.length || children.length) args.push(list(props, depth, true));
+    if (parts.length || children.length) args.push(propsOf(parts, depth, child.component));
     if (children.length) args.push(list(children, depth));
 
     return `${runtime}.${fn}(${args.join(', ')})`;
+  }
+
+  // parts: prop lines, and { spread } where a {...rest} stands. an element merges them
+  // (class and style add up), a component spreads them into one object
+  function propsOf (parts, depth, component) {
+    if (!parts.some(part => part.spread)) return list(parts, depth, true);
+    if (component) return list(parts.map(part => part.spread ? `...${part.spread}` : part), depth, true);
+
+    const groups = [];
+    for (const part of parts) {
+      if (part.spread) groups.push(part.spread);
+      else if (Array.isArray(groups[groups.length - 1])) groups[groups.length - 1].push(part);
+      else groups.push([part]);
+    }
+    return `${runtime}.merge(${groups.map(group => Array.isArray(group) ? list(group, depth, true) : group).join(', ')})`;
   }
 
   function properties (child, root) {
@@ -107,7 +126,7 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
     let dynamic   = false;
 
     for (const attribute of child.attributes) {
-      if (attribute.type === 'Spread') { out.push(`...${expression(attribute)}`); continue; }
+      if (attribute.type === 'Spread') { out.push({ spread: expression(attribute) }); continue; }
 
       for (const name of attribute.names) {
         const { value } = attribute;
@@ -145,7 +164,34 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
     }
   }
 
+  // @tooltip={text}, @gestures:swipeable, use:tooltip={text}: [behavior, value getter]
+  function behavior (name, value) {
+    const [, base, arg] = /^(?:@|use:)([\w-]+)(?::([\w-]+))?$/.exec(name) ?? [];
+    if (!base) throw new Error(`[rat] "${name}" is not a behavior name (@name or @name:arg)`);
+    const fn     = base.replace(/-(\w)/g, (_, char) => char.toUpperCase());
+    const [code] = value.kind === 'true' ? [null] : valueOf(name, value);
+    return `${key(`@${base}${arg ? `:${arg}` : ''}`)}: [${fn}, ${code === null ? 'null' : `() => ${code}`}]`;
+  }
+
+  // on:keydown[enter]!:once -> 'on:keydown[enter]!:once': $$.on(fn, { keys: 'enter', prevent: true, times: 1 })
+  const EVENT = /^on(:?)([\w:.-]+?)(?:\[([^\]]*)\])?(!)?(?::(once|\d+))?$/;
+
+  function event (name, value) {
+    const [, , , keys, prevent, times] = EVENT.exec(name);
+    const [code] = valueOf(name, value);
+    if (keys === undefined && !prevent && !times) return `${key(name)}: ${code}`;
+    const options = [
+      keys !== undefined && `keys: ${JSON.stringify(keys)}`,
+      prevent && 'prevent: true',
+      times && `times: ${times === 'once' ? 1 : Number(times)}`,
+    ].filter(Boolean);
+    return `${key(name)}: ${runtime}.on(${code}, { ${options.join(', ')} })`;
+  }
+
   function prop (name, value, component) {
+    if (name[0] === '@' || name.startsWith('use:')) return behavior(name, value);
+    if (/^on[:a-z]/i.test(name) && !component) return event(name, value);
+
     const isEvent = /^on[:a-z]/i.test(name);
     const isRaw   = isEvent || name === 'ref' || name.startsWith('bind:');
 

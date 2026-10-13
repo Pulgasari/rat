@@ -31,14 +31,13 @@ const breaks = (code, a, b) => code.slice(a.end, b.start).includes('\n');
 /*
 two forms, decided by the right side:
 
-  value |> fn               fn(value)              implicit: a callable, nothing else
+  value |> fn               fn(value)              implicit: the right side is a callable
   value |> obj.fn           obj.fn(value)
+  value |> make()           (make())(value)        whatever it evaluates to is called (d-09)
   value |> fn(a, #)         fn(a, value)           explicit: # marks where the value goes
   value |> { a: #, b: # }   ($$piped => ({ a: $$piped, b: $$piped }))(value)
 
-a call without # (value |> fn()) is refused: it would call fn first and pipe
-into its result, which reads like the implicit form but is not. a value used
-more than once is bound once, so it is never evaluated twice.
+a value used more than once is bound once, so it is never evaluated twice.
 
 one pipe per round, leftmost first, so a |> f |> g becomes g(f(a)).
 */
@@ -57,7 +56,7 @@ function pipes (code, offset = 0) {
     if (!value) throw fail('|> has no left operand');
     if (!fn)    throw fail('|> has no right operand');
 
-    code = code.slice(0, left.start) + call(fn, value, list.slice(right.first, right.last + 1), fail) + code.slice(right.end);
+    code = code.slice(0, left.start) + call(fn, value, list.slice(right.first, right.last + 1)) + code.slice(right.end);
   }
   throw new Error('[rat] pipe rewrite did not settle');
 }
@@ -104,7 +103,7 @@ function rightOperand (code, list, from) {
 const isTopic  = token => token.type === tt.name && token.value === TOPIC;
 const isSimple = value => /^[\w$.]+$/.test(value);
 
-function call (fn, value, list, fail) {
+function call (fn, value, list) {
   const topics = list.filter(isTopic);
 
   if (topics.length) {
@@ -117,19 +116,7 @@ function call (fn, value, list, fail) {
   }
 
   if (list.every(token => token.type === tt.name || token.type === tt.dot || token.type === tt.questionDot)) return `${fn}(${value})`;
-  if (list[list.length - 1].type === tt.parenR && !grouped(list)) throw fail('a call right of |> needs # to place the value: x |> fn(#), or no parens: x |> fn');
   return `(${fn})(${value})`;
-}
-
-// ( … ) around the whole right side: a group (an arrow function, say), not a call
-function grouped (list) {
-  if (list[0].type !== tt.parenL) return false;
-  let depth = 0;
-  for (let at = 0; at < list.length; at++) {
-    if (list[at].type === tt.parenL) depth++;
-    if (list[at].type === tt.parenR && --depth === 0) return at === list.length - 1;
-  }
-  return false;
 }
 
 // ::: sugar :: topic
@@ -168,11 +155,12 @@ function strayTopic (code, offset) {
 /*
 a..b is an inclusive range: 1..5, 5..1, 'a'..'e', 0..$count. an operand is a
 number, a string, a name chain or a (group), anything larger goes in parens.
-it becomes $$.range(a, b), from @rat/runtime. .. inside strings, comments and
-... is never touched.
+a..b becomes $$.range(a, b), a lazy Range with array methods (@rat/runtime);
+[a..b] alone in brackets becomes a real array (d-07). .. inside strings,
+comments and ... is never touched.
 */
 const OPERAND = String.raw`(?:\d[\d_]*(?:\.\d+)?|'[^'\n]*'|"[^"\n]*"|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*|\([^()]*\))`;
-const RANGE   = new RegExp(String.raw`(?<![\w$.])(${OPERAND})\s*(?<!\.)\.\.(?!\.)\s*(-?${OPERAND})`, 'g');
+const RANGE   = new RegExp(String.raw`((?<![\w$)\]])\[\s*)?(?<![\w$.])(${OPERAND})\s*(?<!\.)\.\.(?!\.)\s*(-?${OPERAND})(\s*\])?`, 'g');
 
 function ranges (code, offset = 0, runtime = '$$') {
   // where .. must not be read: strings, templates, regexes, comments
@@ -184,10 +172,11 @@ function ranges (code, offset = 0, runtime = '$$') {
     if (!blocked.some(([start, end]) => match.index >= start && match.index < end)) blocked.push([match.index, match.index + match[0].length]);
   }
 
-  return code.replace(RANGE, (whole, from, to, at) => {
-    const dots = at + whole.indexOf('..', from.length);
+  return code.replace(RANGE, (whole, open, from, to, close, at) => {
+    const dots = at + whole.indexOf('..', (open ?? '').length + from.length);
     if (blocked.some(([start, end]) => dots >= start && dots < end)) return whole;
-    return `${runtime}.range(${from}, ${to})`;
+    const range = `${runtime}.range(${from}, ${to})`;
+    return open && close ? `[...${range}]` : `${open ?? ''}${range}${close ?? ''}`;
   });
 }
 

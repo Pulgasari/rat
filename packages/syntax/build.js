@@ -21,8 +21,8 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join }                               from 'node:path';
 import { fileURLToPath }                               from 'node:url';
 
-import { files, operators, pipe, words } from './spec.js';
-import { textmate }                      from './targets/textmate.js';
+import { files, operators, pipe, templateTags, words } from './spec.js';
+import { textmate }                                    from './targets/textmate.js';
 
 const ROOT  = dirname(fileURLToPath(import.meta.url));
 const BIN   = join(ROOT, 'node_modules', '.bin');
@@ -50,6 +50,7 @@ if (run('zed')) {
     operators : operators.filter(operator => operator !== pipe),
     pipe,
     storage   : words.storage,
+    templateTags,
   }));
 
   for (const grammar of ['rat', 'ratjs']) {

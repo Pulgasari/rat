@@ -80,7 +80,8 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     line    the end of the line        @if (…): …
     indent  a line indented no deeper  @if (…)
             than the block head          …
-  inside line and indent a } still closes, when an outer { … } is open.
+  inside line and indent a } still closes, when an outer { … } is open, and a
+  closing tag ends the body inside its element: <ul>@for (x of xs): <li/></ul>
   */
   function nodes (end, context) {
     const children = [];
@@ -89,8 +90,12 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     while (i < source.length) {
       if (loose) {
         if (peek('}') && context.braces) return children;
+        if (peek('</') && context.depth) return children;
         if (end === 'line' && (atNewline() || atContinuation())) return children;
-        if (end === 'indent' && atNewline() && dedented(context.indent)) return children;
+        if (end === 'indent' && atNewline()) {
+          if (dedented(context.indent)) return children;
+          consistent(context.whitespace);
+        }
       }
 
       if (peek('<!--')) {
@@ -137,6 +142,24 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     const from = at;
     while (source[at] === ' ' || source[at] === '\t') at++;
     return at - from;
+  }
+
+  // the leading spaces and tabs of the line a position is on
+  function leading (position) {
+    const from = source.lastIndexOf('\n', position - 1) + 1;
+    return /^[ \t]*/.exec(source.slice(from))[0];
+  }
+
+  // an indented block uses tabs or spaces, never both (d-04). checks the line after the
+  // newline at i; whitespace is { char } shared by the block, set by its first indented line
+  function consistent (whitespace) {
+    const indent = leading(i + 1);
+    if (!indent || !source.slice(i + 1 + indent.length).split('\n')[0].trim()) return;
+    const chars = new Set(indent);
+    if (chars.size > 1) throw fail('tabs and spaces mixed in one indentation', i + 1);
+    const [char] = chars;
+    whitespace.char ??= char;
+    if (char !== whitespace.char) throw fail(`this block is indented with ${whitespace.char === '\t' ? 'tabs' : 'spaces'}, this line with ${char === '\t' ? 'tabs' : 'spaces'}`, i + 1);
   }
 
   // true if the next non-blank line is indented no deeper than base (or there is none)
@@ -198,7 +221,10 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     sticky(INLINE_SPACE);
     if (peek('{')) { i++; return nodes('brace', { ...context, braces: (context.braces ?? 0) + 1 }); }
     if (peek(':')) { i++; sticky(INLINE_SPACE); return trimEnd(nodes('line', context)); }
-    if (atLineEnd()) return nodes('indent', { ...context, indent: base });
+    if (atLineEnd()) {
+      const head = leading(i);
+      return nodes('indent', { ...context, indent: base, whitespace: { char: head ? head[0] : null } });
+    }
     throw fail('expected "{", ":" or a line break after the block head');
   }
 
@@ -313,7 +339,6 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     const node       = selector(name, start);
     node.svg         = context.svg || node.tag === 'svg';
     node.attributes  = [];
-    node.directives  = {};
     node.children    = [];
 
     const closed = attributes(node);
@@ -322,7 +347,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
       node.children = nodes('tag', { depth: context.depth + 1, svg: node.svg });
     }
 
-    return directives(node);
+    return node;
   }
 
   // div#main.card.big -> { tag, id, classes }. a capital means a component, its name is an identifier
@@ -376,13 +401,11 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
         value = attributeValue(name);
       }
 
-      if (name === '@if' || name === '@for') {
-        if (value.kind !== 'expression') throw fail(`${name} needs a value in {…}`, at);
-        node.directives[name.slice(1)] = value;
-        continue;
-      }
+      // @name is a behavior now. control flow is a block around the element
+      if (name === '@if' || name === '@for' || name === '@switch') throw fail(`${name} is a block, not an attribute: write it around the element`, at);
 
-      const names = name.split('|');
+      // a | inside [ … ] is part of a key filter (on:keydown[ctrl+c|space+a]), not a prop group
+      const names = name.split(/\|(?![^[]*\])/);
       if (names.some(part => !part)) throw fail(`dangling "|" in "${name}"`, at);
       node.attributes.push({ type: 'Attribute', names, value });
     }
@@ -418,16 +441,6 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
 
     if (parts.every(part => typeof part === 'string')) return { kind: 'string', value: parts.join('') };
     return { kind: 'template', parts };
-  }
-
-  // @if={…} and @for={…} wrap the element in the block they name. @for is outside, @if inside
-  function directives (node) {
-    const { for: loop, if: test } = node.directives;
-    delete node.directives;
-    let result = node;
-    if (test) result = { type: 'If', branches: [{ test, children: [result] }], fallback: null };
-    if (loop) result = { type: 'For', ...forHead(loop), children: [result], fallback: null };
-    return result;
   }
 
   // <script>, <script module>, <style>: raw text, top level only

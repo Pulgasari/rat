@@ -83,7 +83,8 @@ export default function define (name, root) {
         optional(seq('=', choice($.attribute_string, $.expression, $.attribute_value))),
       ),
 
-      attribute_name  : $ => /[^\s=\/>"'{}|.#][^\s=\/>"'{}|]*/,
+      // a [ … ] key filter (on:keydown[ctrl+c|space+a]) is part of the name, | included
+      attribute_name  : $ => /([^\s=\/>"'{}|.#\[]|\[[^\]\n]*\])([^\s=\/>"'{}|\[]|\[[^\]\n]*\])*/,
       attribute_value : $ => /[^\s>"'{}]+/,
 
       attribute_string : $ => choice(
@@ -150,8 +151,8 @@ export default function define (name, root) {
       escape_sequence       : $ => /\\./,
       template_substitution : $ => seq('${', repeat($._script), '}'),
 
-      // html`…` is rat markup
-      html_template : $ => seq(alias(token('html`'), $.template_tag), repeat($._template_markup), '`'),
+      // html`…`, htx`…`, rat`…` are rat markup
+      html_template : $ => seq(alias(token(choice(...vocabulary.templateTags.map(tag => `${tag}\``))), $.template_tag), repeat($._template_markup), '`'),
 
       number : $ => /0[xX][\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.\d[\d_]*)?([eE][+-]?\d+)?n?|\.\d[\d_]*([eE][+-]?\d+)?/,
 

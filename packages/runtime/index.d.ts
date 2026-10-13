@@ -31,8 +31,27 @@ export function when  (branches: [() => unknown, Render][], fallback?: Render): 
 export function match (subject: () => unknown, cases: [unknown, Render][], fallback?: Render): DocumentFragment;
 export function each<T> (list: () => Iterable<T>, render: (item: T, index: number) => Child, fallback?: Render): DocumentFragment;
 
-export function range (from: number, to: number): number[];
-export function range (from: string, to: string): string[];
+export class Range<T = number | string> implements Iterable<T> {
+  readonly length : number;
+  at       (index: number): T | undefined;
+  includes (value: T): boolean;
+  indexOf  (value: T): number;
+  toArray  (): T[];
+  [Symbol.iterator] (): Iterator<T>;
+  // plus every, filter, find, findIndex, flatMap, forEach, join, map, reduce, reduceRight,
+  // reverse, slice, some, toReversed, toSorted: each runs on a fresh array
+  [method: string]: unknown;
+}
+
+export function range (from: number, to: number): Range<number>;
+export function range (from: string, to: string): Range<string>;
+
+export type Behavior<V = unknown> = (element: Element, value: V, arg?: string) =>
+  void | (() => void) | { update? (value: V): void, destroy? (): void };
+
+export function use   (element: Element, behavior: Behavior, get?: () => unknown, arg?: string): void;
+export function merge (...parts: (Props | null | undefined)[]): Props;
+export function on    (handler: ((event: Event) => void) | string, options?: { keys?: string, prevent?: boolean, times?: number }): object;
 
 export function mount (component: (props: Props) => Child, target: string | Element, props?: Props): () => void;
 export function style (id: string, css: string): void;
