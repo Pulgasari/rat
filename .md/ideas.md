@@ -605,3 +605,7 @@ bräuchte auch noch eventuelle kopplung mit hotkeys
 <button on:click:1={doSth}>
 <button on:click:5={doSth}>
 ```
+
+## 2.9
+
+das kann HTX doch bereits, dafür brauchte es keine ugly variante von laravel als inspiration. aber ja, das in `rat` auch gehen.
