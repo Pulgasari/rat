@@ -18,14 +18,14 @@ overview: [syntax](#syntax) · [pipe](#pipe) · [ranges](#ranges) · [components
 @for (todo of $shown) <li>…</li>      b) without
 ```
 
-- [ ] a) colon required **(v0) (rec)**: the head ends visibly, and the colon is what tells a one-line body from an indented one
+- [x] a) colon required **(v0) (rec)**: the head ends visibly, and the colon is what tells a one-line body from an indented one
 - [ ] b) no colon: the body starts after the head
 - [ ] c) both
 
 <a id="d-02"></a>
 ### d-02 · one-line blocks: where does the body end?
 
-- [ ] a) at the end of the line, or where `@else` / `@case` / `@default` starts on the same line **(v0) (rec)**
+- [x] a) at the end of the line, or where `@else` / `@case` / `@default` starts on the same line **(v0) (rec)**
 - [ ] b) at the end of the line only, `@else` always on its own line
 - [ ] c) an explicit end marker (`;` or `@end`)
 
@@ -34,7 +34,7 @@ overview: [syntax](#syntax) · [pipe](#pipe) · [ranges](#ranges) · [components
 
 `@if ($a): @for (x of $xs): <li>{x}</li>`
 
-- [ ] a) allowed, each takes the rest of the line **(v0) (rec)**
+- [x] a) allowed, each takes the rest of the line **(v0) (rec)**
 - [ ] b) one directive per line
 
 <a id="d-04"></a>
@@ -42,7 +42,9 @@ overview: [syntax](#syntax) · [pipe](#pipe) · [ranges](#ranges) · [components
 
 - [ ] a) every space and tab counts as one **(v0)**
 - [ ] b) a tab counts as 2 spaces
-- [ ] c) mixing tabs and spaces in one block is an error **(rec)**: no guessing, and the editor setting does not change the meaning
+- [x] c) mixing tabs and spaces in one block is an error **(rec)**: no guessing, and the editor setting does not change the meaning
+
+notiz bzgl d-01 bis d-04: ich bin aber nich sicher, ob sich in der praxis zeigt, dass das derartig taug tbzw 100pro stimmig ist. war auch insb. nich sicher ob mit/ohne colon oder mit/ohne eol-marker usw.
 
 <a id="d-11"></a>
 ### d-11 · the template tag in `.rat.js`
