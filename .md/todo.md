@@ -1,0 +1,37 @@
+# RAT :: todo
+
+---
+
+# syntax
+
+## html-direktiven
+- [x] syntax 1: geschweifte klammern um blocks
+- [ ] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
+- [ ] syntax 3: alternative, falls sich oneliner mal anbiedet. (unklar: doppelpunkt wirklich nötig? brauchts endmarker? mehrere direkten in one line?)
+
+```html
+<!-- syntax 1 -->
+<ul>
+  @for (todo of $shown) {
+    <li>...</li>
+  } @else {
+    <li>nichts zu tun</li>
+  }
+</ul>
+```
+```html
+<!-- syntax 2 -->
+<ul>
+  @for (todo of $shown)
+    <li>...</li>
+  @else
+    <li>nichts zu tun</li>
+</ul>
+```
+```html
+<!-- syntax 3 -->
+<ul>
+  @for (todo of $shown): <li>...</li>
+  @else: <li>nichts zu tun</li>
+</ul>
+```
