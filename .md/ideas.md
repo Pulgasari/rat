@@ -579,3 +579,29 @@ the call is [d-20](decisions.md#d-20).
 2.6 fragments
 2.7 event modifiers
 ```
+
+## 2.7 event modifiers
+
+### preventDefault()
+
+```html
+<form on:submit!={add}>
+```
+
+### key events
+
+```html
+<input on:keydown[enter]={send} />
+```
+
+bräuchte auch noch eventuelle kopplung mit hotkeys
+
+### once
+
+```html
+<button once:click={init}>
+<!-- oder evtl. -->
+<button on:click:once={doSth}>
+<button on:click:1={doSth}>
+<button on:click:5={doSth}>
+```
