@@ -1,6 +1,6 @@
 # RAT
 
-![RAT](rat.webp)
+![RAT](rat2.webp)
 
 experimental JS-framework.
 
