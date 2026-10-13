@@ -31,5 +31,8 @@ export function when  (branches: [() => unknown, Render][], fallback?: Render): 
 export function match (subject: () => unknown, cases: [unknown, Render][], fallback?: Render): DocumentFragment;
 export function each<T> (list: () => Iterable<T>, render: (item: T, index: number) => Child, fallback?: Render): DocumentFragment;
 
+export function range (from: number, to: number): number[];
+export function range (from: string, to: string): string[];
+
 export function mount (component: (props: Props) => Child, target: string | Element, props?: Props): () => void;
 export function style (id: string, css: string): void;

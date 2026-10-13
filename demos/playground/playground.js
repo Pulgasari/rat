@@ -17,6 +17,7 @@ const EXAMPLES = [
   { file: 'todos.rat',    title: 'todos'        },
   { file: 'commands.rat', title: 'commands'     },
   { file: 'syntax.rat',   title: 'syntax-tour'  },
+  { file: 'blocks.rat',   title: 'blocks'       },
   { file: 'pipes.rat.js', title: '.rat.js'      },
 ];
 

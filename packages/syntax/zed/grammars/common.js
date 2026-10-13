@@ -39,8 +39,8 @@ export default function define (name, root) {
       _markup          : markup($ => $.text),
       _template_markup : $ => choice(markup($ => $.template_text)($), $.template_substitution),
 
-      text          : $ => token(choice(/[^<{}@&\s][^<{}@&]*/, /[@&]/)),
-      template_text : $ => token(choice(/[^<{}@&`$\s][^<{}@&`$]*/, /[@&$]/)),
+      text          : $ => token(choice(/[^<{}@&:\s][^<{}@&]*/, /[@&:]/)),
+      template_text : $ => token(choice(/[^<{}@&:`$\s][^<{}@&`$]*/, /[@&:$]/)),
       entity        : $ => /&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);/,
       html_comment  : $ => token(seq('<!--', /([^-]|-[^-]|--[^>])*/, '-->')),
 
@@ -91,12 +91,21 @@ export default function define (name, root) {
         seq("'", repeat(choice(alias(/[^'{]+/, $.string_fragment), $.expression)), "'"),
       ),
 
-      // @if (…) {   @else {   @case 'x' {   the { opens the markup body, } closes it
-      block_head    : $ => seq($.block_keyword, repeat($._head), '{'),
-      block_keyword : $ => /@(else[ \t]+if|if|for|switch|case|else|default)/,
-      block_close   : $ => '}',
+      /*
+      @if (…) {   @if (…):   @if (…)⏎   the head ends with { or :, or just stops (indented body).
+      the lexer takes the longest valid token, and text is valid wherever a head may end, so
+      every head must be complete before it can end: ( … ) after @if/@for/@switch, one value
+      after @case. a : never starts text, so `@if (…): …` reads the : as part of the head
+      */
+      block_head : $ => prec.right(choice(
+        seq(alias(token(/@(if|for|switch|else[ \t]+if)/), $.block_keyword), $.parens, optional($._body_open)),
+        seq(alias(token('@case'), $.block_keyword), $._case_value, optional($._body_open)),
+        seq(alias(token(/@(else|default)/), $.block_keyword), optional($._body_open)),
+      )),
 
-      _head : $ => choice($.parens, $.string, $.template_string, $.number, $.reactive_identifier, $.identifier, $._word, $.pipe_operator, $.operator, $.punctuation),
+      _body_open  : $ => choice('{', ':'),
+      _case_value : $ => choice($.parens, $.string, $.template_string, $.number, $.reactive_identifier, $.identifier, $._word),
+      block_close : $ => '}',
 
       expression : $ => seq('{', repeat($._script), '}'),
 
@@ -116,6 +125,8 @@ export default function define (name, root) {
         $.identifier,
         $._word,
         $.pipe_operator,
+        $.range_operator,
+        $.topic,
         $.operator,
         $.punctuation,
       ),
@@ -153,7 +164,9 @@ export default function define (name, root) {
       language_variable : $ => choice(...vocabulary.language),
       storage_keyword   : $ => choice(...vocabulary.storage),
 
-      pipe_operator : $ => vocabulary.pipe,
+      pipe_operator  : $ => vocabulary.pipe,
+      range_operator : $ => '..',
+      topic          : $ => '#',
       operator      : $ => choice(...vocabulary.operators),
       punctuation   : $ => choice(';', ',', '.'),
     },

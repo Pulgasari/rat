@@ -29,10 +29,16 @@ const isPipe = (list, index) =>
 const breaks = (code, a, b) => code.slice(a.end, b.start).includes('\n');
 
 /*
-value |> fn          fn(value)
-value |> fn(a)       fn(value, a)
-value |> obj.fn      obj.fn(value)
-value |> (x => x)    (x => x)(value)
+two forms, decided by the right side:
+
+  value |> fn               fn(value)              implicit: a callable, nothing else
+  value |> obj.fn           obj.fn(value)
+  value |> fn(a, #)         fn(a, value)           explicit: # marks where the value goes
+  value |> { a: #, b: # }   ($$piped => ({ a: $$piped, b: $$piped }))(value)
+
+a call without # (value |> fn()) is refused: it would call fn first and pipe
+into its result, which reads like the implicit form but is not. a value used
+more than once is bound once, so it is never evaluated twice.
 
 one pipe per round, leftmost first, so a |> f |> g becomes g(f(a)).
 */
@@ -44,13 +50,14 @@ function pipes (code, offset = 0) {
 
     const left  = leftOperand(code, list, index);
     const right = rightOperand(code, list, index + 2);
+    const fail  = message => new CompileError(message, { index: list[index].start + offset, source: ' '.repeat(offset) + code });
 
     const value = code.slice(left.start, left.end).trim();
     const fn    = code.slice(right.start, right.end).trim();
-    if (!value) throw new CompileError('|> has no left operand', { index: list[index].start + offset, source: ' '.repeat(offset) + code });
-    if (!fn)    throw new CompileError('|> has no right operand', { index: list[index].start + offset, source: ' '.repeat(offset) + code });
+    if (!value) throw fail('|> has no left operand');
+    if (!fn)    throw fail('|> has no right operand');
 
-    code = code.slice(0, left.start) + call(fn, value, list.slice(right.first, right.last + 1)) + code.slice(right.end);
+    code = code.slice(0, left.start) + call(fn, value, list.slice(right.first, right.last + 1), fail) + code.slice(right.end);
   }
   throw new Error('[rat] pipe rewrite did not settle');
 }
@@ -94,29 +101,94 @@ function rightOperand (code, list, from) {
   return { end: last >= from ? list[last].end : start, first: from, last, start };
 }
 
-function call (fn, value, list) {
-  const names = list.every(token => token.type === tt.name || token.type === tt.dot || token.type === tt.questionDot);
-  if (names) return `${fn}(${value})`;
+const isTopic  = token => token.type === tt.name && token.value === TOPIC;
+const isSimple = value => /^[\w$.]+$/.test(value);
 
-  // ends in a call: insert the value as first argument
-  const last = list[list.length - 1];
-  if (last?.type === tt.parenR) {
-    let depth = 0;
-    let open  = -1;
-    for (let at = list.length - 1; at >= 0; at--) {
-      if (list[at].type === tt.parenR) depth++;
-      if (list[at].type === tt.parenL && --depth === 0) { open = at; break; }
-    }
-    const callee = list.slice(0, open);
-    if (open > 0 && callee.every(token => token.type === tt.name || token.type === tt.dot || token.type === tt.questionDot)) {
-      const base   = list[0].start;
-      const paren  = list[open].end - base;
-      const empty  = list[open + 1].type === tt.parenR;
-      return fn.slice(0, paren) + value + (empty ? '' : ', ') + fn.slice(paren);
-    }
+function call (fn, value, list, fail) {
+  const topics = list.filter(isTopic);
+
+  if (topics.length) {
+    const base  = list[0].start;
+    const bound = topics.length > 1 && !isSimple(value);
+    const inner = bound ? BOUND : isSimple(value) ? value : `(${value})`;
+    let out     = fn;
+    for (const token of [...topics].reverse()) out = out.slice(0, token.start - base) + inner + out.slice(token.end - base);
+    return bound ? `(${BOUND} => (${out}))(${value})` : out;
   }
 
+  if (list.every(token => token.type === tt.name || token.type === tt.dot || token.type === tt.questionDot)) return `${fn}(${value})`;
+  if (list[list.length - 1].type === tt.parenR && !grouped(list)) throw fail('a call right of |> needs # to place the value: x |> fn(#), or no parens: x |> fn');
   return `(${fn})(${value})`;
+}
+
+// ( … ) around the whole right side: a group (an arrow function, say), not a call
+function grouped (list) {
+  if (list[0].type !== tt.parenL) return false;
+  let depth = 0;
+  for (let at = 0; at < list.length; at++) {
+    if (list[at].type === tt.parenL) depth++;
+    if (list[at].type === tt.parenR && --depth === 0) return at === list.length - 1;
+  }
+  return false;
+}
+
+// ::: sugar :: topic
+
+/*
+# is not js (outside of #private names), so acorn's tokenizer stops at it. every
+stop at a lone # becomes the placeholder name and the tokenizer runs again.
+what is left after the pipes is a # outside of any pipe.
+*/
+const TOPIC = '$$topic';
+const BOUND = '$$piped'; // the parameter a value used more than once is bound to
+
+function topics (code, offset = 0) {
+  for (let round = 0; round < 1000; round++) {
+    try {
+      tokens(code, 0);
+      return code;
+    } catch (error) {
+      // acorn reports the position after the #
+      const at = code[error.pos] === '#' ? error.pos : error.pos - 1;
+      if (code[at] !== '#' || /[\w$]/.test(code[at + 1] ?? '')) { error.pos += offset; throw error; }
+      code = code.slice(0, at) + TOPIC + code.slice(at + 1);
+    }
+  }
+  throw new Error('[rat] topic rewrite did not settle');
+}
+
+function strayTopic (code, offset) {
+  const token = tokens(code, offset).find(isTopic);
+  if (token) throw new CompileError('# outside of a |> pipe', { index: token.start + offset, source: ' '.repeat(offset) + code });
+  return code;
+}
+
+// ::: sugar :: range
+
+/*
+a..b is an inclusive range: 1..5, 5..1, 'a'..'e', 0..$count. an operand is a
+number, a string, a name chain or a (group), anything larger goes in parens.
+it becomes $$.range(a, b), from @rat/runtime. .. inside strings, comments and
+... is never touched.
+*/
+const OPERAND = String.raw`(?:\d[\d_]*(?:\.\d+)?|'[^'\n]*'|"[^"\n]*"|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*|\([^()]*\))`;
+const RANGE   = new RegExp(String.raw`(?<![\w$.])(${OPERAND})\s*(?<!\.)\.\.(?!\.)\s*(-?${OPERAND})`, 'g');
+
+function ranges (code, offset = 0, runtime = '$$') {
+  // where .. must not be read: strings, templates, regexes, comments
+  const blocked = [];
+  const list    = tokens(code, offset);
+  for (const token of list) if (token.type === tt.string || token.type === tt.template || token.type === tt.regexp) blocked.push([token.start, token.end]);
+  for (const match of code.matchAll(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g)) {
+    // only a comment if it does not start inside a string
+    if (!blocked.some(([start, end]) => match.index >= start && match.index < end)) blocked.push([match.index, match.index + match[0].length]);
+  }
+
+  return code.replace(RANGE, (whole, from, to, at) => {
+    const dots = at + whole.indexOf('..', from.length);
+    if (blocked.some(([start, end]) => dots >= start && dots < end)) return whole;
+    return `${runtime}.range(${from}, ${to})`;
+  });
 }
 
 // ::: sugar :: for…of
@@ -151,7 +223,8 @@ function forOf (code, offset = 0) {
   return applyEdits(code, edits);
 }
 
-const sugar = (code, offset = 0) => forOf(pipes(code, offset), offset);
+// order matters: # must be a name before anything tokenizes, ranges before pipes (1..5 |> sum)
+const sugar = (code, offset = 0) => forOf(strayTopic(pipes(ranges(topics(code, offset), offset), offset), offset), offset);
 
 // sugar errors come from acorn's tokenizer, positioned but without a file
 function sweeten (code, { filename, offset = 0, source }) {
@@ -320,4 +393,4 @@ function transformExpression ({ code, start }, { filename, names, source }) {
   return applyEdits(sugared.slice(0, node.end), reads(node, names, bindings(node)));
 }
 
-export { pipes, forOf, sugar, transformExpression, transformScript, walk };
+export { TOPIC, forOf, pipes, ranges, sugar, topics, transformExpression, transformScript, walk };

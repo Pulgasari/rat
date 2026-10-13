@@ -18,8 +18,10 @@ function hash (string) {
 }
 
 function scopeStyle (css, id) {
-  const body = css.trim();
-  if (!body) return '';
+  const lines  = css.replace(/^\s*\n|\s+$/g, '').split('\n');
+  const indent = Math.min(...lines.filter(line => line.trim()).map(line => line.match(/^\s*/)[0].length));
+  const body   = lines.map(line => line.slice(indent)).join('\n');
+  if (!body.trim()) return '';
   return `@scope ([data-rat="${id}"]) {\n${body.replace(/^/gm, '  ')}\n}`;
 }
 

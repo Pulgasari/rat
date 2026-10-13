@@ -4,6 +4,7 @@ export interface CompileOptions {
   filename? : string;                  // decides the mode (.rat / .rat.js) and names the component
   mode?     : 'component' | 'module';  // overrides the filename
   runtime?  : string;                  // import specifier of the runtime, default '@rat/runtime'
+  styles?   : Record<string, (code: string, context: { filename: string }) => string>; // preprocessors per <style lang>
   tag?      : string;                  // .rat.js: the template tag compiled as markup, default 'html'
 }
 
@@ -28,9 +29,11 @@ export function compileComponent (source: string, options?: CompileOptions): Com
 export function compileModule    (source: string, options?: CompileOptions): CompileResult;
 export function parse            (source: string, options?: { blocks?: boolean, filename?: string, offset?: number }): Fragment;
 
-export function forOf (code: string, offset?: number): string;
-export function pipes (code: string, offset?: number): string;
-export function sugar (code: string, offset?: number): string;
+export function forOf  (code: string, offset?: number): string;
+export function pipes  (code: string, offset?: number): string;
+export function ranges (code: string, offset?: number, runtime?: string): string;
+export function sugar  (code: string, offset?: number): string;
+export function topics (code: string, offset?: number): string;
 
 export default compile;
 

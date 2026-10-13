@@ -15,9 +15,9 @@ two languages, one grammar, two entry states:
 | id | files | root state | semantics |
 |---|---|---|---|
 | `rat` | `.rat` | `markup` | markup first: tags, `{…}` holes, `@if`/`@for`/`@switch`, `<script>`, `<style>` |
-| `ratjs` | `.rat.js` | `script` | script first: js + sugar (`$signals`, `\|>`), `` html`…` `` is markup again |
+| `ratjs` | `.rat.js` | `script` | script first: js + sugar (`$signals`, `\|>`), ``html`…` `` is markup again |
 
-everything inside a hole is `script`, everything inside `` html`…` `` is `markup`, so both
+everything inside a hole is `script`, everything inside ``html`…` `` is `markup`, so both
 languages highlight each other's nested parts identically.
 
 ## files
@@ -36,13 +36,14 @@ languages highlight each other's nested parts identically.
 ## the model
 
 ```js
-state  { rules, end?, endToken?, scope?, embed? }
+state  { rules, end?, endToken?, eol?, scope?, embed? }
 rule   { match, token }           // a token, the state stays
        { begin, token, state }    // a token, then the state is pushed
        { include }                // the rules of another state
 ```
 
-a state is left when its `end` matches. patterns are regex sources; an array is a sequence
+a state is left when its `end` matches, or at the end of its line with `eol` (a block head
+without `{` or `:`, followed by an indented body). patterns are regex sources; an array is a sequence
 of groups with one token per group. tokens are textmate scopes, each target maps them by
 longest prefix onto its own names (`variable.other.reactive` → hljs `variable.reactive`,
 monaco `variable.reactive`, codemirror `variableName.special`, zed `@variable.special`).
@@ -147,6 +148,18 @@ if `.rat.js` opens as javascript, add to zed settings:
 ### textmate (vs code, shiki, github)
 
 `textmate/rat.tmLanguage.json`, `textmate/ratjs.tmLanguage.json`. css in `<style>` includes `source.css`.
+
+## tree-sitter notes
+
+the regex targets follow the spec on their own, the tree-sitter grammar does not. two
+lessons that cost a broken parse each, both caught by `build.js check`:
+
+- tree-sitter's lexer takes the **longest valid token**. wherever a rule may end, the
+  tokens that may follow are valid too, and `text` is long. so every block head must be
+  complete before it can end: `( … )` after `@if` / `@for` / `@switch`, one value after
+  `@case`. otherwise `@if (a) {` lexes `(a) ` as text.
+- `:` never starts text, so `@if (…): …` reads the `:` as the end of the head (a string
+  literal beats a regex of the same length).
 
 ## limits (v0)
 

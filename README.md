@@ -9,7 +9,10 @@ experimental JS-framework.
 ## docs
 - [compiler v0](.md/compiler.md)
 - [concept](.md/concept.md)
+- [decisions](.md/decisions.md)
+- [ideas](.md/ideas.md)
 - [syntax v0](.md/syntax.md)
+- [todo](.md/todo.md)
 
 ## demos
 - [demos](demos/)
@@ -20,10 +23,10 @@ experimental JS-framework.
 | package         | path                                     | status |
 |-----------------|------------------------------------------|--------|
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
-| `@rat/core`     | [`packages/core`](packages/core)         | skizze |
+| `@rat/core`     | [`packages/core`](packages/core)         | sketch |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
 | `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0: hljs, monaco, codemirror/acode, zed, textmate |
-| `@rat/types`    | [`packages/types`](packages/types)       | skizze |
+| `@rat/types`    | [`packages/types`](packages/types)       | sketch |
 
 ---
 

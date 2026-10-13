@@ -29,7 +29,7 @@
 (attribute ["=" "|"] @punctuation.delimiter)
 
 (block_keyword) @keyword
-(block_head "{" @keyword)
+(block_head ["{" ":"] @keyword)
 (block_close) @keyword
 (expression ["{" "}"] @punctuation.special)
 
@@ -51,7 +51,8 @@
 (reactive_identifier) @variable.special
 
 [(control_keyword) (storage_keyword) (keyword)] @keyword
-[(pipe_operator) (operator)] @operator
+[(pipe_operator) (range_operator) (operator)] @operator
+(topic) @variable.special
 (punctuation) @punctuation.delimiter
 
 (braces ["{" "}"] @punctuation.bracket)

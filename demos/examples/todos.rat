@@ -10,7 +10,7 @@
   let   $draft  = '';
   let   $filter = 'all';
   const $open   = $todos.filter(todo => !todo.done).length;
-  const $shown  = $todos |> select($filter);
+  const $shown  = $todos |> select(#, $filter);
 
   function select (todos, filter) {
     if (filter === 'open') return todos.filter(todo => !todo.done);

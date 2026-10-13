@@ -17,11 +17,13 @@ an expression is { code, start }: the source text and its offset, so later
 errors still point into the file.
 */
 
-import { CompileError, scanClose, scanUntil, tt } from './util.js';
+import { CompileError, scanCase, scanClose, tt } from './util.js';
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 
-const BLOCK_START = /@(if|for|switch)\b/y;
+const BLOCK_START  = /@(if|for|switch)\b/y;
+const CONTINUATION = /@(else|case|default)(?![\w$])/y;
+const INLINE_SPACE = /[ \t]*/y;
 const NAME        = /[^\s=/>"'{]+/y;
 const TAG         = /[A-Za-z0-9\-_.#:$]*/y;
 const WHITESPACE  = /\s*/y;
@@ -70,10 +72,27 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
 
   // ::: nodes
 
+  /*
+  end says what closes the list:
+    eof     the file
+    tag     a closing tag
+    brace   a }                        @if (…) { … }
+    line    the end of the line        @if (…): …
+    indent  a line indented no deeper  @if (…)
+            than the block head          …
+  inside line and indent a } still closes, when an outer { … } is open.
+  */
   function nodes (end, context) {
     const children = [];
+    const loose    = end === 'line' || end === 'indent';
 
     while (i < source.length) {
+      if (loose) {
+        if (peek('}') && context.braces) return children;
+        if (end === 'line' && (atNewline() || atContinuation())) return children;
+        if (end === 'indent' && atNewline() && dedented(context.indent)) return children;
+      }
+
       if (peek('<!--')) {
         const close = source.indexOf('-->', i + 4);
         if (close < 0) throw fail('unclosed <!--');
@@ -101,7 +120,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
       else if (peek('@') && atBlockStart()) {
         children.push(block(context));
       }
-      else children.push(text(end));
+      else children.push(text(end, context));
     }
 
     if (end === 'tag')   throw fail('unclosed element');
@@ -109,21 +128,56 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     return children;
   }
 
+  const atNewline = () => source[i] === '\n' || (source[i] === '\r' && source[i + 1] === '\n');
+  const atLineEnd = () => i >= source.length || atNewline();
+
+  // the indentation of the line a position is on (spaces and tabs, one each)
+  function indentAt (position) {
+    let at = source.lastIndexOf('\n', position - 1) + 1;
+    const from = at;
+    while (source[at] === ' ' || source[at] === '\t') at++;
+    return at - from;
+  }
+
+  // true if the next non-blank line is indented no deeper than base (or there is none)
+  function dedented (base) {
+    let at = i;
+    while (at < source.length) {
+      const next = source.indexOf('\n', at + 1);
+      const line = source.slice(at + 1, next < 0 ? source.length : next);
+      if (line.trim()) return indentAt(at + 1) <= base;
+      if (next < 0) break;
+      at = next;
+    }
+    return true;
+  }
+
+  const before = () => source[i - 1];
+
   // an @ opens a block only at the start of a line, after whitespace or after a tag
   function atBlockStart () {
-    const before = source[i - 1];
-    if (before !== undefined && !/[\s>}]/.test(before)) return false;
+    if (before() !== undefined && !/[\s>}]/.test(before())) return false;
     BLOCK_START.lastIndex = i;
     return BLOCK_START.test(source);
   }
 
-  function text (end) {
+  // @else, @case, @default: where a one-line body (@if (…): …) stops
+  function atContinuation () {
+    if (before() !== undefined && !/[\s>}]/.test(before())) return false;
+    CONTINUATION.lastIndex = i;
+    return CONTINUATION.test(source);
+  }
+
+  function text (end, context) {
+    const loose = end === 'line' || end === 'indent';
     const start = i;
     i++;
     while (i < source.length) {
       const char = source[i];
-      if (char === '<' || char === '{' || (char === '}' && end === 'brace')) break;
-      if (char === '@' && atBlockStart()) break;
+      if (char === '<' || char === '{') break;
+      if (char === '}' && (end === 'brace' || (loose && context.braces))) break;
+      if (char === '\n' && loose) break;
+      if (char === '@' && (atBlockStart() || (end === 'line' && atContinuation()))) break;
       i++;
     }
     return { type: 'Text', value: source.slice(start, i) };
@@ -132,16 +186,28 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
   // ::: blocks
 
   function block (context) {
+    const base        = indentAt(i);
     const [, keyword] = sticky(BLOCK_START);
-    if (keyword === 'if')     return ifBlock(context);
-    if (keyword === 'for')    return forBlock(context);
-    return switchBlock(context);
+    if (keyword === 'if')  return ifBlock(context, base);
+    if (keyword === 'for') return forBlock(context, base);
+    return switchBlock(context, base);
   }
 
-  function body (context) {
-    skipWhitespace();
-    expect('{');
-    return nodes('brace', context);
+  // the three body forms: { … }, : rest of the line, or the deeper indented lines below
+  function body (context, base) {
+    sticky(INLINE_SPACE);
+    if (peek('{')) { i++; return nodes('brace', { ...context, braces: (context.braces ?? 0) + 1 }); }
+    if (peek(':')) { i++; sticky(INLINE_SPACE); return trimEnd(nodes('line', context)); }
+    if (atLineEnd()) return nodes('indent', { ...context, indent: base });
+    throw fail('expected "{", ":" or a line break after the block head');
+  }
+
+  // a one-line body ends where @else starts, the space before it is no content
+  function trimEnd (children) {
+    const last = children[children.length - 1];
+    if (last?.type === 'Text') last.value = last.value.trimEnd();
+    if (last?.type === 'Text' && !last.value) children.pop();
+    return children;
   }
 
   // looks past whitespace for a continuation like @else, restores if there is none
@@ -153,23 +219,33 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     return false;
   }
 
-  function ifBlock (context) {
-    const branches = [{ test: condition(), children: body(context) }];
+  // continues, for the clause of a block: an @else belongs to the @if on its own indentation,
+  // so a dedented @else after a nested indented block goes to the outer one
+  function clause (keyword, base) {
+    const start = i;
+    skipWhitespace();
+    const ok = i < source.length && indentAt(i) === base;
+    i = start;
+    return ok && continues(keyword);
+  }
+
+  function ifBlock (context, base) {
+    const branches = [{ test: condition(), children: body(context, base) }];
     let fallback   = null;
 
-    while (continues('@else')) {
-      if (continues('if')) { branches.push({ test: condition(), children: body(context) }); continue; }
-      fallback = body(context);
+    while (clause('@else', base)) {
+      if (continues('if')) { branches.push({ test: condition(), children: body(context, base) }); continue; }
+      fallback = body(context, base);
       break;
     }
 
     return { type: 'If', branches, fallback };
   }
 
-  function forBlock (context) {
+  function forBlock (context, base) {
     const head     = condition();
-    const children = body(context);
-    const fallback = continues('@else') ? body(context) : null;
+    const children = body(context, base);
+    const fallback = clause('@else', base) ? body(context, base) : null;
     return { type: 'For', ...forHead(head), children, fallback };
   }
 
@@ -190,27 +266,35 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     return { index, item: binding, list: { code: code.slice(listOffset).trim(), start: start + listOffset } };
   }
 
-  function switchBlock (context) {
+  // @switch (…) { @case … }, or without braces: the @case lines indented below it
+  function switchBlock (context, base) {
     const subject = condition();
     const cases   = [];
     let fallback  = null;
 
-    skipWhitespace();
-    expect('{');
+    sticky(INLINE_SPACE);
+    const braced = peek('{');
+    if (braced) i++;
+    else if (!atLineEnd()) throw fail('expected "{" or a line break after @switch (…)');
 
     while (true) {
+      const start = i;
       skipWhitespace();
-      if (peek('}'))        { i++; break; }
+      if (braced && peek('}')) { i++; break; }
+      if (!braced && (i >= source.length || indentAt(i) <= base)) { i = start; break; }
+
+      const at = i;
       if (continues('@case')) {
-        skipWhitespace();
-        const start  = i;
-        const result = scanUntil(source, start, tt.braceL);
+        sticky(INLINE_SPACE);
+        const from   = i;
+        const result = scanCase(source, from);
         if (result.error) throw fail(`${result.error} in @case`, result.index);
         i = result.index;
-        cases.push({ test: { code: source.slice(start, i).trim(), start: start + offset }, children: body(context) });
+        cases.push({ test: { code: source.slice(from, i).trim(), start: from + offset }, children: body(context, indentAt(at)) });
         continue;
       }
-      if (continues('@default')) { fallback = body(context); continue; }
+      if (continues('@default')) { fallback = body(context, indentAt(at)); continue; }
+      if (!braced) { i = start; break; }
       throw fail('expected @case, @default or "}" in @switch');
     }
 
@@ -355,7 +439,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     const close = source.indexOf(`</${name}>`, open);
     if (close < 0) throw fail(`unclosed <${name}>`, start);
 
-    const content = { code: source.slice(open + 1, close), start: open + 1 + offset };
+    const content = { attributes: attrs.trim(), code: source.slice(open + 1, close), start: open + 1 + offset };
     if (name === 'style')                  styles.push(content);
     else if (/\bmodule\b/.test(attrs))     scripts.module.push(content);
     else                                   scripts.instance.push(content);

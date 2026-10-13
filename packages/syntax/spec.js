@@ -13,12 +13,13 @@ the single source of truth for rat highlighting. every target reads this file:
 
 the model is a stack of regions, the common ground of all regex based engines:
 
-  state  { rules, end?, endToken?, scope?, embed? }
+  state  { rules, end?, endToken?, eol?, scope?, embed? }
   rule   { match, token }           a token, the state stays
          { begin, token, state }    a token, then the named state is pushed
          { include }                the rules of another state, spliced in
 
-a state is left when its `end` matches. `match`, `begin` and `end` are regex
+a state is left when its `end` matches, or at the end of the line if `eol` is
+set (a block head without { or :). `match`, `begin` and `end` are regex
 sources (strings) or arrays of them; an array is a sequence of groups and its
 token an array of the same length, one token per group.
 
@@ -90,8 +91,8 @@ const states = {
 
   markupComment: { end: '-->', endToken: 'comment.block', scope: 'comment.block', rules: [] },
 
-  // @if (…) {   @for (…) {   @case 'x' {   @else {   the { opens the markup body
-  blockHead: { end: '\\{', endToken: 'keyword.control.block', rules: [
+  // @if (…) {   @if (…):   @if (…)⏎   the head ends where the body starts: {, : or the line end
+  blockHead: { end: '\\{|:', endToken: 'keyword.control.block', eol: true, rules: [
     { begin: '\\(', token: 'punctuation.section.parens', state: 'parens' },
     { include: 'atoms' },
   ]},
@@ -156,6 +157,8 @@ const states = {
     { match: `${IDENT}(?=\\s*\\()`,  token: 'entity.name.function' },
     { match: IDENT,                  token: 'variable.other' },
     { match: escape(pipe),           token: 'keyword.operator.pipe' },
+    { match: '(?<!\\.)\\.\\.(?!\\.)',     token: 'keyword.operator.range' },
+    { match: '#(?![\\w$])',            token: 'variable.language.topic' },
     { match: either(operators),      token: 'keyword.operator' },
     { match: '[;,.\\[\\]]',          token: 'punctuation' },
   ]},
