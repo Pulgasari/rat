@@ -67,6 +67,12 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 
 - [ ] überlegung und ggf. konzept für weitere pipe-operators (reduce `|*`, pluck `|.`, filter `|?` + `|!`, find `|1` map `|`). überhaupt sinnvoll?
 
+## `.rat` files
+- [ ] prüfen inwiefern `<style type='scss'>...</style>` (umd andere mäglich wäre ohne viel tamtam
+
+## sonstiges
+- [ ] evtl. mal bzgl. gute/passende ideen oder inspiration schauen bei: haskell, php, svelte, jquery, latte, laravel, lit, rescript oder andere solide projekte
+
 ---
 
 # notizen
