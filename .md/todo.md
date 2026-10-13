@@ -47,4 +47,6 @@
 ```
 
 ## htx
-* [ ] shorthand-syntax
+* [ ] shorthand-syntax `<$xyz>` mit `$` sollte evtl. neu konzipiert bzw. ersetzt werden
+* [ ] (?) `cmd='name'` -> `command='--name'`
+* [ ] (?) `cmd:#sidebar` -> `command='--name' commandfor='#sidebar'`
