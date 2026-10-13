@@ -2,6 +2,11 @@
 
 ---
 
+# repo
+- [ ] md-files (ausser `todo.md`) sollten englisch sein (alles möglichst lowercase außer bei hervorhebungen, eigennamen usw.)
+
+---
+
 # syntax
 
 ## html-direktiven
