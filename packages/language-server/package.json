@@ -1,0 +1,19 @@
+{
+  "name"        : "@rat/language-server",
+  "version"     : "0.0.1",
+  "description" : "language server for .rat and .rat.js: diagnostics from @rat/compiler, more to come",
+  "type"        : "module",
+  "main"        : "./index.js",
+  "bin"         : { "rat-language-server": "./node.js" },
+  "exports"     : {
+    "."        : "./index.js",
+    "./node"   : "./node.js",
+    "./worker" : "./worker.js"
+  },
+  "dependencies": {
+    "@rat/compiler"                     : "file:../compiler",
+    "vscode-languageserver"             : "^10.0.0",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "license"     : "MIT"
+}

@@ -3,7 +3,7 @@ name           = "RAT"
 version        = "0.0.1"
 schema_version = 1
 authors        = ["pulgasari"]
-description    = "syntax highlighting for rat (.rat, .rat.js), generated from @rat/syntax"
+description    = "rat (.rat, .rat.js): highlighting generated from @rat/syntax, diagnostics from @rat/language-server"
 repository     = "https://github.com/pulgasari/rat"
 
 # rev: a commit that contains the generated parsers (zed/grammars/*/src).
@@ -19,3 +19,10 @@ path       = "packages/syntax/zed/grammars/rat"
 repository = "https://github.com/pulgasari/rat"
 rev        = "dd2ab1995379826da230eda415602abe094c349c"
 path       = "packages/syntax/zed/grammars/ratjs"
+
+# the server is started by src/lib.rs: rat-language-server from the path, or
+# @rat/language-server installed from npm. zed compiles the crate to wasm itself
+
+[language_servers.rat-language-server]
+name      = "rat language server"
+languages = ["RAT", "RAT JS"]
