@@ -8,15 +8,15 @@ experimental JS-framework.
 
 ## repo
 
-md: [compiler v0](.md/compiler.md)
+dir: [demos](demos/)
+| [playground](demos/playground/)
+
+md: [compiler](.md/compiler.md)
 | [concept](.md/concept.md)
 | [decisions](.md/decisions.md)
 | [ideas](.md/ideas.md)
-| [syntax v0](.md/syntax.md)
+| [syntax](.md/syntax.md)
 | [todo](.md/todo.md)
-
-dir: [demos](demos/)
-| [playground](demos/playground/)
 
 ## web
 
@@ -38,7 +38,7 @@ demos: [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat)
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
 | `@rat/core`     | [`packages/core`](packages/core)         | sketch |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
-| `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0: hljs, monaco, codemirror/acode, zed, textmate |
+| `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0     |
 | `@rat/types`    | [`packages/types`](packages/types)       | sketch |
 
 ---
