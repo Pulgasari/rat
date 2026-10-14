@@ -34,7 +34,7 @@ class Signal {
     batch(() => { for (const node of [...this.observers]) node.stale(); });
   }
 
-  peek () { return this.#value; }
+  peek     () { return this.#value; }
   toString () { return String(this.value); }
 }
 
@@ -139,10 +139,10 @@ function flush () {
   }
 }
 
-// ::: api
+// :::::: API
 
-const signal   = value => new Signal(value);
-const computed = fn    => new Computed(fn);
+const signal   = value => new Signal (value);
+const computed = fn    => new Computed (fn);
 
 // parent: who disposes the effect, the current owner unless given (null: no one)
 function effect (fn, parent = owner) {
@@ -178,7 +178,13 @@ function onCleanup (fn) {
   owner?.cleanups.push(fn);
 }
 
-const getOwner = () => owner;
+const getOwner = ()    => owner;
 const isSignal = value => value instanceof Signal || value instanceof Computed;
 
-export { Computed, Signal, batch, computed, effect, getOwner, isSignal, onCleanup, scope, signal, untrack };
+// :::::: EXPORT
+
+export {
+  Computed, Signal,
+  computed, effect, signal,
+  batch,  getOwner, isSignal, onCleanup, scope, untrack
+};
