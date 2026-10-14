@@ -97,8 +97,8 @@ export default function Counter (props, children) {
 | `@if` / `@else if` / `@else` | `when(() => test, then, otherwise)`, nested per `@else if` |
 | `@switch` / `@case` / `@default` | `match(() => subject, [[value, branch], …], fallback)` |
 | `@for (x, i of list)` … `@else` | `each(() => list, item => item, (x, i) => row, fallback)`, keyed by identity |
-| `on:keydown[enter]!:once={fn}` | `onkeydown=${$$.on(fn, { keys, prevent, times })}` |
-| `onclick="save"` | `onclick=${$$.command("save")}`. an expression that is no function literal goes through `$$.on()`, which resolves a string when the event fires |
+| `on:keydown[enter]!:once={fn}` | `onkeydown=${$$.listener(fn, { keys, prevent, times })}` |
+| `onclick="save"` | `onclick=${$$.commandListener("save")}`. an expression that is no function literal goes through `$$.listener()`, which resolves a string when the event fires |
 | `@tooltip={x}`, `use:tooltip={x}` | `ref=${$$.use(tooltip, () => x)}` |
 | `bind:value={$x}` | `ref=${$$.bind($x, "value")}` |
 | `ref={$el}` | `ref=${$$.ref($el)}` |

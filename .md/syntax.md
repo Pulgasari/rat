@@ -226,16 +226,16 @@ further pipe operators (`|?`, `|:`, `|*` …) are an idea, not built: [ideas.md]
 ### ranges
 
 ```js
-1..5          // Range 1 2 3 4 5
-5..1          // Range 5 4 3 2 1
-'a'..'e'      // Range a b c d e
+1..5          // 1 2 3 4 5
+5..1          // 5 4 3 2 1
+'a'..'e'      // a b c d e
 0..$count     // reactive in a hole: () => $$.range(0, $count.value)
 (a + 1)..b    // an operand larger than a number, string or name goes in parens
 [1..5]        // a real array: [1, 2, 3, 4, 5]
 ```
 
 - inclusive on both ends. `a..b` becomes `$$.range(from, to)` from `@rat/runtime`: a
-  `Range`, lazy (nothing is allocated until it is iterated) but with the usual array
+  `Span`, lazy (nothing is allocated until it is iterated) but with the usual array
   methods (`map`, `filter`, `reduce`, `join`, `includes`, `at`, `length` …). `[a..b]`
   alone in brackets is an array (d-07).
 - works everywhere script sugar does ([d-06](decisions.md#d-06)).

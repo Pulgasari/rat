@@ -1,15 +1,18 @@
 // @rat/runtime :: range
 
 /*
-a..b is a Range: lazy (nothing is allocated until it is iterated or asked for
+a..b is a range: lazy (nothing is allocated until it is iterated or asked for
 an array) but with the array methods people reach for. [a..b] is a real array.
 
-  1..5          Range 1 2 3 4 5     inclusive on both ends
-  5..1          Range 5 4 3 2 1     counts down
-  'a'..'e'      Range a b c d e     single characters, by code point
+  1..5          1 2 3 4 5     inclusive on both ends
+  5..1          5 4 3 2 1     counts down
+  'a'..'e'      a b c d e     single characters, by code point
+
+the class is Span, not Range: that name belongs to the dom. it is not exported,
+range() makes one and isRange() tells one apart.
 */
 
-class Range {
+class Span {
   #from;
   #step;
   #chars;
@@ -48,9 +51,10 @@ class Range {
 
 // the array methods, each over a fresh array (lazy until used)
 for (const name of ['every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'reduceRight', 'reverse', 'slice', 'some', 'toReversed', 'toSorted']) {
-  Range.prototype[name] = function (...args) { return this.toArray()[name](...args); };
+  Span.prototype[name] = function (...args) { return this.toArray()[name](...args); };
 }
 
-const range = (from, to) => new Range(from, to);
+const range   = (from, to) => new Span(from, to);
+const isRange = value => value instanceof Span;
 
-export { Range, range };
+export { isRange, range };
