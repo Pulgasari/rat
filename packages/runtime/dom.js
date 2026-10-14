@@ -14,15 +14,20 @@ behaviors, bind:x and ref={$signal} arrive as refs, functions the renderer
 calls with the element once its children are in place.
 */
 
-import { each, html, match, raw, render as renderInto, unrender, when } from '@htx/js/render';
+// :::::: IMPORT
 
+import { each, html, match, raw, render as renderInto, unrender, when } from '@htx/js/render';
 import { effect, isSignal, onCleanup, scope, untrack } from './signals.js';
+
+const isTypeOf = (v) => (sth) => typeof v === sth;
+const isFn     = isTypeOf('function');
+const isString = isTypeOf('string');
 
 // effects belong to no owner, the renderer disposes them. scopes neither: the
 // renderer disposes them with their part
 const OPTIONS = {
-  effect : fn => effect(fn, null),
-  scope  : fn => scope(fn, null),
+  effect : fn => effect (fn, null),
+  scope  : fn => scope  (fn, null),
 };
 
 // which event writes a bound property back
@@ -31,12 +36,13 @@ const BIND_EVENTS = { checked: 'change', files: 'change', open: 'toggle', value:
 // ::: render
 
 function render (target, value, options) {
-  return renderInto(target, value, options ? { ...OPTIONS, ...options } : OPTIONS);
+  const merged = options ? { ...OPTIONS, ...options } : OPTIONS;
+  return renderInto(target, value, merged);
 }
 
 // a component runs once, untracked, in a scope of its own
 function mount (Component, target, props = {}) {
-  const host = typeof target === 'string' ? document.querySelector(target) : target;
+  const host = isString(target) ? document.querySelector(target) : target;
   const [, dispose] = scope(() => render(host, Component(props)), null);
   return () => { unrender(host); dispose(); };
 }
@@ -67,7 +73,7 @@ gets the new one, or (without update) the behavior is cleaned up and runs
 again. it lives in the scope its element was built in and goes with it.
 */
 function use (behavior, get, arg) {
-  if (typeof behavior !== 'function') throw new TypeError(`[rat] @${arg ?? ''} needs a function, got ${typeof behavior}`);
+  if (!isFn(behavior)) throw new TypeError(`[rat] @${arg ?? ''} needs a function, got ${typeof behavior}`);
 
   return node => {
     let result  = null;
@@ -78,10 +84,10 @@ function use (behavior, get, arg) {
     effect(() => {
       const value = get?.();
       untrack(() => {
-        if (result && typeof result.update === 'function') { result.update(value); return; }
+        if (result && isFn(result.update)) { result.update(value); return; }
         cleanup?.();
         result  = behavior(node, value, arg) ?? null;
-        cleanup = typeof result === 'function' ? result : result?.destroy ? () => result.destroy() : null;
+        cleanup = isFn(result) ? result : result?.destroy ? () => result.destroy() : null;
       });
     });
   };
