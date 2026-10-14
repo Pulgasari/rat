@@ -20,14 +20,17 @@ experimental JS-framework.
 - [playground](demos/playground/)
 
 ## web
-- [home](http://code.pulgasari.dev/rat/)
-- [playground](https://code.pulgasari.dev/rat/demos/playground/)
-- [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat)
-- [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat)
-- [counter](https://code.pulgasari.dev/rat/demos/playground/#counter.rat)
-- [pipes](https://code.pulgasari.dev/rat/demos/playground/#pipes.rat.js)
-- [syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat)
-- [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
+
+website: [home](http://code.pulgasari.dev/rat/)
+| [docs](http://code.pulgasari.dev/rat/docs/)
+| [playground](https://code.pulgasari.dev/rat/demos/playground/)
+
+demos: [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat)
+| [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat)
+| [counter](https://code.pulgasari.dev/rat/demos/playground/#counter.rat)
+| [pipes](https://code.pulgasari.dev/rat/demos/playground/#pipes.rat.js)
+| [syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat)
+| [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
 
 ## packages
 
