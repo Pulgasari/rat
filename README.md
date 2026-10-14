@@ -8,28 +8,32 @@ experimental JS-framework.
 
 ## repo
 
-dir: [demos](demos/)
-| [playground](demos/playground/)
+dir: 
+[demos](demos/) ·
+[playground](demos/playground/)
 
-md: [compiler](.md/compiler.md)
-| [concept](.md/concept.md)
-| [decisions](.md/decisions.md)
-| [ideas](.md/ideas.md)
-| [syntax](.md/syntax.md)
-| [todo](.md/todo.md)
+md: 
+[compiler](.md/compiler.md) ·
+[concept](.md/concept.md) ·
+[decisions](.md/decisions.md) ·
+[ideas](.md/ideas.md) ·
+[syntax](.md/syntax.md) ·
+[todo](.md/todo.md)
 
 ## web
 
-website: [home](http://code.pulgasari.dev/rat/)
-| [docs](http://code.pulgasari.dev/rat/docs/)
-| [playground](https://code.pulgasari.dev/rat/demos/playground/)
+website: 
+[home](http://code.pulgasari.dev/rat/) ·
+[docs](http://code.pulgasari.dev/rat/docs/) ·
+[playground](https://code.pulgasari.dev/rat/demos/playground/)
 
-demos: [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat)
-| [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat)
-| [counter](https://code.pulgasari.dev/rat/demos/playground/#counter.rat)
-| [pipes](https://code.pulgasari.dev/rat/demos/playground/#pipes.rat.js)
-| [syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat)
-| [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
+demos: 
+[blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat) ·
+[commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat) ·
+[counter](https://code.pulgasari.dev/rat/demos/playground/#counter.rat) ·
+[pipes](https://code.pulgasari.dev/rat/demos/playground/#pipes.rat.js) ·
+[syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat) ·
+[todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
 
 ## packages
 
