@@ -18,6 +18,9 @@
     "grammars": [
       { "language": "rat",   "scopeName": "source.rat",    "path": "./syntaxes/rat.tmLanguage.json",   "embeddedLanguages": { "source.css": "css" } },
       { "language": "ratjs", "scopeName": "source.rat.js", "path": "./syntaxes/ratjs.tmLanguage.json", "embeddedLanguages": { "source.css": "css" } }
+    ],
+    "semanticTokenScopes": [
+      { "scopes": { "variable.reactive": ["variable.other.reactive"], "variable.reactive.readonly": ["variable.other.reactive.readonly", "variable.other.reactive"] } }
     ]
   },
   "scripts"     : {
