@@ -91,7 +91,7 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 - [x] selbe aufgabe again, aber schau diesmal bei 10 anderen sprachen. such selber aus. überrasch mich. ^^
   - `ideas.md#4-inspiration-round-2`: elixir, clojure, f#, swift, kotlin, raku, gleam, zig, imba, ruby
 - [x] (aus dem chat) jquery, htmx, lit und elm genauer anschauen: was sie können, wie, welche konzepte
-  - `study.md`
+  - jetzt als einzelne steckbriefe in `pulgasari.github.io/md/webdev/libs/` (jquery, htmx, lit, elm, dazu hyperscript, arrowjs, lynxjs, tsrx, fresh, ejs)
 
 ---
 
