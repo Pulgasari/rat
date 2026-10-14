@@ -6,18 +6,17 @@ experimental JS-framework.
 
 ---
 
-## docs
-- [compiler v0](.md/compiler.md)
-- [concept](.md/concept.md)
-- [decisions](.md/decisions.md)
-- [ideas](.md/ideas.md)
-- [libs](https://github.com/pulgasari/pulgasari.github.io/tree/main/md/webdev/libs): profiles of jquery, htmx, lit, elm, hyperscript, arrowjs, lynx, tsrx, fresh, ejs
-- [syntax v0](.md/syntax.md)
-- [todo](.md/todo.md)
+## repo
 
-## demos
-- [demos](demos/)
-- [playground](demos/playground/)
+md: [compiler v0](.md/compiler.md)
+| [concept](.md/concept.md)
+| [decisions](.md/decisions.md)
+| [ideas](.md/ideas.md)
+| [syntax v0](.md/syntax.md)
+| [todo](.md/todo.md)
+
+dir: [demos](demos/)
+| [playground](demos/playground/)
 
 ## web
 
