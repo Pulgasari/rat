@@ -24,6 +24,8 @@ becomes
   }
 */
 
+// :::::: IMPORT
+
 import { generate }             from './generate.js';
 import { parse }                from './parse.js';
 import { hash, scopeStyle }     from './style.js';
@@ -131,5 +133,12 @@ async function compileAsync (source, options = {}) {
   return compile(source, options);
 }
 
-export { CompileError, compile, compileAsync, compileComponent, compileModule, forOf, loadStyles, parse, pipes, ranges, sugar, topics, transformExpression, transformScript };
+// :::::: EXPORT
+
+export { 
+  CompileError,
+  compile, compileAsync, compileComponent, compileModule, 
+  forOf, loadStyles, parse, pipes, ranges, sugar, topics,
+  transformExpression, transformScript 
+};
 export default compile;
