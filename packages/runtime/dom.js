@@ -18,10 +18,7 @@ calls with the element once its children are in place.
 
 import { each, html, match, raw, render as renderInto, unrender, when } from '@htx/js/render';
 import { effect, isSignal, onCleanup, scope, untrack } from './signals.js';
-
-const isTypeOf = (v) => (sth) => typeof v === sth;
-const isFn     = isTypeOf('function');
-const isString = isTypeOf('string');
+import { isFn, isString } from './shared.js';
 
 // effects belong to no owner, the renderer disposes them. scopes neither: the
 // renderer disposes them with their part
