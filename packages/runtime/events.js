@@ -6,8 +6,10 @@ event modifiers, written on the attribute and handed over by the compiler:
   on:keydown[enter]={send}            only for that key
   on:keydown[ctrl+c|space+a]={copy}   alternatives with |, combinations with +
   on:submit!={add}                    event.preventDefault() first
-  on:click:once={init}                once, then the listener is gone
+  on:click:once={init}                once, then never again
   on:click:3={tap}                    three times
+
+the compiler turns them into on(handler, options), a plain listener function.
 
 a combination is modifiers and held keys plus the key of the event: in
 space+a, space has to be down when a is pressed. held keys come from one
@@ -60,29 +62,27 @@ function matches (event, combos) {
 
 // ::: handler
 
-const HANDLER = Symbol('rat.handler');
+// a command: fires 'rat:command' upwards, the app (or anyone) listens for it
+const command = name => event => event.currentTarget.dispatchEvent(new CustomEvent('rat:command', {
+  bubbles  : true,
+  composed : true,
+  detail   : { event, name },
+}));
 
-// { keys: 'enter', prevent: true, times: 1 } around a function or a command name
+// the listener for { keys: 'enter', prevent: true, times: 1 } around a function
+// or a command name. a string is resolved when the event fires
 function on (handler, { keys, prevent = false, times = 0 } = {}) {
-  return { [HANDLER]: true, combos: keys ? parseKeys(keys) : null, handler, prevent, times };
-}
+  const combos = keys ? parseKeys(keys) : null;
+  if (combos?.some(combo => combo.length > 1)) track();
+  let left = times;
 
-const isHandler = value => value?.[HANDLER] === true;
-
-// the listener for a node; resolve turns a command name into a function
-function listener (node, type, spec, resolve) {
-  if (spec.combos?.some(combo => combo.length > 1)) track();
-  const call = resolve(spec.handler);
-  let left   = spec.times;
-
-  const fn = event => {
-    if (spec.combos && !matches(event, spec.combos)) return;
-    if (spec.prevent) event.preventDefault();
-    call(event);
-    if (left && --left === 0) node.removeEventListener(type, fn);
+  return function (event) {
+    if (times && !left) return;
+    if (combos && !matches(event, combos)) return;
+    if (prevent) event.preventDefault();
+    if (times) left--;
+    (typeof handler === 'string' ? command(handler) : handler).call(this, event);
   };
-
-  return fn;
 }
 
-export { isHandler, listener, on };
+export { command, on };

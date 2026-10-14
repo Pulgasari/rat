@@ -56,7 +56,7 @@ open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{�
 .rat —————►│ parse      markup → ast (+ scripts)     │
 .rat.js ——►│ script     |>, for…of, $ signals         |
            │ analyze    reactive names, scopes        │
-           │ generate   ast → js  (target: dom)      │──► es module
+           │ generate   ast → htx template (dom)      │──► es module
            │ style      <style> → @scope (native)    │
            └───────────────────────────────────┘
                                                    │ imports
@@ -64,8 +64,14 @@ open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{�
                  ┌──────────── @rat/runtime ─────────────┐
                  │ signals    signal computed effect     │
                  │            batch untrack scope        │
-                 │ dom        el svg insert when each    │
-                 │            match mount style          │
+                 │ dom        html render each when      │
+                 │            match use bind on mount    │
+                 └───────────────────────────────────────┘
+                                   │ renders through
+                                   ▼
+                 ┌──────────── @domina/render ───────────┐
+                 │ template   cloned once per program    │
+                 │ parts      live holes, each when match│
                  └───────────────────────────────────────┘
                                    ▲
                  ┌──────────── @rat/core ────────────────┐
@@ -86,7 +92,7 @@ open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{�
 | package | role | status |
 |---|---|---|
 | `@rat/compiler` | `.rat` / `.rat.js` → es module. runs in browser, node, deno, bun | v0 |
-| `@rat/runtime` | signals + fine-grained dom. no vdom, no tree diffing | v0 |
+| `@rat/runtime` | signals, plus `@domina/render` with effect and scope: fine-grained, no vdom, no tree diffing | v0 |
 | `@rat/syntax` | highlighting from one spec: hljs, monaco, codemirror/acode, zed, textmate | v0 |
 | `@rat/core` | app singleton, commands, hotkeys, router | sketch |
 | `@rat/types` | schemas + reactive data types | sketch (readme) |
@@ -97,10 +103,9 @@ open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{�
 
 | target | output | when |
 |---|---|---|
-| `dom` | readable `$$.el(…)` calls, reactive closures | **(v0)**, default, dev + playground |
-| `dom:clone` | static subtrees parsed once as `<template>`, then `cloneNode` + targeted binding | build, performance |
+| `dom` | an htx template (``$$.html`…` ``) with live holes, rendered by `@domina/render`: static markup is parsed once per template and cloned, only the holes bind | **(v0)**, default |
 | `ssr` | string output, hydration markers | later |
-| `htx` | ``html`…` `` output for existing htx/preact projects (migration, zugriff) | maybe |
+| `htx` | ``html`…` `` output for existing htx/preact projects (migration, zugriff): the `dom` target is htx already | covered |
 
 open: [d-18](decisions.md#d-18) core and runtime as one package.
 
@@ -245,5 +250,5 @@ more inspiration, sorted by what rat could take: [ideas.md](ideas.md#2-inspirati
 3. scope analysis in the compiler (shadowing, warn on unknown `$` names), source maps.
 4. `@rat/core` on top of the runtime: commands, hotkeys, router.
 5. `@rat/types` v1: schemas + reactive variants, wired to `$` declarations.
-6. build adapters (vite, esbuild, node hook), `dom:clone` target.
+6. build adapters (vite, esbuild, node hook). ~~`dom:clone` target~~: the `dom` target clones since it renders through `@domina/render`.
 7. a first real app (candidate: a small zugriff tool) entirely in rat.

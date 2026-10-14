@@ -8,6 +8,7 @@ one entry, two inputs:
 
 both run through the same passes (parse -> script -> generate) and emit an es
 module that imports nothing but @rat/runtime and what the file imports itself.
+the markup comes out as an htx template, rendered by @domina/render.
 
   <script>
     let $count = 0;
@@ -18,9 +19,9 @@ module that imports nothing but @rat/runtime and what the file imports itself.
 becomes
 
   import * as $$ from '@rat/runtime';
-  export default function Counter (props) {
+  export default function Counter (props, children) {
     let $count = $$.signal(0);
-    return $$.el('button', { onclick: () => $count.value++ }, [() => $count.value]);
+    return $$.html`<button onclick=${() => $count.value++}>${() => $count.value}</button>`;
   }
 */
 
@@ -73,7 +74,7 @@ function compileComponent (source, { filename = 'component.rat', runtime = '@rat
     ...instance.flatMap(script => script.imports),
     ...modules.map(trimBlock),
     css && `\nconst ${RUNTIME}style = ${JSON.stringify(scopeStyle(css, scope))};`,
-    `\nexport default function ${nameOf(filename)} (props) {`,
+    `\nexport default function ${nameOf(filename)} (props, children) {`,
     css && `  ${RUNTIME}.style('${scope}', ${RUNTIME}style);`,
     ...instance.map(script => trimBlock(script.code)),
     `  return ${view};`,

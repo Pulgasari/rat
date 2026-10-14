@@ -1,0 +1,11 @@
+{
+  "name"        : "@rat/compiler",
+  "version"     : "0.0.1",
+  "description" : "compiles .rat and .rat.js files into es modules for @rat/runtime",
+  "type"        : "module",
+  "main"        : "./index.js",
+  "types"       : "./index.d.ts",
+  "exports"     : { ".": "./index.js" },
+  "dependencies": { "acorn": "^8.14.0" },
+  "license"     : "MIT"
+}
