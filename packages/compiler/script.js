@@ -337,8 +337,8 @@ names: the reactive names already known (from <script module>), extended in plac
 returns { code, imports, program } — imports only split off when lift is set.
 */
 function transformScript (code, { filename, lift = false, names = new Set, offset = 0, runtime = '$$', source = code, extraEdits } = {}) {
-  const sugared  = sweeten(code, { filename, offset, source });
-  const program  = parseOrFail(sugared, { filename, offset, source });
+  const sugared  = sweeten     (code,    { filename, offset, source });
+  const program  = parseOrFail (sugared, { filename, offset, source });
   const declared = declarations(program, runtime);
 
   for (const name of declared.names) names.add(name);
@@ -382,4 +382,11 @@ function transformExpression ({ code, start }, { filename, names, source }) {
   return applyEdits(sugared.slice(0, node.end), reads(node, names, bindings(node)));
 }
 
-export { TOPIC, forOf, pipes, ranges, sugar, topics, transformExpression, transformScript, walk };
+// :::::: EXPORT
+
+export { 
+  TOPIC, 
+  forOf, pipes, ranges, sugar, topics, walk,
+  transformExpression, transformScript,
+};
+
