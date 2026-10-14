@@ -223,9 +223,10 @@ colon or not and an end marker or not. → they stay easy to change: all of it l
 <a id="d-07"></a>
 ### d-07 · what a range is → **a lazy range type with array methods; `[a..b]` is an array**
 
-built: `a..b` is a `Range` from `@rat/runtime` (iterable, `length`, `at`, `includes`,
+built: `a..b` is a `Span` from `@rat/runtime`'s `range()` (iterable, `length`, `at`, `includes`,
 plus `map`, `filter`, `reduce`, `join` … on a fresh array). `[1..5]` alone in brackets
-compiles to `[...$$.range(1, 5)]`.
+compiles to `[...$$.range(1, 5)]`. the class is not exported (`Range` is the dom's),
+`isRange()` tells one apart.
 
 <a id="d-08"></a>
 ### d-08 · the pipe placeholder → **`#`, provisionally**

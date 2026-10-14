@@ -155,7 +155,7 @@ function strayTopic (code, offset) {
 /*
 a..b is an inclusive range: 1..5, 5..1, 'a'..'e', 0..$count. an operand is a
 number, a string, a name chain or a (group), anything larger goes in parens.
-a..b becomes $$.range(a, b), a lazy Range with array methods (@rat/runtime);
+a..b becomes $$.range(a, b), a lazy range with array methods (@rat/runtime);
 [a..b] alone in brackets becomes a real array (d-07). .. inside strings,
 comments and ... is never touched.
 */

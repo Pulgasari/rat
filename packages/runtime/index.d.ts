@@ -43,7 +43,8 @@ export function when    (condition: unknown, then: () => unknown, otherwise?: ((
 export function match<T> (subject: T | (() => T), cases: [T, () => unknown][], otherwise?: (() => unknown) | null): unknown;
 export function raw     (html: string | null | undefined): unknown;
 
-export class Range<T = number | string> implements Iterable<T> {
+/** What a..b makes: lazy, iterable, with the array methods. */
+export interface Span<T = number | string> extends Iterable<T> {
   readonly length : number;
   at       (index: number): T | undefined;
   includes (value: T): boolean;
@@ -55,8 +56,9 @@ export class Range<T = number | string> implements Iterable<T> {
   [method: string]: unknown;
 }
 
-export function range (from: number, to: number): Range<number>;
-export function range (from: string, to: string): Range<string>;
+export function range   (from: number, to: number): Span<number>;
+export function range   (from: string, to: string): Span<string>;
+export function isRange (value: unknown): value is Span;
 
 export type Behavior<V = unknown> = (element: Element, value: V, arg?: string) =>
   void | (() => void) | { update? (value: V): void, destroy? (): void };
@@ -68,10 +70,10 @@ export function bind (source: Signal<unknown>, name: string): (element: Element)
 /** A ref writing the element into a signal, or calling a function with it. */
 export function ref  (target: Signal<unknown> | ((element: Element) => void) | null | undefined): (element: Element) => void;
 
-/** A listener with key filter, preventDefault and a call limit. A string handler is a command. */
-export function on      (handler: ((event: Event) => void) | string, options?: { keys?: string, prevent?: boolean, times?: number }): (event: Event) => void;
+/** The handler behind a key filter, preventDefault and a call limit. A string handler names a command. */
+export function listener        (handler: ((event: Event) => void) | string, options?: { keys?: string, prevent?: boolean, times?: number }): (event: Event) => void;
 /** A listener firing 'rat:command' upwards with { event, name }. */
-export function command (name: string): (event: Event) => void;
+export function commandListener (name: string): (event: Event) => void;
 
 export function mount (component: Component, target: string | Element, props?: Props): () => void;
 export function style (id: string, css: string): void;

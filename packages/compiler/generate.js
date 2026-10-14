@@ -209,7 +209,7 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
     return `ref=${hole(`${$('use')}(${args.join(', ')})`)}`;
   }
 
-  // on:keydown[enter]!:once={fn} -> onkeydown=${$$.on(fn, { keys: 'enter', prevent: true, times: 1 })}.
+  // on:keydown[enter]!:once={fn} -> onkeydown=${$$.listener(fn, { keys: 'enter', prevent: true, times: 1 })}.
   // a function literal goes in as it is, a string is a command, anything else
   // may be either and is resolved when the event fires
   function event (name, value) {
@@ -223,10 +223,10 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
     ].filter(Boolean);
 
     const [code] = valueOf(value);
-    if (options.length)                       return `${attr}=${hole(`${$('on')}(${code}, { ${options.join(', ')} })`)}`;
-    if (value.kind === 'string')              return `${attr}=${hole(`${$('command')}(${code})`)}`;
+    if (options.length)                       return `${attr}=${hole(`${$('listener')}(${code}, { ${options.join(', ')} })`)}`;
+    if (value.kind === 'string')              return `${attr}=${hole(`${$('commandListener')}(${code})`)}`;
     if (value.kind === 'expression' && isFunction(code)) return `${attr}=${hole(code)}`;
-    return `${attr}=${hole(`${$('on')}(${code})`)}`;
+    return `${attr}=${hole(`${$('listener')}(${code})`)}`;
   }
 
   // ::: components
