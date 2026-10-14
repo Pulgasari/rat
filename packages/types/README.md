@@ -3,6 +3,7 @@
 ---
 
 [Color](#color)
+[Choice](#choice)
 [Dict](#dict)
 [List](#list)
 [Point](#point)
@@ -11,6 +12,7 @@
 #### reactive variants
 [$Array](#)
 [$Bool](#)
+[$Choice](#)
 [$Color](#)
 [$Dict](#)
 [$Map](#)
@@ -22,6 +24,8 @@
 ---
 
 # types
+
+## Choice
 
 ## Color
 
