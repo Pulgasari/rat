@@ -9,13 +9,21 @@ export interface Signal<T> extends ReadSignal<T> {
   value : T;
 }
 
-export type Child  = Node | string | number | boolean | null | undefined | (() => unknown) | Child[];
-export type Props  = Record<string, unknown>;
-export type Render = (...args: any[]) => Child;
+export type Props = Record<string, unknown>;
+
+/** What a template tag returns, rendered by @domina/render. */
+export interface TemplateResult {
+  program : unknown;
+  values  : unknown[];
+}
+
+/** A compiled component: runs once, untracked, returns its view. */
+export type Component = (props: Props, children?: TemplateResult | null) => unknown;
 
 export function signal<T>   (value?: T): Signal<T>;
 export function computed<T> (fn: () => T): ReadSignal<T>;
-export function effect      (fn: () => void): () => void;
+/** parent: who disposes the effect, the current owner unless given, null for no one. */
+export function effect      (fn: () => void, parent?: unknown): () => void;
 export function batch<T>    (fn: () => T): T;
 export function untrack<T>  (fn: () => T): T;
 export function scope<T>    (fn: () => T, parent?: unknown): [T, () => void];
@@ -23,13 +31,17 @@ export function onCleanup   (fn: () => void): void;
 export function isSignal    (value: unknown): boolean;
 export function getOwner    (): unknown;
 
-export function el     (tag: string | ((props: Props) => Child), props?: Props, children?: Child[]): Node | Child;
-export function svg    (tag: string, props?: Props, children?: Child[]): SVGElement;
-export function insert (parent: Node, value: Child, before?: Node | null): void;
+/** The htx tag of @htx/js/render. */
+export function html (strings: TemplateStringsArray, ...values: unknown[]): TemplateResult;
 
-export function when  (branches: [() => unknown, Render][], fallback?: Render): DocumentFragment;
-export function match (subject: () => unknown, cases: [unknown, Render][], fallback?: Render): DocumentFragment;
-export function each<T> (list: () => Iterable<T>, render: (item: T, index: number) => Child, fallback?: Render): DocumentFragment;
+/** @domina/render with rat's effect and scope: functions in holes are live. */
+export function render   (target: Element | DocumentFragment, value: unknown, options?: object): unknown;
+export function unrender (target: Element | DocumentFragment): void;
+
+export function each<T> (items: Iterable<T> | (() => Iterable<T>), key: (item: T, index: number) => unknown, row: (item: T, index: number) => unknown, otherwise?: (() => unknown) | null): unknown;
+export function when    (condition: unknown, then: () => unknown, otherwise?: (() => unknown) | null): unknown;
+export function match<T> (subject: T | (() => T), cases: [T, () => unknown][], otherwise?: (() => unknown) | null): unknown;
+export function raw     (html: string | null | undefined): unknown;
 
 export class Range<T = number | string> implements Iterable<T> {
   readonly length : number;
@@ -49,9 +61,17 @@ export function range (from: string, to: string): Range<string>;
 export type Behavior<V = unknown> = (element: Element, value: V, arg?: string) =>
   void | (() => void) | { update? (value: V): void, destroy? (): void };
 
-export function use   (element: Element, behavior: Behavior, get?: () => unknown, arg?: string): void;
-export function merge (...parts: (Props | null | undefined)[]): Props;
-export function on    (handler: ((event: Event) => void) | string, options?: { keys?: string, prevent?: boolean, times?: number }): object;
+/** A ref running a behavior, again or through update() when the value changes. */
+export function use  (behavior: Behavior, get?: (() => unknown) | null, arg?: string): (element: Element) => void;
+/** A ref binding a property to a signal both ways. */
+export function bind (source: Signal<unknown>, name: string): (element: Element) => void;
+/** A ref writing the element into a signal, or calling a function with it. */
+export function ref  (target: Signal<unknown> | ((element: Element) => void) | null | undefined): (element: Element) => void;
 
-export function mount (component: (props: Props) => Child, target: string | Element, props?: Props): () => void;
+/** A listener with key filter, preventDefault and a call limit. A string handler is a command. */
+export function on      (handler: ((event: Event) => void) | string, options?: { keys?: string, prevent?: boolean, times?: number }): (event: Event) => void;
+/** A listener firing 'rat:command' upwards with { event, name }. */
+export function command (name: string): (event: Event) => void;
+
+export function mount (component: Component, target: string | Element, props?: Props): () => void;
 export function style (id: string, css: string): void;

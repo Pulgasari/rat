@@ -144,8 +144,9 @@ function flush () {
 const signal   = value => new Signal(value);
 const computed = fn    => new Computed(fn);
 
-function effect (fn) {
-  const node = new Effect(fn);
+// parent: who disposes the effect, the current owner unless given (null: no one)
+function effect (fn, parent = owner) {
+  const node = new Effect(fn, parent);
   node.run();
   return () => node.dispose();
 }
