@@ -61,8 +61,8 @@ function compileComponent (source, { filename = 'component.rat', runtime = '@rat
   const ast   = parse(source, { filename });
   const names = new Set;
 
-  const modules  = ast.scripts.module.map(block => transformScript(block.code, { filename, names, offset: block.start, runtime: RUNTIME, source }).code);
-  const instance = ast.scripts.instance.map(block => transformScript(block.code, { filename, lift: true, names, offset: block.start, runtime: RUNTIME, source }));
+  const modules  = ast.scripts.module  .map(block => transformScript(block.code, { filename, names, offset: block.start, runtime: RUNTIME, source }).code);
+  const instance = ast.scripts.instance.map(block => transformScript(block.code, { filename, names, offset: block.start, runtime: RUNTIME, source, lift: true }));
 
   const css   = stylesOf(ast, { filename, source, styles });
   const scope = css ? hash(`${filename}\n${css}`) : null;
