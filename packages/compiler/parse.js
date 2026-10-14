@@ -306,8 +306,10 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
   function forBlock (context, base) {
     const head     = condition();
     const children = body(context, base);
-    const fallback = clause('@else', base) ? body(context, base) : null;
-    return { type: 'For', ...forHead(head), children, fallback, head };
+    let elseAt     = null;
+    let fallback   = null;
+    if (clause('@else', base)) { elseAt = i + offset; fallback = body(context, base); }
+    return { type: 'For', ...forHead(head), children, elseAt, fallback, head };
   }
 
   // "item of list", "item, index of list", "{ a, b } of list"
@@ -324,7 +326,8 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     }
 
     const listOffset = match.index + match[0].length;
-    return { index, item: binding, list: { code: code.slice(listOffset).trim(), start: start + listOffset } };
+    const list       = code.slice(listOffset).trim();
+    return { index, item: binding, list: { code: list, end: start + listOffset + list.length, start: start + listOffset } };
   }
 
   // @switch (…) { @case … }, or without braces: the @case lines indented below it

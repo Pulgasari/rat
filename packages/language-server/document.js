@@ -56,8 +56,8 @@ function bracesOf (text, { start, end }, open = '{', close = '}') {
   return text[from] === open && text[to] === close ? { end: to + 1, start: from } : null;
 }
 
-// javascript segments and markup holes of a parsed markup
-function collect (text, ast, segments, holes) {
+// javascript segments, markup holes and component tags of a parsed markup
+function collect (text, ast, { components, holes, segments }) {
   const add = (expression, kind, open, close) => {
     if (!expression?.code && expression?.code !== '') return;
     segments.push({ code: expression.code, end: expression.end, kind, start: expression.start });
@@ -68,6 +68,7 @@ function collect (text, ast, segments, holes) {
   for (const node of nodesOf(ast.children)) {
     if (node.type === 'Expression') add(node, 'hole');
     if (node.type === 'Element') {
+      if (node.component) components.push({ end: node.name.end, name: node.tag, start: node.name.start });
       for (const attribute of node.attributes) {
         if (attribute.type === 'Spread') { add(attribute, 'spread'); continue; }
         if (attribute.value.kind === 'expression') add(attribute.value, 'attribute');
@@ -75,7 +76,7 @@ function collect (text, ast, segments, holes) {
       }
     }
     if (node.type === 'If') for (const branch of node.branches) add(branch.test, 'head', '(', ')');
-    if (node.type === 'For') { add(node.list, 'list'); if (node.head) { const braces = bracesOf(text, node.head, '(', ')'); if (braces) holes.push({ ...braces, code: { ...node.head, list: node.list }, kind: 'head' }); } }
+    if (node.type === 'For') { add(node.list, 'list'); if (node.head) { const braces = bracesOf(text, node.head, '(', ')'); if (braces) holes.push({ ...braces, code: { ...node.head, list: node.list }, kind: 'head', node }); } }
     if (node.type === 'Switch') {
       add(node.subject, 'head', '(', ')');
       for (const branch of node.cases) { segments.push({ ...branch.test, kind: 'case' }); holes.push({ code: branch.test, end: branch.test.end, kind: 'case', start: branch.test.start }); }
@@ -112,22 +113,32 @@ function cssText (text, styles) {
 /*
 the javascript of a document at its own offsets:
   .rat      scripts as they are, every markup expression as a statement: { $x } -> ; $x ;
+            an @for becomes a loop around its body, so the item is in scope there:
+            @for (todo of $todos) { … } -> for(let todo of $todos){ … }
+            a component tag is a statement of its name, so typescript knows where it comes from
   .rat.js   the file as it is, a markup template as a call: html`…{a}…{b}…` -> html( a, b, )
-the scripts of a .rat are a component body, so props and children are declared at the end
+the scripts of a .rat are a component body: props and children are declared at the end, and a
+default export, so an import of the .rat resolves
 */
 function jsText (text, model) {
-  const out  = blank(text).split('');
-  const copy = (start, end) => { for (let at = start; at < end; at++) out[at] = text[at]; };
-  const put  = (at, char) => { if (at >= 0 && at < out.length && out[at] !== '\n') out[at] = char; };
+  const out   = blank(text).split('');
+  const taken = new Uint8Array(text.length);   // positions written, a later write must not land there
+  const copy  = (start, end) => { for (let at = start; at < end; at++) { out[at] = text[at]; taken[at] = 1; } };
+  // newlines always stay: the lines of the js text are those of the source
+  const put   = (at, char) => { if (at >= 0 && at < out.length && !taken[at] && out[at] !== '\n') { out[at] = char; taken[at] = 1; return true; } return false; };
+  const write = (at, string) => { for (let index = 0; index < string.length; index++) put(at + index, string[index]); };
+  const free  = (start, end) => { for (let at = start; at < end; at++) if (at < 0 || taken[at] || text[at] === '\n') return false; return true; };
+
   const separator = model.kind === 'rat' ? ';' : ',';
   const lead      = model.kind === 'rat';   // a statement needs a ; before it, an argument only a , after it
+  const loops     = [];
 
   if (model.kind === 'rat') for (const segment of model.segments) if (segment.kind === 'script' || segment.kind === 'module') copy(segment.start, segment.end);
 
   if (model.kind === 'ratjs') {
     copy(0, text.length);
     for (const template of model.templates) {
-      for (let at = template.start; at < template.end; at++) if (out[at] !== '\n') out[at] = ' ';
+      for (let at = template.start; at < template.end; at++) { taken[at] = 0; if (out[at] !== '\n') out[at] = ' '; }
       put(template.start - 1, '(');
       put(template.end, ')');
     }
@@ -140,6 +151,21 @@ function jsText (text, model) {
       if (lead) put(code.start - 1, separator);
       copy(code.start, code.end);
       put(code.end, separator);
+      continue;
+    }
+
+    // @for (item of list) as a loop: "for(let " before the item fits where "@for (" and two
+    // characters of indentation were. a newline before it ends the statement above
+    const node = hole.node;
+    if (hole.kind === 'head' && node && lead && free(code.start - 8, code.start)) {
+      const item = node.item;
+      const of   = text.indexOf('of', code.start + item.length);
+      write(code.start - 8, 'for(let ');
+      copy(code.start, code.start + item.length);
+      copy(of, of + 2);
+      copy(code.list.start, code.list.end);
+      put(hole.end - 1, ')');
+      loops.push({ end: node.elseAt ? node.elseAt - 5 : node.end, open: hole.end });
       continue;
     }
 
@@ -159,7 +185,22 @@ function jsText (text, model) {
     put(hole.end - 1, separator);
   }
 
-  return out.join('') + (model.kind === 'rat' ? '\n;var props, children;\n' : '');
+  // a component tag: its name as a statement (an argument in a .rat.js)
+  for (const component of model.components) {
+    if (lead) put(component.start - 1, separator);
+    copy(component.start, component.end);
+    put(component.end, separator);
+  }
+
+  // the braces of the loops, on positions nothing else took: { right after the head, } before the body ends
+  for (const loop of loops) {
+    let open = loop.open;
+    while (open < loop.end && !put(open, '{')) open++;
+    let close = loop.end - 1;
+    while (close > open && !put(close, '}')) close--;
+  }
+
+  return out.join('') + (model.kind === 'rat' ? '\n;var props, children;\nexport default function component () {}\n' : '');
 }
 
 // :::::: ANALYSIS
@@ -167,7 +208,7 @@ function jsText (text, model) {
 function analyze (text, uri) {
   const kind     = isRatJs(uri) ? 'ratjs' : 'rat';
   const filename = decodeURIComponent(uri.split('/').pop());
-  const model    = { errors: [], filename, holes: [], kind, segments: [], styles: [], templates: [], text, warnings: [] };
+  const model    = { components: [], errors: [], filename, holes: [], kind, segments: [], styles: [], templates: [], text, warnings: [] };
 
   if (kind === 'rat') {
     const ast = parse(text, { filename, tolerant: true });
@@ -177,7 +218,7 @@ function analyze (text, uri) {
     for (const script of ast.scripts.module)   model.segments.push({ code: script.code, end: script.end, kind: 'module', range: script.range, start: script.start });
     for (const script of ast.scripts.instance) model.segments.push({ code: script.code, end: script.end, kind: 'script', range: script.range, start: script.start });
     for (const style of ast.styles) model.styles.push({ attributes: style.attributes, end: style.end, range: style.range, start: style.start });
-    collect(text, ast, model.segments, model.holes);
+    collect(text, ast, model);
   } else {
     model.segments.push({ code: text, end: text.length, kind: 'file', start: 0 });
     for (const template of templatesOf(text)) {
@@ -185,7 +226,7 @@ function analyze (text, uri) {
       model.templates.push({ ...template, ast });
       model.errors.push(...ast.errors);
       model.warnings.push(...ast.warnings);
-      collect(text, ast, model.segments, model.holes);
+      collect(text, ast, model);
     }
   }
 
@@ -232,6 +273,7 @@ function analyze (text, uri) {
 function regionAt (model, offset) {
   if (model.styles.some(style => offset >= style.start && offset <= style.end)) return 'css';
   if (model.holes.some(hole => offset > hole.start && offset < hole.end)) return 'js';
+  if (model.components.some(item => offset >= item.start && offset <= item.end)) return 'js';
   if (model.segments.some(segment => (segment.kind === 'script' || segment.kind === 'module') && offset >= segment.start && offset <= segment.end)) return 'js';
   if (model.kind === 'ratjs') return model.templates.some(template => offset >= template.start && offset <= template.end) ? 'markup' : 'js';
   return 'markup';

@@ -5,10 +5,11 @@
 
 import server from 'vscode-languageserver/node';
 
-import { start }            from './index.js';
-import { createJavaScript } from './js.js';
-import { manifestsOf }      from './manifests.js';
+import { start }              from './index.js';
+import { createJavaScript }   from './js.js';
+import { manifestsOf }        from './manifests.js';
+import { classesOfWorkspace } from './styles.js';
 
 const { ProposedFeatures, createConnection } = server;
 
-start(createConnection(ProposedFeatures.all), { javascript: createJavaScript, manifests: manifestsOf });
+start(createConnection(ProposedFeatures.all), { classes: classesOfWorkspace, javascript: createJavaScript, manifests: manifestsOf });

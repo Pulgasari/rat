@@ -8,14 +8,20 @@ offset the same as in the .rat file. so completion, hover, definition and
 signature help need no mapping. a $signal is a plain variable here, which is
 what it is in rat source: $todos.filter offers the array methods.
 
-what this form does not know yet: the item of an @for (it is any), props of
-components, imports of .rat files. the full form maps the compiler output
-with a source map (see lsp/rat.md).
+a .rat answers under its name plus .js (counter.rat -> counter.rat.js), which
+is also where typescript looks for an import of './counter.rat': a closed .rat
+is analyzed from the disk when something imports it. the item of an @for is in
+scope inside its body (document.js turns the block into a loop).
+
+what this form does not know yet: the types of props and of the index of an
+@for. the full form maps the compiler output with a source map (see lsp/rat.md).
 
 typescript only runs where there is a file system, so node, not the worker.
 */
 
 import ts from 'typescript';
+
+import { analyze } from './document.js';
 
 const KINDS = {
   [ts.ScriptElementKind.alias]                 : 9,
@@ -43,15 +49,37 @@ const text   = parts => (parts ?? []).map(part => part.text).join('');
 
 // documents: () => Map(uri -> { model, version })
 function createJavaScript (root, documents) {
-  // a .rat answers under a .js name next to it, a .rat.js under its own
-  const nameOf = uri => uri.endsWith('.rat.js') ? pathOf(uri) : `${pathOf(uri)}.virtual.js`;
-  const uriOf  = name => name.endsWith('.rat.virtual.js') ? `file://${name.slice(0, -'.virtual.js'.length)}` : `file://${name}`;
+  // a .rat answers as .rat.js, a .rat.js under its own name
+  const nameOf = uri => uri.endsWith('.rat.js') ? pathOf(uri) : `${pathOf(uri)}.js`;
 
   const open = () => {
     const out = new Map;
     for (const [uri, entry] of documents()) out.set(nameOf(uri), { ...entry, uri });
     return out;
   };
+
+  // x.rat.js stands for x.rat when there is a x.rat and no real x.rat.js
+  const ratFile = name => name.endsWith('.rat.js') && !ts.sys.fileExists(name) && ts.sys.fileExists(name.slice(0, -3)) ? name.slice(0, -3) : null;
+  const uriOf   = name => {
+    const entry = open().get(name);
+    if (entry) return entry.uri;
+    const rat = ratFile(name);
+    return `file://${rat ?? name}`;
+  };
+
+  // closed .rat files someone imports, analyzed from the disk, per modification time
+  const closed = new Map;   // path -> { time, js }
+  function closedText (name) {
+    const rat = ratFile(name);
+    if (!rat) return null;
+    const time   = ts.sys.getModifiedTime?.(rat)?.getTime() ?? 0;
+    const cached = closed.get(rat);
+    if (cached?.time === time) return cached;
+    const text  = ts.sys.readFile(rat);
+    const entry = { js: analyze(text, `file://${rat}`).js, length: text.length, time };
+    closed.set(rat, entry);
+    return entry;
+  }
 
   function options () {
     const base = { allowJs: true, checkJs: false, lib: ['lib.esnext.d.ts', 'lib.dom.d.ts'], maxNodeModuleJsDepth: 2, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, noEmit: true, target: ts.ScriptTarget.ESNext };
@@ -66,7 +94,7 @@ function createJavaScript (root, documents) {
 
   const host = {
     directoryExists        : ts.sys.directoryExists,
-    fileExists             : name => open().has(name) || ts.sys.fileExists(name),
+    fileExists             : name => open().has(name) || ts.sys.fileExists(name) || !!ratFile(name),
     getCompilationSettings : () => settings,
     getCurrentDirectory    : () => root,
     getDefaultLibFileName  : value => ts.getDefaultLibFilePath(value),
@@ -75,14 +103,18 @@ function createJavaScript (root, documents) {
     getScriptSnapshot      : name => {
       const entry = open().get(name);
       if (entry) return ts.ScriptSnapshot.fromString(entry.model.js);
+      const rat = closedText(name);
+      if (rat) return ts.ScriptSnapshot.fromString(rat.js);
       return ts.sys.fileExists(name) ? ts.ScriptSnapshot.fromString(ts.sys.readFile(name)) : undefined;
     },
     getScriptVersion       : name => {
       const entry = open().get(name);
-      return entry ? `rat:${entry.version}` : String(ts.sys.getModifiedTime?.(name)?.getTime() ?? 0);
+      if (entry) return `rat:${entry.version}`;
+      const rat = ratFile(name);
+      return String(ts.sys.getModifiedTime?.(rat ?? name)?.getTime() ?? 0);
     },
     readDirectory          : ts.sys.readDirectory,
-    readFile               : name => open().get(name)?.model.js ?? ts.sys.readFile(name),
+    readFile               : name => open().get(name)?.model.js ?? closedText(name)?.js ?? ts.sys.readFile(name),
     realpath               : ts.sys.realpath,
   };
 
@@ -93,6 +125,9 @@ function createJavaScript (root, documents) {
     const program = service.getProgram();
     const source  = program?.getSourceFile(fileName);
     if (!source) return null;
+    // what document.js appended to a .rat (its default export) has no place in the file: its start then
+    const length = open().get(fileName)?.model.text.length ?? closedText(fileName)?.length ?? Infinity;
+    if (span.start >= length) return { range: { end: { character: 0, line: 0 }, start: { character: 0, line: 0 } }, uri: uriOf(fileName) };
     const start = source.getLineAndCharacterOfPosition(span.start);
     const end   = source.getLineAndCharacterOfPosition(span.start + span.length);
     return { range: { end: { character: end.character, line: end.line }, start: { character: start.character, line: start.line } }, uri: uriOf(fileName) };

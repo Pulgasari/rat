@@ -12,7 +12,7 @@ kept: unknown attributes of custom elements, values outside an enumeration,
 lowercase tags that are no element.
 */
 
-import { analyze, complete as completeAt, createContext, definition as definitionAt, hover as hoverAt, regionAt, scan } from '@htx/analyzer';
+import { analyze, classesOf, complete as completeAt, createContext, definition as definitionAt, hover as hoverAt, regionAt, scan } from '@htx/analyzer';
 
 const KEEP = new Set(['htx-attribute', 'htx-element', 'htx-value']);
 
@@ -57,15 +57,18 @@ function templatesOf (model) {
 
 const templateAt = (model, offset) => templatesOf(model).find(template => offset >= template.start && offset <= template.end) ?? null;
 
-function createElements (manifests) {
+// manifests: () => [{ manifest, source, time }], classes: () => Set of the workspace's class names
+function createElements (manifests, classes = () => new Set) {
   let context = null;
   let stamp   = null;
 
-  // the context follows the manifests: rebuilt when the list of files or their contents changed
-  function contextOf () {
-    const list = manifests();
-    const key  = list.map(entry => `${entry.source}:${entry.time}`).join('|');
-    if (!context || key !== stamp) { context = createContext({ manifests: list, partial: true }); stamp = key; }
+  // the context follows the manifests and the classes (the workspace's and the document's own
+  // <style>): rebuilt when one of them changed
+  function contextOf (model) {
+    const list  = manifests();
+    const names = [...new Set([...classes(), ...(model ? classesOf(model.css) : [])])].sort();
+    const key   = list.map(entry => `${entry.source}:${entry.time}`).join('|') + '#' + names.join(' ');
+    if (!context || key !== stamp) { context = createContext({ classes: names, manifests: list, partial: true }); stamp = key; }
     return context;
   }
 
@@ -75,14 +78,14 @@ function createElements (manifests) {
     diagnostics (model, document) {
       const text = model.text;
       return templatesOf(model)
-        .flatMap(template => analyze(template, contextOf()))
+        .flatMap(template => analyze(template, contextOf(model)))
         .filter(item => KEEP.has(item.code) && !(item.code === 'htx-attribute' && RAT_ATTRIBUTE.test(text.slice(item.start, item.end))))
         .map(item => ({ code: item.code, message: item.message, range: range(document, item.start, item.end), severity: SEVERITY[item.severity], source: 'rat' }));
     },
 
     complete (model, document, offset) {
       const template = templateAt(model, offset);
-      const result   = template && completeAt(template, offset, contextOf());
+      const result   = template && completeAt(template, offset, contextOf(model));
       if (!result) return null;
       return result.items.map(item => ({
         detail        : item.detail,
@@ -96,13 +99,13 @@ function createElements (manifests) {
 
     hover (model, document, offset) {
       const template = templateAt(model, offset);
-      const result   = template && hoverAt(template, offset, contextOf());
+      const result   = template && hoverAt(template, offset, contextOf(model));
       return result ? { contents: { kind: 'markdown', value: result.markdown }, range: range(document, result.start, result.end) } : null;
     },
 
     definition (model, document, offset) {
       const template = templateAt(model, offset);
-      const result   = template && definitionAt(template, offset, contextOf());
+      const result   = template && definitionAt(template, offset, contextOf(model));
       if (!result?.module || !result.source) return null;
       const uri = `file://${result.source.replace(/\/[^/]*$/, '')}/${result.module}`;
       return { range: { end: { character: 0, line: 0 }, start: { character: 0, line: 0 } }, uri };
