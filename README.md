@@ -6,23 +6,7 @@ experimental JS-framework.
 
 ---
 
-## repo
-
-dir: 
-[demos](demos/) ·
-[playground](demos/playground/)
-
-md: 
-[compiler](.md/compiler.md) ·
-[concept](.md/concept.md) ·
-[decisions](.md/decisions.md) ·
-[ideas](.md/ideas.md) ·
-[syntax](.md/syntax.md) ·
-[todo](.md/todo.md)
-
-## web
-
-website: 
+official: 
 [home](http://code.pulgasari.dev/rat/) ·
 [docs](http://code.pulgasari.dev/rat/docs/) ·
 [playground](https://code.pulgasari.dev/rat/demos/playground/)
@@ -44,6 +28,20 @@ demos:
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
 | `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0     |
 | `@rat/types`    | [`packages/types`](packages/types)       | sketch |
+
+## repo
+
+dir: 
+[demos](demos/) ·
+[playground](demos/playground/)
+
+md: 
+[compiler](.md/compiler.md) ·
+[concept](.md/concept.md) ·
+[decisions](.md/decisions.md) ·
+[ideas](.md/ideas.md) ·
+[syntax](.md/syntax.md) ·
+[todo](.md/todo.md)
 
 ---
 
