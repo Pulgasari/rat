@@ -5,16 +5,23 @@ markup -> ast. a hand-written recursive descent over the source; js inside
 holes and conditions is not parsed here, only delimited (acorn's tokenizer
 finds the closing token). the script pass parses and rewrites it later.
 
-  Fragment   { children }
-  Element    { tag, id, classes, attributes, children, component, svg }
+  Fragment   { children, errors, warnings, scripts, styles }
+  Element    { tag, id, classes, attributes, children, component, svg, name, openEnd, close }
   Text       { value }
-  Expression { code, start }
+  Expression { code, start, end }
   If         { branches: [{ test, children }], fallback }
   For        { item, index, list, children, fallback }
   Switch     { subject, cases: [{ test, children }], fallback }
 
-an expression is { code, start }: the source text and its offset, so later
-errors still point into the file.
+every node has start and end, offsets in the file. an expression is
+{ code, start, end }: the trimmed source text and where it stands, so later
+errors still point into the file. an element also has the range of its name,
+where its open tag ends (openEnd) and the range of its closing tag (close).
+
+tolerant: true (the language server) collects errors in ast.errors and keeps
+going: an unclosed tag ends at the end of the file, a bad attribute is
+skipped, a broken block is skipped up to the next tag or line. without it
+the first error is thrown, which is what compile() wants.
 */
 
 import { CompileError, scanCase, scanClose, tt } from './util.js';
@@ -30,17 +37,31 @@ const WHITESPACE  = /\s*/y;
 
 // ::: parser
 
-function parse (source, { blocks = true, filename = 'component.rat', offset = 0 } = {}) {
+function parse (source, { blocks = true, filename = 'component.rat', offset = 0, tolerant = false } = {}) {
   let i = 0;
 
-  const scripts = { instance: [], module: [] };
-  const styles  = [];
+  const errors   = [];
+  const warnings = [];
+  const scripts  = { instance: [], module: [] };
+  const styles   = [];
 
   // ::: helpers
 
   // offset: where source starts inside the file (a template in a .rat.js), errors count from the file
   const fullSource = offset ? ' '.repeat(offset) + source : source;
   const fail       = (message, index = i) => new CompileError(message, { filename, index: index + offset, source: fullSource });
+
+  // an error the parser can step over: thrown, or collected when tolerant
+  const report = (message, index = i) => { const error = fail(message, index); if (!tolerant) throw error; errors.push(error); };
+
+  // after an error inside a construct: on to the next tag or line, at least one character further
+  function recover (from, failed) {
+    i = Math.max(i, failed, from + 1);
+    const tag  = source.indexOf('<', i);
+    const line = source.indexOf('\n', i);
+    const next = Math.min(tag < 0 ? source.length : tag, line < 0 ? source.length : line);
+    i = Math.min(next, source.length);
+  }
 
   const peek = (string) => source.startsWith(string, i);
 
@@ -64,7 +85,10 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     const result = scanClose(source, start, close);
     if (result.error) throw fail(`${result.error} in ${label}`, result.index);
     i = result.index + 1;
-    return { code: source.slice(start, result.index).trim(), start: start + offset };
+    const text = source.slice(start, result.index);
+    const lead = text.length - text.trimStart().length;
+    const code = text.trim();
+    return { code, end: start + lead + code.length + offset, start: start + lead + offset };
   }
 
   const hole      = () => until(tt.braceR, 'expression');
@@ -88,48 +112,56 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     const loose    = end === 'line' || end === 'indent';
 
     while (i < source.length) {
-      if (loose) {
-        if (peek('}') && context.braces) return children;
-        if (peek('</') && context.depth) return children;
-        if (end === 'line' && (atNewline() || atContinuation())) return children;
-        if (end === 'indent' && atNewline()) {
-          if (dedented(context.indent)) return children;
-          consistent(context.whitespace);
+      const at = i;
+      try {
+        if (loose) {
+          if (peek('}') && context.braces) return children;
+          if (peek('</') && context.depth) return children;
+          if (end === 'line' && (atNewline() || atContinuation())) return children;
+          if (end === 'indent' && atNewline()) {
+            if (dedented(context.indent)) return children;
+            consistent(context.whitespace);
+          }
         }
-      }
 
-      if (peek('<!--')) {
-        const close = source.indexOf('-->', i + 4);
-        if (close < 0) throw fail('unclosed <!--');
-        i = close + 3;
+        if (peek('<!--')) {
+          const close = source.indexOf('-->', i + 4);
+          if (close < 0) { report('unclosed <!--'); i = source.length; continue; }
+          i = close + 3;
+        }
+        else if (peek('</')) {
+          const close = source.indexOf('>', i);
+          if (end !== 'tag') { report('unexpected closing tag'); i = close < 0 ? source.length : close + 1; continue; }
+          if (close < 0) { report('unclosed closing tag'); i = source.length; return children; }
+          context.close = { end: close + 1 + offset, name: source.slice(i + 2, close).trim(), start: i + offset };
+          i = close + 1;
+          return children;
+        }
+        else if (peek('<') && /[A-Za-z.#]/.test(source[i + 1] ?? '')) {
+          const node = element(context);
+          if (node) children.push(node);
+        }
+        else if (peek('{')) {
+          i++;
+          children.push({ type: 'Expression', ...hole() });
+        }
+        else if (peek('}') && end === 'brace') {
+          i++;
+          return children;
+        }
+        else if (peek('@') && atBlockStart()) {
+          children.push(block(context));
+        }
+        else children.push(text(end, context));
+      } catch (error) {
+        if (!tolerant || !(error instanceof CompileError)) throw error;
+        errors.push(error);
+        recover(at, error.index - offset);
       }
-      else if (peek('</')) {
-        if (end !== 'tag') throw fail('unexpected closing tag');
-        const close = source.indexOf('>', i);
-        if (close < 0) throw fail('unclosed closing tag');
-        i = close + 1;
-        return children;
-      }
-      else if (peek('<') && /[A-Za-z.#]/.test(source[i + 1] ?? '')) {
-        const node = element(context);
-        if (node) children.push(node);
-      }
-      else if (peek('{')) {
-        i++;
-        children.push({ type: 'Expression', ...hole() });
-      }
-      else if (peek('}') && end === 'brace') {
-        i++;
-        return children;
-      }
-      else if (peek('@') && atBlockStart()) {
-        children.push(block(context));
-      }
-      else children.push(text(end, context));
     }
 
-    if (end === 'tag')   throw fail('unclosed element');
-    if (end === 'brace') throw fail('unclosed block, expected "}"');
+    if (end === 'tag')   report(`<${context.tag}> is never closed`, context.open);
+    if (end === 'brace') report('unclosed block, expected "}"');
     return children;
   }
 
@@ -203,17 +235,17 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
       if (char === '@' && (atBlockStart() || (end === 'line' && atContinuation()))) break;
       i++;
     }
-    return { type: 'Text', value: source.slice(start, i) };
+    return { end: i + offset, start: start + offset, type: 'Text', value: source.slice(start, i) };
   }
 
   // ::: blocks
 
   function block (context) {
+    const start       = i;
     const base        = indentAt(i);
     const [, keyword] = sticky(BLOCK_START);
-    if (keyword === 'if')  return ifBlock(context, base);
-    if (keyword === 'for') return forBlock(context, base);
-    return switchBlock(context, base);
+    const node        = keyword === 'if' ? ifBlock(context, base) : keyword === 'for' ? forBlock(context, base) : switchBlock(context, base);
+    return { ...node, end: i + offset, start: start + offset };
   }
 
   // the three body forms: { … }, : rest of the line, or the deeper indented lines below
@@ -259,20 +291,25 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     const branches = [{ test: condition(), children: body(context, base) }];
     let fallback   = null;
 
+    let elseAt     = null;
+
     while (clause('@else', base)) {
       if (continues('if')) { branches.push({ test: condition(), children: body(context, base) }); continue; }
+      elseAt   = i + offset;
       fallback = body(context, base);
       break;
     }
 
-    return { type: 'If', branches, fallback };
+    return { type: 'If', branches, elseAt, fallback };
   }
 
   function forBlock (context, base) {
     const head     = condition();
     const children = body(context, base);
-    const fallback = clause('@else', base) ? body(context, base) : null;
-    return { type: 'For', ...forHead(head), children, fallback };
+    let elseAt     = null;
+    let fallback   = null;
+    if (clause('@else', base)) { elseAt = i + offset; fallback = body(context, base); }
+    return { type: 'For', ...forHead(head), children, elseAt, fallback, head };
   }
 
   // "item of list", "item, index of list", "{ a, b } of list"
@@ -289,7 +326,8 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     }
 
     const listOffset = match.index + match[0].length;
-    return { index, item: binding, list: { code: code.slice(listOffset).trim(), start: start + listOffset } };
+    const list       = code.slice(listOffset).trim();
+    return { index, item: binding, list: { code: list, end: start + listOffset + list.length, start: start + listOffset } };
   }
 
   // @switch (…) { @case … }, or without braces: the @case lines indented below it
@@ -340,13 +378,25 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
     node.svg         = context.svg || node.tag === 'svg';
     node.attributes  = [];
     node.children    = [];
+    node.name        = { end: start + 1 + name.length + offset, start: start + 1 + offset };
+    node.close       = null;
 
     const closed = attributes(node);
+    node.openEnd = i + offset;
 
-    if (!closed && !VOID.has(node.tag)) {
-      node.children = nodes('tag', { depth: context.depth + 1, svg: node.svg });
+    if (closed === false && !VOID.has(node.tag)) {
+      const inner   = { depth: context.depth + 1, open: start, svg: node.svg, tag: name };
+      node.children = nodes('tag', inner);
+      node.close    = inner.close ?? null;
+
+      // a closing tag closes the innermost element whatever it says; a different name is a slip
+      const written = node.close?.name;
+      if (written && written !== name && written.split(/[.#]/)[0] !== node.tag) {
+        warnings.push(fail(`</${written}> closes <${name}>`, node.close.start - offset));
+      }
     }
 
+    node.end = i + offset;
     return node;
   }
 
@@ -360,68 +410,73 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
 
     for (const part of rest) {
       if (part[0] === '.') node.classes.push(part.slice(1));
-      else if (node.id)    throw fail(`an element has one id, "${part}" is a second one`, start);
+      else if (node.id)    report(`an element has one id, "${part}" is a second one`, start);
       else                 node.id = part.slice(1);
     }
     return node;
   }
 
-  // returns true if the tag closed itself
+  // true if the tag closed itself, false if it opened, null at the end of the file
   function attributes (node) {
     while (true) {
       skipWhitespace();
-      if (i >= source.length) throw fail('unclosed tag', node.start - offset);
+      if (i >= source.length) { report('unclosed tag', node.start - offset); return null; }
       if (peek('/>')) { i += 2; return true; }
       if (peek('>'))  { i += 1; return false; }
 
+      const at = i;
+
       if (peek('{')) {
         i++;
-        if (peek('...')) { i += 3; node.attributes.push({ type: 'Spread', ...hole() }); continue; }
+        if (peek('...')) { i += 3; node.attributes.push({ type: 'Spread', ...hole(), range: { end: i + offset, start: at + offset } }); continue; }
         // {name} is name={name}
         const value = hole();
-        node.attributes.push({ type: 'Attribute', names: [value.code], value: { kind: 'expression', ...value } });
+        node.attributes.push({ end: i + offset, nameEnd: i + offset, names: [value.code], start: at + offset, type: 'Attribute', value: { kind: 'expression', ...value } });
         continue;
       }
 
       // a positional value (htx): a child, until shorthand tags give it a meaning
       if (peek('"') || peek("'")) {
-        node.children.push({ type: 'Text', value: quoted().value });
+        const value = quoted();
+        node.children.push({ end: i + offset, start: at + offset, type: 'Text', value: value.value ?? '' });
         continue;
       }
 
-      const at   = i;
       const name = sticky(NAME)?.[0];
-      if (!name) throw fail(`unexpected "${source[i]}" in tag`);
+      if (!name) { report(`unexpected "${source[i]}" in tag`); i++; continue; }
+      const nameEnd = i;
 
       let value = { kind: 'true' };
       skipWhitespace();
       if (peek('=')) {
         i++;
         skipWhitespace();
-        value = attributeValue(name);
+        value = attributeValue(name) ?? value;
       }
 
       // @name is a behavior now. control flow is a block around the element
-      if (name === '@if' || name === '@for' || name === '@switch') throw fail(`${name} is a block, not an attribute: write it around the element`, at);
+      if (name === '@if' || name === '@for' || name === '@switch') { report(`${name} is a block, not an attribute: write it around the element`, at); continue; }
 
       // a | inside [ … ] is part of a key filter (on:keydown[ctrl+c|space+a]), not a prop group
       const names = name.split(/\|(?![^[]*\])/);
-      if (names.some(part => !part)) throw fail(`dangling "|" in "${name}"`, at);
-      node.attributes.push({ type: 'Attribute', names, value });
+      if (names.some(part => !part)) { report(`dangling "|" in "${name}"`, at); continue; }
+      node.attributes.push({ end: i + offset, nameEnd: nameEnd + offset, names, start: at + offset, type: 'Attribute', value });
     }
   }
 
   function attributeValue (name) {
+    const at = i;
     if (peek('{'))              { i++; return { kind: 'expression', ...hole() }; }
     if (peek('"') || peek("'")) return quoted();
     const bare = sticky(/[^\s>]+/y);
-    if (!bare) throw fail(`expected a value for "${name}"`);
-    return { kind: 'string', value: bare[0] };
+    if (!bare) { report(`expected a value for "${name}"`); return null; }
+    return { end: i + offset, kind: 'string', start: at + offset, value: bare[0] };
   }
 
-  // a quoted value, with {…} holes it becomes a template
+  // a quoted value, with {…} holes it becomes a template. start and end: inside the quotes
   function quoted () {
     const quote = source[i++];
+    const start = i;
     const parts = [];
     let text    = '';
 
@@ -435,24 +490,27 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
       else text += source[i++];
     }
 
-    if (i >= source.length) throw fail('unclosed quote');
-    i++;
+    const end = i;
+    if (i >= source.length) report('unclosed quote', start - 1);
+    else i++;
     if (text) parts.push(text);
 
-    if (parts.every(part => typeof part === 'string')) return { kind: 'string', value: parts.join('') };
-    return { kind: 'template', parts };
+    if (parts.every(part => typeof part === 'string')) return { end: end + offset, kind: 'string', start: start + offset, value: parts.join('') };
+    return { end: end + offset, kind: 'template', parts, start: start + offset };
   }
 
   // <script>, <script module>, <style>: raw text, top level only
   function raw (name, start, context) {
-    if (!blocks || context.depth) throw fail(`<${name}> is only allowed at the top level of a .rat file`, start);
+    const misplaced = !blocks || context.depth;
+    if (misplaced) report(`<${name}> is only allowed at the top level of a .rat file`, start);
     const open = source.indexOf('>', i);
-    if (open < 0) throw fail(`unclosed <${name}>`, start);
+    if (open < 0) { report(`unclosed <${name}>`, start); i = source.length; return null; }
     const attrs = source.slice(i, open);
     const close = source.indexOf(`</${name}>`, open);
-    if (close < 0) throw fail(`unclosed <${name}>`, start);
+    if (close < 0) { report(`unclosed <${name}>`, start); i = source.length; return null; }
+    if (misplaced) { i = close + name.length + 3; return null; }
 
-    const content = { attributes: attrs.trim(), code: source.slice(open + 1, close), start: open + 1 + offset };
+    const content = { attributes: attrs.trim(), code: source.slice(open + 1, close), end: close + offset, range: { end: close + name.length + 3 + offset, start: start + offset }, start: open + 1 + offset };
     if (name === 'style')                  styles.push(content);
     else if (/\bmodule\b/.test(attrs))     scripts.module.push(content);
     else                                   scripts.instance.push(content);
@@ -464,7 +522,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0 
   // ::: run
 
   const children = normalize(nodes('eof', { depth: 0, svg: false }));
-  return { children, scripts, styles, type: 'Fragment' };
+  return { children, end: source.length + offset, errors, scripts, start: offset, styles, type: 'Fragment', warnings };
 }
 
 // ::: whitespace

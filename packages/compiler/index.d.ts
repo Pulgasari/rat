@@ -29,7 +29,10 @@ export function compileAsync     (source: string, options?: CompileOptions): Pro
 export function compileComponent (source: string, options?: CompileOptions): CompileResult;
 export function compileModule    (source: string, options?: CompileOptions): CompileResult;
 export function loadStyles       (...langs: (string | string[])[]): Promise<unknown[]>;
-export function parse            (source: string, options?: { blocks?: boolean, filename?: string, offset?: number }): Fragment;
+export function parse            (source: string, options?: { blocks?: boolean, filename?: string, offset?: number, tolerant?: boolean }): Fragment;
+
+/** the $ declarations of a script as written, token based: for tooling. */
+export function declared         (code: string, offset?: number): { name: string, kind: 'signal' | 'computed', start: number, end: number, statement: number }[];
 
 export function forOf  (code: string, offset?: number): string;
 export function pipes  (code: string, offset?: number): string;
@@ -44,15 +47,20 @@ export default compile;
 export interface Code {
   code  : string;
   start : number;                      // offset in the file
+  end?  : number;
 }
+
+export interface Range { start: number; end: number }
 
 export type Node = Element | Expression | For | If | Switch | Text;
 
-export interface Fragment {
+export interface Fragment extends Range {
   type     : 'Fragment';
   children : Node[];
   scripts  : { instance: Code[], module: Code[] };
   styles   : Code[];
+  errors   : CompileError[];           // collected with tolerant: true, else the first one is thrown
+  warnings : CompileError[];           // a closing tag that names another element
 }
 
 export interface ModuleAst {
@@ -68,12 +76,17 @@ export interface Element {
   component  : boolean;
   id         : string | null;
   start      : number;
+  end        : number;
+  name       : Range;                  // the tag name as written
+  openEnd    : number;                 // after the > of the open tag
+  close      : (Range & { name: string }) | null;
   svg        : boolean;
   tag        : string;
 }
 
-export interface Attribute {
+export interface Attribute extends Range {
   type  : 'Attribute';
+  nameEnd : number;
   names : string[];                    // more than one for a prop group (a|b)
   value : { kind: 'true' }
         | { kind: 'string', value: string }
@@ -85,7 +98,7 @@ export interface Spread extends Code { type: 'Spread'; }
 
 export interface Expression extends Code { type: 'Expression'; }
 
-export interface Text {
+export interface Text extends Range {
   type  : 'Text';
   value : string;
 }

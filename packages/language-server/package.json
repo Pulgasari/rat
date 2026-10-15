@@ -1,0 +1,23 @@
+{
+  "name"        : "@rat/language-server",
+  "version"     : "0.1.0",
+  "description" : "language server for .rat and .rat.js: diagnostics, structure, signals, elements, css and javascript",
+  "type"        : "module",
+  "main"        : "./index.js",
+  "bin"         : { "rat-language-server": "./node.js" },
+  "exports"     : {
+    "."        : "./index.js",
+    "./node"   : "./node.js",
+    "./worker" : "./worker.js"
+  },
+  "dependencies": {
+    "@htx/analyzer"                     : "npm:@jsr/htx__analyzer@^0.1.0",
+    "@rat/compiler"                     : "file:../compiler",
+    "acorn"                             : "^8.14.0",
+    "typescript"                        : "^5.9.0 || ^6.0.0",
+    "vscode-css-languageservice"        : "^6.3.0",
+    "vscode-languageserver"             : "^10.0.0",
+    "vscode-languageserver-textdocument": "^1.0.12"
+  },
+  "license"     : "MIT"
+}

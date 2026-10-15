@@ -33,7 +33,7 @@ import { hash, scopeStyle }     from './style.js';
 import { CompileError, nameOf } from './util.js';
 
 import { builtIn, langOf, langsIn, loadStyles, preprocessor }                              from './preprocess.js';
-import { forOf, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
+import { declared, forOf, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
 
 const RUNTIME = '$$';
 
@@ -139,7 +139,7 @@ async function compileAsync (source, options = {}) {
 export { 
   CompileError,
   compile, compileAsync, compileComponent, compileModule, 
-  forOf, loadStyles, parse, pipes, ranges, sugar, topics,
+  declared, forOf, loadStyles, parse, pipes, ranges, sugar, topics,
   transformExpression, transformScript 
 };
 export default compile;

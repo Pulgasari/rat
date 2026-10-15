@@ -11,8 +11,8 @@ source ──► parse ──► ast ──► generate ──► es module
 
 | file | job |
 |---|---|
-| `parse.js` | markup → ast. hand-written recursive descent. js in holes is only delimited (acorn's tokenizer finds the closing `}` / `)`), not parsed. knows the three body forms (braces, indentation, one line) |
-| `script.js` | `sugar` (token based: `#`, `..`, `\|>`, `for…of`), then the acorn parse, then the reactive rewrite (`$x` → `$x.value`, declarations → `signal` / `computed`) |
+| `parse.js` | markup → ast. hand-written recursive descent. js in holes is only delimited (acorn's tokenizer finds the closing `}` / `)`), not parsed. knows the three body forms (braces, indentation, one line). every node has `start` / `end`; `tolerant: true` (the language server) collects errors in `ast.errors` and recovers, closing tags that name another element land in `ast.warnings` |
+| `script.js` | `sugar` (token based: `#`, `..`, `\|>`, `for…of`), then the acorn parse, then the reactive rewrite (`$x` → `$x.value`, declarations → `signal` / `computed`). `declared(code)` lists the `$` declarations token based, for tooling |
 | `generate.js` | ast → an htx template for `@domina/render`. holes become closures, blocks the helpers `when` / `match` / `each`, component props a spread of getters |
 | `style.js` | `<style>` → `@scope ([data-rat="hash"]) { … }` |
 | `util.js` | errors with line/column, token scanners, applying edits, names |

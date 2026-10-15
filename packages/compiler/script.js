@@ -323,6 +323,50 @@ function declarations (program, runtime) {
   return { edits, names };
 }
 
+/*
+the reactive declarations of a script as written, for tooling (the language
+server): [{ name, kind, start, end, statement }], kind 'signal' (let, var) or
+'computed' (const). token based like the sugar pass, so it reads code with
+|>, # and .. and code that does not parse yet. offsets count from offset.
+*/
+function declared (code, offset = 0) {
+  let list;
+  try { list = tokens(code.replace(/#(?![\w$\\])/g, '_')); } catch { return []; }
+
+  const out   = [];
+  let   depth = 0;
+
+  for (let index = 0; index < list.length; index++) {
+    const token = list[index];
+    if (OPENERS.has(token.type)) { depth++; continue; }
+    if (CLOSERS.has(token.type)) { depth--; continue; }
+    if (depth) continue;
+
+    const kind = token.type === tt._const ? 'computed' : token.type === tt._var || (token.type === tt.name && token.value === 'let') ? 'signal' : null;
+    if (!kind) continue;
+
+    // the declarators of this statement: a name after the keyword or after a comma on its level
+    let expectName = true;
+    let local      = 0;
+    let next       = index + 1;
+    for (; next < list.length; next++) {
+      const item = list[next];
+      if (expectName) {
+        if (item.type === tt.name && item.value[0] === '$' && item.value.length > 1) out.push({ end: item.end + offset, kind, name: item.value, start: item.start + offset, statement: token.start + offset });
+        expectName = false;
+        continue;
+      }
+      if (OPENERS.has(item.type)) local++;
+      else if (CLOSERS.has(item.type)) { if (!local) break; local--; }
+      else if (!local && item.type === tt.comma) expectName = true;
+      else if (!local && (item.type === tt.semi || breaks(code, list[next - 1], item) && (item.type.keyword || item.value === 'let'))) break;
+    }
+    index = next - 1;
+  }
+
+  return out;
+}
+
 function parseOrFail (code, { filename, offset, source }) {
   try {
     return parseProgram(code, ACORN);
@@ -386,7 +430,7 @@ function transformExpression ({ code, start }, { filename, names, source }) {
 
 export { 
   TOPIC, 
-  forOf, pipes, ranges, sugar, topics, walk,
+  declared, forOf, pipes, ranges, sugar, topics, walk,
   transformExpression, transformScript,
 };
 

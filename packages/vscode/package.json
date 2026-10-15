@@ -1,0 +1,38 @@
+{
+  "name"        : "rat-vscode",
+  "displayName" : "RAT",
+  "description" : "rat for vs code: highlighting from @rat/syntax, diagnostics from @rat/language-server",
+  "version"     : "0.0.1",
+  "publisher"   : "pulgasari",
+  "license"     : "MIT",
+  "repository"  : "https://github.com/pulgasari/rat",
+  "engines"     : { "vscode": "^1.91.0" },
+  "categories"  : ["Programming Languages"],
+  "main"        : "./extension.cjs",
+  "activationEvents": ["onLanguage:rat", "onLanguage:ratjs"],
+  "contributes" : {
+    "languages": [
+      { "id": "rat",   "aliases": ["RAT"],    "extensions": [".rat"],             "configuration": "./language-configuration.json" },
+      { "id": "ratjs", "aliases": ["RAT JS"], "filenamePatterns": ["*.rat.js"],   "configuration": "./language-configuration.json" }
+    ],
+    "grammars": [
+      { "language": "rat",   "scopeName": "source.rat",    "path": "./syntaxes/rat.tmLanguage.json",   "embeddedLanguages": { "source.css": "css" } },
+      { "language": "ratjs", "scopeName": "source.rat.js", "path": "./syntaxes/ratjs.tmLanguage.json", "embeddedLanguages": { "source.css": "css" } }
+    ],
+    "semanticTokenScopes": [
+      { "scopes": { "variable.reactive": ["variable.other.reactive"], "variable.reactive.readonly": ["variable.other.reactive.readonly", "variable.other.reactive"] } }
+    ]
+  },
+  "scripts"     : {
+    "syntaxes" : "node -e \"const fs = require('fs'); fs.mkdirSync('syntaxes', { recursive: true }); for (const name of ['rat', 'ratjs']) fs.copyFileSync('../syntax/textmate/' + name + '.tmLanguage.json', 'syntaxes/' + name + '.tmLanguage.json');\"",
+    "prepare"  : "npm run syntaxes",
+    "package"  : "npm run syntaxes && vsce package"
+  },
+  "dependencies": {
+    "@rat/language-server" : "file:../language-server",
+    "vscode-languageclient": "^10.0.0"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^3.0.0"
+  }
+}

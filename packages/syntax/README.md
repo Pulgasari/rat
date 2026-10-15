@@ -139,6 +139,10 @@ new EditorView({ extensions: [language(StreamLanguage, 'rat')] });
    that is pushed). while changing the grammar itself, point `repository` at your clone
    (`file:///…/rat`) and `rev` at a local commit, then `zed: rebuild dev extension`
 
+the extension also starts the language server (`src/lib.rs`, a small rust crate zed
+compiles to wasm): `rat-language-server` from the path if there is one (`npm link` in
+`packages/language-server`), otherwise `@rat/language-server` from npm.
+
 if `.rat.js` opens as javascript, add to zed settings:
 
 ```json
