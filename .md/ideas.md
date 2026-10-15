@@ -1082,6 +1082,14 @@ runtime needs nothing beyond that; the work is in the compiler.
 
 Anm.: Das hätte dann 3 Namen oder was lol. Aber inwiefern clashed das mit plain js? es braucht ja eigtl nur in `.rat.js` und `.rat` zu funktionieren? odef nich?
 
+**reply:** right on both. it is one word in three places, each doing its own job:
+`case` declares (script), `@case` uses it in markup, `is` tests it inside an expression
+(like `instanceof`). `pattern` / `when` are off the table. and the clash is no clash: only
+compiled files need it, and there `case Name = …` as a statement is a syntax error in
+plain js, so no valid code changes meaning. inside a `switch`, `case x:` stays what it
+was; a declaration needs `Name =` with a capital. built that way, see
+[syntax.md](syntax.md#named-cases).
+
 the call is [d-30](decisions.md#d-30).
 
 ---

@@ -242,6 +242,7 @@ const BLOCKS = [
   { detail: 'continues @if, @for', label: '@else', snippet: '@else {\n\t$0\n}' },
   { detail: 'inside @switch', label: '@case', snippet: '@case ${1:value} { $0 }' },
   { detail: 'inside @switch', label: '@default', snippet: '@default { $0 }' },
+  { detail: 'markup with parameters, top level', label: '@fragment', snippet: '@fragment ${1:name} (${2:item})\n\t$0' },
 ];
 
 const BINDABLE  = ['checked', 'files', 'open', 'value'];

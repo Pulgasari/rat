@@ -190,7 +190,7 @@
           ]
         },
         {
-          "begin": "@(?:else\\s+if|default|switch|case|else|for|if)(?![\\w$])",
+          "begin": "@(?:else\\s+if|fragment|default|switch|case|else|for|if)(?![\\w$])",
           "beginCaptures": {
             "0": {
               "name": "keyword.control.block"
@@ -327,7 +327,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -532,7 +532,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -605,7 +605,7 @@
               "name": "entity.other.attribute-name"
             }
           },
-          "match": "((?:class|style|bind|use|on))(:)([\\w\\-:]+)"
+          "match": "((?:class|style|bind|once|use|on))(:)([\\w\\-:]+)"
         },
         {
           "match": "\\[[^\\]\\n]*\\]",
@@ -909,7 +909,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -1114,7 +1114,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -1214,7 +1214,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -1419,7 +1419,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -1624,7 +1624,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -1876,7 +1876,7 @@
           "name": "keyword.control"
         },
         {
-          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|of)(?![\\w$])",
+          "match": "(?<![\\w$.])(?:instanceof|extends|delete|export|import|typeof|async|from|void|new|as|in|is|of)(?![\\w$])",
           "name": "keyword.other"
         },
         {
@@ -2109,7 +2109,7 @@
           ]
         },
         {
-          "begin": "@(?:else\\s+if|default|switch|case|else|for|if)(?![\\w$])",
+          "begin": "@(?:else\\s+if|fragment|default|switch|case|else|for|if)(?![\\w$])",
           "beginCaptures": {
             "0": {
               "name": "keyword.control.block"

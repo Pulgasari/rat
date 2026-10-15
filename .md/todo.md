@@ -23,6 +23,12 @@
 - [x] wenn `use`/`@` sitzt könnten wa direkt mal `@aufbau/patterns` und `@aufbau/filters` in demo-seite für diese syntax nutzen
   - `demos/examples/behaviors.rat` (playground: "behaviors"): `@pattern`, `use:filter`, `@flash:click`, dazu key-filter, `!`, `:once`, `:3`
 
+- [x] neue anmerkungen in `decisions.md` und `ideas.md` (runde 2)
+  - entschieden + gebaut: d-12 (nein), d-14 a (schema als startwert, `@rat/types` v0), d-24 (`!`), d-25 d (alle drei formen, neu `once:click`), d-27 (`@fragment`), named cases (`case`, `is`, `@case Name` mit teilen)
+  - antworten: `<|` bei d-10 (plus option e: nur `|>` und `|?>`), "3 namen?" in `ideas.md` 5, rückfrage zum `>` bei d-19
+  - nebenbei: `runtime/shared.js` (14.10.) hatte `isFn`/`isString` vertauscht, `mount()` und alle behaviors waren dadurch kaputt. behoben
+  - runtime: computeds mit cutoff (gleicher wert weckt keine effekte mehr), siehe `compiler.md`
+
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
 - [x] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
@@ -92,6 +98,44 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
   - `ideas.md#4-inspiration-round-2`: elixir, clojure, f#, swift, kotlin, raku, gleam, zig, imba, ruby
 - [x] (aus dem chat) jquery, htmx, lit und elm genauer anschauen: was sie können, wie, welche konzepte
   - jetzt als einzelne steckbriefe in `pulgasari.github.io/md/webdev/libs/` (jquery, htmx, lit, elm, dazu hyperscript, arrowjs, lynxjs, tsrx, fresh, ejs)
+
+---
+
+# als nächstes (stand 15.10.)
+
+## fehler und lücken
+- [ ] `@rat/core` ist nicht lauffähig: importiert `./datatypes.js` (gibt es nicht), nutzt `toDashed`/`toUndashed` und ein globales `htx` ohne import. neu aufsetzen nach `concept.md` 6: `createApp`, kommando-registry auf `rat:command`, hotkeys, router-registry (d-17)
+- [ ] computeds lösen sich nie von ihren quellen (leak), siehe `compiler.md`
+- [ ] `@for`-index veraltet nach umsortieren (d-15, empfehlung `$loop`)
+- [ ] `@case` mit importiertem case: matcht, gibt aber keine teile an den zweig (der compiler kennt sie nicht)
+- [ ] zed-grammatik und acode-plugin neu generieren (`cd packages/syntax && npm i && node build.js`): `@fragment`, `once:`, `is` sind nur in spec und textmate drin
+
+## compiler
+- [ ] statische holes (`{42}`, ausdrücke ohne `$`/`props.`/aufrufe) direkt einsetzen statt als effect
+- [ ] scope-analyse: schatten von `$`-namen (parameter, innere deklarationen) erkennen, unbekannte `$`-namen warnen (roadmap 3)
+- [ ] source maps (die edit-liste hat die infos schon)
+- [ ] mehrere `<script>`-blöcke: namen aus block 2 gelten in block 1 nicht
+
+## runtime
+- [ ] leave-animationen: behavior darf `{ leave (done) }` liefern, runtime entfernt erst nach `done()` (ideas 2.11)
+- [ ] `Set`s pro abhängigkeit, kopie pro schreibzugriff, neuaufbau pro lauf: erst bei messbarem bedarf (siehe alien-signals-steckbrief)
+
+## `@rat/types`
+- [ ] reaktive varianten mit verben (`$List.push`, `$Enum.cycle`), damit ist d-23 c erledigt
+- [ ] `persist` über `@bunker`
+- [ ] der compiler liest statische schemas (completion, warnungen)
+
+## werkzeuge und betrieb
+- [ ] build-adapter: vite, esbuild, node-hook (roadmap 6)
+- [ ] service worker, der `.rat` auf anfrage compiliert (d-20, browser ohne build)
+- [ ] playground: imports zwischen `.rat`-dateien (virtuelles dateisystem)
+- [ ] `packages/_compiler` (alter generator) und `packages/compiler/_parserblocks.js` (fremder, ungenutzter code) aufräumen, wenn der vergleich nicht mehr gebraucht wird
+
+## deine entscheidungen
+* [ ] offen: d-10 (pipe-familie, neu: option e), d-13 (props), d-15 (index), d-16 (kommandos mit argument), d-19 (das `>`?), d-23 (mutation), d-26 (`@` oder `use:`), d-28 (`@await`), d-29 (filter in `@for`), d-30 (patterns direkt im `@case`)
+
+## danach
+- [ ] erste echte app komplett in rat (roadmap 7, kandidat: kleines zugriff-tool)
 
 ---
 

@@ -12,6 +12,7 @@ finds the closing token). the script pass parses and rewrites it later.
   If         { branches: [{ test, children }], fallback }
   For        { item, index, list, children, fallback }
   Switch     { subject, cases: [{ test, children }], fallback }
+  FragmentDef { name, params, children }    @fragment name (params), top level only
 
 every node has start and end, offsets in the file. an expression is
 { code, start, end }: the trimmed source text and where it stands, so later
@@ -28,7 +29,7 @@ import { CompileError, scanCase, scanClose, tt } from './util.js';
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 
-const BLOCK_START  = /@(if|for|switch)\b/y;
+const BLOCK_START  = /@(if|for|switch|fragment)\b/y;
 const CONTINUATION = /@(else|case|default)(?![\w$])/y;
 const INLINE_SPACE = /[ \t]*/y;
 const NAME        = /[^\s=/>"'{]+/y;
@@ -240,11 +241,14 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
 
   // ::: blocks
 
+  const BLOCKS = { fragment: fragmentBlock, for: forBlock, if: ifBlock, switch: switchBlock };
+
+  // context.block: inside a block body, where a @fragment would close over the block
   function block (context) {
     const start       = i;
     const base        = indentAt(i);
     const [, keyword] = sticky(BLOCK_START);
-    const node        = keyword === 'if' ? ifBlock(context, base) : keyword === 'for' ? forBlock(context, base) : switchBlock(context, base);
+    const node        = BLOCKS[keyword]({ ...context, block: true }, base, context);
     return { ...node, end: i + offset, start: start + offset };
   }
 
@@ -310,6 +314,17 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     let fallback   = null;
     if (clause('@else', base)) { elseAt = i + offset; fallback = body(context, base); }
     return { type: 'For', ...forHead(head), children, elseAt, fallback, head };
+  }
+
+  // @fragment row (item, index): markup with parameters, a function returning a view (d-27)
+  function fragmentBlock (context, base, outer) {
+    const at = i;
+    if (outer.depth || outer.block) throw fail('@fragment is only allowed at the top level of a .rat file', at - '@fragment'.length);
+    sticky(INLINE_SPACE);
+    const name = sticky(/[A-Za-z_$][\w$]*/y)?.[0];
+    if (!name) throw fail('expected a name after @fragment: @fragment row (item)');
+    const params = condition();
+    return { type: 'FragmentDef', children: body(context, base), name, params };
   }
 
   // "item of list", "item, index of list", "{ a, b } of list"
@@ -548,7 +563,7 @@ function normalize (children, pre = false) {
     if (node.type === 'Element') node.children = normalize(node.children, pre || node.tag === 'pre');
     if (node.type === 'If')      { for (const branch of node.branches) branch.children = normalize(branch.children, pre); }
     if (node.type === 'Switch')  { for (const branch of node.cases)    branch.children = normalize(branch.children, pre); }
-    if (node.type === 'For' || node.type === 'If' || node.type === 'Switch') {
+    if (node.type === 'For' || node.type === 'If' || node.type === 'Switch' || node.type === 'FragmentDef') {
       if (node.children) node.children = normalize(node.children, pre);
       if (node.fallback) node.fallback = normalize(node.fallback, pre);
     }

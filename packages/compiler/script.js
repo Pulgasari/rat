@@ -12,7 +12,7 @@ the js side. two steps, in this order:
 
 import { parse as parseProgram, parseExpressionAt } from 'acorn';
 
-import { ACORN, CompileError, applyEdits, reason, tokens, tt } from './util.js';
+import { ACORN, CompileError, applyEdits, reason, scannable, tokens, tt } from './util.js';
 
 // ::: sugar :: pipe
 
@@ -180,6 +180,226 @@ function ranges (code, offset = 0, runtime = '$$') {
   });
 }
 
+// ::: sugar :: named cases
+
+/*
+d-30, ideas 5. a case is a pattern with a name:
+
+  case Loading = { status: 'loading' };
+  case Failed  = { status: 'error', message };     message is a part it hands out
+  case Adult   = { age } if age >= 18;             a guard, after the parts
+  case Email   = string if #.includes('@');        # in a guard is the value
+
+becomes a pattern, a function returning its parts or null:
+
+  const Failed = $$.pattern($$value => {
+    if (!($$value != null && $$value?.status === 'error')) return null;
+    const message = $$value?.message;
+    return { message };
+  });
+
+`case` at the start of a statement is a syntax error in plain js, so the name is
+free in compiled files. a capitalized name is required (`case Name =`), which
+also keeps `case x = 1:` inside a switch what it was.
+
+the pattern itself:
+  { key: pattern, name }   an object; a shorthand or a lowercase name binds a part
+  [a, b, ...rest]          an array, at least as long as its elements
+  'x', 1, true, null       compared with ===
+  string, number …         typeof
+  Other                    another case, through $$.is
+  anything else            an expression, compared with ===
+*/
+const TYPES = new Set(['bigint', 'boolean', 'function', 'number', 'object', 'string', 'symbol', 'undefined']);
+const VALUE = '$$value';
+
+// tokens that leave an expression open at the end of a line: the declaration goes on
+const CONTINUES = new Set([tt.eq, tt._if, tt.comma, tt.dot, tt.questionDot, tt.question, tt.colon, tt.logicalAND, tt.logicalOR, tt.coalesce, tt.equality, tt.relational, tt.plusMin, tt.star, tt.slash, tt.modulo, tt.bitwiseAND, tt.bitwiseOR, tt.bitwiseXOR, tt.arrow]);
+
+function caseDeclarations (code, offset = 0, found = new Map, runtime = '$$') {
+  if (!/\bcase\b/.test(code)) return code;
+  const list  = tokens(scannable(code), offset);
+  const edits = [];
+  const fail  = (message, at) => new CompileError(message, { index: at + offset, source: ' '.repeat(offset) + code });
+
+  for (let at = 0; at < list.length; at++) {
+    const token = list[at];
+    const name  = list[at + 1];
+    if (token.type !== tt._case || name?.type !== tt.name || list[at + 2]?.type !== tt.eq) continue;
+    if (!/^[A-Z]/.test(name.value)) throw fail(`a named case starts with a capital: case ${name.value[0].toUpperCase()}${name.value.slice(1)} = …`, name.start);
+
+    let depth = 0;
+    let guard = null;
+    let last  = at + 2;
+    let next  = at + 3;
+    for (; next < list.length; next++) {
+      const item = list[next];
+      if (item.type === tt.eof) break;
+      if (depth === 0) {
+        if (item.type === tt.semi) break;
+        if (breaks(code, list[last], item) && !CONTINUES.has(list[last].type) && !CONTINUES.has(item.type)) break;
+        if (item.type === tt._if && !guard) guard = next;
+      }
+      if (OPENERS.has(item.type)) depth++;
+      else if (CLOSERS.has(item.type)) { if (depth === 0) break; depth--; }
+      last = next;
+    }
+
+    const from    = list[at + 3]?.start ?? code.length;
+    const end     = list[last].end;
+    const pattern = code.slice(from, guard ? list[guard].start : end).trim();
+    const test    = guard ? code.slice(list[guard].end, end).trim().replace(/#(?![\w$\\])/g, VALUE) : null;
+    if (!pattern) throw fail(`case ${name.value} has no pattern`, list[at + 2].start);
+
+    const compiled = compilePattern(pattern, { fail: message => fail(`${message} in case ${name.value}`, from), runtime });
+    found.set(name.value, compiled.parts.map(([part]) => part));
+
+    edits.push({ end, pos: token.start, text: `const ${name.value} = ${patternFunction(compiled, test, runtime)}` });
+    at = last;
+  }
+
+  return applyEdits(code, edits);
+}
+
+function patternFunction ({ parts, tests }, guard, runtime) {
+  const lines = [];
+  if (tests.length) lines.push(`if (!(${tests.join(' && ')})) return null;`);
+  for (const [name, access] of parts) lines.push(`const ${name} = ${access};`);
+  const out = `{ ${parts.map(([name]) => name).join(', ')} }`.replace('{  }', '{}');
+  lines.push(guard ? `return (${guard}) ? ${out} : null;` : `return ${out};`);
+  return `${runtime}.pattern(${VALUE} => { ${lines.join(' ')} })`;
+}
+
+// { tests, parts }: conditions on the value and [name, access] for every part it hands out
+function compilePattern (code, { fail, runtime }) {
+  let node;
+  try { node = parseExpressionAt(code, 0, ACORN); }
+  catch (error) { throw fail(reason(error)); }
+  if (code.slice(node.end).trim()) throw fail('expected a single pattern');
+
+  const tests = [];
+  const parts = [];
+  const text  = node => code.slice(node.start, node.end);
+
+  const bind = (name, access) => {
+    if (parts.some(([known]) => known === name)) throw fail(`the part "${name}" is bound twice`);
+    parts.push([name, access]);
+  };
+
+  function visit (node, access) {
+    switch (node.type) {
+      case 'ObjectExpression': {
+        tests.push(`${access} != null`);
+        for (const property of node.properties) {
+          if (property.type === 'SpreadElement') continue;
+          if (property.computed) throw fail('a computed key can not be a pattern');
+          const key   = property.key.type === 'Identifier' ? property.key.name : String(property.key.value);
+          const inner = /^[A-Za-z_$][\w$]*$/.test(key) ? `${access}?.${key}` : `${access}?.[${JSON.stringify(key)}]`;
+          if (property.shorthand) bind(key, inner);
+          else visit(property.value, inner);
+        }
+        return;
+      }
+      case 'ArrayExpression': {
+        const rest  = node.elements.some(element => element?.type === 'SpreadElement');
+        const fixed = node.elements.filter(element => element?.type !== 'SpreadElement');
+        tests.push(`Array.isArray(${access})`, `${access}.length ${rest ? '>=' : '==='} ${fixed.length}`);
+        node.elements.forEach((element, index) => {
+          if (!element) return;
+          if (element.type === 'SpreadElement') {
+            if (element.argument.type === 'Identifier') bind(element.argument.name, `${access}.slice(${index})`);
+            return;
+          }
+          visit(element, `${access}[${index}]`);
+        });
+        return;
+      }
+      case 'Identifier': {
+        if (node.name === 'undefined') return void tests.push(`${access} === undefined`);
+        if (TYPES.has(node.name))      return void tests.push(node.name === 'object' ? `(typeof ${access} === 'object' && ${access} !== null)` : `typeof ${access} === '${node.name}'`);
+        if (/^[A-Z]/.test(node.name))  return void tests.push(`${runtime}.is(${access}, ${node.name})`);
+        return bind(node.name, access);
+      }
+      case 'MemberExpression':
+        // Cases.Failed: another case; a lowercase chain is a value to compare with
+        if (/^[A-Z]/.test(node.property.name ?? '')) return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
+        return void tests.push(`${access} === ${text(node)}`);
+      default:
+        tests.push(`${access} === (${text(node)})`);
+    }
+  }
+
+  visit(node, VALUE);
+  return { parts, tests };
+}
+
+// ::: sugar :: is
+
+/*
+value is Case -> $$.is(value, Case). the left side is the postfix chain before
+it ($user, item.state, list[0], f(x)), so `!a is B && c` reads as
+!$$.is(a, B) && c. the right side is a name chain, optionally called, or a
+(group). `is` stays a plain name everywhere else (obj.is(x), const is = …).
+*/
+const OPERAND_END = new Set([tt.name, tt.num, tt.string, tt.privateId, tt._this, tt._null, tt._true, tt._false, tt.parenR, tt.bracketR, tt.backQuote]);
+const CHAIN       = new Set([tt.name, tt.num, tt.string, tt.privateId, tt._this, tt._null, tt._true, tt._false, tt._new, tt.dot, tt.questionDot, tt.template, tt.backQuote]);
+
+// contextual keywords acorn reads as names: `await is(x)` calls a function named is
+const CONTEXTUAL = new Set(['async', 'await', 'of', 'yield']);
+
+// ) is ( is left alone: `if (a) is(b)` is a call after a condition, not a test
+const isIs = (code, list, at) => {
+  const token = list[at];
+  const left  = list[at - 1];
+  const right = list[at + 1];
+  if (token.type !== tt.name || token.value !== 'is' || !left || !right) return false;
+  if (!OPERAND_END.has(left.type) || breaks(code, left, token)) return false;
+  if (left.type === tt.name && CONTEXTUAL.has(left.value)) return false;
+  if (right.type === tt.parenL) return left.type !== tt.parenR;
+  return right.type === tt.name;
+};
+
+function isOperator (code, offset = 0, runtime = '$$') {
+  if (!/\bis\b/.test(code)) return code;
+  for (let round = 0; round < 1000; round++) {
+    const list  = tokens(code, offset);
+    const index = list.findIndex((_, at) => isIs(code, list, at));
+    if (index < 0) return code;
+
+    let depth = 0;
+    let first = index;
+    for (let at = index - 1; at >= 0; at--) {
+      const token = list[at];
+      if (CLOSERS.has(token.type)) { depth++; first = at; continue; }
+      if (OPENERS.has(token.type)) { if (depth === 0) break; depth--; first = at; continue; }
+      if (depth === 0 && !CHAIN.has(token.type)) break;
+      first = at;
+    }
+
+    let last = index + 1;
+    if (list[last].type === tt.parenL) last = closing(list, last);
+    else {
+      while (list[last + 1]?.type === tt.dot && list[last + 2]?.type === tt.name) last += 2;
+      if (list[last + 1]?.type === tt.parenL) last = closing(list, last + 1);
+    }
+
+    const value = code.slice(list[first].start, list[index].start).trim();
+    const test  = code.slice(list[index + 1].start, list[last].end);
+    code = code.slice(0, list[first].start) + `${runtime}.is(${value}, ${test})` + code.slice(list[last].end);
+  }
+  throw new Error('[rat] is rewrite did not settle');
+}
+
+// the index of the token closing the opener at index
+function closing (list, index) {
+  let depth = 0;
+  for (let at = index; at < list.length; at++) {
+    if (OPENERS.has(list[at].type)) depth++;
+    else if (CLOSERS.has(list[at].type) && --depth === 0) return at;
+  }
+  return list.length - 2;
+}
+
 // ::: sugar :: for…of
 
 // for (x of y) -> for (const x of y). the head ends at the first top level "of"
@@ -212,13 +432,21 @@ function forOf (code, offset = 0) {
   return applyEdits(code, edits);
 }
 
-// order matters: # must be a name before anything tokenizes, ranges before pipes (1..5 |> sum)
-const sugar = (code, offset = 0) => forOf(strayTopic(pipes(ranges(topics(code, offset), offset), offset), offset), offset);
+/*
+order matters: cases first (their guards own a #), # must be a name before anything
+else tokenizes, ranges before pipes (1..5 |> sum), is before pipes (x |> # is A).
+cases: a map the named cases are collected in, name -> the parts they hand out
+*/
+const sugar = (code, offset = 0, cases = new Map) => {
+  code = caseDeclarations(code, offset, cases);
+  code = isOperator(ranges(topics(code, offset), offset), offset);
+  return forOf(strayTopic(pipes(code, offset), offset), offset);
+};
 
 // sugar errors come from acorn's tokenizer, positioned but without a file
-function sweeten (code, { filename, offset = 0, source }) {
+function sweeten (code, { cases, filename, offset = 0, source }) {
   try {
-    return sugar(code, offset);
+    return sugar(code, offset, cases);
   } catch (error) {
     if (error instanceof CompileError || error.pos == null) throw error;
     throw new CompileError(reason(error), { filename, index: error.pos, source });
@@ -378,10 +606,11 @@ function parseOrFail (code, { filename, offset, source }) {
 /*
 a <script> or <script module> block, or a whole .rat.js file.
 names: the reactive names already known (from <script module>), extended in place.
+cases: the named cases found, extended in place (name -> the parts they hand out).
 returns { code, imports, program } — imports only split off when lift is set.
 */
-function transformScript (code, { filename, lift = false, names = new Set, offset = 0, runtime = '$$', source = code, extraEdits } = {}) {
-  const sugared  = sweeten     (code,    { filename, offset, source });
+function transformScript (code, { cases = new Map, filename, lift = false, names = new Set, offset = 0, runtime = '$$', source = code, extraEdits } = {}) {
+  const sugared  = sweeten     (code,    { cases, filename, offset, source });
   const program  = parseOrFail (sugared, { filename, offset, source });
   const declared = declarations(program, runtime);
 
@@ -403,7 +632,7 @@ function transformScript (code, { filename, lift = false, names = new Set, offse
     }
   }
 
-  if (extraEdits) edits.push(...extraEdits(program, sugared, names));
+  if (extraEdits) edits.push(...extraEdits(program, sugared, names, cases));
 
   return { code: applyEdits(sugared, edits), imports, program };
 }
@@ -430,7 +659,7 @@ function transformExpression ({ code, start }, { filename, names, source }) {
 
 export { 
   TOPIC, 
-  declared, forOf, pipes, ranges, sugar, topics, walk,
+  caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, walk,
   transformExpression, transformScript,
 };
 

@@ -22,8 +22,10 @@ source ──► parse ──► ast ──► generate ──► es module
 
 | step | why here |
 |---|---|
+| `cases` | first, because a guard owns its `#` (the value). `case Name = pattern if guard` → `const Name = $$.pattern(…)`, the parts each case hands out are collected for `@case` branches |
 | `topics` | `#` is no js token, acorn's tokenizer stops at it. every stop at a lone `#` becomes the placeholder name, then the tokenizer runs again |
 | `ranges` | before pipes, so `1..5 \|> sum` pipes the range. `..` inside strings, templates, regexes and comments is skipped |
+| `is` | after ranges, before pipes (`x \|> # is A`). `a is B` → `$$.is(a, B)`, the left side is the postfix chain before it |
 | `pipes` | one pipe per round, leftmost first. implicit (callable), explicit (`#`), refused (a call without `#`) |
 | stray `#` | a `#` left after the pipes is outside of any pipe: an error |
 | `forOf` | `for (x of y)` → `for (const x of y)` |
@@ -54,7 +56,9 @@ source ──► parse ──► ast ──► generate ──► es module
 | static holes | small overhead | every `{…}` hole becomes an effect, even `{42}`. the compiler can detect literals and non-reactive expressions (no `$` names, no `props.`, no calls) and insert them directly |
 | `each()` reorder | ok | rows walk back to front and move only when their successor changed (`moveBefore` where available). a longest increasing subsequence would move fewer on reversals |
 | `each()` index | correctness | rows are built once per key, the index is a plain value and goes stale when a kept row moves. pass it as a signal when the body uses it (the compiler knows) |
-| computeds without cutoff | needless runs | a computed whose value stays the same still wakes its effects. fix: an equality check before propagating (push-pull in two phases: stale → check) |
+| computeds without cutoff | done | direct dependents of a write are dirty, everything further down only maybe stale; a maybe stale node asks its sources' versions first, so a computed that recomputes to the same value stops the update there |
+| computeds never let go | leak | a computed stays in its sources' observer sets after the effect reading it is gone. alien-signals unlinks a computed once its last observer leaves (`unwatched`); the same here: unlink when `observers` becomes empty |
+| `Set`s per dependency | allocation | every link is an entry in two `Set`s, every write copies the observers into an array, every run rebuilds all links. alien-signals reuses links in place (one object per dependency, versions). worth it once a list with many rows shows up in a profile |
 | `pipes()`, `topics()` | compile time | re-tokenize per pipe / per `#` (o(n·p)). irrelevant for normal files, a single pass for generated code with hundreds of them |
 | `@scope` | native | no runtime overhead, no selector rewriting |
 
