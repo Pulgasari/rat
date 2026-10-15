@@ -185,11 +185,11 @@ what a schema should do:
 | `describe` | introspection: generate forms, devtools, `@aufbau/gui` controls |
 | statically readable | the compiler knows the shape: completion, warnings, targeted updates |
 
-notation in a `.rat` script: [d-14](decisions.md#d-14).
+notation in a `.rat` script, decided ([d-14](decisions.md#d-14)) and built in v0: the
+schema is the initial value, the signal starts at its initial value and checks every write.
 
 ```js
-let $view = Enum('grid', 'list');          // a) schema as initial value, value = default
-let $view : Enum('grid', 'list') = 'grid'; // b) annotation, removed by the compiler
+let $view = Enum('grid', 'list');
 ```
 
 further open points (no decision yet, need more design first):
@@ -249,6 +249,7 @@ more inspiration, sorted by what rat could take: [ideas.md](ideas.md#2-inspirati
 2. ~~editor support~~ → `@rat/syntax` (one spec, derived for hljs, monaco, codemirror/acode, zed, textmate)
 3. scope analysis in the compiler (shadowing, warn on unknown `$` names), source maps.
 4. `@rat/core` on top of the runtime: commands, hotkeys, router.
-5. `@rat/types` v1: schemas + reactive variants, wired to `$` declarations.
+5. `@rat/types` v1: schemas + reactive variants, wired to `$` declarations. ~~schemas, wired
+   to `$` declarations~~ (v0); reactive variants, persist and static reading are next.
 6. build adapters (vite, esbuild, node hook). ~~`dom:clone` target~~: the `dom` target clones since it renders through `@domina/render`.
 7. a first real app (candidate: a small zugriff tool) entirely in rat.

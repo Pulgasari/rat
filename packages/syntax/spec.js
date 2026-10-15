@@ -35,11 +35,11 @@ regex rules, so every engine reads them the same way (js, oniguruma, monarch):
 // :::::: VOCABULARY
 
 const words = {
-  blocks    : ['case', 'default', 'else', 'for', 'if', 'switch'],               // as @if, @for …
+  blocks    : ['case', 'default', 'else', 'for', 'fragment', 'if', 'switch'],               // as @if, @for …
   constants : ['Infinity', 'NaN', 'false', 'null', 'true', 'undefined'],
   control   : ['await', 'break', 'case', 'catch', 'continue', 'default', 'do', 'else', 'finally', 'for', 'if', 'return', 'switch', 'throw', 'try', 'while', 'yield'],
-  directives: ['bind', 'class', 'on', 'style', 'use'],                           // as on:click, bind:value, use:tooltip …
-  keywords  : ['as', 'async', 'delete', 'export', 'extends', 'from', 'import', 'in', 'instanceof', 'new', 'of', 'typeof', 'void'],
+  directives: ['bind', 'class', 'on', 'once', 'style', 'use'],                           // as on:click, bind:value, use:tooltip …
+  keywords  : ['as', 'async', 'delete', 'export', 'extends', 'from', 'import', 'in', 'instanceof', 'is', 'new', 'of', 'typeof', 'void'],
   language  : ['props', 'super', 'this'],
   storage   : ['class', 'const', 'function', 'let', 'var'],
 };

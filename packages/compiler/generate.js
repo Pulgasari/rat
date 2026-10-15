@@ -8,13 +8,17 @@ the markup stays markup, every binding is a visible closure in a hole.
   $$.html`<p class:on=${() => $x.value}>${() => $count.value}</p>`
 
 blocks become helpers with a function as source, which the renderer follows
-live: @if -> when, @switch -> match, @for -> each. component props travel in a
-spread with getters, so a child reads props.x and tracks it without knowing it
-came from a signal.
+live: @if -> when, @switch -> match (cases with patterns), @for -> each.
+component props travel in a spread with getters, so a child reads props.x and
+tracks it without knowing it came from a signal.
+
+a @fragment at the top level becomes a function declaration next to the
+component body (hoisted, so the script can call it too), collected in
+options.fragments. without that array (.rat.js) a @fragment is an error.
 */
 
-import { transformExpression } from './script.js';
-import { key }                 from './util.js';
+import { transformExpression }  from './script.js';
+import { CompileError, key }    from './util.js';
 
 const INLINE = 72; // a line stays one line up to this width
 
@@ -42,20 +46,35 @@ const SIMPLE   = /^[\w-]+$/;
 
 // on:keydown[enter]!:once -> type, keys, prevent, times
 const EVENT    = /^on(:?)([\w:.-]+?)(?:\[([^\]]*)\])?(!)?(?::(once|\d+))?$/;
+const ONCE     = /^once:/; // once:click is on:click:once (d-25 d)
 const BEHAVIOR = /^(?:@|use:)([\w-]+)(?::([\w-]+))?$/;
 
-const isEvent    = name => /^on[:a-z]/i.test(name);
+const isEvent    = name => /^on[:a-z]/i.test(name) || ONCE.test(name);
 const isBehavior = name => name[0] === '@' || name.startsWith('use:');
 const isFunction = code => /^(?:async\s+)?(?:function\b|\([^)]*\)\s*=>|[\w$]+\s*=>)/.test(code.trim());
 
 // ::: generator
 
-function generate (ast, { filename, names, runtime = '$$', scope = null, source }) {
+// a @case value compared as it is, without a pattern check
+const LITERAL = /^(?:'[^']*'|"[^"]*"|`[^`$]*`|-?\d[\d_.e]*|true|false|null|undefined)$/;
+
+function generate (ast, { cases = new Map, filename, fragments = null, names, runtime = '$$', scope = null, source }) {
   const $ = name => `${runtime}.${name}`;
+
+  // the reactive names in reach; a @case branch adds the parts of its case
+  let reactive = names;
+  const within = (extra, fn) => {
+    const previous = reactive;
+    reactive = new Set([...previous, ...extra]);
+    try     { return fn(); }
+    finally { reactive = previous; }
+  };
+
+  const fail = (message, at) => new CompileError(message, { filename, index: at, source });
 
   // an object literal as a value has to be wrapped, or () => { … } reads as a block
   const expression = node => {
-    const code = transformExpression(node, { filename, names, source });
+    const code = transformExpression(node, { filename, names: reactive, source });
     return code.trimStart().startsWith('{') ? `(${code})` : code;
   };
 
@@ -98,6 +117,7 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
       case 'If'         : return hole(ifBlock(child, depth, root));
       case 'For'        : return hole(forBlock(child, depth, root));
       case 'Switch'     : return hole(switchBlock(child, depth, root));
+      case 'FragmentDef': throw fail('@fragment is only allowed at the top level of a .rat file, in a .rat.js file write a function', child.start);
     }
     throw new Error(`[rat] unknown node ${child.type}`);
   }
@@ -123,14 +143,47 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
     return call($('each'), args, depth);
   }
 
-  function switchBlock ({ cases, fallback, subject }, depth, root) {
-    const items = cases.map(({ children, test }) => `[${expression(test)}, () => ${view(children, depth + 2, root)}]`);
+  function switchBlock (node, depth, root) {
+    const { cases: list, fallback, subject } = node;
+    if (list.some(({ test }) => !LITERAL.test(test.code))) return patternSwitch(node, depth, root);
+    const items = list.map(({ children, test }) => `[${expression(test)}, () => ${view(children, depth + 2, root)}]`);
     const list  = items.some(multiline) || items.join(', ').length > INLINE
       ? `[\n${items.map(item => pad(depth + 2) + item).join(',\n')},\n${pad(depth + 1)}]`
       : `[${items.join(', ')}]`;
     const args  = [live(expression(subject)), list];
     if (fallback) args.push(`() => ${view(fallback, depth + 1, root)}`);
     return call($('match'), args, depth);
+  }
+
+  /*
+  a @switch with a named case (or any non-literal @case): $$.cases tests each
+  value in order, a pattern decides, anything else is Object.is. a case declared
+  in this file hands out its parts, each one a computed in the branch:
+
+    @case Failed: <p>{message}</p>
+    ($$parts) => { const message = $$.computed(() => $$parts().message); return $$.html`<p>${() => message.value}</p>`; }
+  */
+  function patternSwitch ({ cases: list, fallback, subject }, depth, root) {
+    const tests = list.map(({ test }) => expression(test));
+    const views = list.map(({ children, test }) => {
+      const parts = cases.get(test.code) ?? [];
+      if (!parts.length) return `() => ${view(children, depth + 2, root)}`;
+      const locals = parts.map(part => `const ${part} = ${$('computed')}(() => $$parts().${part});`).join(' ');
+      return within(parts, () => `($$parts) => { ${locals} return ${view(children, depth + 2, root)}; }`);
+    });
+
+    const bracket = items => items.some(multiline) || items.join(', ').length > INLINE
+      ? `[\n${items.map(item => pad(depth + 2) + item).join(',\n')},\n${pad(depth + 1)}]`
+      : `[${items.join(', ')}]`;
+
+    const args = [live(expression(subject)), bracket(tests), bracket(views)];
+    if (fallback) args.push(`() => ${view(fallback, depth + 1, root)}`);
+    return call($('cases'), args, depth);
+  }
+
+  // @fragment row (item) -> function row (item) { return $$.html`…`; }
+  function fragment ({ children, name, params }) {
+    return `function ${name} (${params.code}) {\n    return ${view(children, 2, true)};\n  }`;
   }
 
   // ::: elements
@@ -189,7 +242,7 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
   function reference (value) {
     if (value.kind !== 'expression') throw new Error('[rat] ref needs a signal or a function in {…}');
     const code = value.code.trim();
-    return names.has(code) ? code : expression(value);
+    return reactive.has(code) ? code : expression(value);
   }
 
   // bind:value={$text} -> a ref that writes the signal into the property and back
@@ -213,6 +266,10 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
   // a function literal goes in as it is, a string is a command, anything else
   // may be either and is resolved when the event fires
   function event (name, value) {
+    if (ONCE.test(name)) {
+      if (/:(?:once|\d+)$/.test(name)) throw new Error(`[rat] "${name}" counts twice, once: and a count`);
+      name = `on:${name.slice(5)}:once`;
+    }
     const [, , type, keys, prevent, times] = EVENT.exec(name) ?? [];
     if (!type) throw new Error(`[rat] "${name}" is not an event name`);
     const attr    = `on${type}`;
@@ -271,7 +328,14 @@ function generate (ast, { filename, names, runtime = '$$', scope = null, source 
     return `get ${key(name)} () { return ${code}; }`;
   }
 
-  return view(ast.children, 1, true);
+  const top = [];
+  for (const child of ast.children) {
+    if (child.type !== 'FragmentDef') { top.push(child); continue; }
+    if (!fragments) throw fail('@fragment is only allowed in a .rat file, in a .rat.js file write a function', child.start);
+    fragments.push(fragment(child));
+  }
+
+  return view(top, 1, true);
 }
 
 export { generate };

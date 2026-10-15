@@ -11,45 +11,6 @@ open: [syntax](#syntax) · [pipe](#pipe) · [components](#components) · [app](#
 
 ## syntax
 
-<a id="d-12"></a>
-### d-12 · `{…}` holes in plain `.js` files (no compiler involved)
-
-in `.rat` and `.rat.js` files the compiler turns `{…}` into code, that is settled. the
-question is only about a plain `.js` file that uses ``html`…` `` from htx at runtime,
-without any compile step: should the runtime template understand `{…}` as well?
-
-```js
-// app.js, loaded as is by the browser
-html`<p>${name}</p>`   // works today (htx)
-html`<p>{name}</p>`    // the question: this too?
-```
-
-- [ ] a) no, at runtime it stays `${…}` **(v0) (rec)**: a tagged template only sees the strings, `{name}` would have to be looked up by name at runtime (no access to local variables), so it can not work like in the compiled files
-- [ ] b) yes, for values passed in explicitly: ``html({ name })`<p>{name}</p>` ``
-
-Anmerkung: Ich wüsste gar nicht wozu das überhaupt nötig sein sollte?
-
-<a id="d-24"></a>
-### d-24 · `preventDefault()` on an event
-
-your draft `on:submit!={add}` is built, provisionally.
-
-- [ ] a) `!` after the event name: `on:submit!={add}` **(v0)**
-- [ ] b) a word: `on:submit:prevent={add}` (reads like `:once`)
-- [ ] c) both
-
-Anm.: `prevent` ist halt total nichtssagend. "Was wird denn prevented?" `!` is vermutlich auch nich perfekt, aber für mich zumindest noch iwie nachvollziehbarer.
-
-<a id="d-25"></a>
-### d-25 · once / n times
-
-`on:click:once` and `on:click:3` are built, provisionally.
-
-- [ ] a) `on:click:once`, `on:click:3` **(v0) (rec)**: one form for both, the count is a plain suffix
-- [ ] b) `once:click={…}` as its own prefix
-- [ ] c) `on:click:1` only (no word)
-- [ ] d) erstmal alle 3 Formen (mit Vermerk dass man da generell später nochma schauen muss d,e attribute syntax 100% sauber/logisch/stribent zu bekommwn)
-
 <a id="d-26"></a>
 ### d-26 · behaviors: `@name` or `use:name`
 
@@ -58,20 +19,6 @@ both are built, as you asked, until practice decides.
 - [ ] a) `@tooltip={…}` only
 - [ ] b) `use:tooltip={…}` only
 - [ ] c) both stay
-
-<a id="d-27"></a>
-### d-27 · the name for markup fragments with parameters ([ideas.md 2.6](ideas.md#26-markup-fragments-as-values-svelte))
-
-your doubt: a dom `DocumentFragment` has no parameters. a rat fragment is a function
-that *returns* nodes, called with arguments each time.
-
-- [ ] a) `@fragment row (item)`: the result is a fragment, the declaration is its recipe
-- [ ] b) `@snippet row (item)` (svelte's word)
-- [ ] c) `@partial row (item)` (the word from server templates: php, rails, handlebars)
-- [ ] d) `@markup row (item)`
-- [ ] e) other: …
-
-Anm.: Ich finde iwie für "@snippet" ist die Funktionalität zu stark. Wenns im prinz echt der sache nach ne function zur document-fragment erstellung ist, dann wäre der name `@fragment` ja perfekt. 
 
 <a id="d-28"></a>
 ### d-28 · async blocks: the syntax ([ideas.md 2.3](ideas.md#23-async-blocks-svelte))
@@ -126,10 +73,10 @@ two parts: the block, and whether patterns can be named and reused.
 - [ ] b) `@switch` learns patterns (no new keyword): a `@case` with `{ … }` or `[ … ]` is a pattern, anything else compares with `===` **(rec)**
 - [ ] c) both, `@match` exhaustive (warns about unhandled cases), `@switch` not
 
-named cases, your idea:
-
-- [x] yes, `case` as a declaration (see [ideas.md 5](ideas.md#5-named-cases)), usable in `@switch`, `@if` and script
-- [ ] not yet
+named cases, your idea: **yes, built.** `case Name = pattern if guard` in scripts, `x is Name`
+in scripts and conditions, `@case Name` in `@switch` with the parts handed to the branch.
+details in [syntax.md](syntax.md#named-cases), your question in [ideas.md 5](ideas.md#5-named-cases).
+what stays open here is only the block: patterns written straight into a `@case` (a, b or c).
 
 ---
 
@@ -149,6 +96,15 @@ operators; `|?>`, `|?:`, `|!:`, `|?|`, `|!|` are free.
 
 Anm. glaube bei so viele wäre es auch wieddr unleserllch, wenn name nicht 100pro perfekt. aber ich frag mich grade ob zumindest bei map `<|` eigtl logisch wäre?
 
+**reply:** `<|` is free in js (`a <| b` is a syntax error), but it already has a meaning
+elsewhere: in f#, elm and haskell (`<|`, `$`) it is backward application, `f <| x` is
+`f(x)`, the mirror of `|>`. the arrow points left, so it reads as "flows from right to
+left", while map in a chain flows on to the right like every other step. as map it would
+fight both the precedent and its own picture. on "too many": agreed, six operators only pay
+off if they are all used daily. a smaller set is a real option:
+
+- [ ] e) two only: `|>` pipe and `|?>` filter; map stays `|> map(#, fn)` or a function
+
 ---
 
 ## components
@@ -159,12 +115,6 @@ Anm. glaube bei so viele wäre es auch wieddr unleserllch, wenn name nicht 100pr
 - [ ] a) `props.title`, reactive through getters **(v0)**
 - [ ] b) destructuring with `$`: `let { $title, size = 'm' } = props` → `$title` stays reactive **(rec)**: the same `$` rule as everywhere
 - [ ] c) a block: `@props { title, size = 'm' }`
-
-<a id="d-14"></a>
-### d-14 · type notation in scripts
-
-- [x] a) schema as initial value: `let $view = Enum('grid', 'list')` **(rec)**: plain js, no new syntax
-- [ ] b) annotation: `let $view : Enum('grid', 'list') = 'grid'`
 
 <a id="d-15"></a>
 ### d-15 · the index in `@for`
@@ -199,6 +149,9 @@ Anm. glaube bei so viele wäre es auch wieddr unleserllch, wenn name nicht 100pr
 ### d-19 · `@scope` lower boundary
 
 - [ ] a) none: styles reach into children, closer components win >**(v0) (rec)**: css-like, slotted content keeps the parent's styles
+
+question: there is a `>` in front of **(v0) (rec)** now. a slip, or a mark you meant
+(a tick for a)?
 - [ ] b) donut scope: `to ([data-rat])`, styles stop at child components
 
 ---
@@ -268,3 +221,39 @@ evaluated and called with the value.
 built: `scss`, `sass` and `ass` load on demand (`compileAsync()`, `loadStyles()`), any
 other language through `options.styles`. still to do: browser-only setups through a
 service worker that compiles `.rat` files on request. your own css sugar comes later.
+
+<a id="d-12"></a>
+### d-12 · `{…}` holes in plain `.js` files → **no, `${…}` stays**
+
+your note: what would it be good for at all? → nothing, which is why it was the
+recommendation. it only came up because `.rat.js` reads `{…}`; a plain `.js` file has no
+compiler that could know the local names, so it keeps `${…}`.
+
+<a id="d-14"></a>
+### d-14 · type notation in scripts → **a schema as the initial value**
+
+built: `let $view = Enum('grid', 'list')`. `signal()` takes anything with a standard schema
+interface (`~standard`): it starts at the schema's initial value and checks every write
+(rejected: dropped with a warning, coerced: stored coerced). the schemas are `@rat/types`
+v0 (`Bool`, `Num`, `Str`, `Enum`, `List`, `Record`); zod and valibot schemas work as well.
+
+<a id="d-24"></a>
+### d-24 · `preventDefault()` on an event → **`!` after the event name**
+
+your note: `prevent` says nothing about what is prevented. → `on:submit!={add}` stays,
+no word form.
+
+<a id="d-25"></a>
+### d-25 · once / n times → **all three forms for now (d)**
+
+built: `on:click:once`, `on:click:3` (and so `on:click:1`) and now `once:click={…}`, which
+compiles to `on:click:once`. `once:click:3` is an error (counted twice). marked for later:
+one more look at the attribute syntax as a whole, so that prefixes, modifiers and suffixes
+follow one rule.
+
+<a id="d-27"></a>
+### d-27 · the name for markup fragments with parameters → **`@fragment`**
+
+your note: `@snippet` promises too much, and the thing really is a function that makes a
+document fragment. → built as `@fragment row (item)`, top level of a `.rat` file, compiled
+to a hoisted function in the component ([syntax.md](syntax.md#fragment)).

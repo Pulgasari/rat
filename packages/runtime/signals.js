@@ -5,8 +5,18 @@ push-pull core. a write marks everything downstream stale (push), computeds
 recompute lazily on read (pull), effects are queued and flushed once the
 outermost write or batch is done, so an effect never sees half an update.
 
+two marks: the direct dependents of a written signal are dirty, everything
+further down is only maybe stale (check). a maybe stale node first asks its
+sources whether one of them really changed (each value carries a version),
+so a computed that recomputes to the same value stops the update there.
+
 ownership: every effect and scope belongs to the owner it was created in and
 is disposed with it. that is what lets @if / @for throw away a whole branch.
+
+a signal created from a schema (anything with a standard schema interface,
+'~standard', e.g. from @rat/types) starts at the schema's initial value and checks
+every write: a value the schema rejects is dropped with a warning, a value it
+coerces is stored coerced. d-14 a: let $view = Enum('grid', 'list').
 */
 
 let observer = null; // the computed or effect currently reading
@@ -20,8 +30,13 @@ const queue = new Set;
 class Signal {
   #value;
   observers = new Set;
+  schema    = null;
+  version   = 0;
 
-  constructor (value) { this.#value = value; }
+  constructor (value) {
+    if (isSchema(value)) { this.schema = value; value = value.initial; }
+    this.#value = value;
+  }
 
   get value () {
     if (observer) link(this, observer);
@@ -29,9 +44,15 @@ class Signal {
   }
 
   set value (next) {
+    if (this.schema) {
+      const checked = check(this.schema, next);
+      if (!checked.ok) return;
+      next = checked.value;
+    }
     if (Object.is(next, this.#value)) return;
     this.#value = next;
-    batch(() => { for (const node of [...this.observers]) node.stale(); });
+    this.version++;
+    batch(() => { for (const node of [...this.observers]) node.stale(true); });
   }
 
   peek     () { return this.#value; }
@@ -41,26 +62,38 @@ class Signal {
 class Computed {
   #fn;
   #value;
-  dirty     = true;
+  check     = false; // a source of a source changed: maybe stale
+  dirty     = true;  // a source changed: stale
   observers = new Set;
-  sources   = new Set;
+  sources   = new Map; // source -> the version read
+  version   = 0;
 
   constructor (fn) { this.#fn = fn; }
 
   get value () {
+    this.refresh();
     if (observer) link(this, observer);
-    if (this.dirty) {
-      unlink(this);
-      this.#value = track(this, this.#fn);
-      this.dirty  = false;
-    }
     return this.#value;
   }
 
-  stale () {
-    if (this.dirty) return;
-    this.dirty = true;
-    for (const node of [...this.observers]) node.stale();
+  // recomputes when stale, bumps the version only when the value changed
+  refresh () {
+    if (this.check && !this.dirty) this.dirty = changed(this);
+    this.check = false;
+    if (!this.dirty) return;
+
+    const first = this.version === 0;
+    unlink(this);
+    const next  = track(this, this.#fn);
+    this.dirty  = false;
+    if (first || !Object.is(next, this.#value)) { this.#value = next; this.version++; }
+  }
+
+  stale (direct) {
+    const clean = !this.dirty && !this.check;
+    if (direct) this.dirty = true;
+    else        this.check = true;
+    if (clean) for (const node of [...this.observers]) node.stale(false);
   }
 
   peek () { return untrack(() => this.value); }
@@ -72,7 +105,8 @@ class Effect {
   cleanups = [];
   children = new Set;
   disposed = false;
-  sources  = new Set;
+  forced   = true; // runs without asking its sources: the first time, or after a direct write
+  sources  = new Map;
 
   constructor (fn, parent = owner) {
     this.#fn    = fn;
@@ -82,6 +116,8 @@ class Effect {
 
   run () {
     if (this.disposed) return;
+    if (!this.forced && !changed(this)) return;
+    this.forced = false;
     this.reset();
     const previous = owner;
     owner = this;
@@ -89,7 +125,10 @@ class Effect {
     finally { owner = previous; }
   }
 
-  stale () { queue.add(this); }
+  stale (direct) {
+    if (direct) this.forced = true;
+    queue.add(this);
+  }
 
   reset () {
     unlink(this);
@@ -116,12 +155,21 @@ class Scope extends Effect {
 
 function link (source, target) {
   source.observers.add(target);
-  target.sources.add(source);
+  target.sources.set(source, source.version);
 }
 
 function unlink (target) {
-  for (const source of target.sources) source.observers.delete(target);
+  for (const source of target.sources.keys()) source.observers.delete(target);
   target.sources.clear();
+}
+
+// true if a source has a newer value than the one the target last read
+function changed (target) {
+  for (const [source, version] of target.sources) {
+    if (source instanceof Computed) source.refresh();
+    if (source.version !== version) return true;
+  }
+  return false;
 }
 
 function track (node, fn) {
@@ -137,6 +185,24 @@ function flush () {
     queue.delete(next);
     next.run();
   }
+}
+
+// ::: schemas
+
+const isSchema = value => typeof value?.['~standard']?.validate === 'function';
+
+// a schema check, { ok, value }. async schemas can not guard a synchronous write
+function check (schema, value) {
+  const result = schema['~standard'].validate(value);
+  if (typeof result?.then === 'function') {
+    console.warn('[rat] an async schema can not check a signal write, the value is taken as it is');
+    return { ok: true, value };
+  }
+  if (result.issues) {
+    console.warn(`[rat] ${JSON.stringify(value)} rejected: ${result.issues.map(issue => issue.message).join(', ')}`);
+    return { ok: false };
+  }
+  return { ok: true, value: result.value };
 }
 
 // :::::: API
@@ -186,5 +252,5 @@ const isSignal = value => value instanceof Signal || value instanceof Computed;
 export {
   Computed, Signal,
   computed, effect, signal,
-  batch,  getOwner, isSignal, onCleanup, scope, untrack
+  batch,  getOwner, isSchema, isSignal, onCleanup, scope, untrack
 };

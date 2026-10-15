@@ -1,0 +1,11 @@
+{
+  "name"        : "@rat/types",
+  "version"     : "0.0.1",
+  "description" : "schemas as values: check, coerce, initial values, standard schema; a signal takes one as its initial value",
+  "type"        : "module",
+  "main"        : "./index.js",
+  "types"       : "./index.d.ts",
+  "exports"     : { ".": "./index.js" },
+  "sideEffects" : false,
+  "license"     : "MIT"
+}

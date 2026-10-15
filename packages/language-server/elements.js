@@ -17,7 +17,7 @@ import { analyze, classesOf, complete as completeAt, createContext, definition a
 const KEEP = new Set(['htx-attribute', 'htx-element', 'htx-value']);
 
 // rat's own attribute forms, which a manifest cannot know
-const RAT_ATTRIBUTE = /^(@|use:|bind:|on:)/;
+const RAT_ATTRIBUTE = /^(@|use:|bind:|on:|once:)/;
 
 const SEVERITY   = { error: 1, info: 3, warning: 2 };
 const COMPLETION = { attribute: 10, custom: 7, element: 7, event: 23, keyword: 14, property: 10, shorthand: 18, value: 12 };

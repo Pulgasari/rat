@@ -33,7 +33,7 @@ import { hash, scopeStyle }     from './style.js';
 import { CompileError, nameOf } from './util.js';
 
 import { builtIn, langOf, langsIn, loadStyles, preprocessor }                              from './preprocess.js';
-import { declared, forOf, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
+import { caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
 
 const RUNTIME = '$$';
 
@@ -61,13 +61,15 @@ function stylesOf (ast, { filename, source, styles = {} }) {
 function compileComponent (source, { filename = 'component.rat', runtime = '@rat/runtime', styles } = {}) {
   const ast   = parse(source, { filename });
   const names = new Set;
+  const cases = new Map;
 
-  const modules  = ast.scripts.module  .map(block => transformScript(block.code, { filename, names, offset: block.start, runtime: RUNTIME, source }).code);
-  const instance = ast.scripts.instance.map(block => transformScript(block.code, { filename, names, offset: block.start, runtime: RUNTIME, source, lift: true }));
+  const modules  = ast.scripts.module  .map(block => transformScript(block.code, { cases, filename, names, offset: block.start, runtime: RUNTIME, source }).code);
+  const instance = ast.scripts.instance.map(block => transformScript(block.code, { cases, filename, names, offset: block.start, runtime: RUNTIME, source, lift: true }));
 
-  const css   = stylesOf(ast, { filename, source, styles });
-  const scope = css ? hash(`${filename}\n${css}`) : null;
-  const view  = generate(ast, { filename, names, runtime: RUNTIME, scope, source });
+  const css       = stylesOf(ast, { filename, source, styles });
+  const scope     = css ? hash(`${filename}\n${css}`) : null;
+  const fragments = [];
+  const view      = generate(ast, { cases, filename, fragments, names, runtime: RUNTIME, scope, source });
 
   const lines = [
     `import * as ${RUNTIME} from ${JSON.stringify(runtime)};`,
@@ -77,6 +79,7 @@ function compileComponent (source, { filename = 'component.rat', runtime = '@rat
     `\nexport default function ${nameOf(filename)} (props, children) {`,
     css && `  ${RUNTIME}.style('${scope}', ${RUNTIME}style);`,
     ...instance.map(script => trimBlock(script.code)),
+    ...fragments.map(code => `  ${code}`),
     `  return ${view};`,
     '}',
     css && `\nexport { ${RUNTIME}style as style };`,
@@ -95,7 +98,7 @@ function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/ru
   const templates = [];
 
   // html`…` (htx`…`, rat`…`) without holes of its own is rat markup
-  const markup = (program, code, known) => {
+  const markup = (program, code, known, cases) => {
     const edits = [];
     walk(program, node => {
       if (node.type !== 'TaggedTemplateExpression' || node.tag.type !== 'Identifier' || !tags.includes(node.tag.name)) return;
@@ -103,7 +106,7 @@ function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/ru
       const raw = node.quasi.quasis[0].value.raw;
       const ast = parse(raw, { blocks: false, filename, offset: node.quasi.start + 1 });
       templates.push(ast);
-      edits.push({ end: node.end, pos: node.start, text: generate(ast, { filename, names: known, runtime: RUNTIME, source: code }) });
+      edits.push({ end: node.end, pos: node.start, text: generate(ast, { cases, filename, names: known, runtime: RUNTIME, source: code }) });
       return false;
     });
     return edits;
@@ -139,7 +142,7 @@ async function compileAsync (source, options = {}) {
 export { 
   CompileError,
   compile, compileAsync, compileComponent, compileModule, 
-  declared, forOf, loadStyles, parse, pipes, ranges, sugar, topics,
+  caseDeclarations, declared, forOf, isOperator, loadStyles, parse, pipes, ranges, sugar, topics,
   transformExpression, transformScript 
 };
 export default compile;

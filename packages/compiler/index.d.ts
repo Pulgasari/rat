@@ -34,10 +34,14 @@ export function parse            (source: string, options?: { blocks?: boolean, 
 /** the $ declarations of a script as written, token based: for tooling. */
 export function declared         (code: string, offset?: number): { name: string, kind: 'signal' | 'computed', start: number, end: number, statement: number }[];
 
+/** case Name = pattern [if guard] -> const Name = $$.pattern(…); found collects name -> the parts it hands out. */
+export function caseDeclarations (code: string, offset?: number, found?: Map<string, string[]>, runtime?: string): string;
+/** a is B -> $$.is(a, B). */
+export function isOperator       (code: string, offset?: number, runtime?: string): string;
 export function forOf  (code: string, offset?: number): string;
 export function pipes  (code: string, offset?: number): string;
 export function ranges (code: string, offset?: number, runtime?: string): string;
-export function sugar  (code: string, offset?: number): string;
+export function sugar  (code: string, offset?: number, cases?: Map<string, string[]>): string;
 export function topics (code: string, offset?: number): string;
 
 export default compile;
@@ -52,7 +56,7 @@ export interface Code {
 
 export interface Range { start: number; end: number }
 
-export type Node = Element | Expression | For | If | Switch | Text;
+export type Node = Element | Expression | For | FragmentDef | If | Switch | Text;
 
 export interface Fragment extends Range {
   type     : 'Fragment';
@@ -123,4 +127,12 @@ export interface Switch {
   cases    : { test: Code, children: Node[] }[];
   fallback : Node[] | null;
   subject  : Code;
+}
+
+/** @fragment name (params): top level only, compiled to a hoisted function. */
+export interface FragmentDef {
+  type     : 'FragmentDef';
+  children : Node[];
+  name     : string;
+  params   : Code;
 }

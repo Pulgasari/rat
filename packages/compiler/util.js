@@ -127,4 +127,4 @@ function nameOf (filename) {
   return IDENTIFIER.test(name) ? name : 'Component';
 }
 
-export { ACORN, CompileError, IDENTIFIER, applyEdits, key, nameOf, reason, scanCase, scanClose, scanUntil, tokens, tt };
+export { ACORN, CompileError, IDENTIFIER, applyEdits, key, nameOf, reason, scanCase, scanClose, scanUntil, scannable, tokens, tt };

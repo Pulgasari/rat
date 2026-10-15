@@ -4,8 +4,8 @@ what the prototype compiler understands. anything marked *(planned)* is not buil
 open choices are linked to [decisions.md](decisions.md).
 
 - [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes) · [behaviors](#behaviors) · [event modifiers](#event-modifiers)
-- [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@switch`](#switch)
-- [script sugar](#script-sugar): [signals](#signals), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
+- [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@switch`](#switch), [`@fragment`](#fragment)
+- [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
 
 ## file
@@ -178,10 +178,46 @@ rules (v0):
 - without braces, the `@case` / `@default` lines are the ones indented deeper than `@switch`.
 - a `@case` value ends at `{`, `:` or the end of its line. a value with a top level `:`
   (a ternary) goes in parens.
+- a `@case` with a [named case](#named-cases) matches by pattern, anything else with
+  `Object.is`. a case declared in the same file hands out its parts to the branch, live:
+
+```html
+@switch ($state)
+  @case Loading: <p>loading …</p>
+  @case Failed:  <p.alert>{message}</p>     <!-- message comes from the case -->
+  @case 'idle':  <p>…</p>
+  @default:      <app-view />
+```
+
+- an imported case matches, but its parts are not known to the compiler: no names from it
+  in the branch (yet).
+- patterns written into the `@case` itself (`@case { status: 'error' }`) wait for
+  [d-30](decisions.md#d-30) a/b/c.
+
+### `@fragment`
+
+markup with parameters, declared once and used as a function ([d-27](decisions.md#d-27)):
+
+```html
+@fragment row (item)
+  <tr><td>{item.name}</td><td>{item.price}</td></tr>
+
+<table>
+  @for (fruit of $fruits): {row(fruit)}
+</table>
+```
+
+- top level of a `.rat` file only (not inside an element or a block). in a `.rat.js`
+  file write a function that returns ``html`…` ``.
+- compiles to `function row (item) { return $$.html`…`; }` in the component, hoisted: the
+  script can call it and hand it on as a prop.
+- the parameters are plain values. the call sits in a live hole, so `{row($selected)}`
+  runs again when `$selected` changes; the renderer sees the same template and only
+  patches its holes.
 
 ### recognition
 
-`@if`, `@for`, `@switch` are recognized only at the start of a line, after whitespace,
+`@if`, `@for`, `@switch`, `@fragment` are recognized only at the start of a line, after whitespace,
 after a tag or after `}`. `mail@for.example` stays text. a `}` closes only while a
 block is open; otherwise it is text.
 
@@ -196,6 +232,62 @@ let   $count  = 0;            // $$.signal(0)
 const $double = $count * 2;   // $$.computed(() => $count.value * 2)
 $count++;                     // $count.value++
 ```
+
+### typed signals
+
+a schema as the initial value ([d-14 a](decisions.md#d-14), [`@rat/types`](../packages/types)):
+the signal starts at the schema's initial value and checks every write. a rejected value
+is dropped with a warning, a coerced one is stored coerced.
+
+```js
+import { Enum, Num } from '@rat/types';
+
+let $view = Enum('grid', 'list');           // 'grid'
+let $zoom = Num.range(50, 200).default(100);
+$view = 'table';                            // dropped: one of grid, list
+$zoom = '120';                              // 120
+```
+
+no new syntax: `signal()` takes anything with a standard schema interface (`~standard`),
+so a zod or valibot schema works as well (its initial value is `undefined`).
+
+### named cases
+
+a `case` as a declaration: a pattern with a name, reusable in `@switch`, `@if` and
+scripts ([d-30](decisions.md#d-30), [ideas.md 5](ideas.md#5-named-cases)).
+
+```js
+case Loading = { status: 'loading' };
+case Failed  = { status: 'error', message };     // message: a part it hands out
+case Adult   = { age } if age >= 18;             // a guard after the parts
+case Email   = string if #.includes('@');        // # in a guard is the value
+export case Done = { status: 'done' };           // in <script module> or .rat.js
+```
+
+```js
+if (input is Email) send(input);
+const adults = $users.filter(user => user is Adult);
+```
+
+```html
+@if ($user is Adult): <a href="/shop">shop</a>
+```
+
+| in a pattern | means |
+|---|---|
+| `{ key: pattern, name }` | an object; a shorthand or a lowercase name hands out that part |
+| `[a, b, ...rest]` | an array, exactly that long (at least, with `...rest`) |
+| `'x'`, `1`, `true`, `null`, `undefined` | equal (`===`) |
+| `string`, `number`, `boolean`, `object` … | `typeof` |
+| `Other`, `states.Other` | another case |
+| anything else | an expression, compared with `===` |
+
+- the name must start with a capital: `case Name = …`. `case` as a statement is a syntax
+  error in plain js, so nothing valid changes meaning.
+- `is` reads the postfix chain on its left: `!a is B && c` is `!(a is B) && c`. a plain
+  `is` elsewhere stays a name (`obj.is(x)`, `const is = …`).
+- a case compiles to `$$.pattern(value => parts | null)`; `x is Case` to `$$.is(x, Case)`.
+  anything that is not a pattern compares with `Object.is`, so `x is 'idle'` works too.
 
 ### pipe
 
@@ -300,6 +392,8 @@ const pattern = (element, { id, ...options }) => {
 <input on:keydown[ctrl+c|space+a]={copy} />          <!-- | alternatives, + a combination -->
 <form on:submit!={add}>                              <!-- event.preventDefault() first -->
 <button on:click:once={init}>                        <!-- once, then the listener is gone -->
+<button once:click={init}>                           <!-- the same -->
+<button on:click:1={init}>                           <!-- the same -->
 <button on:click:3={tap}>                            <!-- three times -->
 <input on:keydown[escape]!={clear} />                <!-- combined: key, then !, then count -->
 ```
@@ -308,7 +402,8 @@ const pattern = (element, { id, ...options }) => {
   `left`, `right`, `ctrl`. a modifier (`ctrl`, `shift`, `alt`, `meta`) must match
   exactly: `[enter]` does not fire on shift+enter.
 - in `space+a`, `space` has to be held when `a` is pressed.
-- `!` and `:once` / `:N` are provisional ([d-24](decisions.md#d-24), [d-25](decisions.md#d-25)).
+- `!` is decided ([d-24](decisions.md#d-24)). the three forms of "once" all stay for now
+  ([d-25](decisions.md#d-25)); the attribute syntax as a whole gets one more look later.
 - modifiers need the `on:` / `on` prefix form on elements.
 
 ## styles
@@ -341,5 +436,5 @@ compile(source, { styles: { less: code => … } }); // any other language: pass 
   is kept as is.
 - positional values and shorthand tags from htx (`<$icon 'bx:search' />`), see your
   todo on redesigning `<$xyz>`.
-- `@await (promise) { … } @then (value) { … } @catch (error) { … }`.
+- `@await`: three variants in [d-28](decisions.md#d-28).
 - `@let name = expr` in markup for local derivations.

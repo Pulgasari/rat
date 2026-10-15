@@ -20,6 +20,19 @@ export interface TemplateResult {
 /** A compiled component: runs once, untracked, returns its view. */
 export type Component = (props: Props, children?: TemplateResult | null) => unknown;
 
+/** Anything with a standard schema interface: @rat/types, zod, valibot, arktype. */
+export interface StandardSchema<T = unknown> {
+  readonly '~standard': {
+    readonly version  : 1;
+    readonly vendor   : string;
+    validate (value: unknown): { value: T, issues?: undefined } | { issues: readonly { message: string }[] } | Promise<unknown>;
+  };
+  /** where a signal starts, @rat/types sets it (Enum: the first value, .default(x): x) */
+  readonly initial?: T;
+}
+
+/** A schema as the value starts at its initial value and checks every write (d-14 a). */
+export function signal<T>   (schema: StandardSchema<T>): Signal<T>;
 export function signal<T>   (value?: T): Signal<T>;
 export function computed<T> (fn: () => T): ReadSignal<T>;
 /** parent: who disposes the effect, the current owner unless given, null for no one. */
@@ -29,6 +42,7 @@ export function untrack<T>  (fn: () => T): T;
 export function scope<T>    (fn: () => T, parent?: unknown): [T, () => void];
 export function onCleanup   (fn: () => void): void;
 export function isSignal    (value: unknown): boolean;
+export function isSchema    (value: unknown): value is StandardSchema;
 export function getOwner    (): unknown;
 
 /** The htx tag of @htx/js/render. */
@@ -42,6 +56,17 @@ export function each<T> (items: Iterable<T> | (() => Iterable<T>), key: (item: T
 export function when    (condition: unknown, then: () => unknown, otherwise?: (() => unknown) | null): unknown;
 export function match<T> (subject: T | (() => T), cases: [T, () => unknown][], otherwise?: (() => unknown) | null): unknown;
 export function raw     (html: string | null | undefined): unknown;
+
+/** A named case: the parts it hands out, or null for no match. */
+export type Pattern<P extends object = object> = ((value: unknown) => P | null) & { readonly __pattern: true };
+
+export function pattern<P extends object> (fn: (value: unknown) => P | null): Pattern<P>;
+export function isPattern (value: unknown): value is Pattern;
+/** value is Case: a pattern decides, anything else compares with Object.is. */
+export function is        (value: unknown, test: unknown): boolean;
+export function which     (value: unknown, tests: unknown[]): { index: number, parts: object | null };
+/** A @switch with patterns: a branch gets the parts of its case as a getter. */
+export function cases     (subject: () => unknown, tests: unknown[], views: ((parts: () => object) => unknown)[], otherwise?: (() => unknown) | null): unknown;
 
 /** What a..b makes: lazy, iterable, with the array methods. */
 export interface Span<T = number | string> extends Iterable<T> {
