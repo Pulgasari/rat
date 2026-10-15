@@ -1080,6 +1080,8 @@ runtime needs nothing beyond that; the work is in the compiler.
 - exhaustiveness: should `@switch` warn when a known set of cases is not fully covered?
 - how far patterns go: objects and guards are easy, arrays and nested patterns follow.
 
+Anm.: Das hätte dann 3 Namen oder was lol. Aber inwiefern clashed das mit plain js? es braucht ja eigtl nur in `.rat.js` und `.rat` zu funktionieren? odef nich?
+
 the call is [d-30](decisions.md#d-30).
 
 ---
