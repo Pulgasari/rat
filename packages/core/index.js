@@ -3,7 +3,7 @@
 // :::::: IMPORT
 
 import '@aufbau/elements';
-import '@domina/prototype';
+import '@domina/prototypes';
 import '@htx/js';
 
 // :::

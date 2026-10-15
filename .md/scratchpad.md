@@ -34,7 +34,7 @@ this stuff is used directly, or partly only as a basis/orientation?
 @aufbau/filters
 @aufbau/gestures
 @bunker
-@domina/prototype
+@domina/prototypes
 
 # RAT does not need to reinvent this,
 # but it surely needs rework
