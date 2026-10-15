@@ -27,6 +27,8 @@ html`<p>{name}</p>`    // the question: this too?
 - [ ] a) no, at runtime it stays `${…}` **(v0) (rec)**: a tagged template only sees the strings, `{name}` would have to be looked up by name at runtime (no access to local variables), so it can not work like in the compiled files
 - [ ] b) yes, for values passed in explicitly: ``html({ name })`<p>{name}</p>` ``
 
+Anmerkung: Ich wüsste gar nicht wozu das überhaupt nötig sein sollte?
+
 <a id="d-24"></a>
 ### d-24 · `preventDefault()` on an event
 
