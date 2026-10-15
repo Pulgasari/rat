@@ -128,7 +128,7 @@ two parts: the block, and whether patterns can be named and reused.
 
 named cases, your idea:
 
-- [ ] yes, `case` as a declaration (see [ideas.md 5](ideas.md#5-named-cases)), usable in `@switch`, `@if` and script
+- [x] yes, `case` as a declaration (see [ideas.md 5](ideas.md#5-named-cases)), usable in `@switch`, `@if` and script
 - [ ] not yet
 
 ---
@@ -147,6 +147,8 @@ operators; `|?>`, `|?:`, `|!:`, `|?|`, `|!|` are free.
 - [ ] c) two-character forms: `|:` map, `|?` filter, `|*` reduce, `|.name` pluck
 - [ ] d) other: …
 
+Anm. glaube bei so viele wäre es auch wieddr unleserllch, wenn name nicht 100pro perfekt. aber ich frag mich grade ob zumindest bei map `<|` eigtl logisch wäre?
+
 ---
 
 ## components
@@ -161,7 +163,7 @@ operators; `|?>`, `|?:`, `|!:`, `|?|`, `|!|` are free.
 <a id="d-14"></a>
 ### d-14 · type notation in scripts
 
-- [ ] a) schema as initial value: `let $view = Enum('grid', 'list')` **(rec)**: plain js, no new syntax
+- [x] a) schema as initial value: `let $view = Enum('grid', 'list')` **(rec)**: plain js, no new syntax
 - [ ] b) annotation: `let $view : Enum('grid', 'list') = 'grid'`
 
 <a id="d-15"></a>
@@ -196,7 +198,7 @@ operators; `|?>`, `|?:`, `|!:`, `|?|`, `|!|` are free.
 <a id="d-19"></a>
 ### d-19 · `@scope` lower boundary
 
-- [ ] a) none: styles reach into children, closer components win **(v0) (rec)**: css-like, slotted content keeps the parent's styles
+- [ ] a) none: styles reach into children, closer components win >**(v0) (rec)**: css-like, slotted content keeps the parent's styles
 - [ ] b) donut scope: `to ([data-rat])`, styles stop at child components
 
 ---
