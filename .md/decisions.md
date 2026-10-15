@@ -38,6 +38,8 @@ your draft `on:submit!={add}` is built, provisionally.
 - [ ] b) a word: `on:submit:prevent={add}` (reads like `:once`)
 - [ ] c) both
 
+Anm.: `prevent` ist halt total nichtssagend. "Was wird denn prevented?" `!` is vermutlich auch nich perfekt, aber für mich zumindest noch iwie nachvollziehbarer.
+
 <a id="d-25"></a>
 ### d-25 · once / n times
 
@@ -46,6 +48,7 @@ your draft `on:submit!={add}` is built, provisionally.
 - [ ] a) `on:click:once`, `on:click:3` **(v0) (rec)**: one form for both, the count is a plain suffix
 - [ ] b) `once:click={…}` as its own prefix
 - [ ] c) `on:click:1` only (no word)
+- [ ] d) erstmal alle 3 Formen (mit Vermerk dass man da generell später nochma schauen muss d,e attribute syntax 100% sauber/logisch/stribent zu bekommwn)
 
 <a id="d-26"></a>
 ### d-26 · behaviors: `@name` or `use:name`
@@ -67,6 +70,8 @@ that *returns* nodes, called with arguments each time.
 - [ ] c) `@partial row (item)` (the word from server templates: php, rails, handlebars)
 - [ ] d) `@markup row (item)`
 - [ ] e) other: …
+
+Anm.: Ich finde iwie für "@snippet" ist die Funktionalität zu stark. Wenns im prinz echt der sache nach ne function zur document-fragment erstellung ist, dann wäre der name `@fragment` ja perfekt. 
 
 <a id="d-28"></a>
 ### d-28 · async blocks: the syntax ([ideas.md 2.3](ideas.md#23-async-blocks-svelte))
