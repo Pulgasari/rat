@@ -2,7 +2,7 @@
 
 status: schema as initial value **built** (d-14), `@rat/types` v0. reactive variants, persist and static reading are next.
 
-see also: [causa_types.md](../causa_types.md), [syntax.md: typed signals](../syntax.md#typed-signals), [mutation](mutation.md), [value wrappers](value-wrappers.md)
+see also: [causa_types.md](../causa_types.md), [syntax.md: typed signals](../syntax.md#typed-signals), [reactivity](reactivity.md), [value wrappers](value-wrappers.md)
 
 <a id="d-14"></a>
 ## d-14 · type notation in scripts → **a schema as the initial value**

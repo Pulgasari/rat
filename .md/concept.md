@@ -148,7 +148,7 @@ same convention as in `@aufbau/signals`.
   (`$todos = [...$todos, x]`). later: reactive types from `@rat/types` (`$List`).
 
 open: [d-13](ideas/props.md#d-13) props, [d-15](ideas/loop-metadata.md#d-15) `@for` index,
-[d-23](ideas/mutation.md#d-23) mutation. shadowing (a parameter `$x` in an inner function is
+[d-23](ideas/reactivity.md#d-23) mutation. shadowing (a parameter `$x` in an inner function is
 still rewritten in v0) needs scope analysis in the compiler, no decision needed.
 
 ---
