@@ -211,7 +211,7 @@ themselves live in `@rat/types`, the dom side in `@rat/runtime`.
 - **devtools:** alien-signals keeps its graph in links and flags; a debug build of the facade
   could name nodes and expose the graph.
 
-[alien-signals]: https://github.com/pulgasari/pulgasari.github.io/main/tree/md/webdev/libs/alien-signals.md
+[alien-signals]: https://github.com/pulgasari/pulgasari.github.io/blob/main/md/webdev/libs/alien-signals.md
 [immer]: /pulgasari.github.io/md/webdev/libs/immer.md
 [mobx]: /pulgasari.github.io/md/webdev/libs/mobx.md
 [svelte]: /pulgasari.github.io/md/webdev/libs/svelte.md
