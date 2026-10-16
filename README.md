@@ -50,7 +50,3 @@ md:
 [ideas](.md/ideas/README.md) ·
 [syntax](.md/syntax.md) ·
 [todo](.md/todo.md)
-
----
-
-···
