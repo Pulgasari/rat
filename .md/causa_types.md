@@ -367,24 +367,42 @@ what it shows that is not obvious:
 no answers here, these are the questions a design for `@rat/types` (and `@aufbau/gui`,
 `@aufbau/store`) has to settle:
 
-- **one schema for everything?** can the same `Settings` schema type a signal, check a
-  storage read, render a settings panel (`@aufbau/gui`) and back a store
-  (`@aufbau/store`)? if yes, `@aufbau/gui`'s spec format and `@aufbau/store`'s type
-  registry become views of one schema language.
-- **coercion by default?** forms want `'42'` → `42`, apis want a strict "no".
-- **tagged unions by convention?** require a tag field (`kind`, `type`, `space`) or allow
-  untagged unions tried in order?
-- **ui hints where?** on the schema (`Byte.hint({ control: 'slider' })`), in a separate
-  view spec (json schema forms' way), or both with the view winning?
-- **representations and codecs:** part of a schema (`Color.codec(css)`) or separate
-  functions?
-- **patterns and schemas:** is every schema a pattern (`x is Str.email`, `{ age: Num.min(18) }`)?
-  and how is a binding told apart from a test (case of the first letter, shorthand only, a
-  marker)?
-- **reactive variants:** does `List(T)` as a signal get list verbs (`push`, `remove`), and
-  `Enum` as a signal `cycle`? (d-23 c, @aufbau/store already does this.)
-- **static types later?** keep the door open to derive `.d.ts` types from schemas, the way
-  zod does, without making them needed.
-- **names:** `Str` / `Num` (short), `String` / `Number` (clash with js globals), `Text` /
-  `Int` / `Decimal` (closer to what a person means)? and `Record`, which clashes with
-  typescript's built-in `Record`.
+###### **one schema for everything?** can the same `Settings` schema type a signal, check a.storage read, render a settings panel (`@aufbau/gui`) and back a store (`@aufbau/store`)? if yes, `@aufbau/gui`'s spec format and `@aufbau/store`'s type registry become views of one schema language.
+
+Ich ging zumindest bisher davon aus, dass darauf hinaus laufen wird/sollte/könnte. Allein schon weil man dann nicht jedes mal rumüberkegen muss, wie man das nun notiert.
+  
+###### **coercion by default?** forms want `'42'` → `42`, apis want a strict "no".
+
+Soweit möglich, ja.
+
+###### **tagged unions by convention?** require a tag field (`kind`, `type`, `space`) or allow untagged unions tried in order?
+
+Mir ist unklar, woraur die Frage genau abzielt.
+
+###### **ui hints where?** on the schema (`Byte.hint({ control: 'slider' })`), in a separate view spec (json schema forms' way), or both with the view winning?
+
+Prinzipiell beides. 
+
+RAT legt da bereits einen Default fest. Aber eine App, ein AppView, ein AppPanel, eine GUIInstanz oder eine Element kann da natütrlich reinfunken.
+
+Die genaue Form, wie all das in der Praxis aussehen könnte, wäre zu konzipieren und umfassend auszuprobieren. Hier sind sicherlich zig Formen möglich und man sollte sich zu früh auf irgendwas einschiessen.
+  
+###### **representations and codecs:** part of a schema (`Color.codec(css)`) or separate functions?
+
+Ist ne Frage, die vermutlich aus der Praxis heraus zu beantworten ist.
+  
+###### **patterns and schemas:** is every schema a pattern (`x is Str.email`, `{ age: Num.min(18) }`)? and how is a binding told apart from a test (case of the first letter, shorthand only, a marker)?
+
+###### **reactive variants:** does `List(T)` as a signal get list verbs (`push`, `remove`), and `Enum` as a signal `cycle`? (d-23 c, @aufbau/store already does this.)
+
+In meiner Vorstellung ist `$List` "nur" ein reaktives `List`.
+
+Wie man das in der Praxis am besten konstruiert, ist mir aber noch unklar
+
+- **static types later?** keep the door open to derive `.d.ts` types from schemas, the wayvzod does, without making them needed.
+
+- **names:** `Str` / `Num` (short), `String` / `Number` (clash with js globals), `Text` /.`Int` / `Decimal` (closer to what a person means)? and `Record`, which clashes with typescript's built-in `Record`.
+
+### possible answers
+
+1. Ja, ich denke, dass ein `$List`
