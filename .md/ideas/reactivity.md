@@ -195,7 +195,7 @@ themselves live in `@rat/types`, the dom side in `@rat/runtime`.
 <a id="d-31"></a>
 ## d-31 · the package name
 
-- [ ] a) `@rat/signals` **(rec)**: says what it is, and it is the word the ecosystem uses for this layer (`@preact/signals`, `@solidjs/signals`, angular signals, the tc39 proposal). `$()` and the variants are signals too
+- [x] a) `@rat/signals` **(rec)**: says what it is, and it is the word the ecosystem uses for this layer
 - [ ] b) `@rat/reactivity`: broader, like `@vue/reactivity`, which also holds deep proxies (`reactive()`); fits if plain objects become deep proxies by default
 - [ ] c) it stays inside `@rat/runtime` as `signals.js`, no package of its own
 
