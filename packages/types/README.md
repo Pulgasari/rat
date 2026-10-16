@@ -2,7 +2,7 @@
 
 ## schemas (v0)
 
-schemas are values ([concept 5](../../.md/concept.md#5-types-are-values), [d-14 a](../../.md/decisions.md#d-14)): they check and coerce a value, know where a signal starts and describe themselves. they speak the standard schema interface (`~standard`), so a signal takes them, and so do zod- or valibot-aware libraries.
+schemas are values ([concept 5](../../.md/concept.md#5-types-are-values), [d-14 a](../../.md/ideas/types.md#d-14)): they check and coerce a value, know where a signal starts and describe themselves. they speak the standard schema interface (`~standard`), so a signal takes them, and so do zod- or valibot-aware libraries.
 
 ```js
 import { Bool, Enum, List, Num, Record, Str } from '@rat/types';

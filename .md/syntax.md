@@ -1,7 +1,7 @@
 # rat :: syntax v0
 
 what the prototype compiler understands. anything marked *(planned)* is not built yet.
-open choices are linked to [decisions.md](decisions.md).
+open choices are linked to [ideas/](ideas/README.md).
 
 - [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes) · [behaviors](#behaviors) · [event modifiers](#event-modifiers)
 - [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@switch`](#switch), [`@fragment`](#fragment)
@@ -115,16 +115,16 @@ every block body can be written three ways, mixed freely, per branch:
 rules (v0):
 
 - **indentation**: a body ends at the first non-blank line indented no deeper than the
-  line of its head. a block uses tabs or spaces, mixing them is an error ([d-04](decisions.md#d-04)).
+  line of its head. a block uses tabs or spaces, mixing them is an error ([d-04](ideas/blocks.md#d-04)).
 - a closing tag ends an indented or one-line body inside its element:
   `<ul>@for (x of $xs): <li>{x}</li></ul>`.
 - an **`@else`** belongs to the block whose head is on its own indentation. so a dedented
   `@else` after a nested indented block goes to the outer one.
 - **one line**: the body ends at the end of the line, or where `@else`, `@case` or
   `@default` starts on the same line: `@if ($ok): <b>yes</b> @else: <i>no</i>`
-  ([d-01](decisions.md#d-01), [d-02](decisions.md#d-02)).
+  ([d-01](ideas/blocks.md#d-01), [d-02](ideas/blocks.md#d-02)).
 - blocks nest in every form; a one-line body may hold another one-line block
-  (`@if ($a): @for (x of $xs): <li>{x}</li>`, [d-03](decisions.md#d-03)).
+  (`@if ($a): @for (x of $xs): <li>{x}</li>`, [d-03](ideas/blocks.md#d-03)).
 - inside an outer `{ … }`, a `}` also ends an indented or one-line body.
 
 ### `@if`
@@ -192,11 +192,11 @@ rules (v0):
 - an imported case matches, but its parts are not known to the compiler: no names from it
   in the branch (yet).
 - patterns written into the `@case` itself (`@case { status: 'error' }`) wait for
-  [d-30](decisions.md#d-30) a/b/c.
+  [d-30](ideas/pattern-matching.md#d-30) a/b/c.
 
 ### `@fragment`
 
-markup with parameters, declared once and used as a function ([d-27](decisions.md#d-27)):
+markup with parameters, declared once and used as a function ([d-27](ideas/fragments.md#d-27)):
 
 ```html
 @fragment row (item)
@@ -235,7 +235,7 @@ $count++;                     // $count.value++
 
 ### typed signals
 
-a schema as the initial value ([d-14 a](decisions.md#d-14), [`@rat/types`](../packages/types)):
+a schema as the initial value ([d-14 a](ideas/types.md#d-14), [`@rat/types`](../packages/types)):
 the signal starts at the schema's initial value and checks every write. a rejected value
 is dropped with a warning, a coerced one is stored coerced.
 
@@ -254,7 +254,7 @@ so a zod or valibot schema works as well (its initial value is `undefined`).
 ### named cases
 
 a `case` as a declaration: a pattern with a name, reusable in `@switch`, `@if` and
-scripts ([d-30](decisions.md#d-30), [ideas.md 5](ideas.md#5-named-cases)).
+scripts ([d-30](ideas/pattern-matching.md#d-30), [pattern matching](ideas/pattern-matching.md#named-cases)).
 
 ```js
 case Loading = { status: 'loading' };
@@ -291,7 +291,7 @@ const adults = $users.filter(user => user is Adult);
 
 ### pipe
 
-two forms, decided by the right side ([d-08](decisions.md#d-08), [d-09](decisions.md#d-09)):
+two forms, decided by the right side ([d-08](ideas/pipes.md#d-08), [d-09](ideas/pipes.md#d-09)):
 
 ```js
 // implicit: the right side is a callable, nothing else
@@ -313,7 +313,7 @@ $todos |> #.length |> `${#} todos`;               // # works in any expression
 - a value used more than once is bound to a parameter, so it is evaluated once.
 - `#` outside of a pipe is an error. `#private` names are untouched.
 
-further pipe operators (`|?`, `|:`, `|*` …) are an idea, not built: [ideas.md](ideas.md#1-a-pipe-family).
+further pipe operators (`|?`, `|:`, `|*` …) are an idea, not built: [ideas/pipes](ideas/pipes.md).
 
 ### ranges
 
@@ -330,9 +330,9 @@ further pipe operators (`|?`, `|:`, `|*` …) are an idea, not built: [ideas.md]
   `Span`, lazy (nothing is allocated until it is iterated) but with the usual array
   methods (`map`, `filter`, `reduce`, `join`, `includes`, `at`, `length` …). `[a..b]`
   alone in brackets is an array (d-07).
-- works everywhere script sugar does ([d-06](decisions.md#d-06)).
+- works everywhere script sugar does ([d-06](ideas/ranges.md#d-06)).
 - `1..toString()` (valid js) now reads as a range. write `(1).toString()`.
-- open: exclusive ranges, steps, bare letters ([d-05](decisions.md#d-05), [d-07](decisions.md#d-07)).
+- open: exclusive ranges, steps, bare letters ([d-05](ideas/ranges.md#d-05), [d-07](ideas/ranges.md#d-07)).
 
 ### `for…of` without a declaration
 
@@ -402,14 +402,14 @@ const pattern = (element, { id, ...options }) => {
   `left`, `right`, `ctrl`. a modifier (`ctrl`, `shift`, `alt`, `meta`) must match
   exactly: `[enter]` does not fire on shift+enter.
 - in `space+a`, `space` has to be held when `a` is pressed.
-- `!` is decided ([d-24](decisions.md#d-24)). the three forms of "once" all stay for now
-  ([d-25](decisions.md#d-25)); the attribute syntax as a whole gets one more look later.
+- `!` is decided ([d-24](ideas/event-modifiers.md#d-24)). the three forms of "once" all stay for now
+  ([d-25](ideas/event-modifiers.md#d-25)); the attribute syntax as a whole gets one more look later.
 - modifiers need the `on:` / `on` prefix form on elements.
 
 ## styles
 
 `<style>` is css. `scss`, `sass` and `ass` ([`@aufbau/ass`](https://github.com/pulgasari/aufbau/tree/main/ass))
-are built in ([d-20](decisions.md#d-20)):
+are built in ([d-20](ideas/styles.md#d-20)):
 
 ```html
 <style lang="scss">
@@ -436,5 +436,5 @@ compile(source, { styles: { less: code => … } }); // any other language: pass 
   is kept as is.
 - positional values and shorthand tags from htx (`<$icon 'bx:search' />`), see your
   todo on redesigning `<$xyz>`.
-- `@await`: three variants in [d-28](decisions.md#d-28).
+- `@await`: three variants in [d-28](ideas/async-blocks.md#d-28).
 - `@let name = expr` in markup for local derivations.
