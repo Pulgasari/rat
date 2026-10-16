@@ -1,0 +1,12 @@
+{
+  "name"         : "@rat/signals",
+  "version"      : "0.0.1",
+  "description"  : "rat's signal layer: alien-signals' graph behind a facade with .value, owners, typed writes, $() and reactive variants",
+  "type"         : "module",
+  "main"         : "./index.js",
+  "types"        : "./index.d.ts",
+  "exports"      : { ".": "./index.js" },
+  "dependencies" : { "alien-signals": "3.2.1" },
+  "sideEffects"  : false,
+  "license"      : "MIT"
+}

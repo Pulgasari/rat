@@ -5,7 +5,7 @@
 schemas are values ([concept 5](../../.md/concept.md#5-types-are-values), [d-14 a](../../.md/ideas/types.md#d-14)): they check and coerce a value, know where a signal starts and describe themselves. they speak the standard schema interface (`~standard`), so a signal takes them, and so do zod- or valibot-aware libraries.
 
 ```js
-import { Bool, Enum, List, Num, Record, Str } from '@rat/types';
+import { Bool, Enum, ListOf, Num, Record, Str } from '@rat/types';
 
 export const Todo = Record({
   done  : Bool,
@@ -14,7 +14,7 @@ export const Todo = Record({
 });
 
 export const Settings = Record({
-  tags : List(Str),
+  tags : ListOf(Str),
   view : Enum('grid', 'list'),
   zoom : Num.range(50, 200).default(100),
 });
@@ -33,12 +33,41 @@ export const Settings = Record({
 | `Num.min(n)`, `.max(n)`, `.range(a, b)`, `.int` | |
 | `Str.min(n)`, `.max(n)`, `.pattern(re)`, `.email`, `.uuid` | |
 | `Enum(...values)` | one of them, the first is the initial value |
-| `List(item)`, `.min(n)`, `.max(n)` | every item checked and coerced |
+| `ListOf(item)`, `.min(n)`, `.max(n)` | a list whose items are checked and coerced |
 | `Record(shape)` | known fields checked, unknown ones kept |
 | `.default(x)`, `.optional()`, `.check(fn, message)` | on every schema |
 | `validate(x)`, `is(x)`, `parse(x)`, `describe` | `{ value }` or `{ issues: [{ message, path }] }` |
 
-not yet: reactive variants with verbs (`$List.push`, `$Enum.cycle`, d-23 c), `persist` through `@bunker`, the compiler reading a static schema.
+## collections (v0)
+
+`List` is the data type, `$List` its reactive variant, like `Map` and `$Map`. the schema for
+"a list of strings" is `ListOf(Str)`.
+
+`$List`, `$Map` and `$Set` are made with `reactive()` from [`@rat/signals`](../signals/README.md)
+and registered there for `Array`, `Map` and `Set` when this package is imported. from then on
+`let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c):
+
+```html
+<script>
+  import '@rat/types';            // once, anywhere in the app: fills the registry
+
+  let $todos = [];
+  const add  = title => $todos.push({ title, done: false });   // reactive
+</script>
+
+<p>{$todos.length} todos</p>
+@for (todo of $todos): <li>{todo.title}</li>
+```
+
+- reading methods subscribe, writing methods notify, a write that changes nothing notifies
+  nobody (`set` with the same value, `pop` on an empty list).
+- `List` (and `$List`) is not an array: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]`
+  (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays, so
+  `$todos = $todos.filter(…)` works as before and gives a new `$List`.
+- the sketch below (unique values, optionally sorted) would become options on `List`.
+- `ListOf(Str)` checks arrays for now; it should accept a `List` as well.
+
+not yet: `$Enum.cycle`, `$Record`, `persist` through `@bunker`, the compiler reading a static schema.
 
 ---
 

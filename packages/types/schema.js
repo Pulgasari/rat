@@ -95,7 +95,7 @@ class ListSchema extends Schema {
 }
 
 // every item checked and coerced; a new array only when an item changed, so an unchanged list stays the same object
-const List = item => new ListSchema({
+const ListOf = item => new ListSchema({
   describe : { item: item.describe },
   initial  : [],
   kind     : 'list',
@@ -138,4 +138,4 @@ const isSchema = value => value instanceof Schema;
 
 // :::::: EXPORT
 
-export { Bool, Enum, List, Num, Record, Schema, Str, isSchema };
+export { Bool, Enum, ListOf, Num, Record, Schema, Str, isSchema };

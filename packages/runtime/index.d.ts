@@ -1,13 +1,9 @@
 // @rat/runtime
 
-export interface ReadSignal<T> {
-  readonly value : T;
-  peek () : T;
-}
+import type { Signal } from '@rat/signals';
 
-export interface Signal<T> extends ReadSignal<T> {
-  value : T;
-}
+/** The signal layer: signal, computed, effect, scope, batch, untrack, onCleanup, $(), reactive() … */
+export * from '@rat/signals';
 
 export type Props = Record<string, unknown>;
 
@@ -19,31 +15,6 @@ export interface TemplateResult {
 
 /** A compiled component: runs once, untracked, returns its view. */
 export type Component = (props: Props, children?: TemplateResult | null) => unknown;
-
-/** Anything with a standard schema interface: @rat/types, zod, valibot, arktype. */
-export interface StandardSchema<T = unknown> {
-  readonly '~standard': {
-    readonly version  : 1;
-    readonly vendor   : string;
-    validate (value: unknown): { value: T, issues?: undefined } | { issues: readonly { message: string }[] } | Promise<unknown>;
-  };
-  /** where a signal starts, @rat/types sets it (Enum: the first value, .default(x): x) */
-  readonly initial?: T;
-}
-
-/** A schema as the value starts at its initial value and checks every write (d-14 a). */
-export function signal<T>   (schema: StandardSchema<T>): Signal<T>;
-export function signal<T>   (value?: T): Signal<T>;
-export function computed<T> (fn: () => T): ReadSignal<T>;
-/** parent: who disposes the effect, the current owner unless given, null for no one. */
-export function effect      (fn: () => void, parent?: unknown): () => void;
-export function batch<T>    (fn: () => T): T;
-export function untrack<T>  (fn: () => T): T;
-export function scope<T>    (fn: () => T, parent?: unknown): [T, () => void];
-export function onCleanup   (fn: () => void): void;
-export function isSignal    (value: unknown): boolean;
-export function isSchema    (value: unknown): value is StandardSchema;
-export function getOwner    (): unknown;
 
 /** The htx tag of @htx/js/render. */
 export function html (strings: TemplateStringsArray, ...values: unknown[]): TemplateResult;

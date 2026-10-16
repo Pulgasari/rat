@@ -1,11 +1,12 @@
 {
   "name"        : "@rat/types",
   "version"     : "0.0.1",
-  "description" : "schemas as values: check, coerce, initial values, standard schema; a signal takes one as its initial value",
+  "description" : "schemas as values and the reactive variants of collections ($List, $Map, $Set), registered for $()",
   "type"        : "module",
   "main"        : "./index.js",
   "types"       : "./index.d.ts",
   "exports"     : { ".": "./index.js" },
-  "sideEffects" : false,
+  "dependencies": { "@rat/signals": "0.0.1" },
+  "sideEffects" : ["./collections.js", "./index.js"],
   "license"     : "MIT"
 }

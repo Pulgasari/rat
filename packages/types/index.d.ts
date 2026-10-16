@@ -57,10 +57,50 @@ export const Str  : StrSchema;
 
 /** One value out of a fixed list, the first is the initial one. */
 export function Enum<const V extends readonly unknown[]> (...values: V): Schema<V[number]>;
-export function List<T>   (item: Schema<T>): ListSchema<T>;
+/** The schema of a list whose items match item: ListOf(Str). */
+export function ListOf<T> (item: Schema<T>): ListSchema<T>;
 export function Record<S extends Record<string, Schema<any>>> (shape: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
 
 /** The base class, for schemas of your own. */
 export const Schema: new (definition: object) => Schema<unknown>;
 
 export function isSchema (value: unknown): value is Schema<unknown>;
+
+/** A list: length is a getter, at(i) / set(i, v) replace [i]. $List is the same, reactive. */
+export interface List<T> extends Iterable<T> {
+  readonly length: number;
+  at (index: number): T | undefined;
+  includes (value: T): boolean;
+  indexOf (value: T): number;
+  every (fn: (item: T, index: number) => unknown): boolean;
+  filter (fn: (item: T, index: number) => unknown): T[];
+  find (fn: (item: T, index: number) => unknown): T | undefined;
+  findIndex (fn: (item: T, index: number) => unknown): number;
+  flatMap<U> (fn: (item: T, index: number) => U | U[]): U[];
+  forEach (fn: (item: T, index: number) => void): void;
+  join (separator?: string): string;
+  map<U> (fn: (item: T, index: number) => U): U[];
+  reduce<U> (fn: (sum: U, item: T, index: number) => U, initial: U): U;
+  slice (start?: number, end?: number): T[];
+  some (fn: (item: T, index: number) => unknown): boolean;
+  toArray (): T[];
+  push (...items: T[]): number;
+  pop (): T | undefined;
+  shift (): T | undefined;
+  unshift (...items: T[]): number;
+  splice (start: number, count?: number, ...items: T[]): T[];
+  sort (fn?: (a: T, b: T) => number): this;
+  reverse (): this;
+  set (index: number, value: T): this;
+  remove (value: T): boolean;
+  replace (items: Iterable<T>): this;
+  clear (): this;
+}
+
+export const List: { new <T>(items?: Iterable<T>): List<T>; from<T> (items: Iterable<T>): List<T>; of<T> (...items: T[]): List<T> };
+/** A List whose reads subscribe and whose writes notify. */
+export const $List: typeof List;
+/** A Map whose reads subscribe and whose writes notify. */
+export const $Map: MapConstructor;
+/** A Set whose reads subscribe and whose writes notify. */
+export const $Set: SetConstructor;

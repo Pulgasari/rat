@@ -228,7 +228,7 @@ applies in `<script>`, `<script module>`, every hole and every `.rat.js` file.
 ### signals
 
 ```js
-let   $count  = 0;            // $$.signal(0)
+let   $count  = 0;            // $$.$(0), a signal
 const $double = $count * 2;   // $$.computed(() => $count.value * 2)
 $count++;                     // $count.value++
 ```

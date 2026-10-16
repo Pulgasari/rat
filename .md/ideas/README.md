@@ -14,9 +14,6 @@ today, **(rec)** the recommendation. a decided entry stays in its file, with wha
 | d-15 | the index in `@for` | [loop metadata](loop-metadata.md#d-15) |
 | d-16 | commands with arguments in markup | [app](app.md#d-16) |
 | d-19 | `@scope` lower boundary (question about the `>`) | [styles](styles.md#d-19) |
-| d-23 | mutating `$` arrays and objects | [reactivity](reactivity.md#d-23) |
-| d-31 | the name of the signal package: `@rat/signals` or `@rat/reactivity` | [reactivity](reactivity.md#d-31) |
-| d-32 | the core: alien-signals behind a facade | [reactivity](reactivity.md#d-32) |
 | d-26 | behaviors: `@name` or `use:name` | [behaviors](behaviors.md#d-26) |
 | d-28 | async blocks: the syntax | [async blocks](async-blocks.md#d-28) |
 | d-29 | filters on loops: the syntax | [loop filters](loop-filters.md#d-29) |
@@ -49,7 +46,7 @@ today, **(rec)** the recommendation. a decided entry stays in its file, with wha
 | [pipes](pipes.md) | `\|>` built (d-08, d-09), d-10 open | f#, elixir, clojure, gleam |
 | [ranges](ranges.md) | built (d-05 to d-07) | |
 | [types](types.md) | built (d-14), `@rat/types` v0 | |
-| [reactivity](reactivity.md) | idea; d-23, d-31, d-32 open | alien-signals, svelte, vue |
+| [reactivity](reactivity.md) | built as `@rat/signals` (d-23 c, d-31 a, d-32 b) | alien-signals, svelte, vue |
 | [value wrappers](value-wrappers.md) | idea | swift |
 | [junctions](junctions.md) | idea | raku |
 | [with chains](with-chains.md) | idea | elixir, gleam, f# |

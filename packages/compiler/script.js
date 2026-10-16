@@ -521,7 +521,8 @@ function reads (root, names, skip = new Set) {
   return edits;
 }
 
-// top level `let $x = …` / `const $x = …`, as { names, edits }
+// top level `let $x = …` / `const $x = …`, as { names, edits }. a let goes through $(),
+// which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded)
 function declarations (program, runtime) {
   const names = new Set;
   const edits = [];
@@ -541,10 +542,10 @@ function declarations (program, runtime) {
         edits.push({ order: 1,  pos: init.end,   text: '))' });
       }
       else if (init) {
-        edits.push({ order: -1, pos: init.start, text: `${runtime}.signal(` });
+        edits.push({ order: -1, pos: init.start, text: `${runtime}.$(` });
         edits.push({ order: 1,  pos: init.end,   text: ')' });
       }
-      else edits.push({ pos: id.end, text: ` = ${runtime}.signal()` });
+      else edits.push({ pos: id.end, text: ` = ${runtime}.$()` });
     }
   }
 
