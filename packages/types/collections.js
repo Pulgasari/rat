@@ -40,34 +40,34 @@ class List {
   includes (value) { return this.#items.includes(value); }
   indexOf  (value) { return this.#items.indexOf(value); }
 
-  every     (fn) { return this.#items.every(fn); }
-  filter    (fn) { return this.#items.filter(fn); }
-  find      (fn) { return this.#items.find(fn); }
-  findIndex (fn) { return this.#items.findIndex(fn); }
-  flatMap   (fn) { return this.#items.flatMap(fn); }
-  forEach   (fn) { this.#items.forEach(fn); }
-  join      (separator) { return this.#items.join(separator); }
-  map       (fn) { return this.#items.map(fn); }
-  reduce    (...args) { return this.#items.reduce(...args); }
+  every     (fn)         { return this.#items.every(fn); }
+  filter    (fn)         { return this.#items.filter(fn); }
+  find      (fn)         { return this.#items.find(fn); }
+  findIndex (fn)         { return this.#items.findIndex(fn); }
+  flatMap   (fn)         { return this.#items.flatMap(fn); }
+  forEach   (fn)         { this.#items.forEach(fn); }
+  join      (separator)  { return this.#items.join(separator); }
+  map       (fn)         { return this.#items.map(fn); }
+  reduce    (...args)    { return this.#items.reduce(...args); }
   slice     (start, end) { return this.#items.slice(start, end); }
-  some      (fn) { return this.#items.some(fn); }
-  toArray   () { return [...this.#items]; }
-  toJSON    () { return this.toArray(); }
+  some      (fn)         { return this.#items.some(fn); }
+  toArray   ()           { return [...this.#items]; }
+  toJSON    ()           { return this.toArray(); }
 
   [Symbol.iterator] () { return this.#items[Symbol.iterator](); }
 
   push    (...items) { return this.#items.push(...items); }
-  pop     () { return this.#items.pop(); }
-  shift   () { return this.#items.shift(); }
+  pop     ()         { return this.#items.pop(); }
+  shift   ()         { return this.#items.shift(); }
   unshift (...items) { return this.#items.unshift(...items); }
-  splice  (...args) { return this.#items.splice(...args); }
-  sort    (fn) { this.#items.sort(fn); return this; }
-  reverse () { this.#items.reverse(); return this; }
+  splice  (...args)  { return this.#items.splice(...args); }
+  sort    (fn)       { this.#items.sort(fn); return this; }
+  reverse ()         { this.#items.reverse(); return this; }
 
   set     (index, value) { this.#items[index < 0 ? this.#items.length + index : index] = value; return this; }
-  remove  (value) { const index = this.#items.indexOf(value); if (index > -1) this.#items.splice(index, 1); return index > -1; }
-  replace (items) { this.#items = [...items]; return this; }
-  clear   () { this.#items.length = 0; return this; }
+  remove  (value)        { const index = this.#items.indexOf(value); if (index > -1) this.#items.splice(index, 1); return index > -1; }
+  replace (items)        { this.#items = [...items]; return this; }
+  clear   ()             { this.#items.length = 0; return this; }
 }
 
 const LIST_READS = ['length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator];
