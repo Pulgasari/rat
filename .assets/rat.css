@@ -1,5 +1,9 @@
+/*
 @import url("https://cdn.ratcode.dev/css/reset.css");
 @import url("https://cdn.ratcode.dev/css/default.css");
+*/
+@import url("https://code.pulgasari.dev/aufbau/css/aufbau.css");
+@import url("https://code.pulgasari.dev/aufbau/gestalt/gestalt.css");
 @import url("./animations.css");
 
 :root { --color: red; }
