@@ -1,9 +1,19 @@
 # rat :: reactivity
 
-status: **idea**, the plan for the signal layer. today `@rat/runtime/signals.js` is a first draft (push-pull with a cutoff, `Set`s per dependency). decisions: [d-31](#d-31) package name, [d-32](#d-32) the core, [d-23](#d-23) mutation (moved here from its own file).
+status: **idea**, the plan for the signal layer. 
 
-see also: alien-signals.md in `pulgasari.github.io/md/webdev/libs/` (how the core works, and the comparison with the current draft), [types](types.md), [causa_types.md](../causa_types.md), immer.md, mobx.md and svelte.md in the same libs folder
+today `@rat/runtime/signals.js` is a first draft (push-pull with a cutoff, `Set`s per dependency).
 
+decisions: [d-31](#d-31) package name, [d-32](#d-32) the core, [d-23](#d-23) mutation (moved here from its own file).
+
+see also: 
+- [alien-signals.md][alien-signals] (how the core works, and the comparison with the current draft)
+- [types](types.md)
+- [causa_types.md](../causa_types.md)
+- [immer.md][immer]
+- [mobx.md][mobx]
+- [svelte.md][svelte]
+  
 ## the plan in one picture
 
 ```
@@ -200,3 +210,8 @@ themselves live in `@rat/types`, the dom side in `@rat/runtime`.
   signal, and a `subscribe` on rat signals for libraries that expect one.
 - **devtools:** alien-signals keeps its graph in links and flags; a debug build of the facade
   could name nodes and expose the graph.
+
+[alien-signals]: /pulgasari.github.io/md/webdev/libs/alien-signals.md
+[immer]: /pulgasari.github.io/md/webdev/libs/immer.md
+[mobx]: /pulgasari.github.io/md/webdev/libs/mobx.md
+[svelte]: /pulgasari.github.io/md/webdev/libs/svelte.md
