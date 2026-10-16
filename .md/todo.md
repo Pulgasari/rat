@@ -33,6 +33,9 @@
   - 29 dateien plus `ideas/README.md` (offene entscheidungen, alle themen mit status, shortlist). `decisions.md` ist nur noch ein index, alte links `decisions.md#d-xx` gehen weiter
   - neu: `ideas/parts.md` (`htx-part` als idee für rat: `<rat-part>`, `lazy:`) und `ideas/no-build.md` (compilieren im browser, die tricks aus `@htx/elements/load.js`)
 
+- [x] reaktivität als idee festhalten: `ideas/reactivity.md`
+  - alien-signals als kern hinter eigener fassade (d-32), `$()` mit registry, `reactive(Class, { reads, writes })` für varianten, d-23 dorthin verschoben, paketname `@rat/signals` oder `@rat/reactivity` (d-31)
+
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
 - [x] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
@@ -136,7 +139,7 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 - [ ] `packages/_compiler` (alter generator) und `packages/compiler/_parserblocks.js` (fremder, ungenutzter code) aufräumen, wenn der vergleich nicht mehr gebraucht wird
 
 ## deine entscheidungen
-* [ ] offen: d-10 (pipe-familie, neu: option e), d-13 (props), d-15 (index), d-16 (kommandos mit argument), d-19 (das `>`?), d-23 (mutation), d-26 (`@` oder `use:`), d-28 (`@await`), d-29 (filter in `@for`), d-30 (patterns direkt im `@case`)
+* [ ] offen: d-10 (pipe-familie, neu: option e), d-13 (props), d-15 (index), d-16 (kommandos mit argument), d-19 (das `>`?), d-23 (mutation), d-31 (name des signal-pakets), d-32 (alien-signals als kern), d-26 (`@` oder `use:`), d-28 (`@await`), d-29 (filter in `@for`), d-30 (patterns direkt im `@case`)
 
 ## danach
 - [ ] erste echte app komplett in rat (roadmap 7, kandidat: kleines zugriff-tool)
