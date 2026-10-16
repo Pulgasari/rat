@@ -10,17 +10,18 @@ and registered there, so $() and every `let $x = …` in a .rat script pick them
   let $seen  = new Map;     // a signal holding a $Map
   $seen.set(id, true);
 
-$List wraps a plain class (Items), not an Array subclass: an array's length
-and index access are no methods and could only be caught with a proxy. a
-$List has length as a getter and at(index) / set(index, value) instead of
-[index]. (List itself is the schema, List(Str), in schema.js.)
+List is the data type, $List its reactive variant, like Map and $Map. List is a
+plain class, not an Array subclass: an array's length and index access are no
+methods and could only be caught with a proxy. a List has length as a getter
+and at(index) / set(index, value) instead of [index]. the schema for "a list
+of strings" is ListOf(Str), in schema.js.
 */
 
 import { reactive, register } from '@rat/signals';
 
 // ::: List
 
-class Items {
+class List {
   #items;
 
   constructor (items = []) { this.#items = [...items]; }
@@ -66,7 +67,7 @@ class Items {
 
 const LIST_READS = ['length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator];
 
-const $List = reactive(Items, {
+const $List = reactive(List, {
   reads  : LIST_READS,
   writes : {
     clear   : list => list.length > 0,
@@ -82,8 +83,6 @@ const $List = reactive(Items, {
     unshift : (list, ...items) => items.length > 0,
   },
 });
-
-Object.defineProperty($List, 'name', { value: '$List' });
 
 // ::: Map, Set
 
@@ -108,10 +107,10 @@ const $Set = reactive(Set, {
 // ::: registry
 
 register(Array, $List);
-register(Items, $List);
+register(List,  $List);
 register(Map,   $Map);
 register(Set,   $Set);
 
 // :::::: EXPORT
 
-export { $List, $Map, $Set };
+export { $List, $Map, $Set, List };

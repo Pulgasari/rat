@@ -57,7 +57,8 @@ export const Str  : StrSchema;
 
 /** One value out of a fixed list, the first is the initial one. */
 export function Enum<const V extends readonly unknown[]> (...values: V): Schema<V[number]>;
-export function List<T>   (item: Schema<T>): ListSchema<T>;
+/** The schema of a list whose items match item: ListOf(Str). */
+export function ListOf<T> (item: Schema<T>): ListSchema<T>;
 export function Record<S extends Record<string, Schema<any>>> (shape: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
 
 /** The base class, for schemas of your own. */
@@ -65,8 +66,8 @@ export const Schema: new (definition: object) => Schema<unknown>;
 
 export function isSchema (value: unknown): value is Schema<unknown>;
 
-/** A reactive list: reads subscribe, writes notify. length is a getter, at(i) / set(i, v) replace [i]. */
-export interface $List<T> extends Iterable<T> {
+/** A list: length is a getter, at(i) / set(i, v) replace [i]. $List is the same, reactive. */
+export interface List<T> extends Iterable<T> {
   readonly length: number;
   at (index: number): T | undefined;
   includes (value: T): boolean;
@@ -96,7 +97,9 @@ export interface $List<T> extends Iterable<T> {
   clear (): this;
 }
 
-export const $List: { new <T>(items?: Iterable<T>): $List<T>; from<T> (items: Iterable<T>): $List<T>; of<T> (...items: T[]): $List<T> };
+export const List: { new <T>(items?: Iterable<T>): List<T>; from<T> (items: Iterable<T>): List<T>; of<T> (...items: T[]): List<T> };
+/** A List whose reads subscribe and whose writes notify. */
+export const $List: typeof List;
 /** A Map whose reads subscribe and whose writes notify. */
 export const $Map: MapConstructor;
 /** A Set whose reads subscribe and whose writes notify. */

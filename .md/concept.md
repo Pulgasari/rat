@@ -171,7 +171,7 @@ export const Todo = Record({
 export const Settings = Record({
   view : Enum('grid', 'list'),
   zoom : Num.range(50, 200).default(100),
-  tags : List(Str),
+  tags : ListOf(Str),
 });
 ```
 
