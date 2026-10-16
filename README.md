@@ -25,11 +25,16 @@ demos:
 |-----------------|------------------------------------------|--------|
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
 | `@rat/core`     | [`packages/core`](packages/core)         | sketch |
-| `@rat/language-server` | [`packages/language-server`](packages/language-server) | v0: diagnostics |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
-| `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0     |
 | `@rat/types`    | [`packages/types`](packages/types)       | v0: schemas |
-| `rat-vscode`    | [`packages/vscode`](packages/vscode)     | v0: highlighting + language server |
+
+### tooling
+
+| package         | path                                     | status |
+|-----------------|------------------------------------------|--------|
+| `@rat/language-server` | [`packages/language-server`](packages/language-server) | v0: diagnostics |
+| `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0     |
+| `@rat/vscode`   | [`packages/vscode`](packages/vscode)     | v0: hl + ls |
 
 ## repo
 
