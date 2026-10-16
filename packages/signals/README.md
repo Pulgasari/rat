@@ -1,8 +1,6 @@
 # @rat/signals
 
-rat's signal layer: the graph of [alien-signals](https://github.com/stackblitz/alien-signals)
-(`createReactiveSystem`, pinned to 3.2.1) behind a facade in the shape rat's compiler and
-runtime use. decided in [d-31 and d-32](../../.md/ideas/reactivity.md).
+based on [alien-signals](https://github.com/stackblitz/alien-signals) (pinned to 3.2.1) behind a facade in the shape rat's compiler and runtime use.
 
 ```js
 import { $, computed, effect, signal } from '@rat/signals';
