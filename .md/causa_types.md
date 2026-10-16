@@ -399,10 +399,9 @@ In meiner Vorstellung ist `$List` "nur" ein reaktives `List`.
 
 Wie man das in der Praxis am besten konstruiert, ist mir aber noch unklar
 
-- **static types later?** keep the door open to derive `.d.ts` types from schemas, the wayvzod does, without making them needed.
+###### **static types later?** keep the door open to derive `.d.ts` types from schemas, the wayvzod does, without making them needed.
 
-- **names:** `Str` / `Num` (short), `String` / `Number` (clash with js globals), `Text` /.`Int` / `Decimal` (closer to what a person means)? and `Record`, which clashes with typescript's built-in `Record`.
+###### **names:** `Str` / `Num` (short), `String` / `Number` (clash with js globals), `Text` /.`Int` / `Decimal` (closer to what a person means)? and `Record`, which clashes with typescript's built-in `Record`.
 
-### possible answers
+Hier versteh schon wieder nicht, inwiefern das clashen soll? Was hat das `@rat/types` mit TypeScript am Hut? Und `Num`/`Str` wären doch prinipiell `Number`/`String`?
 
-1. Ja, ich denke, dass ein `$List`
