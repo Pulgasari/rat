@@ -185,12 +185,11 @@ problem is the opposite case, mutation that is reactive without showing it.
 
 - [ ] a) reassign only: `$todos = [...$todos, x]` **(v0)**
 - [ ] b) the compiler turns known mutating calls into updates (`push`, `splice`, `sort` …)
-- [ ] c) reactive types from `@rat/types` (`$List`) take care of it **(rec)**: with `$()` and its registry, the compiler picks the variant by the initial value, see above
+- [x] c) reactive types from `@rat/types` (`$List`) take care of it **(rec)**: with `$()` and its registry, the compiler picks the variant by the initial value, see above
 
 ## the package name
 
-the package holds the core, the facade, `$()`, the registry and `reactive()`. the variants
-themselves live in `@rat/types`, the dom side in `@rat/runtime`.
+the package holds the core, the facade, `$()`, the registry and `reactive()`. the variants themselves live in `@rat/types`, the dom side in `@rat/runtime`.
 
 <a id="d-31"></a>
 ## d-31 · the package name
