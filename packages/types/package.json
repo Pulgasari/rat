@@ -1,12 +1,12 @@
 {
   "name"        : "@rat/types",
   "version"     : "0.0.1",
-  "description" : "schemas as values and the reactive variants of collections ($List, $Map, $Set), registered for $()",
+  "description" : "data types with their schemas (List, Enum, Record …) and reactive variants ($List, $Map, $Set, $Enum), registered for $()",
   "type"        : "module",
   "main"        : "./index.js",
   "types"       : "./index.d.ts",
   "exports"     : { ".": "./index.js" },
   "dependencies": { "@rat/signals": "0.0.1" },
-  "sideEffects" : ["./collections.js", "./index.js"],
+  "sideEffects" : ["./index.js", "./reactive.js"],
   "license"     : "MIT"
 }

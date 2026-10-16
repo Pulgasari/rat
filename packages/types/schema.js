@@ -9,7 +9,10 @@ and @rat/runtime's signal() takes a schema as its initial value:
   let $view = Enum('grid', 'list');      // 'grid', and only 'grid' or 'list' from then on
   let $zoom = Num.range(50, 200).default(100);
 
-every method returns a new schema, a schema never changes.
+every method returns a new schema, a schema never changes. Bool, Num, Str and
+Record are schemas only, the values they describe are plain js. List and Enum
+are data types as well (list.js, enum.js): called they give a schema, with new
+a value.
 */
 
 class Schema {
@@ -79,38 +82,7 @@ const Bool = new Schema   ({ initial: false, kind: 'bool', run: scalar('a boolea
 const Num  = new NumSchema({ initial: 0,     kind: 'num',  run: scalar('a number',  value => typeof value === 'number' && Number.isFinite(value), toNum) });
 const Str  = new StrSchema({ initial: '',    kind: 'str',  run: scalar('a string',  value => typeof value === 'string') });
 
-// one value out of a fixed list, the first is the initial one
-const Enum = (...values) => new Schema({
-  describe : { values },
-  initial  : values[0],
-  kind     : 'enum',
-  run      : (value, path) => values.includes(value) ? { value } : { issues: [{ message: `one of ${values.map(String).join(', ')}`, path }] },
-});
-
 // ::: structures
-
-class ListSchema extends Schema {
-  min (length) { return this.check(value => value.length >= length, `at least ${length} items`, { min: length }); }
-  max (length) { return this.check(value => value.length <= length, `at most ${length} items`,  { max: length }); }
-}
-
-// every item checked and coerced; a new array only when an item changed, so an unchanged list stays the same object
-const ListOf = item => new ListSchema({
-  describe : { item: item.describe },
-  initial  : [],
-  kind     : 'list',
-  run      : (value, path) => {
-    if (!Array.isArray(value)) return { issues: [{ message: 'expected a list', path }] };
-    const issues = [];
-    const out    = value.map((entry, index) => {
-      const result = item.validate(entry, [...path, index]);
-      if (result.issues) issues.push(...result.issues);
-      return result.value;
-    });
-    if (issues.length) return { issues };
-    return { value: out.some((entry, index) => entry !== value[index]) ? out : value };
-  },
-});
 
 // an object with known fields; unknown fields are kept as they are
 function Record (shape) {
@@ -136,6 +108,10 @@ function Record (shape) {
 
 const isSchema = value => value instanceof Schema;
 
+// one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
+// of a list of strings. the class stays a class (new, extends, instanceof), only a call differs
+const typed = (Class, toSchema) => new Proxy(Class, { apply: (target, self, args) => toSchema(...args) });
+
 // :::::: EXPORT
 
-export { Bool, Enum, ListOf, Num, Record, Schema, Str, isSchema };
+export { Bool, Num, Record, Schema, Str, isSchema, typed };

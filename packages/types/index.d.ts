@@ -44,7 +44,7 @@ export interface StrSchema extends Schema<string> {
   readonly uuid  : this;
 }
 
-export interface ListSchema<T> extends Schema<T[]> {
+export interface ListSchema<T> extends Schema<T[] | List<T>> {
   min (length: number): this;
   max (length: number): this;
 }
@@ -55,10 +55,6 @@ export const Bool : Schema<boolean>;
 export const Num  : NumSchema;
 export const Str  : StrSchema;
 
-/** One value out of a fixed list, the first is the initial one. */
-export function Enum<const V extends readonly unknown[]> (...values: V): Schema<V[number]>;
-/** The schema of a list whose items match item: ListOf(Str). */
-export function ListOf<T> (item: Schema<T>): ListSchema<T>;
 export function Record<S extends Record<string, Schema<any>>> (shape: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
 
 /** The base class, for schemas of your own. */
@@ -97,9 +93,45 @@ export interface List<T> extends Iterable<T> {
   clear (): this;
 }
 
-export const List: { new <T>(items?: Iterable<T>): List<T>; from<T> (items: Iterable<T>): List<T>; of<T> (...items: T[]): List<T> };
+export interface ListConstructor {
+  new <T>(items?: Iterable<T>): List<T>;
+  /** The schema of a list (an array or a List) whose items match item: List(Str). */
+  <T>(item: Schema<T>): ListSchema<T>;
+  from<T> (items: Iterable<T>): List<T>;
+  of<T>   (...items: T[]): List<T>;
+}
+
+export const List: ListConstructor;
 /** A List whose reads subscribe and whose writes notify. */
-export const $List: typeof List;
+export const $List: { new <T>(items?: Iterable<T>): List<T>; from<T> (items: Iterable<T>): List<T>; of<T> (...items: T[]): List<T> };
+
+/** Holds one value out of a fixed list. */
+export interface Enum<V> {
+  readonly schema : Schema<V>;
+  readonly values : readonly V[];
+  /** Setting a value that is not one of values throws. */
+  value : V;
+  /** The next value (step -1: the previous), around the end. */
+  cycle (step?: number): V;
+  is    (value: unknown): value is V;
+  toJSON (): V;
+  valueOf (): V;
+}
+
+export interface EnumConstructor {
+  /** Starts at the first value, at the schema's initial value, or at the value of the Enum it copies. */
+  new <const V extends readonly unknown[]>(...values: V): Enum<V[number]>;
+  new <V>(source: Schema<V> | Enum<V>): Enum<V>;
+  /** The schema: one value out of a fixed list, the first is the initial one. */
+  <const V extends readonly unknown[]>(...values: V): Schema<V[number]>;
+}
+
+export const Enum: EnumConstructor;
+/** An Enum whose value and is() subscribe and whose cycle() and value = … notify. */
+export const $Enum: {
+  new <const V extends readonly unknown[]>(...values: V): Enum<V[number]>;
+  new <V>(source: Schema<V> | Enum<V>): Enum<V>;
+};
 /** A Map whose reads subscribe and whose writes notify. */
 export const $Map: MapConstructor;
 /** A Set whose reads subscribe and whose writes notify. */

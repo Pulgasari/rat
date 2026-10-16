@@ -137,7 +137,7 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
   - erledigt mit `@rat/signals`
 
 ## `@rat/types`
-- [ ] reaktive varianten mit verben: `$List`, `$Map`, `$Set` gebaut (d-23 c). offen: `$Enum.cycle`, `$Record`, varianten mit einem signal pro schlüssel, wo es sich lohnt
+- [ ] reaktive varianten mit verben: `$List`, `$Map`, `$Set` gebaut (d-23 c). `Enum` als datentyp mit `.value` / `.cycle()` und `$Enum` gebaut; `List(Str)` ist wieder das schema (aufruf = schema, `new` = wert). offen: `$Record`, varianten mit einem signal pro schlüssel, wo es sich lohnt
 - [ ] `persist` über `@bunker`
 - [ ] der compiler liest statische schemas (completion, warnungen)
 

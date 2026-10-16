@@ -1,4 +1,6 @@
 // @rat/types
 
-export { Bool, Enum, ListOf, Num, Record, Schema, Str, isSchema } from './schema.js';
-export { $List, $Map, $Set, List }                                from './collections.js';
+export { Bool, Num, Record, Schema, Str, isSchema } from './schema.js';
+export { Enum }                                     from './enum.js';
+export { List }                                     from './list.js';
+export { $Enum, $List, $Map, $Set }                 from './reactive.js';
