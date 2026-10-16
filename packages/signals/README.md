@@ -82,8 +82,7 @@ and lets `$bla` be reassigned (`$bla = new Map(entries)` gives a new `$Map`).
   overridden method (`new Map(entries)` calls `set`) work.
 - `@rat/types` brings `$List`, `$Map` and `$Set` and registers them for `Array`, `Map` and `Set`.
 
-## needs
+## system.js
 
-an import map entry for `alien-signals/system` (the playground uses
-`https://cdn.jsdelivr.net/npm/alien-signals@3.2.1/esm/system.mjs`, a single file without
-imports).
+alien-signals' `system.mjs` (3.2.1), vendored: a single file without imports, so the package
+needs no import map entry and no dependency.

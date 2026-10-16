@@ -35,7 +35,7 @@ export function getOwner    (): unknown;
 export function isSignal    (value: unknown): value is ReadSignal<unknown>;
 export function isSchema    (value: unknown): value is StandardSchema;
 
-/** Methods that read subscribe, methods that write notify. A write check returns false when nothing changes. */
+/** Methods and getters that read subscribe, methods and setters that write notify. A write check returns false when nothing changes. */
 export interface Variant {
   reads?  : (string | symbol)[];
   writes? : (string | symbol)[] | Record<string | symbol, true | ((target: any, ...args: any[]) => boolean)>;

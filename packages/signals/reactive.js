@@ -11,6 +11,8 @@ methods bump it.
     writes : { set: (map, key, value) => !map.has(key) || !Object.is(map.get(key), value), delete: true, clear: true },
   });
 
+a getter is a read, a setter is a write (value on $Enum).
+
 the version signal is created on first use, not in a field: a built-in like
 Map calls the overridden set() from its own constructor, before any field of
 a subclass exists.
@@ -60,7 +62,7 @@ function reactive (Base, { reads = [], writes = [] } = {}) {
     if (!descriptor) throw new TypeError(`[rat] ${Base.name} has no ${String(name)} to read`);
     if (descriptor.get) {
       const get = descriptor.get;
-      Object.defineProperty(Reactive.prototype, name, { configurable: true, get () { track(this); return get.call(this); } });
+      Object.defineProperty(Reactive.prototype, name, { configurable: true, get () { track(this); return get.call(this); }, set: descriptor.set });
     }
     else {
       const method = descriptor.value;
@@ -81,17 +83,19 @@ function reactive (Base, { reads = [], writes = [] } = {}) {
   }
 
   for (const [name, changes] of entriesOf(writes)) {
-    const method = descriptorOf(Base.prototype, name)?.value;
-    if (typeof method !== 'function') throw new TypeError(`[rat] ${Base.name} has no method ${String(name)} to write with`);
-    Object.defineProperty(Reactive.prototype, name, {
-      configurable : true,
-      writable     : true,
-      value        : function (...args) {
-        // the check reads the target: untracked, or an effect that writes would subscribe to its own write
-        if (changes !== true && !untrack(() => changes(this, ...args))) return method.apply(this, args);
-        return batch(() => { const result = method.apply(this, args); bump(this); return result; });
-      },
-    });
+    const descriptor = descriptorOf(Base.prototype, name);
+    const method     = descriptor?.value ?? descriptor?.set;
+    if (typeof method !== 'function') throw new TypeError(`[rat] ${Base.name} has no method or setter ${String(name)} to write with`);
+
+    const write = function (...args) {
+      // the check reads the target: untracked, or an effect that writes would subscribe to its own write
+      if (changes !== true && !untrack(() => changes(this, ...args))) return method.apply(this, args);
+      return batch(() => { const result = method.apply(this, args); bump(this); return result; });
+    };
+
+    // a setter keeps its getter, the tracking one when the name is a read as well
+    if (descriptor.set) Object.defineProperty(Reactive.prototype, name, { configurable: true, get: descriptorOf(Reactive.prototype, name).get, set: write });
+    else Object.defineProperty(Reactive.prototype, name, { configurable: true, writable: true, value: write });
   }
 
   return Reactive;
