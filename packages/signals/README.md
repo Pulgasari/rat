@@ -5,11 +5,11 @@ based on [alien-signals](https://github.com/stackblitz/alien-signals) (pinned to
 ```js
 import { $, computed, effect, signal } from '@rat/signals';
 
-const count  = signal(0);
-const double = computed(() => count.value * 2);
+const $count  = signal(0);
+const $double = computed(() => $count.value * 2);
 
-const stop = effect(() => console.log(double.value));   // logs 0
-count.value = 2;                                         // logs 4
+const stop = effect(() => console.log($double.value)); // logs 0
+$count.value = 2;                                      // logs 4
 stop();
 ```
 
