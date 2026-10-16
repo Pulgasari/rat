@@ -42,7 +42,7 @@ md:
 [compiler](.md/compiler.md) ·
 [concept](.md/concept.md) ·
 [decisions](.md/decisions.md) ·
-[ideas](.md/ideas.md) ·
+[ideas](.md/ideas/README.md) ·
 [syntax](.md/syntax.md) ·
 [todo](.md/todo.md)
 

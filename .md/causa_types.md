@@ -2,8 +2,8 @@
 
 a topic paper, not a concept. what the words mean, where the ideas come from, which
 questions a design has to answer. nothing here is decided; it is the ground to design on.
-related: [concept 5](concept.md#5-types-are-values), [d-14](decisions.md#d-14),
-[d-30](decisions.md#d-30), [ideas 5](ideas.md#5-named-cases), [syntax: named cases](syntax.md#named-cases).
+related: [concept 5](concept.md#5-types-are-values), [d-14](ideas/types.md#d-14),
+[d-30](ideas/pattern-matching.md#d-30), [pattern matching](ideas/pattern-matching.md#named-cases), [syntax: named cases](syntax.md#named-cases).
 
 - [1. the complaint](#1-the-complaint)
 - [2. what a type is](#2-what-a-type-is)

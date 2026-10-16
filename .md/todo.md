@@ -29,6 +29,10 @@
   - nebenbei: `runtime/shared.js` (14.10.) hatte `isFn`/`isString` vertauscht, `mount()` und alle behaviors waren dadurch kaputt. behoben
   - runtime: computeds mit cutoff (gleicher wert weckt keine effekte mehr), siehe `compiler.md`
 
+- [x] `ideas.md` aufteilen: ein thema pro datei in `.md/ideas/`, die entscheidungen direkt mit in die jeweilige datei
+  - 29 dateien plus `ideas/README.md` (offene entscheidungen, alle themen mit status, shortlist). `decisions.md` ist nur noch ein index, alte links `decisions.md#d-xx` gehen weiter
+  - neu: `ideas/parts.md` (`htx-part` als idee für rat: `<rat-part>`, `lazy:`) und `ideas/no-build.md` (compilieren im browser, die tricks aus `@htx/elements/load.js`)
+
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
 - [x] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden

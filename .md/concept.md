@@ -1,7 +1,7 @@
 # rat :: concept
 
 status: draft v0. everything here is a proposal, not a decision. what the prototype
-already does is marked **(v0)**. open questions live in [decisions.md](decisions.md),
+already does is marked **(v0)**. open questions live in [ideas/](ideas/README.md),
 each section points to its entries.
 
 - [1. stance](#1-stance)
@@ -45,7 +45,7 @@ one core, three notations. all end up in the same ast and the same codegen.
 the difference to "a framework with a compiler": `.js` stays a full way in. whoever does
 not want the compiler loses the sugar, not the framework.
 
-open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{…}` holes in vanilla.
+decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/templates-in-js.md#d-12) `{…}` holes in vanilla.
 
 ---
 
@@ -107,7 +107,7 @@ open: [d-11](decisions.md#d-11) template tag name, [d-12](decisions.md#d-12) `{�
 | `ssr` | string output, hydration markers | later |
 | `htx` | ``html`…` `` output for existing htx/preact projects (migration, zugriff): the `dom` target is htx already | covered |
 
-open: [d-18](decisions.md#d-18) core and runtime as one package.
+decided: [d-18](ideas/app.md#d-18), core and runtime stay separate.
 
 ---
 
@@ -147,8 +147,8 @@ same convention as in `@aufbau/signals`.
 - mutation in place (`$todos.push(x)`) does not notify. v0: reassign
   (`$todos = [...$todos, x]`). later: reactive types from `@rat/types` (`$List`).
 
-open: [d-13](decisions.md#d-13) props, [d-15](decisions.md#d-15) `@for` index,
-[d-23](decisions.md#d-23) mutation. shadowing (a parameter `$x` in an inner function is
+open: [d-13](ideas/props.md#d-13) props, [d-15](ideas/loop-metadata.md#d-15) `@for` index,
+[d-23](ideas/mutation.md#d-23) mutation. shadowing (a parameter `$x` in an inner function is
 still rewritten in v0) needs scope analysis in the compiler, no decision needed.
 
 ---
@@ -185,7 +185,7 @@ what a schema should do:
 | `describe` | introspection: generate forms, devtools, `@aufbau/gui` controls |
 | statically readable | the compiler knows the shape: completion, warnings, targeted updates |
 
-notation in a `.rat` script, decided ([d-14](decisions.md#d-14)) and built in v0: the
+notation in a `.rat` script, decided ([d-14](ideas/types.md#d-14)) and built in v0: the
 schema is the initial value, the signal starts at its initial value and checks every write.
 
 ```js
@@ -220,7 +220,7 @@ app.commands.set('toggleSidebar', () => $sidebar = !$sidebar);
 app.hotkeys.set('ctrl+b', 'toggleSidebar');
 ```
 
-open: [d-16](decisions.md#d-16) commands with arguments, [d-17](decisions.md#d-17) router.
+open: [d-16](ideas/app.md#d-16) commands with arguments. decided: [d-17](ideas/app.md#d-17) router.
 
 ---
 
@@ -239,7 +239,7 @@ open: [d-16](decisions.md#d-16) commands with arguments, [d-17](decisions.md#d-1
 | `@domina` | dom helpers for runtime and core, where sensible |
 | `@bunker` | persistence for types and app state |
 
-more inspiration, sorted by what rat could take: [ideas.md](ideas.md#2-inspiration).
+more inspiration, sorted by what rat could take: [ideas/](ideas/README.md).
 
 ---
 
