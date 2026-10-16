@@ -7,7 +7,9 @@ the js side. two steps, in this order:
             acorn cannot parse |>, so this runs before anything is parsed
   reactive  ast level: declared $names become signals / computeds, every
             read and write of one gets .value. only insertions, so edits
-            never collide and positions stay simple
+            never collide and positions stay simple. a $name made with
+            `new $Variant(…)` stays as written: the object reports its own
+            reads and writes
 */
 
 import { parse as parseProgram, parseExpressionAt } from 'acorn';
@@ -521,11 +523,16 @@ function reads (root, names, skip = new Set) {
   return edits;
 }
 
-// top level `let $x = …` / `const $x = …`, as { names, edits }. a let goes through $(),
-// which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded)
+// `new $Map`, `new $List(items)`: an instance of a reactive variant
+const isVariant = init => init?.type === 'NewExpression' && init.callee.type === 'Identifier' && /^\$[A-Z]/.test(init.callee.name);
+
+// top level `let $x = …` / `const $x = …`, as { edits, names, variants }. a let goes through $(),
+// which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded).
+// a variant instance is no signal and gets no .value, it is used as written
 function declarations (program, runtime) {
-  const names = new Set;
-  const edits = [];
+  const names    = new Set;
+  const variants = new Set;
+  const edits    = [];
 
   for (const statement of program.body) {
     const declaration = statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
@@ -534,6 +541,7 @@ function declarations (program, runtime) {
     for (const declarator of declaration.declarations) {
       const { id, init } = declarator;
       if (id.type !== 'Identifier' || !id.name.startsWith('$') || id.name.length < 2) continue;
+      if (isVariant(init)) { variants.add(id.name); continue; }
       names.add(id.name);
 
       if (declaration.kind === 'const') {
@@ -549,14 +557,26 @@ function declarations (program, runtime) {
     }
   }
 
-  return { edits, names };
+  return { edits, names, variants };
+}
+
+// a variant binding changes through its methods. reassigned, whatever read it would keep the old object
+function reassigned (program, variants) {
+  let found = null;
+  walk(program, node => {
+    if (found) return false;
+    const target = node.type === 'AssignmentExpression' ? node.left : node.type === 'UpdateExpression' ? node.argument : null;
+    if (target?.type === 'Identifier' && variants.has(target.name)) found = target;
+  });
+  return found;
 }
 
 /*
 the reactive declarations of a script as written, for tooling (the language
-server): [{ name, kind, start, end, statement }], kind 'signal' (let, var) or
-'computed' (const). token based like the sugar pass, so it reads code with
-|>, # and .. and code that does not parse yet. offsets count from offset.
+server): [{ name, kind, start, end, statement }], kind 'signal' (let, var),
+'computed' (const) or 'variant' (= new $Map, either keyword). token based like
+the sugar pass, so it reads code with |>, # and .. and code that does not parse
+yet. offsets count from offset.
 */
 function declared (code, offset = 0) {
   let list;
@@ -581,7 +601,10 @@ function declared (code, offset = 0) {
     for (; next < list.length; next++) {
       const item = list[next];
       if (expectName) {
-        if (item.type === tt.name && item.value[0] === '$' && item.value.length > 1) out.push({ end: item.end + offset, kind, name: item.value, start: item.start + offset, statement: token.start + offset });
+        if (item.type === tt.name && item.value[0] === '$' && item.value.length > 1) {
+          const variant = list[next + 1]?.type === tt.eq && list[next + 2]?.type === tt._new && /^\$[A-Z]/.test(list[next + 3]?.value ?? '');
+          out.push({ end: item.end + offset, kind: variant ? 'variant' : kind, name: item.value, start: item.start + offset, statement: token.start + offset });
+        }
         expectName = false;
         continue;
       }
@@ -616,6 +639,9 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
   const declared = declarations(program, runtime);
 
   for (const name of declared.names) names.add(name);
+
+  const target = reassigned(program, declared.variants);
+  if (target) throw new CompileError(`${target.name} is a reactive variant, it changes through its methods and is not reassigned`, { filename, index: offset + target.start, source });
 
   const edits   = [...declared.edits, ...reads(program, names, bindings(program))];
   const imports = [];

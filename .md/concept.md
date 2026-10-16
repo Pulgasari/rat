@@ -132,6 +132,7 @@ the existing pattern (`$bool`, `$Bool`, "syntax from god") becomes a language ru
 |---|---|
 | `let $x = v` | `let $x = $$.$(v)`: a signal, its value through the registry of reactive variants ([reactivity](ideas/reactivity.md)) |
 | `const $x = expr` | `const $x = $$.computed(() => expr)` |
+| `let $x = new $Map` (any `new $Variant(…)`, `let` or `const`) | unchanged: the variant reports its own reads and writes, no `.value`, no reassignment |
 | reading `$x` | `$x.value` |
 | `$x = v`, `$x++`, `$x += v` | `$x.value = v` etc. |
 | `{expr}` in markup | `() => expr`, the runtime binds fine-grained |

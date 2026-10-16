@@ -175,6 +175,12 @@ function semanticTokens (model, document) {
 
 // :::::: SIGNALS
 
+const WHAT = {
+  computed : 'computed: follows the signals it reads, read only',
+  signal   : 'signal: reading tracks it, writing updates whatever read it',
+  variant  : 'reactive variant: its reading methods track, its writing methods update whatever read it',
+};
+
 const signalOf = (model, name) => model.signals.find(signal => signal.name === name) ?? null;
 
 function signalHover (model, document, offset) {
@@ -185,7 +191,7 @@ function signalHover (model, document, offset) {
   const text  = document.getText();
   const lineEnd = text.indexOf('\n', signal.statement);
   const code  = text.slice(signal.statement, lineEnd < 0 ? text.length : lineEnd).trim();
-  const what  = signal.kind === 'computed' ? 'computed: follows the signals it reads, read only' : 'signal: reading tracks it, writing updates whatever read it';
+  const what  = WHAT[signal.kind];
   return { contents: { kind: 'markdown', value: `\`\`\`js\n${code}\n\`\`\`\n\n${what}` }, range: range(document, occurrence.start, occurrence.end) };
 }
 

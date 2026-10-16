@@ -1,8 +1,13 @@
 // @rat/types :: collections
 
 /*
-the reactive variants of collections, made with reactive() from @rat/signals,
-and registered there, so $() and every `let $x = …` in a .rat script pick them:
+the reactive variants of collections, made with reactive() from @rat/signals.
+in plain js they are used directly:
+
+  const $seen = new $Map;
+  $seen.set(id, true);      // whatever read $seen updates
+
+they are registered too, so $() and every `let $x = …` in a .rat script pick them:
 
   let $todos = [];          // a signal holding a $List
   $todos.push(todo);        // reactive: whatever read $todos updates
