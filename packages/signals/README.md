@@ -71,10 +71,12 @@ const $Map = reactive(Map, {
 });
 ```
 
-`$()` and the registry are only the compiler's side of it. in a `.rat` script `let $bla = new Map`
-is a signal (`$$.$(new Map)`), the registry turns its value into a `$Map`, and `$bla.set('a', 1)`
-compiles to `bla.value.set('a', 1)`. nobody writes that `.value` by hand; in plain js `new $Map`
-is the direct way.
+the same code works unchanged in `.js`, `.rat.js` and `.rat`: the compiler leaves a `$name`
+made with `new $Variant(…)` as written, no signal, no `.value`.
+
+`$()` and the registry are the other way in, for a value of any kind: `$(new Map)` is a
+signal whose value becomes a `$Map`. in a `.rat` script `let $bla = new Map` compiles to that,
+and lets `$bla` be reassigned (`$bla = new Map(entries)` gives a new `$Map`).
 
 - a `writes` entry is `true` or a check `(target, ...args) => changes?`, run untracked before
   the write; when it says no, nothing is notified.

@@ -171,12 +171,30 @@ signal's value is: on creation and on every write, so `$todos = [...$todos, x]` 
 because the compiler emits `$(…)` instead of `signal(…)`. this is dispatch by kind of value,
 the same pattern as `@pulgasari/shift`.
 
-in plain js a variant is used directly, no signal and no `.value` in between: `$Map`
-from `@rat/types` is a subclass of `Map`, so `const $bla = new $Map; $bla.set('a', 1);
-$bla.get('a')` is reactive as it stands. `$()` is only needed where a value of any kind
-has to become a `$name`, which is the compiler's case. (the first sketch,
-`() => $(Map(...args))`, failed twice: `Map()` without `new` throws, and it returned a
-function that made a new signal on every call instead of one reactive map.)
+**a variant is first of all a class that looks like the original**, only named `$Map`:
+
+```js
+import { $Map } from '@rat/types';
+
+const $bla = new $Map;
+$bla.set('a', 1);
+console.log($bla.get('a'));
+```
+
+this is reactive as it stands, and reads the same in `.js`, `.rat.js` and `.rat`: the
+compiler leaves a `$name` made with `new $Variant(…)` as written, no `$()`, no `.value`.
+such a name changes through its methods; reassigning it is a compile error, since
+whatever read it would keep the old object.
+
+`$()` is the other way in, for a value of any kind that has to become a reassignable
+`$name`: `let $todos = []` is a signal holding a `$List`. the `.value` that needs only
+ever shows up in compiled output. (the first sketch, `() => $(Map(...args))`, failed
+twice: `Map()` without `new` throws, and it returned a function that made a new signal
+on every call instead of one reactive map.)
+
+open: `let $todos = []` / `new Map` could also become the variant directly, but only for
+a name that is never reassigned, and markup handlers (`onclick={() => $todos = []}`) are
+compiled apart from the script, so the compiler would have to see both first.
 
 open: what `$()` does with a plain object. a signal (reassign only, cheap), a deep proxy
 (every property a signal, like vue's `reactive` or svelte's `$state`), or a `$Record` from

@@ -231,7 +231,14 @@ applies in `<script>`, `<script module>`, every hole and every `.rat.js` file.
 let   $count  = 0;            // $$.$(0), a signal
 const $double = $count * 2;   // $$.computed(() => $count.value * 2)
 $count++;                     // $count.value++
+
+let   $seen   = new $Map;     // stays as written: no signal, no .value
+$seen.set('a', 1);            // $seen.set('a', 1)
 ```
+
+a `$name` made with `new $Variant(…)` ([reactivity](ideas/reactivity.md)) is used exactly
+like in plain js: the object reports its own reads and writes. it changes through its
+methods, reassigning it is a compile error.
 
 ### typed signals
 

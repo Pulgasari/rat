@@ -38,6 +38,8 @@
 
 - [x] `@rat/signals` bauen (d-31, d-32): kern auf alien-signals, fassade, `$()`, registry, `reactive()`; `$List`, `$Map`, `$Set` in `@rat/types`
   - der compiler schreibt `$$.$(…)` statt `$$.signal(…)`. `$()` gibt immer ein signal zurück, die registry entscheidet über die variante seines werts
+  - `let $bla = new $Map` bleibt im output wie geschrieben (kein `$()`, kein `.value`), sieht also in `.js`, `.rat.js` und `.rat` gleich aus. neu zuweisen ist ein compile-fehler
+  - offen: auch `let $todos = []` / `new Map` direkt als variante statt als signal mit variante? geht nur, wenn `$todos` nie neu zugewiesen wird, auch nicht aus markup-handlern
   - `$List` greift erst, wenn `@rat/types` geladen ist (die registry füllt sich beim import)
   - `@domina/render`: iterierbare werte (set, generator, `$List`) rendern als liste
 
