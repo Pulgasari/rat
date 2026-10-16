@@ -1,17 +1,15 @@
 # @rat/signals
 
-rat's signal layer: the graph of [alien-signals](https://github.com/stackblitz/alien-signals)
-(`createReactiveSystem`, pinned to 3.2.1) behind a facade in the shape rat's compiler and
-runtime use. decided in [d-31 and d-32](../../.md/ideas/reactivity.md).
+based on [alien-signals](https://github.com/stackblitz/alien-signals) (pinned to 3.2.1) behind a facade in the shape rat's compiler and runtime use.
 
 ```js
 import { $, computed, effect, signal } from '@rat/signals';
 
-const count  = signal(0);
-const double = computed(() => count.value * 2);
+const $count  = signal(0);
+const $double = computed(() => $count.value * 2);
 
-const stop = effect(() => console.log(double.value));   // logs 0
-count.value = 2;                                         // logs 4
+const stop = effect(() => console.log($double.value)); // logs 0
+$count.value = 2;                                      // logs 4
 stop();
 ```
 
@@ -84,8 +82,7 @@ and lets `$bla` be reassigned (`$bla = new Map(entries)` gives a new `$Map`).
   overridden method (`new Map(entries)` calls `set`) work.
 - `@rat/types` brings `$List`, `$Map` and `$Set` and registers them for `Array`, `Map` and `Set`.
 
-## needs
+## system.js
 
-an import map entry for `alien-signals/system` (the playground uses
-`https://cdn.jsdelivr.net/npm/alien-signals@3.2.1/esm/system.mjs`, a single file without
-imports).
+alien-signals' `system.mjs` (3.2.1), vendored: a single file without imports, so the package
+needs no import map entry and no dependency.

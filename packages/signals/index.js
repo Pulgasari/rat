@@ -1,4 +1,13 @@
 // @rat/signals
 
-export { Computed, Signal, batch, computed, effect, getOwner, isSchema, isSignal, onCleanup, scope, signal, untrack } from './core.js';
-export { $, REACTIVE, isReactive, reactive, register, wrap }                                                       from './reactive.js';
+export {
+  Computed, Signal,
+  computed, effect, signal,
+  batch, scope, untrack,
+  getOwner, isSchema, isSignal, onCleanup,
+} from './core.js';
+
+export { 
+  $, REACTIVE, reactive,
+  isReactive, register, wrap 
+} from './reactive.js';

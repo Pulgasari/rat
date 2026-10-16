@@ -1,6 +1,6 @@
 # RAT
 
-![RAT](rat2.webp)
+![RAT](.assets/rat2.webp)
 
 experimental JS-framework.
 

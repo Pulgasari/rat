@@ -21,7 +21,7 @@ subscriber, alien-signals reports it as unwatched, and it is disposed. the
 same report lets a computed nobody reads anymore drop its sources.
 */
 
-import { createReactiveSystem } from 'alien-signals/system';
+import { createReactiveSystem } from './system.js';
 
 // ::: flags (alien-signals' ReactiveFlags, plus one of its index)
 
@@ -325,8 +325,10 @@ function check (schema, value) {
 
 // :::::: API
 
-const signal   = value  => new Signal (value);
+const signal   = value  => new Signal   (value);
 const computed = getter => new Computed (getter);
+const getOwner = ()     => owner;
+const isSignal = value  => value instanceof Signal || value instanceof Computed;
 
 // runs fn now and again on every change. parent: who disposes it, the current
 // owner unless given, null for no one (the caller disposes it)
@@ -367,9 +369,6 @@ function untrack (fn) {
 function onCleanup (fn) {
   owner?.cleanups.push(fn);
 }
-
-const getOwner = ()    => owner;
-const isSignal = value => value instanceof Signal || value instanceof Computed;
 
 // :::::: EXPORT
 

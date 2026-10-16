@@ -66,8 +66,20 @@ function reactive (Base, { reads = [], writes = [] } = {}) {
     }
     else {
       const method = descriptor.value;
-      Object.defineProperty(Reactive.prototype, name, { configurable: true, writable: true, value: function (...args) { track(this); return method.apply(this, args); } });
+      Object.defineProperty(
+        Reactive.prototype, 
+        name,
+        { 
+          configurable: true, 
+          writable: true, 
+          value: function (...args) { 
+            track(this); 
+            return method.apply(this, args); 
+          }
+        }
+      );
     }
+    
   }
 
   for (const [name, changes] of entriesOf(writes)) {
