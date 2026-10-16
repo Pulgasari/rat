@@ -171,9 +171,12 @@ signal's value is: on creation and on every write, so `$todos = [...$todos, x]` 
 because the compiler emits `$(…)` instead of `signal(…)`. this is dispatch by kind of value,
 the same pattern as `@pulgasari/shift`.
 
-a factory for a variant becomes a one-liner on top: `const $Map = (...args) => $(new Map(...args))`.
-(a sketch like `() => $(Map(...args))` fails twice: `Map()` without `new` throws, and it
-returns a function that makes a new signal on every call instead of one reactive map.)
+in plain js a variant is used directly, no signal and no `.value` in between: `$Map`
+from `@rat/types` is a subclass of `Map`, so `const $bla = new $Map; $bla.set('a', 1);
+$bla.get('a')` is reactive as it stands. `$()` is only needed where a value of any kind
+has to become a `$name`, which is the compiler's case. (the first sketch,
+`() => $(Map(...args))`, failed twice: `Map()` without `new` throws, and it returned a
+function that made a new signal on every call instead of one reactive map.)
 
 open: what `$()` does with a plain object. a signal (reassign only, cheap), a deep proxy
 (every property a signal, like vue's `reactive` or svelte's `$state`), or a `$Record` from

@@ -51,17 +51,30 @@ one (the caller disposes it, as `@domina/render` does).
 
 ## reactive variants
 
-a signal only notices reassignment; a container changed in place needs a variant:
+a signal only notices reassignment; a container changed in place needs a variant. a variant
+is a plain subclass, used like the original:
+
+```js
+import { $Map } from '@rat/types';
+
+const $bla = new $Map;
+effect(() => console.log($bla.get('a')));   // logs undefined
+$bla.set('a', 1);                           // logs 1
+```
+
+`reactive()` is how such a variant is made, `@rat/types` does it for `List`, `Map` and `Set`:
 
 ```js
 const $Map = reactive(Map, {
   reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', Symbol.iterator],
   writes : { set: (map, key, value) => !map.has(key) || !Object.is(map.get(key), value), delete: (map, key) => map.has(key), clear: map => map.size > 0 },
 });
-
-register(Map, $Map);
-$(new Map).value.set('a', 1);   // whatever read the map updates
 ```
+
+`$()` and the registry are only the compiler's side of it. in a `.rat` script `let $bla = new Map`
+is a signal (`$$.$(new Map)`), the registry turns its value into a `$Map`, and `$bla.set('a', 1)`
+compiles to `bla.value.set('a', 1)`. nobody writes that `.value` by hand; in plain js `new $Map`
+is the direct way.
 
 - a `writes` entry is `true` or a check `(target, ...args) => changes?`, run untracked before
   the write; when it says no, nothing is notified.
