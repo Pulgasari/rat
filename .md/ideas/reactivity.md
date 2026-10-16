@@ -1,8 +1,8 @@
 # rat :: reactivity
 
-status: **idea**, the plan for the signal layer. 
+status: **built** as `@rat/signals` v0 ([readme](../../packages/signals/README.md)), with `$List`, `$Map`, `$Set` in `@rat/types`. 
 
-today `@rat/runtime/signals.js` is a first draft (push-pull with a cutoff, `Set`s per dependency).
+`@rat/runtime/signals.js` only re-exports it now.
 
 decisions: [d-31](#d-31) package name, [d-32](#d-32) the core, [d-23](#d-23) mutation (moved here from its own file).
 
@@ -67,7 +67,7 @@ possible later if the dependency ever gets in the way.
 ## d-32 · the core
 
 - [ ] a) keep an own algorithm, improve the draft (cutoff done, links and allocation next)
-- [ ] b) alien-signals' graph (`createReactiveSystem`) behind rat's facade, version pinned **(rec)**
+- [x] b) alien-signals' graph (`createReactiveSystem`) behind rat's facade, version pinned **(rec)**
 - [ ] c) a copy of alien-signals' graph inside rat (no dependency, updates by hand)
 
 ## the problem behind "reactive variants"
@@ -154,14 +154,20 @@ that decides which reactive form a value gets:
 ```js
 $(0)                         // a plain signal
 $(Enum('grid', 'list'))      // a typed signal (d-14)
-$(new Map([['a', 1]]))       // a $Map: the registry knows Map
-$([1, 2, 3])                 // a $List, if one is registered, else a plain signal
-$(reactiveThing)             // returned as it is, never wrapped twice
+$(new Map([['a', 1]]))       // a signal holding a $Map: the registry knows Map
+$([1, 2, 3])                 // a signal holding a $List, if one is registered, else holding the array
+$(signal)                    // returned as it is, never wrapped twice
 
 $.register(Map, $Map);       // @rat/types fills the registry
 ```
 
-`let $bla = [1, 2, 3]` and `let $bla = $([1, 2, 3])` would then mean exactly the same,
+**built that way, one correction to the first sketch:** `$()` always returns a **signal**,
+never the variant itself. the compiler adds `.value` to every `$name` (`$todos.push(x)` is
+`todos.value.push(x)`), so a `$name` has to be a signal. the registry decides what the
+signal's value is: on creation and on every write, so `$todos = [...$todos, x]` gives a new
+`$List` again.
+
+`let $bla = [1, 2, 3]` and `let $bla = $([1, 2, 3])` mean exactly the same,
 because the compiler emits `$(…)` instead of `signal(…)`. this is dispatch by kind of value,
 the same pattern as `@pulgasari/shift`.
 

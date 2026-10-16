@@ -36,6 +36,11 @@
 - [x] reaktivität als idee festhalten: `ideas/reactivity.md`
   - alien-signals als kern hinter eigener fassade (d-32), `$()` mit registry, `reactive(Class, { reads, writes })` für varianten, d-23 dorthin verschoben, paketname `@rat/signals` oder `@rat/reactivity` (d-31)
 
+- [x] `@rat/signals` bauen (d-31, d-32): kern auf alien-signals, fassade, `$()`, registry, `reactive()`; `$List`, `$Map`, `$Set` in `@rat/types`
+  - der compiler schreibt `$$.$(…)` statt `$$.signal(…)`. `$()` gibt immer ein signal zurück, die registry entscheidet über die variante seines werts
+  - `$List` greift erst, wenn `@rat/types` geladen ist (die registry füllt sich beim import)
+  - `@domina/render`: iterierbare werte (set, generator, `$List`) rendern als liste
+
 ## html-direktiven
 - [x] syntax 1: geschweifte klammern um blocks
 - [x] syntax 2 ("indentation based layout"): geschweifte klammern um blocks können weggelassen werden, stattdessen muss kontextuales korrekt indentiert werden
@@ -112,7 +117,8 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 
 ## fehler und lücken
 - [ ] `@rat/core` ist nicht lauffähig: importiert `./datatypes.js` (gibt es nicht), nutzt `toDashed`/`toUndashed` und ein globales `htx` ohne import. neu aufsetzen nach `concept.md` 6: `createApp`, kommando-registry auf `rat:command`, hotkeys, router-registry (d-17)
-- [ ] computeds lösen sich nie von ihren quellen (leak), siehe `compiler.md`
+- [x] computeds lösen sich nie von ihren quellen (leak)
+  - erledigt mit `@rat/signals` (alien-signals: `unwatched`)
 - [ ] `@for`-index veraltet nach umsortieren (d-15, empfehlung `$loop`)
 - [ ] `@case` mit importiertem case: matcht, gibt aber keine teile an den zweig (der compiler kennt sie nicht)
 - [ ] zed-grammatik und acode-plugin neu generieren (`cd packages/syntax && npm i && node build.js`): `@fragment`, `once:`, `is` sind nur in spec und textmate drin
@@ -125,10 +131,11 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 
 ## runtime
 - [ ] leave-animationen: behavior darf `{ leave (done) }` liefern, runtime entfernt erst nach `done()` (ideas 2.11)
-- [ ] `Set`s pro abhängigkeit, kopie pro schreibzugriff, neuaufbau pro lauf: erst bei messbarem bedarf (siehe alien-signals-steckbrief)
+- [x] `Set`s pro abhängigkeit, kopie pro schreibzugriff, neuaufbau pro lauf
+  - erledigt mit `@rat/signals`
 
 ## `@rat/types`
-- [ ] reaktive varianten mit verben (`$List.push`, `$Enum.cycle`), damit ist d-23 c erledigt
+- [ ] reaktive varianten mit verben: `$List`, `$Map`, `$Set` gebaut (d-23 c). offen: `$Enum.cycle`, `$Record`, varianten mit einem signal pro schlüssel, wo es sich lohnt
 - [ ] `persist` über `@bunker`
 - [ ] der compiler liest statische schemas (completion, warnungen)
 
@@ -139,7 +146,7 @@ let bla = 'Some Example' |> eene() |> meene() |> muh();
 - [ ] `packages/_compiler` (alter generator) und `packages/compiler/_parserblocks.js` (fremder, ungenutzter code) aufräumen, wenn der vergleich nicht mehr gebraucht wird
 
 ## deine entscheidungen
-* [ ] offen: d-10 (pipe-familie, neu: option e), d-13 (props), d-15 (index), d-16 (kommandos mit argument), d-19 (das `>`?), d-23 (mutation), d-31 (name des signal-pakets), d-32 (alien-signals als kern), d-26 (`@` oder `use:`), d-28 (`@await`), d-29 (filter in `@for`), d-30 (patterns direkt im `@case`)
+* [ ] offen: d-10 (pipe-familie, neu: option e), d-13 (props), d-15 (index), d-16 (kommandos mit argument), d-19 (das `>`?), d-26 (`@` oder `use:`), d-28 (`@await`), d-29 (filter in `@for`), d-30 (patterns direkt im `@case`)
 
 ## danach
 - [ ] erste echte app komplett in rat (roadmap 7, kandidat: kleines zugriff-tool)

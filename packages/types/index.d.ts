@@ -64,3 +64,40 @@ export function Record<S extends Record<string, Schema<any>>> (shape: S): Schema
 export const Schema: new (definition: object) => Schema<unknown>;
 
 export function isSchema (value: unknown): value is Schema<unknown>;
+
+/** A reactive list: reads subscribe, writes notify. length is a getter, at(i) / set(i, v) replace [i]. */
+export interface $List<T> extends Iterable<T> {
+  readonly length: number;
+  at (index: number): T | undefined;
+  includes (value: T): boolean;
+  indexOf (value: T): number;
+  every (fn: (item: T, index: number) => unknown): boolean;
+  filter (fn: (item: T, index: number) => unknown): T[];
+  find (fn: (item: T, index: number) => unknown): T | undefined;
+  findIndex (fn: (item: T, index: number) => unknown): number;
+  flatMap<U> (fn: (item: T, index: number) => U | U[]): U[];
+  forEach (fn: (item: T, index: number) => void): void;
+  join (separator?: string): string;
+  map<U> (fn: (item: T, index: number) => U): U[];
+  reduce<U> (fn: (sum: U, item: T, index: number) => U, initial: U): U;
+  slice (start?: number, end?: number): T[];
+  some (fn: (item: T, index: number) => unknown): boolean;
+  toArray (): T[];
+  push (...items: T[]): number;
+  pop (): T | undefined;
+  shift (): T | undefined;
+  unshift (...items: T[]): number;
+  splice (start: number, count?: number, ...items: T[]): T[];
+  sort (fn?: (a: T, b: T) => number): this;
+  reverse (): this;
+  set (index: number, value: T): this;
+  remove (value: T): boolean;
+  replace (items: Iterable<T>): this;
+  clear (): this;
+}
+
+export const $List: { new <T>(items?: Iterable<T>): $List<T>; from<T> (items: Iterable<T>): $List<T>; of<T> (...items: T[]): $List<T> };
+/** A Map whose reads subscribe and whose writes notify. */
+export const $Map: MapConstructor;
+/** A Set whose reads subscribe and whose writes notify. */
+export const $Set: SetConstructor;

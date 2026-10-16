@@ -20,7 +20,7 @@ becomes
 
   import * as $$ from '@rat/runtime';
   export default function Counter (props, children) {
-    let $count = $$.signal(0);
+    let $count = $$.$(0);
     return $$.html`<button onclick=${() => $count.value++}>${() => $count.value}</button>`;
   }
 */

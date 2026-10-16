@@ -4,7 +4,8 @@
 source (.rat / .rat.js) -> @rat/compiler -> output (js | ast) -> preview.
 the preview is an iframe per run: fresh document, fresh runtime, no state
 leaking between two compiles. the compiled module goes in as a blob url, the
-iframe gets the page's import map, with @rat/runtime and @rat/types pointing into this repo.
+iframe gets the page's import map, with @rat/runtime, @rat/signals and @rat/types pointing
+into this repo, and alien-signals pinned.
 */
 
 import { compileAsync } from '../../packages/compiler/index.js';
@@ -25,6 +26,8 @@ const EXAMPLES = [
 const DELAY   = 250;
 const RUNTIME = new URL('../../packages/runtime/index.js', import.meta.url).href;
 const TYPES   = new URL('../../packages/types/index.js',   import.meta.url).href;
+const SIGNALS = new URL('../../packages/signals/index.js', import.meta.url).href;
+const ALIEN   = 'https://cdn.jsdelivr.net/npm/alien-signals@3.2.1/esm/system.mjs';
 const STORAGE = 'rat:playground:';
 
 const $ = selector => document.querySelector(selector);
@@ -132,7 +135,7 @@ function preview (code) {
   // the page's own import map (code.pulgasari.dev: aufbau, domina …) with this repo's runtime on top.
   // one map, since not every browser takes several
   const page = JSON.parse(document.querySelector('script[type="importmap"]')?.textContent || '{}');
-  const map  = JSON.stringify({ imports: { ...page.imports, '@rat/runtime': RUNTIME, '@rat/types': TYPES } });
+  const map  = JSON.stringify({ imports: { ...page.imports, '@rat/runtime': RUNTIME, '@rat/signals': SIGNALS, '@rat/types': TYPES, 'alien-signals/system': ALIEN } });
 
   ui.preview.srcdoc = `<!DOCTYPE html>
 <html>

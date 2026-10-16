@@ -92,10 +92,11 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | package | role | status |
 |---|---|---|
 | `@rat/compiler` | `.rat` / `.rat.js` → es module. runs in browser, node, deno, bun | v0 |
-| `@rat/runtime` | signals, plus `@domina/render` with effect and scope: fine-grained, no vdom, no tree diffing | v0 |
+| `@rat/signals` | the signal layer: alien-signals' graph behind rat's facade, `$()`, `reactive()` ([reactivity](ideas/reactivity.md)) | v0 |
+| `@rat/runtime` | `@rat/signals` plus `@domina/render` with effect and scope: fine-grained, no vdom, no tree diffing | v0 |
 | `@rat/syntax` | highlighting from one spec: hljs, monaco, codemirror/acode, zed, textmate | v0 |
 | `@rat/core` | app singleton, commands, hotkeys, router | sketch |
-| `@rat/types` | schemas + reactive data types | sketch (readme) |
+| `@rat/types` | schemas, reactive collections (`$List`, `$Map`, `$Set`) | v0 |
 | `@rat/vite`, `@rat/esbuild`, `@rat/node` | build adapters, thin shells around `compile()` | planned |
 | `@rat/elements` | bridge to `@aufbau/elements`, components as custom elements | planned |
 
@@ -129,7 +130,7 @@ the existing pattern (`$bool`, `$Bool`, "syntax from god") becomes a language ru
 
 | written | compiled to |
 |---|---|
-| `let $x = v` | `let $x = $$.signal(v)` |
+| `let $x = v` | `let $x = $$.$(v)`: a signal, its value through the registry of reactive variants ([reactivity](ideas/reactivity.md)) |
 | `const $x = expr` | `const $x = $$.computed(() => expr)` |
 | reading `$x` | `$x.value` |
 | `$x = v`, `$x++`, `$x += v` | `$x.value = v` etc. |

@@ -38,7 +38,7 @@ source ──► parse ──► ast ──► generate ──► es module
 - **sugar before the parse.** acorn knows neither `|>` nor `#` nor `..`, so they are
   rewritten at token level before an ast exists. downside: error positions after a pipe
   or range are approximate.
-- **insertions only.** the reactive rewrite only inserts text (`.value`, `$$.signal(` …
+- **insertions only.** the reactive rewrite only inserts text (`.value`, `$$.$(` …
   `)`), it never replaces. edits never collide, no magic-string needed.
 - **markup stays markup.** the output is an htx template: what was markup is still
   markup, every binding a closure in a hole. it is readable and fast at once:
@@ -56,9 +56,7 @@ source ──► parse ──► ast ──► generate ──► es module
 | static holes | small overhead | every `{…}` hole becomes an effect, even `{42}`. the compiler can detect literals and non-reactive expressions (no `$` names, no `props.`, no calls) and insert them directly |
 | `each()` reorder | ok | rows walk back to front and move only when their successor changed (`moveBefore` where available). a longest increasing subsequence would move fewer on reversals |
 | `each()` index | correctness | rows are built once per key, the index is a plain value and goes stale when a kept row moves. pass it as a signal when the body uses it (the compiler knows) |
-| computeds without cutoff | done | direct dependents of a write are dirty, everything further down only maybe stale; a maybe stale node asks its sources' versions first, so a computed that recomputes to the same value stops the update there |
-| computeds never let go | leak | a computed stays in its sources' observer sets after the effect reading it is gone. alien-signals unlinks a computed once its last observer leaves (`unwatched`); the same here: unlink when `observers` becomes empty |
-| `Set`s per dependency | allocation | every link is an entry in two `Set`s, every write copies the observers into an array, every run rebuilds all links. alien-signals reuses links in place (one object per dependency, versions). worth it once a list with many rows shows up in a profile |
+| signals | done | `@rat/signals` runs on alien-signals' graph: a cutoff when a computed recomputes to the same value, one link object per dependency reused in place, no allocation in the steady state, and a computed nobody reads lets go of its sources (`unwatched`) |
 | `pipes()`, `topics()` | compile time | re-tokenize per pipe / per `#` (o(n·p)). irrelevant for normal files, a single pass for generated code with hundreds of them |
 | `@scope` | native | no runtime overhead, no selector rewriting |
 
@@ -85,7 +83,7 @@ source ──► parse ──► ast ──► generate ──► es module
 
 ```js
 export default function Counter (props, children) {
-  let $count = $$.signal(0);
+  let $count = $$.$(0);
   return $$.html`
     <div.counter>
       <button onclick=${() => $count.value++}>+1</button>

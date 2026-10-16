@@ -38,7 +38,33 @@ export const Settings = Record({
 | `.default(x)`, `.optional()`, `.check(fn, message)` | on every schema |
 | `validate(x)`, `is(x)`, `parse(x)`, `describe` | `{ value }` or `{ issues: [{ message, path }] }` |
 
-not yet: reactive variants with verbs (`$List.push`, `$Enum.cycle`, d-23 c), `persist` through `@bunker`, the compiler reading a static schema.
+## reactive collections (v0)
+
+`$List`, `$Map` and `$Set`, made with `reactive()` from [`@rat/signals`](../signals/README.md)
+and registered there for `Array`, `Map` and `Set` when this package is imported. from then on
+`let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c):
+
+```html
+<script>
+  import '@rat/types';            // once, anywhere in the app: fills the registry
+
+  let $todos = [];
+  const add  = title => $todos.push({ title, done: false });   // reactive
+</script>
+
+<p>{$todos.length} todos</p>
+@for (todo of $todos): <li>{todo.title}</li>
+```
+
+- reading methods subscribe, writing methods notify, a write that changes nothing notifies
+  nobody (`set` with the same value, `pop` on an empty list).
+- `$List` is not an array: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]`
+  (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays, so
+  `$todos = $todos.filter(…)` works as before and gives a new `$List`.
+- the data type sketch below (a list of unique values, optionally sorted) is not this; it
+  would be an option on top.
+
+not yet: `$Enum.cycle`, `$Record`, `persist` through `@bunker`, the compiler reading a static schema.
 
 ---
 

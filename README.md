@@ -26,7 +26,8 @@ demos:
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
 | `@rat/core`     | [`packages/core`](packages/core)         | sketch |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
-| `@rat/types`    | [`packages/types`](packages/types)       | v0: schemas |
+| `@rat/signals`  | [`packages/signals`](packages/signals)   | v0: alien-signals core, `$()`, reactive variants |
+| `@rat/types`    | [`packages/types`](packages/types)       | v0: schemas, `$List` / `$Map` / `$Set` |
 
 ### tooling
 
