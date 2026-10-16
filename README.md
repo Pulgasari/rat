@@ -38,6 +38,7 @@ dir:
 [playground](demos/playground/)
 
 md: 
+[causa: types](.md/causa_types.md) ·
 [compiler](.md/compiler.md) ·
 [concept](.md/concept.md) ·
 [decisions](.md/decisions.md) ·
