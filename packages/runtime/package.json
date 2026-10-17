@@ -6,7 +6,7 @@
   "main"        : "./index.js",
   "types"       : "./index.d.ts",
   "exports"     : { ".": "./index.js" },
-  "dependencies": { "@rat/signals": "0.0.1" },
+  "dependencies": { "@rat/commands": "0.0.1", "@rat/hotkeys": "0.0.1", "@rat/signals": "0.0.1" },
   "sideEffects" : false,
   "license"     : "MIT"
 }

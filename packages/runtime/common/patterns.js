@@ -15,8 +15,7 @@ with Object.is, so a @switch can mix both:
     @case 'idle':  …
 */
 
-import { match }          from './dom.js';
-import { computed, isFn } from './shared.js';
+import { isFn } from './shared.js';
 
 //die benennung hier is so herrlich bekloppt
 const PATTERN   = Symbol('rat.pattern');
@@ -34,20 +33,6 @@ function which (value, tests) {
   return { index: -1, parts: null };
 }
 
-/*
-a @switch with patterns. a branch is built once and kept while its case keeps
-matching; it gets the parts as a getter, so the compiler can make every part a
-computed and the branch follows a new value of the same case.
-*/
-function cases (subject, tests, views, otherwise = null) {
-  const found = computed(() => which(subject(), tests));
-  return match(
-    () => found.value.index,
-    views.map((view, index) => [index, () => view(() => found.value.parts ?? {})]),
-    otherwise,
-  );
-}
-
 // :::::: EXPORT
 
-export { cases, is, isPattern, pattern, which };
+export { is, isPattern, pattern, which };

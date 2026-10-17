@@ -84,11 +84,16 @@ bust without devtools, on a phone too. .rat files are always revalidated.
 
   const map = {
     '@rat/app'        : at('./index.js'),
+    '@rat/commands'   : at('../commands/index.js'),
     '@rat/compiler'   : at('../compiler/index.js'),
+    '@rat/hotkeys'    : at('../hotkeys/index.js'),
+    '@rat/import'     : at('../import/index.js'),
     '@rat/runtime'    : at('../runtime/index.js'),
     '@rat/signals'    : at('../signals/index.js'),
     '@rat/types'      : at('../types/index.js'),
 
+    '@bunker/db'      : at('../../../bunker/db/index.js'),
+    '@bunker/policy'  : at('../../../bunker/policy/index.js'),
     '@domina/methods/': at('../../../domina/packages/methods/'),
     '@domina/render'  : at('../../../domina/packages/render/index.js'),
     '@htx/htx'        : at('../../../htx/packages/htx/index.js'),
