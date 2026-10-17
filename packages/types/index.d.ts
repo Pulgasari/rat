@@ -55,7 +55,6 @@ export const Bool : Schema<boolean>;
 export const Num  : NumSchema;
 export const Str  : StrSchema;
 
-export function Record<S extends Record<string, Schema<any>>> (shape: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
 
 /** The base class, for schemas of your own. */
 export const Schema: new (definition: object) => Schema<unknown>;
@@ -136,3 +135,84 @@ export const $Enum: {
 export const $Map: MapConstructor;
 /** A Set whose reads subscribe and whose writes notify. */
 export const $Set: SetConstructor;
+
+type Shape = { [key: string]: Schema<any> };
+
+/** A sealed object with fixed fields; with a schema every field write is checked. */
+export type Record<T extends object> = T & {
+  readonly schema : Schema<T> | null;
+  /** Several fields at once (one notification on a $Record). */
+  assign (values: Partial<T>): Record<T>;
+  toJSON (): T;
+};
+
+export interface RecordConstructor {
+  /** Fields at the schema's initial values, values parsed over them. */
+  new <T extends object>(schema: Schema<T>, values?: Partial<T>): Record<T>;
+  /** Fixed fields without a schema, or a copy of another Record. */
+  new <T extends object>(values: T | Record<T>): Record<T>;
+  /** The schema: an object with known fields, unknown fields kept. */
+  <S extends Shape>(shape: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
+}
+
+export const Record: RecordConstructor;
+/** A Record whose field reads subscribe and whose field writes notify, one version for all fields. */
+export const $Record: { new <T extends object>(schema: Schema<T>, values?: Partial<T>): Record<T>; new <T extends object>(values: T | Record<T>): Record<T> };
+
+/** Frozen: fixed length, fixed values. */
+export interface Tuple<T extends readonly unknown[]> extends Iterable<T[number]> {
+  readonly [index: number]: T[number];
+  readonly length: T['length'];
+  at (index: number): T[number] | undefined;
+  equals (other: unknown): boolean;
+  /** A new tuple with one value replaced. */
+  with (index: number, value: T[number]): Tuple<T>;
+  toArray (): T[number][];
+  toJSON (): T[number][];
+}
+
+export interface TupleConstructor {
+  new <const T extends readonly unknown[]>(...items: T): Tuple<T>;
+  from<T> (items: Iterable<T>): Tuple<T[]>;
+  /** The schema: an array or a Tuple of exactly these items. */
+  <const S extends readonly Schema<any>[]>(...items: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
+}
+
+export const Tuple: TupleConstructor;
+
+export interface UnionSchema<T> extends Schema<T> {
+  /** The name (or index) of the first case the value fits, null for none. */
+  which (value: unknown): string | number | null;
+}
+
+/** One of several schemas, the first that fits wins. A schema only: a union value is a value of one of its cases. */
+export function Union<const S extends readonly Schema<any>[]> (...cases: S): UnionSchema<Infer<S[number]>>;
+export function Union<S extends Shape> (cases: S): UnionSchema<Infer<S[keyof S]>>;
+
+/** Any notation: '#ff8800', 'rgb(…)', 'hsl(…)', [r, g, b, a?], { r, g, b, a? }, { h, s, l, a? }, a Color. */
+export type ColorInput = string | readonly number[] | { r: number, g: number, b: number, a?: number } | { h: number, s: number, l: number, a?: number } | Color;
+
+/** One color, read and written in rgb (0-255), hsl (0-360, 0-100), alpha (0-1) or hex. */
+export interface Color {
+  r : number; g : number; b : number; a : number;
+  h : number; s : number; l : number;
+  hex : string;
+  set (input: ColorInput): this;
+  /** A new color, amount of the way to other. */
+  mix (other: ColorInput, amount?: number): Color;
+  equals (other: ColorInput): boolean;
+  toArray (): [number, number, number, number];
+  toHsl (): [number, number, number, number];
+  toJSON (): string;
+  toString (): string;
+}
+
+export interface ColorConstructor {
+  new (input?: ColorInput): Color;
+  /** The schema: anything that reads as a color. */
+  (): Schema<ColorInput>;
+}
+
+export const Color: ColorConstructor;
+/** A Color whose reads subscribe and whose writes notify. */
+export const $Color: { new (input?: ColorInput): Color };

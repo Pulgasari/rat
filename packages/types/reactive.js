@@ -2,7 +2,7 @@
 
 /*
 the reactive variants, made with reactive() from @rat/signals: $List, $Map,
-$Set, $Enum. they look like the originals, only their reads subscribe and their
+$Set, $Enum, $Record, $Color. they look like the originals, only their reads subscribe and their
 writes notify. in plain js they are used directly:
 
   const $seen = new $Map;
@@ -18,12 +18,17 @@ they are registered too, so $() and every `let $x = …` in a .rat script pick t
 
   const $view = new $Enum('grid', 'list', 'masonry');
   $view.cycle();            // whatever read $view.value updates
+
+  const $accent = new $Color('#ff8800');
+  $accent.l = 70;           // whatever read $accent.hex, .r … updates
 */
 
 import { reactive, register } from '@rat/signals';
 
-import { Enum } from './enum.js';
-import { List } from './list.js';
+import { Color }            from './color.js';
+import { Enum }             from './enum.js';
+import { List }             from './list.js';
+import { GET, Record, SET } from './record.js';
 
 // ::: $List
 
@@ -76,14 +81,46 @@ const $Enum = reactive(Enum, {
   },
 });
 
+// ::: $Record
+
+// one version for the whole record: a field write updates whatever read any field
+const $Record = reactive(Record, {
+  reads  : [GET, 'toJSON'],
+  writes : {
+    [SET]  : (record, key, value) => !Object.is(record[GET](key), value),
+    assign : true,
+  },
+});
+
+// ::: $Color
+
+const differs = name => (color, value) => !Object.is(color[name], value);
+
+const $Color = reactive(Color, {
+  reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
+  writes : {
+    a   : differs('a'),
+    b   : differs('b'),
+    g   : differs('g'),
+    h   : differs('h'),
+    hex : differs('hex'),
+    l   : differs('l'),
+    r   : differs('r'),
+    s   : differs('s'),
+    set : (color, input) => !color.equals(input),
+  },
+});
+
 // ::: registry
 
-register(Array, $List);
-register(Enum,  $Enum);
-register(List,  $List);
-register(Map,   $Map);
-register(Set,   $Set);
+register(Array,  $List);
+register(Color,  $Color);
+register(Enum,   $Enum);
+register(List,   $List);
+register(Map,    $Map);
+register(Record, $Record);
+register(Set,    $Set);
 
 // :::::: EXPORT
 
-export { $Enum, $List, $Map, $Set };
+export { $Color, $Enum, $List, $Map, $Record, $Set };

@@ -96,7 +96,7 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | `@rat/runtime` | `@rat/signals` plus `@domina/render` with effect and scope: fine-grained, no vdom, no tree diffing | v0 |
 | `@rat/syntax` | highlighting from one spec: hljs, monaco, codemirror/acode, zed, textmate | v0 |
 | `@rat/core` | app singleton, commands, hotkeys, router | sketch |
-| `@rat/types` | data types with their schemas (`List`, `Enum`), schemas (`Str`, `Num`, `Record` …), reactive variants (`$List`, `$Map`, `$Set`, `$Enum`) | v0 |
+| `@rat/types` | data types with their schemas (`Color`, `Enum`, `List`, `Record`, `Tuple`), schemas (`Str`, `Num`, `Union` …), reactive variants (`$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`) | v0 |
 | `@rat/vite`, `@rat/esbuild`, `@rat/node` | build adapters, thin shells around `compile()` | planned |
 | `@rat/elements` | bridge to `@aufbau/elements`, components as custom elements | planned |
 
