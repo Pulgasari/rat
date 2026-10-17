@@ -1,21 +1,21 @@
 # @rat/types
 
-[Color](#color)
-[Enum](#enum)
-[List](#list)
-[Point](#point)
-[Tree](#tree)
+[Color](#color) ·
+[Enum](#enum) ·
+[List](#list) ·
+[Point](#point) ·
+[Tree](#tree) ·
 [Union](#union)
 
 #### reactive variants
-[$Array](#)
-[$Bool](#)
-[$Color](#)
-[$Enum](#)
-[$Map](#)
-[$List](#list)
-[$Point](#point)
-[$Set](#)
+[$Array](#) ·
+[$Bool](#) ·
+[$Color](#) ·
+[$Enum](#) ·
+[$Map](#) ·
+[$List](#list) ·
+[$Point](#point) ·
+[$Set](#) ·
 [$Tree](#)
 
 ---
