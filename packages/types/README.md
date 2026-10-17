@@ -1,5 +1,25 @@
 # @rat/types
 
+[Color](#color)
+[Enum](#enum)
+[List](#list)
+[Point](#point)
+[Tree](#tree)
+[Union](#union)
+
+#### reactive variants
+[$Array](#)
+[$Bool](#)
+[$Color](#)
+[$Enum](#)
+[$Map](#)
+[$List](#list)
+[$Point](#point)
+[$Set](#)
+[$Tree](#)
+
+---
+
 three things, kept apart:
 
 | | what it is | examples |
