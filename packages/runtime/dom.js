@@ -102,4 +102,42 @@ function style (id, css) {
   document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
 }
 
-export { bind, each, html, match, mount, raw, ref, render, style, unrender, use, when };
+/*
+a css file of a component (style link / adopt): once per url, global, a promise
+that settles when it is in. adopt rewrites relative url(…) against the file
+first: an adopted sheet resolves them against the page (chromium ignores the
+baseURL option). @import does not work in an adopted sheet (a constructable
+stylesheet ignores it); link does that.
+*/
+const files = new Map;
+
+const RELATIVE_URL = /url\(\s*(['"]?)(?![a-z][\w+.-]*:|\/|#)([^'")]+)\1\s*\)/gi;
+
+const rebase = (css, base) => css.replace(RELATIVE_URL, (_, quote, path) => `url("${new URL(path, base).href}")`);
+
+function sheet (mode, url) {
+  if (files.has(url)) return files.get(url);
+
+  let done;
+  if (mode === 'link') {
+    const link = Object.assign(document.createElement('link'), { href: url, rel: 'stylesheet' });
+    done = new Promise((resolve, reject) => { link.onload = () => resolve(link); link.onerror = () => reject(new Error(`[rat] style link ${url} failed`)); });
+    document.head.append(link);
+  }
+  else {
+    done = fetch(url)
+      .then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] style adopt ${url}: ${response.status}`)))
+      .then(css => {
+        const sheet = new CSSStyleSheet;
+        sheet.replaceSync(rebase(css, url));
+        document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+        return sheet;
+      });
+  }
+
+  done.catch(error => console.error(error));
+  files.set(url, done);
+  return done;
+}
+
+export { bind, each, html, match, mount, raw, ref, render, sheet, style, unrender, use, when };

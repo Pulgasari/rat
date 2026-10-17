@@ -436,6 +436,37 @@ compile(source, { styles: { less: code => … } }); // any other language: pass 
 - *(planned)* a service worker that compiles `.rat` files on request, so a plain browser
   page can `import './card.rat'` without a build.
 
+### css files
+
+```html
+<script>
+  style link   'https://code.pulgasari.dev/aufbau/css/aufbau.css';
+  style adopt  'https://code.pulgasari.dev/aufbau/gestalt/gestalt.css';
+  style inline 'local.css';
+  style        'other.css';                 // adopt is the default
+</script>
+
+<style mode="link"   src="https://code.pulgasari.dev/aufbau/css/aufbau.css" />
+<style mode="adopt"  src="https://code.pulgasari.dev/aufbau/gestalt/gestalt.css" />
+<style mode="inline" src="local.css" />
+<style src="other.css" />
+```
+
+| mode | what happens | scope |
+|---|---|---|
+| `link` | a `<link rel="stylesheet">` in the head, once per url | global |
+| `adopt` (default) | fetched, a constructable stylesheet in `document.adoptedStyleSheets`, once per url | global |
+| `inline` | read while compiling, added to the component's `<style>`. no request at runtime, no unstyled flash. `.scss` / `.sass` / `.ass` go through that language | the component |
+
+- the statement works in `<script>` and `<script module>`, at the top level, at the start of a
+  statement. `style` stays a plain name everywhere else (`style.color`, `const style = …`).
+- relative paths resolve against the `.rat` file. `link` and `adopt` run when the module is
+  first imported.
+- `url(…)` inside an adopted or inlined file resolves against that file.
+- `@import` does not work in an adopted file (constructable stylesheets ignore it), use `link`.
+- `inline` needs the file while compiling: `compileAsync(source, { read: path => text })`.
+  `@rat/app` passes it.
+
 ## open
 
 - comments in markup: `<!-- -->` disappears. a line form (`// …` at the start of a line)?

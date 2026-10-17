@@ -520,6 +520,13 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     if (misplaced) report(`<${name}> is only allowed at the top level of a .rat file`, start);
     const open = source.indexOf('>', i);
     if (open < 0) { report(`unclosed <${name}>`, start); i = source.length; return null; }
+    // <style src="…" /> has no content and no closing tag
+    if (name === 'style' && source[open - 1] === '/') {
+      if (!misplaced) styles.push({ attributes: source.slice(i, open - 1).trim(), code: '', end: open + 1 + offset, range: { end: open + 1 + offset, start: start + offset }, start: open + 1 + offset });
+      i = open + 1;
+      return null;
+    }
+
     const attrs = source.slice(i, open);
     const close = source.indexOf(`</${name}>`, open);
     if (close < 0) { report(`unclosed <${name}>`, start); i = source.length; return null; }

@@ -73,3 +73,5 @@ export function commandListener (name: string): (event: Event) => void;
 
 export function mount (component: Component, target: string | Element, props?: Props): () => void;
 export function style (id: string, css: string): void;
+/** A css file of a component: link (a <link> in the head) or adopt (a constructable stylesheet), once per url. */
+export function sheet (mode: 'adopt' | 'link', url: string): Promise<HTMLLinkElement | CSSStyleSheet>;
