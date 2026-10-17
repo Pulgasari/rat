@@ -4,6 +4,11 @@
 
 experimental JS-framework.
 
+works great with:
+[@bunker](https://github.com/pulgasari/aufbau/) ·
+[@bunker](https://github.com/pulgasari/bunker/packages/) ·
+[@domina](https://github.com/pulgasari/domina/packages/) ·
+
 ---
 
 official: 
