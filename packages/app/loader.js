@@ -75,7 +75,8 @@ async function rewrite (code, url, chain) {
 // ::: compile
 
 async function build (url, chain) {
-  const response = await fetch(url);
+  // revalidated every time: an edited .rat file shows on the next reload
+  const response = await fetch(url, { cache: 'no-cache' });
   if (!response.ok) throw new Error(`[rat] ${url}: ${response.status} ${response.statusText}`);
 
   const source = await response.text();
