@@ -1,62 +1,83 @@
 # rat :: ideas
 
-one file per topic: where the idea comes from, how it could look in rat, what it costs, and
-the decisions that belong to it, right there. tick one box per decision (`- [x]`), add a note
-below it if needed, and it gets built that way. **(v0)** marks what the prototype does
-today, **(rec)** the recommendation. a decided entry stays in its file, with what was built.
+one file per topic: where the idea comes from, how it could look in rat, what it costs, and the decisions that belong to it, right there.
+
+tick one box per decision (`- [x]`), add a note below it if needed, and it gets built that way. **(v0)** marks what the prototype does today, **(rec)** the recommendation.
+
+a decided entry stays in its file, with what was built.
 
 ## open decisions
 
-| | decision | file |
-|---|---|---|
-| d-10 | further pipe operators (now with option e: only `\|>` and `\|?>`) | [pipes](pipes.md#d-10) |
-| d-13 | props | [props](props.md#d-13) |
-| d-15 | the index in `@for` | [loop metadata](loop-metadata.md#d-15) |
-| d-16 | commands with arguments in markup | [app](app.md#d-16) |
-| d-19 | `@scope` lower boundary (question about the `>`) | [styles](styles.md#d-19) |
-| d-26 | behaviors: `@name` or `use:name` | [behaviors](behaviors.md#d-26) |
-| d-28 | async blocks: the syntax | [async blocks](async-blocks.md#d-28) |
-| d-29 | filters on loops: the syntax | [loop filters](loop-filters.md#d-29) |
-| d-30 | patterns written straight into a `@case` | [pattern matching](pattern-matching.md#d-30) |
+# rat :: decisions
+
+an index. every decision lives in the file of its topic, in [ideas/](ideas/README.md), where the boxes are ticked. the anchors below keep old links (`decisions.md#d-14`) working.
+
+- <a id="d-01"></a>**d-01** · one-line blocks need the `:` → yes · [ideas/blocks](ideas/blocks.md#d-01)
+- <a id="d-02"></a>**d-02** · a one-line body ends at the line end or at `@else` / `@case` / `@default` → yes · [ideas/blocks](ideas/blocks.md#d-02)
+- <a id="d-03"></a>**d-03** · several directives on one line → allowed · [ideas/blocks](ideas/blocks.md#d-03)
+- <a id="d-04"></a>**d-04** · tabs and spaces mixed in one indented block → an error · [ideas/blocks](ideas/blocks.md#d-04)
+- <a id="d-05"></a>**d-05** · range forms → inclusive `a..b` only · [ideas/ranges](ideas/ranges.md#d-05)
+- <a id="d-06"></a>**d-06** · ranges work everywhere script sugar works → yes · [ideas/ranges](ideas/ranges.md#d-06)
+- <a id="d-07"></a>**d-07** · what a range is → a lazy range type with array methods · [ideas/ranges](ideas/ranges.md#d-07)
+- <a id="d-08"></a>**d-08** · the pipe placeholder → `#`, provisionally · [ideas/pipes](ideas/pipes.md#d-08)
+- <a id="d-09"></a>**d-09** · `x |> f()` → `f()(x)` · [ideas/pipes](ideas/pipes.md#d-09)
+- <a id="d-10"></a>**d-10** · further pipe operators · **open** · [ideas/pipes](ideas/pipes.md#d-10)
+- <a id="d-11"></a>**d-11** · the template tag in `.rat.js` → `html`, `htx` and `rat` · [ideas/templates-in-js](ideas/templates-in-js.md#d-11)
+- <a id="d-12"></a>**d-12** · `{…}` holes in plain `.js` files → no · [ideas/templates-in-js](ideas/templates-in-js.md#d-12)
+- <a id="d-13"></a>**d-13** · props · **open** · [ideas/props](ideas/props.md#d-13)
+- <a id="d-14"></a>**d-14** · type notation in scripts → a schema as the initial value · [ideas/types](ideas/types.md#d-14)
+- <a id="d-15"></a>**d-15** · the index in `@for` · **open** · [ideas/loop-metadata](ideas/loop-metadata.md#d-15)
+- <a id="d-16"></a>**d-16** · commands with arguments in markup · **open** · [ideas/app](ideas/app.md#d-16)
+- <a id="d-17"></a>**d-17** · router → a registry now, file based later · [ideas/app](ideas/app.md#d-17)
+- <a id="d-18"></a>**d-18** · `@rat/core` and `@rat/runtime` → separate · [ideas/app](ideas/app.md#d-18)
+- <a id="d-19"></a>**d-19** · `@scope` lower boundary · **open** · [ideas/styles](ideas/styles.md#d-19)
+- <a id="d-20"></a>**d-20** · style languages → `scss` and `ass` out of the box · [ideas/styles](ideas/styles.md#d-20)
+- <a id="d-23"></a>**d-23** · mutating `$` arrays and objects → reactive variants (`$List`) · [ideas/reactivity](ideas/reactivity.md#d-23)
+- <a id="d-24"></a>**d-24** · `preventDefault()` → `!` · [ideas/event-modifiers](ideas/event-modifiers.md#d-24)
+- <a id="d-25"></a>**d-25** · once / n times → all three forms for now · [ideas/event-modifiers](ideas/event-modifiers.md#d-25)
+- <a id="d-26"></a>**d-26** · behaviors: `@name` or `use:name` · **open** · [ideas/behaviors](ideas/behaviors.md#d-26)
+- <a id="d-27"></a>**d-27** · markup fragments with parameters → `@fragment` · [ideas/fragments](ideas/fragments.md#d-27)
+- <a id="d-28"></a>**d-28** · async blocks: the syntax · **open** · [ideas/async-blocks](ideas/async-blocks.md#d-28)
+- <a id="d-29"></a>**d-29** · filters on loops: the syntax · **open** · [ideas/loop-filters](ideas/loop-filters.md#d-29)
+- <a id="d-30"></a>**d-30** · pattern matching: patterns in `@case` · **open** · [ideas/pattern-matching](ideas/pattern-matching.md#d-30)
+- <a id="d-31"></a>**d-31** · the name of the signal package → `@rat/signals` · [ideas/reactivity](ideas/reactivity.md#d-31)
+- <a id="d-32"></a>**d-32** · the core → alien-signals behind a facade · [ideas/reactivity](ideas/reactivity.md#d-32)
 
 ## all topics
 
-| topic | status | from |
-|---|---|---|
-| **markup and control flow** | | |
-| [block syntax](blocks.md) | built (d-01 to d-04) | |
-| [loop metadata](loop-metadata.md) | idea, d-15 open | latte |
-| [local names](local-names.md) | idea | svelte |
-| [async blocks](async-blocks.md) | idea, d-28 open | svelte |
-| [loop filters](loop-filters.md) | idea, d-29 open | haskell |
-| [pattern matching](pattern-matching.md) | named cases built, d-30 open | rescript, f#, raku |
-| [fragments](fragments.md) | built (d-27) | svelte |
-| [markup shorthands](markup-shorthands.md) | ideas | imba, ruby, kotlin |
-| **attributes and events** | | |
-| [event modifiers](event-modifiers.md) | built (d-24, d-25), word modifiers idea | vue |
-| [binding modifiers](binding-modifiers.md) | idea | vue |
-| [rest attributes](rest-attributes.md) | built | laravel blade, htx |
-| [behaviors](behaviors.md) | built, d-26 open | svelte, lit |
-| [transitions](transitions.md) | idea | svelte |
-| **components** | | |
-| [props](props.md) | d-13 open | |
-| [slots](slots.md) | idea | web components, latte |
-| [parts and lazy components](parts.md) | `<rat-part>` built (`@rat/app`), `lazy:` idea | astro, `@htx/elements` |
-| **script and data** | | |
-| [pipes](pipes.md) | `\|>` built (d-08, d-09), d-10 open | f#, elixir, clojure, gleam |
-| [ranges](ranges.md) | built (d-05 to d-07) | |
-| [types](types.md) | built (d-14), `@rat/types` v0 | |
-| [reactivity](reactivity.md) | built as `@rat/signals` (d-23 c, d-31 a, d-32 b) | alien-signals, svelte, vue |
-| [value wrappers](value-wrappers.md) | idea | swift |
-| [junctions](junctions.md) | idea | raku |
-| [with chains](with-chains.md) | idea | elixir, gleam, f# |
-| [templates in js](templates-in-js.md) | built (d-11, d-12) | |
-| **app, styles, tooling** | | |
-| [app](app.md) | d-16 open, d-17 and d-18 decided | |
-| [styles](styles.md) | built (d-20), d-19 open | |
-| [no build](no-build.md) | in the page: built (`@rat/app`), service worker: idea | `@htx/elements/load.js` |
-| [comptime](comptime.md) | idea | zig |
-| [tooling](tooling.md) | idea | laravel artisan |
+### built
+[behaviors](behaviors.md)
+[block syntax](blocks.md)
+[event modifiers](event-modifiers.md)
+[fragments](fragments.md)
+[local names](local-names.md)
+[no build](no-build.md)
+[pattern matching](pattern-matching.md)
+[parts and lazy components](parts.md)
+[pipes](pipes.md)
+[ranges](ranges.md)
+[reactivity](reactivity.md)
+[rest attributes](rest-attributes.md)
+[styles](styles.md)
+[templates in js](templates-in-js.md)
+[types](types.md)
+ 
+### open
+[app](app.md)
+[async blocks](async-blocks.md)
+[binding modifiers](binding-modifiers.md)
+[comptime](comptime.md)
+[junctions](junctions.md)
+[loop filters](loop-filters.md) 
+[loop metadata](loop-metadata.md)
+[markup shorthands](markup-shorthands.md)
+[props](props.md)
+[service worker]
+[slots](slots.md)
+[tooling](tooling.md) 
+[transitions](transitions.md)
+[value wrappers](value-wrappers.md)
+[with chains](with-chains.md)
 
 ## shortlist
 
