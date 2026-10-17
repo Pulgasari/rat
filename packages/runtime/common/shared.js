@@ -6,6 +6,8 @@ const isString = isTypeOf('string');
 
 // :::::: EXPORT
 
+export * from '@rat/commands';
+export * from '@rat/hotkeys';
 export * from '@rat/signals';
 
 export {
