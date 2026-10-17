@@ -6,6 +6,8 @@ const isString = isTypeOf('string');
 
 // :::::: EXPORT
 
+export * from '@rat/signals';
+
 export {
   isFn, isString,
 }
