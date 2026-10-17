@@ -8,10 +8,6 @@ a decided entry stays in its file, with what was built.
 
 ## open decisions
 
-# rat :: decisions
-
-an index. every decision lives in the file of its topic, in [ideas/](ideas/README.md), where the boxes are ticked. the anchors below keep old links (`decisions.md#d-14`) working.
-
 - <a id="d-01"></a>**d-01** · one-line blocks need the `:` → yes · [ideas/blocks](ideas/blocks.md#d-01)
 - <a id="d-02"></a>**d-02** · a one-line body ends at the line end or at `@else` / `@case` / `@default` → yes · [ideas/blocks](ideas/blocks.md#d-02)
 - <a id="d-03"></a>**d-03** · several directives on one line → allowed · [ideas/blocks](ideas/blocks.md#d-03)
