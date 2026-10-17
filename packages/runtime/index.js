@@ -1,7 +1,7 @@
 // @rat/runtime
 
-export { * } from '@rat/commands';
-export { * } from '@rat/hotkeys';
+//export { * } from '@rat/commands';
+//export { * } from '@rat/hotkeys';
 export { * } from '@rat/signals';
 
 export { * } from './common/patterns.js';
