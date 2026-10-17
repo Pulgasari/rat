@@ -15,19 +15,15 @@ with Object.is, so a @switch can mix both:
     @case 'idle':  …
 */
 
-import { match }    from './dom.js';
-import { computed } from './signals.js';
+import { match }          from './dom.js';
+import { computed, isFn } from './shared.js';
 
-const PATTERN = Symbol('rat.pattern');
-
+//die benennung hier is so herrlich bekloppt
+const PATTERN   = Symbol('rat.pattern');
 const pattern   = fn    => Object.defineProperty(fn, PATTERN, { value: true });
-const isPattern = value => typeof value === 'function' && value[PATTERN] === true;
-
-// the parts a test hands out, or null: a pattern decides, anything else is Object.is
-const partsOf = (value, test) => isPattern(test) ? test(value) : Object.is(value, test) ? {} : null;
-
-// value is Case
-const is = (value, test) => partsOf(value, test) != null;
+const isPattern = value => isFn(value) && value[PATTERN] === true;
+const partsOf   = (value, test) => isPattern(test) ? test(value) : Object.is(value, test) ? {} : null;
+const is        = (value, test) => partsOf(value, test) != null;
 
 // the first test the value matches: { index, parts }, index -1 for none
 function which (value, tests) {
