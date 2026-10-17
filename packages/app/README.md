@@ -43,10 +43,25 @@ shows a splash meanwhile: logo, `rat app is being built …`, what is happening 
 - background and color are the page's: the logo and the spinner are masks in `currentColor`,
   so light, dark and any palette work without a setting.
 - every rule sits in `:where()`, any rule of the page wins. `--rat-logo` and `--rat-spinner`
-  (`url(…)`) swap the images.
+  (`url(…)`) swap the images. the logo is `splash.svg` next to `run.js`.
 - content inside `<rat-app>` replaces the splash: `<rat-app src="app.rat">my own</rat-app>`.
 - the status comes from the loader: each file announces itself with a `rat:compile` event
   (`detail: { name, url }`) before it compiles, the element writes it into `data-status`.
+
+## cache busting: `?fresh`
+
+a host like github pages lets the browser keep files for a while (`max-age=600`), so an edited
+module may not show on reload. `.rat` files are revalidated on every load anyway. for the js:
+
+```
+index.html?fresh
+```
+
+`run.js` then fetches every module of the page's origin reachable from `@rat/app` once with
+`cache: 'reload'` before importing anything. that overwrites the browser's http cache, so the
+imports after it get the current files, each fetched once. no devtools needed, works on a
+phone. `data-fresh` on the script does the same for every load. the console says how many files
+were refetched. files from other origins (esm.sh) are left alone: their urls carry a version.
 
 ## elements
 

@@ -38,7 +38,8 @@
 
 - [x] `@rat/app` bauen: ohne build, `run.js` (klassisches script, schreibt die import map), `<rat-app src>`, `<rat-part src load>`, loader mit import-umschreibung per acorn
   - im headless chromium geprüft: `demos/app` lädt `app.rat` samt importiertem `counter.rat`, klicks wirken, `<rat-part load="visible">` lädt beim scrollen
-  - splash für ein leeres `<rat-app>` (logo, status, spinner), nur css aus `run.js`, also schon beim ersten paint da. logo ist noch ein platzhalter
+  - splash für ein leeres `<rat-app>` (logo, status, spinner), nur css aus `run.js`, also schon beim ersten paint da. logo: `packages/app/splash.svg` (kopie von `.assets/splash-01.svg`)
+  - cache busten: `?fresh` an der seiten-url lädt alle eigenen module einmal mit `cache: 'reload'` neu, `.rat` wird immer revalidiert. geprüft mit `max-age=600`: normales reload 0 js vom server, `?fresh` jede datei genau einmal
   - dabei gefunden und behoben: `<style>` traf das oberste element einer komponente nicht (`@scope` matcht seinen root nur über `:scope`). jetzt ist der scope-root das elternelement, eine untere grenze schneidet dessen andere kinder ab
   - offen: domina-commit (iterables rendern) muss nach main; ob `<app-root>` & co. aus aufbau besser hierher passen, ausprobieren statt raten
 
