@@ -23,6 +23,7 @@ demos:
 
 | package         | path                                     | status |
 |-----------------|------------------------------------------|--------|
+| `@rat/app`      | [`packages/app`](packages/app)           | v0: no build, `run.js`, `<rat-app>`, `<rat-part>` |
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
 | `@rat/core`     | [`packages/core`](packages/core)         | sketch |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |

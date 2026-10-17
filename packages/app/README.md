@@ -1,0 +1,65 @@
+# @rat/app
+
+rat without a build: a page, `.rat` files next to it, one script.
+
+```html
+<script src="./packages/app/run.js"></script>
+
+<rat-app src="app.rat">loading …</rat-app>
+<rat-part src="./chart.rat" load="visible"></rat-part>
+```
+
+demo: [`demos/app`](../../demos/app/).
+
+## how it works
+
+1. **`run.js`** is a classic script, not a module: it runs before any module, so the import map
+   it writes is in place in time. it maps `@rat/*` into this repo, `@htx/*` and `@domina/*` into
+   the repos next to it (`code.pulgasari.dev/rat/`, `/htx/`, `/domina/`, or a local checkout of
+   all three side by side), `acorn` and `@pulgasari/is` / `str` to esm.sh. an import map already
+   on the page wins: put it before `run.js` to point anything elsewhere. then it imports
+   `index.js`, which defines the elements and loads `@rat/types` (the registry of reactive
+   variants).
+2. **the loader** fetches a `.rat` / `.rat.js` file, compiles it (`compileAsync`, so a
+   `<style lang="scss">` works), and imports the result from a blob url. a blob module has no
+   path of its own, so the loader rewrites the imports of the compiled code first (parsed with
+   acorn):
+   - `./card.rat`: compiled the same way, the import gets its blob url
+   - `import('./card.rat')`: stays lazy, compiled when it runs
+   - `./util.js`, `../x.js`: an absolute url, against the file's own url
+   - `@rat/runtime`, `acorn`: stay, for the import map
+3. **`<rat-app>` / `<rat-part>`** mount the component (the default export) into themselves.
+
+one compile per url, a failed one is dropped so the next try loads again. a circle of `.rat`
+files is an error naming the files. devtools show the compiled code under `<file>.rat.js`.
+
+## elements
+
+| | |
+|---|---|
+| `src` | the file, against the page. a new `src` mounts the new component |
+| `load` | `<rat-part>` only: `eager` (default), `visible` (once in view), `idle` |
+| `[loading]`, `[error]` | while loading, after a failure (the message is inside, `part="error"`) |
+| `props` | a property, handed to the component when it mounts |
+| `rat:mount`, `rat:error` | events, bubbling |
+
+what the element holds until the component mounts stays: a loading screen without code.
+`<rat-app>` is the entry of an app and always loads right away, `<rat-part>` is a piece of a
+page (an island, [parts](../../.md/ideas/parts.md)).
+
+## js
+
+```js
+import { compileFile, componentOf, load } from '@rat/app';
+
+const module = await load('./card.rat');   // the module
+const Card   = componentOf(module);        // its component
+```
+
+## limits
+
+- compiling in the page costs time on every load: fine for development and small sites. for
+  production a build compiles the same files ahead.
+- the import map needs `acorn` from a cdn; offline it has to be mapped to a local copy.
+- `@domina/render` renders iterables (a `$List`) as lists only from the commit on domina's
+  `ccr-6dcb933c-w3kck9` branch on.
