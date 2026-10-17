@@ -42,18 +42,18 @@
 - [x] was fehlt bis zu einer test-pwa (stichpunkte, nach dringlichkeit)
 
 **muss**
-- domina-commit (iterables rendern, `$List` in `@for`/als kind) nach main, sonst rendert `$List` auf code.pulgasari.dev nicht
 - props entscheiden (d-13): heute nur `props.title`. für mehr als eine komponente braucht es eine feste form
 - slots: `<slot />` gibt es, benannte slots nicht ([slots](ideas/slots.md)). für layouts (header/main/footer) nötig
-- router: d-17 sagt "registry jetzt", gebaut ist nichts. alternativ erstmal `<app-root>`/`<app-view>` aus aufbau in `app.rat` ausprobieren (dein "ausprobieren statt raten")
-- persistenz: `$Record`/`$List` in indexeddb/localstorage halten (`persist` über `@bunker`, in `@rat/types` als "not yet" vermerkt)
+- router: erstmal `<app-root>`/`<app-view>` aus aufbau in `app.rat` ausprobieren (entschieden). d-17 ("registry jetzt") danach neu bewerten
+- persistenz über `@bunker` (entschieden): `$Record`/`$List` in indexeddb/opfs halten, `persist` in `@rat/types`
 - pwa-hülle: `manifest.webmanifest`, icons, service worker fürs offline-cachen. ohne build heißt das: der sw cached `run.js`, die pakete, die `.rat`-dateien und die cdn-urls (acorn, esm.sh)
-- `@rat/core` ist kaputt (fehlende `./datatypes.js`, `toDashed`): reparieren oder entfernen, damit nichts darauf aufbaut
+- `@rat/core` wird nirgends benutzt (nur in einem kommentar in `demos/examples/commands.rat` erwähnt, nicht in der import map von code.pulgasari.dev) und ist kaputt (`./datatypes.js` fehlt). vorschlag: löschen
 
 **sollte**
 - `@await` / async-blöcke (d-28) für daten aus fetch oder indexeddb, sonst alles von hand mit signals
 - fehleranzeige: compile-fehler zeigt `<rat-app>` schon, laufzeitfehler in komponenten noch nicht (keine error boundary)
-- `@for`-index (d-15) und keys: aktuell schlüssel = item selbst; bei objekten aus der db, die neu geladen werden, gehen zustände verloren
+- keys in `@for`: `@for` erkennt eine zeile wieder am objekt selbst (`item => item`). ein neu geladenes oder kopiertes objekt (`{ ...todo, done: true }`, frisch aus der db) ist für ihn eine neue zeile: die alte wird weggeworfen, die neue neu gebaut. sichtbar wird das an fokus, halb getipptem text, offenen `<details>`, scrollpositionen in der zeile. lösung: ein schlüssel, z.b. `@for (todo of $todos; key todo.id)`
+- `@for`-index (d-15): wie man an den index kommt, ist noch offen (eigenes thema, unabhängig von keys)
 - produktion: ein build-schritt (oder der sw kompiliert einmal und cached das ergebnis), sonst kompiliert jedes laden neu
 
 **klären**
