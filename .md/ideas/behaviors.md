@@ -30,7 +30,7 @@ its cleanup when it goes:
 <section use:pattern={'dots 8%'}>…</section>
 ```
 
-a behavior is a function `(element, value) => cleanup`. it runs again when the value changes. this is the same idea as the aufbau controller concept (`pattern=`, `filter=`, `hotkey=` as attributes on any element), so `@aufbau/patterns`, `@aufbau/filters` and `@aufbau/gestures` could ship rat behaviors directly.
+a behavior is a function `(element, value) => cleanup`. it runs again when the value changes. this is the same idea as the aufbau controller concept (`pattern=`, `filter=`, `hotkey=` as attributes on any element), so `@gestalt/patterns`, `@gestalt/filters` and `@aufbau/gestures` could ship rat behaviors directly.
 
 **cost.** small in the runtime. the larger work is writing the behaviors.
 

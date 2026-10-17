@@ -20,13 +20,13 @@
 
 ```html
 <script>
-  style link 'https://code.pulgasari.dev/aufbau/css/aufbau.css';
-  style adopt 'https://code.pulgasari.dev/aufbau/gestalt/gestalt.css';
+  style link 'https://code.pulgasari.dev/gestalt/packages/css/aufbau.css';
+  style adopt 'https://code.pulgasari.dev/gestalt/packages/css/gestalt.css';
   style inline 'localfile.css';
 </script>
 
-<style mode='link'   src='https://code.pulgasari.dev/aufbau/css/aufbau.css' />
-<style mode='adopt'  src='https://code.pulgasari.dev/aufbau/gestalt/gestalt.css' />
+<style mode='link'   src='https://code.pulgasari.dev/gestalt/packages/css/aufbau.css' />
+<style mode='adopt'  src='https://code.pulgasari.dev/gestalt/packages/css/gestalt.css' />
 <style mode='inline' src='localfile.css' />
 ```
 

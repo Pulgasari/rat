@@ -440,14 +440,14 @@ compile(source, { styles: { less: code => … } }); // any other language: pass 
 
 ```html
 <script>
-  style link   'https://code.pulgasari.dev/aufbau/css/aufbau.css';
-  style adopt  'https://code.pulgasari.dev/aufbau/gestalt/gestalt.css';
+  style link   'https://code.pulgasari.dev/gestalt/packages/css/aufbau.css';
+  style adopt  'https://code.pulgasari.dev/gestalt/packages/css/gestalt.css';
   style inline 'local.css';
   style        'other.css';                 // adopt is the default
 </script>
 
-<style mode="link"   src="https://code.pulgasari.dev/aufbau/css/aufbau.css" />
-<style mode="adopt"  src="https://code.pulgasari.dev/aufbau/gestalt/gestalt.css" />
+<style mode="link"   src="https://code.pulgasari.dev/gestalt/packages/css/aufbau.css" />
+<style mode="adopt"  src="https://code.pulgasari.dev/gestalt/packages/css/gestalt.css" />
 <style mode="inline" src="local.css" />
 <style src="other.css" />
 ```

@@ -31,7 +31,7 @@ this stuff is used directly, or partly only as a basis/orientation?
 # can safely be improved in places
 # or extended while working on the framework
 @aufbau/elements
-@aufbau/filters
+@gestalt/filters
 @aufbau/gestures
 @bunker
 @domina/prototypes
@@ -41,8 +41,8 @@ this stuff is used directly, or partly only as a basis/orientation?
 @aufbau/gui
 @aufbau/hotkeys
 @aufbau/import
-@aufbau/patterns
-@aufbau/webfonts
+@gestalt/patterns
+@gestalt/webfonts
 
 ## only basis/orientation ?
 @aufbau/bundler (?)
