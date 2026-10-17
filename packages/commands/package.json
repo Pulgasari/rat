@@ -1,0 +1,11 @@
+{
+  "name"         : "@rat/commands",
+  "version"      : "0.0.1",
+  "description"  : "a registry of named commands, fired by name from code, markup (rat:command) and hotkeys",
+  "type"         : "module",
+  "main"         : "./index.js",
+  "types"        : "./index.d.ts",
+  "exports"      : { ".": "./index.js" },
+  "sideEffects"  : false,
+  "license"      : "MIT"
+}

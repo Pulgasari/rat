@@ -27,6 +27,7 @@ const DELAY   = 250;
 const RUNTIME = new URL('../../packages/runtime/index.js', import.meta.url).href;
 const TYPES   = new URL('../../packages/types/index.js',   import.meta.url).href;
 const SIGNALS = new URL('../../packages/signals/index.js', import.meta.url).href;
+const PACKAGE = name => new URL(`../../packages/${name}/index.js`, import.meta.url).href;
 const STORAGE = 'rat:playground:';
 
 const $ = selector => document.querySelector(selector);
@@ -134,7 +135,7 @@ function preview (code) {
   // the page's own import map (code.pulgasari.dev: aufbau, domina …) with this repo's runtime on top.
   // one map, since not every browser takes several
   const page = JSON.parse(document.querySelector('script[type="importmap"]')?.textContent || '{}');
-  const map  = JSON.stringify({ imports: { ...page.imports, '@rat/runtime': RUNTIME, '@rat/signals': SIGNALS, '@rat/types': TYPES } });
+  const map  = JSON.stringify({ imports: { ...page.imports, '@rat/commands': PACKAGE('commands'), '@rat/hotkeys': PACKAGE('hotkeys'), '@rat/runtime': RUNTIME, '@rat/signals': SIGNALS, '@rat/types': TYPES } });
 
   ui.preview.srcdoc = `<!DOCTYPE html>
 <html>

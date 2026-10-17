@@ -17,8 +17,7 @@ calls with the element once its children are in place.
 // :::::: IMPORT
 
 import { each, html, match, raw, render as renderInto, unrender, when } from '@htx/js/render';
-import { effect, isSignal, onCleanup, scope, untrack } from './signals.js';
-import { isFn, isString } from './shared.js';
+import { effect, isFn, isSignal, isString, onCleanup, scope, untrack } from '../common/shared.js';
 
 // effects belong to no owner, the renderer disposes them. scopes neither: the
 // renderer disposes them with their part

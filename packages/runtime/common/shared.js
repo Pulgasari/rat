@@ -1,4 +1,4 @@
-// @rat/runtime/shared.js
+// @rat/runtime :: shared
 
 const isTypeOf = type => value => typeof value === type;
 const isFn     = isTypeOf('function');
