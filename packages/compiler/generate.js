@@ -144,9 +144,9 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
   }
 
   function switchBlock (node, depth, root) {
-    const { cases: list, fallback, subject } = node;
-    if (list.some(({ test }) => !LITERAL.test(test.code))) return patternSwitch(node, depth, root);
-    const items = list.map(({ children, test }) => `[${expression(test)}, () => ${view(children, depth + 2, root)}]`);
+    const { cases, fallback, subject } = node;
+    if (cases.some(({ test }) => !LITERAL.test(test.code))) return patternSwitch(node, depth, root);
+    const items = cases.map(({ children, test }) => `[${expression(test)}, () => ${view(children, depth + 2, root)}]`);
     const list  = items.some(multiline) || items.join(', ').length > INLINE
       ? `[\n${items.map(item => pad(depth + 2) + item).join(',\n')},\n${pad(depth + 1)}]`
       : `[${items.join(', ')}]`;
