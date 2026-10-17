@@ -45,7 +45,7 @@ class Span {
     return Number.isInteger(index) && index >= 0 && index < this.length ? index : -1;
   }
 
-  toArray () { return [...this]; }
+  toArray  () { return [...this]; }
   toString () { return this.toArray().join(','); }
 }
 
