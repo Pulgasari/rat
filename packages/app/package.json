@@ -1,0 +1,12 @@
+{
+  "name"         : "@rat/app",
+  "version"      : "0.0.1",
+  "description"  : "rat without a build: run.js writes the import map, <rat-app> and <rat-part> load, compile and mount .rat files in the page",
+  "type"         : "module",
+  "main"         : "./index.js",
+  "types"        : "./index.d.ts",
+  "exports"      : { ".": "./index.js", "./run.js": "./run.js" },
+  "dependencies" : { "@rat/compiler": "0.0.1", "@rat/runtime": "0.0.1", "@rat/types": "0.0.1", "acorn": "^8.14.0" },
+  "sideEffects"  : ["./elements.js", "./index.js", "./run.js"],
+  "license"      : "MIT"
+}

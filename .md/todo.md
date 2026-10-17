@@ -36,6 +36,10 @@
 - [x] reaktivität als idee festhalten: `ideas/reactivity.md`
   - alien-signals als kern hinter eigener fassade (d-32), `$()` mit registry, `reactive(Class, { reads, writes })` für varianten, d-23 dorthin verschoben, paketname `@rat/signals` oder `@rat/reactivity` (d-31)
 
+- [x] `@rat/app` bauen: ohne build, `run.js` (klassisches script, schreibt die import map), `<rat-app src>`, `<rat-part src load>`, loader mit import-umschreibung per acorn
+  - im headless chromium geprüft: `demos/app` lädt `app.rat` samt importiertem `counter.rat`, klicks wirken, `<rat-part load="visible">` lädt beim scrollen
+  - offen: domina-commit (iterables rendern) muss nach main; ob `<app-root>` & co. aus aufbau besser hierher passen, ausprobieren statt raten
+
 - [x] `@rat/signals` bauen (d-31, d-32): kern auf alien-signals, fassade, `$()`, registry, `reactive()`; `$List`, `$Map`, `$Set` in `@rat/types`
   - der compiler schreibt `$$.$(…)` statt `$$.signal(…)`. `$()` gibt immer ein signal zurück, die registry entscheidet über die variante seines werts
   - `let $bla = new $Map` bleibt im output wie geschrieben (kein `$()`, kein `.value`), sieht also in `.js`, `.rat.js` und `.rat` gleich aus. neu zuweisen ist ein compile-fehler

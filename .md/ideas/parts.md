@@ -1,6 +1,6 @@
 # rat :: parts and lazy components
 
-status: **idea**. a prototype existed as `<htx-part>` in `@htx/elements` (to be removed from htx), used in `aufbau/www/`.
+status: **`<rat-part>` built** in [`@rat/app`](../../packages/app), with `load="eager | visible | idle"`. `lazy:` inside components is still an idea. a prototype existed as `<htx-part>` in `@htx/elements` (to be removed from htx), used in `aufbau/www/`.
 
 see also: [no build](no-build.md) (how a part gets compiled in the browser), astro.md in `pulgasari.github.io/md/webdev/libs/`
 

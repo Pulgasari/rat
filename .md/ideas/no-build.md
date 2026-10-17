@@ -1,6 +1,6 @@
 # rat :: no build
 
-status: **idea**. the playground compiles in the page already; `@htx/elements/load.js` did the same for `.htx` files, including imports between them. the service worker is not built.
+status: **in the page: built** as [`@rat/app`](../../packages/app) (`run.js`, `<rat-app>`, `<rat-part>`). no `resolve` hook in the compiler was needed: the loader parses the compiled code with acorn and rewrites its imports. the service worker is not built.
 
 see also: [parts](parts.md), [styles](styles.md) (d-20), [tooling](tooling.md), [comptime](comptime.md)
 

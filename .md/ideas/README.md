@@ -41,7 +41,7 @@ today, **(rec)** the recommendation. a decided entry stays in its file, with wha
 | **components** | | |
 | [props](props.md) | d-13 open | |
 | [slots](slots.md) | idea | web components, latte |
-| [parts and lazy components](parts.md) | idea, prototype `htx-part` | astro, `@htx/elements` |
+| [parts and lazy components](parts.md) | `<rat-part>` built (`@rat/app`), `lazy:` idea | astro, `@htx/elements` |
 | **script and data** | | |
 | [pipes](pipes.md) | `\|>` built (d-08, d-09), d-10 open | f#, elixir, clojure, gleam |
 | [ranges](ranges.md) | built (d-05 to d-07) | |
@@ -54,7 +54,7 @@ today, **(rec)** the recommendation. a decided entry stays in its file, with wha
 | **app, styles, tooling** | | |
 | [app](app.md) | d-16 open, d-17 and d-18 decided | |
 | [styles](styles.md) | built (d-20), d-19 open | |
-| [no build](no-build.md) | idea | `@htx/elements/load.js` |
+| [no build](no-build.md) | in the page: built (`@rat/app`), service worker: idea | `@htx/elements/load.js` |
 | [comptime](comptime.md) | idea | zig |
 | [tooling](tooling.md) | idea | laravel artisan |
 

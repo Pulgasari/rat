@@ -1,0 +1,22 @@
+<script>
+  import Counter from '../examples/counter.rat';
+  import { $Enum } from '@rat/types';
+
+  const $view = new $Enum('grid', 'list', 'masonry');
+</script>
+
+<main.app>
+  <h1>rat, no build</h1>
+  <p>this file and the counter are compiled in the page.</p>
+
+  <Counter />
+
+  <p>
+    view: <b>{$view.value}</b>
+    <button onclick={() => $view.cycle()}>cycle</button>
+  </p>
+</main.app>
+
+<style>
+  .app { display: grid; gap: 1rem; }
+</style>
