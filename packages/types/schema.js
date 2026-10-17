@@ -10,15 +10,16 @@ and @rat/runtime's signal() takes a schema as its initial value:
   let $zoom = Num.range(50, 200).default(100);
 
 every method returns a new schema, a schema never changes. Bool, Num, Str and
-Record are schemas only, the values they describe are plain js. List and Enum
-are data types as well (list.js, enum.js): called they give a schema, with new
-a value.
+Union are schemas only, the values they describe are plain js. Color, Enum,
+List, Record and Tuple are data types as well (one file each): called they
+give a schema, with new a value.
 */
 
 class Schema {
-  // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks
-  constructor ({ checks = [], describe = {}, initial, kind, nullable = false, run }) {
-    Object.assign(this, { checks, describe: { kind, ...describe }, initial, kind, nullable, run });
+  // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
+  // parts: the schemas a structure is made of (record fields, tuple items, union cases)
+  constructor ({ checks = [], describe = {}, initial, kind, nullable = false, parts = null, run }) {
+    Object.assign(this, { checks, describe: { kind, ...describe }, initial, kind, nullable, parts, run });
     Object.freeze(this);
   }
 
@@ -82,36 +83,15 @@ const Bool = new Schema   ({ initial: false, kind: 'bool', run: scalar('a boolea
 const Num  = new NumSchema({ initial: 0,     kind: 'num',  run: scalar('a number',  value => typeof value === 'number' && Number.isFinite(value), toNum) });
 const Str  = new StrSchema({ initial: '',    kind: 'str',  run: scalar('a string',  value => typeof value === 'string') });
 
-// ::: structures
-
-// an object with known fields; unknown fields are kept as they are
-function Record (shape) {
-  const keys = Object.keys(shape);
-  return new Schema({
-    describe : { fields: Object.fromEntries(keys.map(key => [key, shape[key].describe])) },
-    initial  : Object.fromEntries(keys.map(key => [key, shape[key].initial])),
-    kind     : 'record',
-    run      : (value, path) => {
-      if (value === null || typeof value !== 'object' || Array.isArray(value)) return { issues: [{ message: 'expected a record', path }] };
-      const issues  = [];
-      const changed = {};
-      for (const key of keys) {
-        const result = shape[key].validate(value[key], [...path, key]);
-        if (result.issues) issues.push(...result.issues);
-        else if (result.value !== value[key]) changed[key] = result.value;
-      }
-      if (issues.length) return { issues };
-      return { value: Object.keys(changed).length ? { ...value, ...changed } : value };
-    },
-  });
-}
-
 const isSchema = value => value instanceof Schema;
 
 // one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
 // of a list of strings. the class stays a class (new, extends, instanceof), only a call differs
 const typed = (Class, toSchema) => new Proxy(Class, { apply: (target, self, args) => toSchema(...args) });
 
+// a structure's input: a plain object, not an array, a class instance counts (a Record does)
+const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+
 // :::::: EXPORT
 
-export { Bool, Num, Record, Schema, Str, isSchema, typed };
+export { Bool, Num, Schema, Str, isObject, isSchema, typed };

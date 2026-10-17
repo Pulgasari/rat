@@ -30,9 +30,10 @@ registry decides which variant its value gets, now and on every write:
 import { Signal, batch, isSchema, isSignal, untrack } from './core.js';
 
 const REACTIVE = Symbol.for('rat.reactive');
-const VERSION  = Symbol('rat.version');
 
-const versionOf = target => target[VERSION] ??= new Signal(0);
+// outside the target, so a sealed or frozen instance works too (a Record is sealed)
+const versions  = new WeakMap;
+const versionOf = target => versions.get(target) ?? versions.set(target, new Signal(0)).get(target);
 const track     = target => { versionOf(target).value; };
 const bump      = target => { versionOf(target).value++; };
 
