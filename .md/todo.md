@@ -7,6 +7,8 @@
 
 ---
 
+## syntax
+
 - [ ] syntax für css-files import/adopt
   - [ ] `style adopt` + `<style mode='adopt' />`
   - [ ] `style inline` + `<style mode='inline' />`
@@ -25,3 +27,4 @@
 <style mode='inline' src='localfile.css' />
 ```
 
+- [ ] `const/let/var` vor `$name` optional machen (?)
