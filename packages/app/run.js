@@ -88,7 +88,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   JSR = 'https://esm.sh/jsr/';
 
   const map = {
-    //////////// RAT ////////////
+    //////////// @rat ////////////
     '@rat/app'        : at('./index.js'),
     '@rat/commands'   : at('../commands/index.js'),
     '@rat/compiler'   : at('../compiler/index.js'),
