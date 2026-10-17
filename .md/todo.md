@@ -38,6 +38,8 @@
 
 - [x] `@rat/app` bauen: ohne build, `run.js` (klassisches script, schreibt die import map), `<rat-app src>`, `<rat-part src load>`, loader mit import-umschreibung per acorn
   - im headless chromium geprüft: `demos/app` lädt `app.rat` samt importiertem `counter.rat`, klicks wirken, `<rat-part load="visible">` lädt beim scrollen
+  - splash für ein leeres `<rat-app>` (logo, status, spinner), nur css aus `run.js`, also schon beim ersten paint da. logo ist noch ein platzhalter
+  - dabei gefunden und behoben: `<style>` traf das oberste element einer komponente nicht (`@scope` matcht seinen root nur über `:scope`). jetzt ist der scope-root das elternelement, eine untere grenze schneidet dessen andere kinder ab
   - offen: domina-commit (iterables rendern) muss nach main; ob `<app-root>` & co. aus aufbau besser hierher passen, ausprobieren statt raten
 
 - [x] `@rat/signals` bauen (d-31, d-32): kern auf alien-signals, fassade, `$()`, registry, `reactive()`; `$List`, `$Map`, `$Set` in `@rat/types`
