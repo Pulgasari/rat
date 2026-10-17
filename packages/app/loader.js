@@ -12,6 +12,9 @@
      a dynamic import('./x.rat') stays lazy: it goes through load() when it runs.
   3. import the result from a blob url, named after the file for devtools.
 
+every file announces itself before it compiles: a 'rat:compile' event on the
+document, detail { name, url } (the splash of <rat-app> shows it).
+
 one compile per url, a failed one is dropped so the next try loads again.
 a circle of .rat files (a imports b imports a) is an error: each would wait
 for the other.
@@ -77,6 +80,8 @@ async function build (url, chain) {
 
   const source = await response.text();
   const name   = new URL(url).pathname.split('/').pop();
+
+  document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
 
   let compiled;
   try { compiled = await compileAsync(source, { filename: name }); }

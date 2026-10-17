@@ -9,14 +9,14 @@
     :root { color-scheme: light dark; font: 15px/1.5 system-ui, sans-serif; }
     body  { margin: 2rem auto; max-width: 40rem; padding: 0 1rem; }
 
-    rat-app[loading], rat-part[loading] { opacity: .5; }
+    rat-part[loading] { opacity: .5; }
     [error] > pre { color: crimson; white-space: pre-wrap; }
 
     .spacer { block-size: 120vh; display: grid; place-items: end center; opacity: .5; }
   </style>
 </head>
 <body>
-  <rat-app src='app.rat'>loading …</rat-app>
+  <rat-app src='app.rat'></rat-app>
 
   <div class='spacer'>scroll: the todos below load once they come into view</div>
   <rat-part src='../examples/todos.rat' load='visible'>todos load when visible …</rat-part>

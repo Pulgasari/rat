@@ -33,6 +33,21 @@ demo: [`demos/app`](../../demos/app/).
 one compile per url, a failed one is dropped so the next try loads again. a circle of `.rat`
 files is an error naming the files. devtools show the compiled code under `<file>.rat.js`.
 
+## splash
+
+compiling in the page takes a moment, most of it loading the compiler. an empty `<rat-app>`
+shows a splash meanwhile: logo, `rat app is being built …`, what is happening right now
+(`loading the compiler`, `loading app.rat`, `compiling counter.rat` …), a spinner.
+
+- css only, written by `run.js`: it is there with the first paint, before any module loaded.
+- background and color are the page's: the logo and the spinner are masks in `currentColor`,
+  so light, dark and any palette work without a setting.
+- every rule sits in `:where()`, any rule of the page wins. `--rat-logo` and `--rat-spinner`
+  (`url(…)`) swap the images.
+- content inside `<rat-app>` replaces the splash: `<rat-app src="app.rat">my own</rat-app>`.
+- the status comes from the loader: each file announces itself with a `rat:compile` event
+  (`detail: { name, url }`) before it compiles, the element writes it into `data-status`.
+
 ## elements
 
 | | |

@@ -15,8 +15,9 @@ src resolves against the page. a new src mounts the new component.
 rat-app is the entry of a whole app and always eager; rat-part is a piece of a
 page, an island in astro's words (ideas/parts.md).
 
-while loading the element has [loading], after a failure [error] and the
-message inside, so css can show either. props: element.props = { … } before
+while loading the element has [loading] and in data-status what it is doing
+(the splash run.js draws for an empty <rat-app> shows it), after a failure
+[error] and the message inside. props: element.props = { … } before
 it mounts. events: rat:mount, rat:error (detail: the error).
 */
 
@@ -68,19 +69,25 @@ class RatPart extends HTMLElement {
     if (!src) return;
 
     const ticket = this.#ticket;
+    const status = ({ detail }) => { if (ticket === this.#ticket) this.dataset.status = `compiling ${detail.name}`; };
     this.toggleAttribute('loading', true);
     this.removeAttribute('error');
+    this.dataset.status = `loading ${src}`;
+    document.addEventListener('rat:compile', status);
 
     try {
       const Component = componentOf(await load(new URL(src, this.baseURI).href));
+      document.removeEventListener('rat:compile', status);
       if (ticket !== this.#ticket) return;
       if (!Component) throw new Error(`[rat] ${src} exports no component`);
       this.replaceChildren();
       this.#dispose = mount(Component, this, this.props);
       this.removeAttribute('loading');
+      delete this.dataset.status;
       this.dispatchEvent(new CustomEvent('rat:mount', { bubbles: true }));
     }
     catch (error) {
+      document.removeEventListener('rat:compile', status);
       if (ticket !== this.#ticket) return;
       this.#fail(error);
     }
@@ -97,6 +104,7 @@ class RatPart extends HTMLElement {
   #fail (error) {
     console.error(error);
     this.removeAttribute('loading');
+    delete this.dataset.status;
     this.toggleAttribute('error', true);
     const message = Object.assign(document.createElement('pre'), { textContent: error.message });
     message.setAttribute('part', 'error');

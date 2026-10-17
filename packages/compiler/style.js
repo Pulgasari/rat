@@ -1,13 +1,18 @@
 // @rat/compiler :: style
 
 /*
-<style> -> native @scope, rooted at the component's top level elements, which
+<style> -> native @scope around the component's top level elements, which
 carry data-rat="<hash>". no selector rewriting, no class mangling: the browser
 does the scoping.
 
-there is no lower boundary (`to (…)`) on purpose: styles reach into child
-components the way css always cascades, and slotted content keeps its parent's
-styles. where both match, @scope proximity lets the closer component win.
+the scoping root is their PARENT, not they themselves: a plain selector in
+@scope never matches the root (only :scope does), so `.counter { … }` would
+miss <div.counter> at the top of the component. the lower boundary cuts the
+parent's other children off, so only the component's elements are in scope.
+
+no other boundary on purpose: styles reach into child components the way css
+always cascades, and slotted content keeps its parent's styles. where both
+match, @scope proximity lets the closer component win.
 */
 
 // djb2, base36. stable per file, short enough to read in devtools
@@ -22,7 +27,8 @@ function scopeStyle (css, id) {
   const indent = Math.min(...lines.filter(line => line.trim()).map(line => line.match(/^\s*/)[0].length));
   const body   = lines.map(line => line.slice(indent)).join('\n');
   if (!body.trim()) return '';
-  return `@scope ([data-rat="${id}"]) {\n${body.replace(/^/gm, '  ')}\n}`;
+  const root = `[data-rat="${id}"]`;
+  return `@scope (:has(> ${root})) to (:scope > :not(${root})) {\n${body.replace(/^/gm, '  ')}\n}`;
 }
 
 export { hash, scopeStyle };

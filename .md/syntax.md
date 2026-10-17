@@ -36,7 +36,7 @@ open choices are linked to [ideas/](ideas/README.md).
 |---|---|
 | `<script module>` | module level. `export default` is refused, the markup is the default export |
 | `<script>` | the body of the component function. `export` is refused |
-| `<style>` | `@scope ([data-rat="<hash>"]) { … }` without a lower boundary, adopted as a constructable stylesheet. styles reach into child components (as css cascades), on conflicts the closer component wins (scope proximity). see [styles](#styles) |
+| `<style>` | `@scope` around the elements with `data-rat="<hash>"` (rooted at their parent, so `.counter { … }` matches the `<div.counter>` on top too; the parent's other children are cut off), adopted as a constructable stylesheet. styles reach into child components (as css cascades), on conflicts the closer component wins (scope proximity). see [styles](#styles) |
 | everything else | the markup |
 
 the component is named after the file: `todo-list.rat` → `TodoList`.
