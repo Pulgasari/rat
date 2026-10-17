@@ -8,38 +8,7 @@ open choices are linked to [ideas/](ideas/README.md).
 - [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
 
-## file
 
-```html
-<script module>
-  // module level, runs once. exports, shared state
-  let $todos = [];
-</script>
-
-<script>
-  // component body, runs per instance. props is in scope, imports are lifted
-  import Item from './item.rat';
-  let $draft = '';
-</script>
-
-<section.todos>
-  …markup…
-</section.todos>
-
-<style>
-  /* limited to the component through @scope */
-  .todos { display: grid; }
-</style>
-```
-
-| block | ends up in |
-|---|---|
-| `<script module>` | module level. `export default` is refused, the markup is the default export |
-| `<script>` | the body of the component function. `export` is refused |
-| `<style>` | `@scope` around the elements with `data-rat="<hash>"` (rooted at their parent, so `.counter { … }` matches the `<div.counter>` on top too; the parent's other children are cut off), adopted as a constructable stylesheet. styles reach into child components (as css cascades), on conflicts the closer component wins (scope proximity). see [styles](#styles) |
-| everything else | the markup |
-
-the component is named after the file: `todo-list.rat` → `TodoList`.
 
 ## holes
 
