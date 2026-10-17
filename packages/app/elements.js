@@ -1,6 +1,12 @@
 // @rat/app :: elements
 
 /*
+<rat-app>   ::  the root of app
+<rat-view>  ::  holds a view of app
+<rat-part>  ::  holds a .rat | .rat.js | .html | .htx
+*/
+
+/*
   <rat-app src="app.rat">loading …</rat-app>
   <rat-part src="./chart.rat" load="visible"></rat-part>
 
@@ -21,11 +27,15 @@ while loading the element has [loading] and in data-status what it is doing
 it mounts. events: rat:mount, rat:error (detail: the error).
 */
 
-import { mount } from '@rat/runtime';
+// :::::: IMPORT
 
+import { mount } from '@rat/runtime';
 import { componentOf, load } from './loader.js';
 
 const idle = fn => globalThis.requestIdleCallback ? requestIdleCallback(fn) : setTimeout(fn, 1);
+
+// :::::: CONSTRUCT ELEMENTS
+// TODO: should use: @domina/element as base but extend it
 
 class RatPart extends HTMLElement {
   static observedAttributes = ['src'];
@@ -116,6 +126,8 @@ class RatPart extends HTMLElement {
 class RatApp extends RatPart {
   get mode () { return 'eager'; }
 }
+
+// :::::: REGISTER ELEMENTS
 
 const define = (name, element) => customElements.get(name) ?? customElements.define(name, element);
 
