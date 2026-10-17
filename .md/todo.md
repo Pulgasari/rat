@@ -28,3 +28,6 @@
 ```
 
 - [ ] `const/let/var` vor `$name` optional machen (?)
+
+## vorbereitung
+- [ ] hier jetzt mal alles sammeln, ohne viel gelaber bzw. nur so viel wie nötig, umd stchpunktartig alles sammeln, was nötig wäre zu tun oder zu klären, damit man grundsätzlich damit anfangen könnte mal testweise ne pwa o.ä. zu bauen
