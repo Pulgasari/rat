@@ -34,9 +34,9 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   // ::: splash
 
   const SPINNER = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-    <circle cx="4" cy="12" r="3"><animate id="a" attributeName="r" begin="0;c.end-0.25s" dur="0.75s" values="3;.2;3"/></circle>
-    <circle cx="12" cy="12" r="3"><animate attributeName="r" begin="a.end-0.6s" dur="0.75s" values="3;.2;3"/></circle>
-    <circle cx="20" cy="12" r="3"><animate id="c" attributeName="r" begin="a.end-0.45s" dur="0.75s" values="3;.2;3"/></circle>
+    <circle cx="4"  cy="12" r="3"><animate id="a" attributeName="r" begin="0;c.end-0.25s" dur="0.75s" values="3;.2;3"/></circle>
+    <circle cx="12" cy="12" r="3"><animate        attributeName="r" begin="a.end-0.6s"    dur="0.75s" values="3;.2;3"/></circle>
+    <circle cx="20" cy="12" r="3"><animate id="c" attributeName="r" begin="a.end-0.45s"   dur="0.75s" values="3;.2;3"/></circle>
   </svg>`;
 
   const STATUS = fresh ? 'fetching fresh files' : 'loading the compiler';
@@ -81,8 +81,14 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   document.head.prepend(Object.assign(document.createElement('style'), { textContent: SPLASH }));
 
   // ::: import map
+  
+  const // CDN + JSR
+  ESM = 'https://esm.sh/',
+  UPM = 'https://upm.sh/',
+  JSR = 'https://esm.sh/jsr/';
 
   const map = {
+    //////////// RAT ////////////
     '@rat/app'        : at('./index.js'),
     '@rat/commands'   : at('../commands/index.js'),
     '@rat/compiler'   : at('../compiler/index.js'),
@@ -91,17 +97,20 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     '@rat/runtime'    : at('../runtime/index.js'),
     '@rat/signals'    : at('../signals/index.js'),
     '@rat/types'      : at('../types/index.js'),
-
+    //////////// @bunker ////////////
     '@bunker/db'      : at('../../../bunker/db/index.js'),
     '@bunker/policy'  : at('../../../bunker/policy/index.js'),
+    //////////// @domina ////////////
     '@domina/methods/': at('../../../domina/packages/methods/'),
     '@domina/render'  : at('../../../domina/packages/render/index.js'),
+    //////////// @htx ////////////
     '@htx/htx'        : at('../../../htx/packages/htx/index.js'),
     '@htx/js/render'  : at('../../../htx/packages/js/render.js'),
-
-    '@pulgasari/is'   : 'https://esm.sh/jsr/@pulgasari/is',
-    '@pulgasari/str'  : 'https://esm.sh/jsr/@pulgasari/str',
-    'acorn'           : 'https://esm.sh/acorn@8.14.0',
+    //////////// @pulgasari ////////////
+    '@pulgasari/is'   : JSR + '@pulgasari/is',
+    '@pulgasari/str'  : JSR + '@pulgasari/str',
+    //////////// other stuff ////////////
+    'acorn'           : ESM + 'acorn@8.14.0',
   };
 
   // what the page maps already stays as it is
