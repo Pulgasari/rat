@@ -25,9 +25,3 @@
 <style mode='inline' src='localfile.css' />
 ```
 
-- [ ] + möglichkeit paths vordefinieren zu können, sodass auch angabe als string reicht
-
-```html
-<script>
-  style 'aufbau', 'gestalt';
-</script>
