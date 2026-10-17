@@ -74,11 +74,10 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
                  │ parts      live holes, each when match│
                  └───────────────────────────────────────┘
                                    ▲
-                 ┌──────────── @rat/core ────────────────┐
-                 │ app        singleton, root element    │
+                 ┌─── @rat/commands · @rat/hotkeys ──────┐
                  │ commands   registry ← 'rat:command'   │
-                 │ hotkeys    → commands                 │
-                 │ router     → views                    │
+                 │ hotkeys    combos → commands          │
+                 │ router     open (<app-root> for now)  │
                  └───────────────────────────────────────┘
                                    ▲
                  ┌──────────── @rat/types ───────────────┐
@@ -95,7 +94,10 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | `@rat/signals` | the signal layer: alien-signals' graph behind rat's facade, `$()`, `reactive()` ([reactivity](ideas/reactivity.md)) | v0 |
 | `@rat/runtime` | `@rat/signals` plus `@domina/render` with effect and scope: fine-grained, no vdom, no tree diffing | v0 |
 | `@rat/syntax` | highlighting from one spec: hljs, monaco, codemirror/acode, zed, textmate | v0 |
-| `@rat/core` | app singleton, commands, hotkeys, router | sketch |
+| `@rat/app` | no build: `run.js`, `<rat-app>`, `<rat-part>` | v0 |
+| `@rat/commands` | a registry of named commands, `rat:command` from markup | v0 |
+| `@rat/hotkeys` | one key notation for `on:keydown[…]` and app-wide shortcuts | v0 |
+| `@rat/import` | files of any format as values | v0 |
 | `@rat/types` | data types with their schemas (`Color`, `Enum`, `List`, `Record`, `Tuple`), schemas (`Str`, `Num`, `Union` …), reactive variants (`$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`) | v0 |
 | `@rat/vite`, `@rat/esbuild`, `@rat/node` | build adapters, thin shells around `compile()` | planned |
 | `@rat/elements` | bridge to `@aufbau/elements`, components as custom elements | planned |
@@ -208,18 +210,19 @@ taken from the readme, compiler and runtime already have the entry points:
 
 - a **string** as event handler is a command: `<button onclick='toggleSidebar'>` fires
   `rat:command` with `{ name, event }` (bubbling). **(v0)**
-- `@rat/core` listens for it at the app root and runs it from the registry.
-- hotkeys reference commands: `app.hotkeys.set('ctrl+b', 'toggleSidebar')`.
+- a registry from `@rat/commands` listens for it (`commands.listen(root)`) and runs it.
+- hotkeys from `@rat/hotkeys` reference commands: `hotkeys.define({ 'ctrl+b': 'toggleSidebar' })`.
 - native `command` / `commandfor` (invoker commands api) is heard as well,
   `--toggle-sidebar` ↔ `toggleSidebar`.
 
 ```js
-import { createApp } from '@rat/core';
+import { createCommands } from '@rat/commands';
+import { createHotkeys }  from '@rat/hotkeys';
 
-const app = createApp({ root: '#app' });
+const commands = createCommands({ toggleSidebar: () => $sidebar = !$sidebar });
+commands.listen(document);
 
-app.commands.set('toggleSidebar', () => $sidebar = !$sidebar);
-app.hotkeys.set('ctrl+b', 'toggleSidebar');
+createHotkeys({ commands }).define({ 'ctrl+b': 'toggleSidebar' });
 ```
 
 open: [d-16](ideas/app.md#d-16) commands with arguments. decided: [d-17](ideas/app.md#d-17) router.
@@ -250,7 +253,7 @@ more inspiration, sorted by what rat could take: [ideas/](ideas/README.md).
 1. ~~v0: compiler (`dom` target), runtime, playground in `demos/`~~
 2. ~~editor support~~ → `@rat/syntax` (one spec, derived for hljs, monaco, codemirror/acode, zed, textmate)
 3. scope analysis in the compiler (shadowing, warn on unknown `$` names), source maps.
-4. `@rat/core` on top of the runtime: commands, hotkeys, router.
+4. ~~commands, hotkeys~~ (`@rat/commands`, `@rat/hotkeys`), router: `<app-root>` from aufbau is tried first.
 5. `@rat/types` v1: schemas + reactive variants, wired to `$` declarations. ~~schemas, wired
    to `$` declarations~~ (v0); reactive variants, persist and static reading are next.
 6. build adapters (vite, esbuild, node hook). ~~`dom:clone` target~~: the `dom` target clones since it renders through `@domina/render`.

@@ -47,7 +47,7 @@
 - router: erstmal `<app-root>`/`<app-view>` aus aufbau in `app.rat` ausprobieren (entschieden). d-17 ("registry jetzt") danach neu bewerten
 - persistenz über `@bunker` (entschieden): `$Record`/`$List` in indexeddb/opfs halten, `persist` in `@rat/types`
 - pwa-hülle: `manifest.webmanifest`, icons, service worker fürs offline-cachen. ohne build heißt das: der sw cached `run.js`, die pakete, die `.rat`-dateien und die cdn-urls (acorn, esm.sh)
-- `@rat/core` wird nirgends benutzt (nur in einem kommentar in `demos/examples/commands.rat` erwähnt, nicht in der import map von code.pulgasari.dev) und ist kaputt (`./datatypes.js` fehlt). vorschlag: löschen
+- ~~`@rat/core`~~ gelöscht. commands und hotkeys sind jetzt `@rat/commands` und `@rat/hotkeys`
 
 **sollte**
 - `@await` / async-blöcke (d-28) für daten aus fetch oder indexeddb, sonst alles von hand mit signals
