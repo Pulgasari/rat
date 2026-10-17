@@ -7,7 +7,7 @@ experimental JS-framework.
 works great with:
 [@aufbau](https://github.com/pulgasari/aufbau/) ·
 [@bunker](https://github.com/pulgasari/bunker/packages/) ·
-[@domina](https://github.com/pulgasari/domina/packages/) ·
+[@domina](https://github.com/pulgasari/domina/packages/)
 
 ---
 
