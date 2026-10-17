@@ -14,6 +14,7 @@ the js side. two steps, in this order:
 
 import { parse as parseProgram, parseExpressionAt } from 'acorn';
 
+import { styleStatements } from './style.js';
 import { ACORN, CompileError, applyEdits, reason, scannable, tokens, tt } from './util.js';
 
 // ::: sugar :: pipe
@@ -631,10 +632,16 @@ function parseOrFail (code, { filename, offset, source }) {
 a <script> or <script module> block, or a whole .rat.js file.
 names: the reactive names already known (from <script module>), extended in place.
 cases: the named cases found, extended in place (name -> the parts they hand out).
+sheets: given, the `style …` statements are cut out and collected there (style.js).
 returns { code, imports, program } — imports only split off when lift is set.
 */
-function transformScript (code, { cases = new Map, filename, lift = false, names = new Set, offset = 0, runtime = '$$', source = code, extraEdits } = {}) {
-  const sugared  = sweeten     (code,    { cases, filename, offset, source });
+function transformScript (code, { cases = new Map, filename, lift = false, names = new Set, offset = 0, runtime = '$$', sheets, source = code, extraEdits } = {}) {
+  let   sugared  = sweeten     (code,    { cases, filename, offset, source });
+  if (sheets) {
+    const statements = styleStatements(sugared);
+    sheets.push(...statements.found.map(sheet => ({ ...sheet, index: sheet.index + offset })));
+    sugared = statements.code;
+  }
   const program  = parseOrFail (sugared, { filename, offset, source });
   const declared = declarations(program, runtime);
 

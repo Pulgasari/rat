@@ -85,7 +85,10 @@ async function build (url, chain) {
   document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
 
   let compiled;
-  try { compiled = await compileAsync(source, { filename: name }); }
+  // base: css files resolve against this file, not the blob. read: what style inline needs
+  const read = path => fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
+
+  try { compiled = await compileAsync(source, { base: url, filename: name, read }); }
   catch (error) { error.message = `${url}\n${error.message}`; throw error; }
 
   const code = await rewrite(compiled.code, url, chain);

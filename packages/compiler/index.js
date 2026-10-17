@@ -29,7 +29,7 @@ becomes
 
 import { generate }             from './generate.js';
 import { parse }                from './parse.js';
-import { hash, scopeStyle }     from './style.js';
+import { MODES, attrOf, hash, inlineSources, langOfPath, rebase, scopeStyle } from './style.js';
 import { CompileError, nameOf } from './util.js';
 
 import { builtIn, langOf, langsIn, loadStyles, preprocessor }                              from './preprocess.js';
@@ -47,26 +47,57 @@ a <style> in another language goes through options.styles[lang], a function
 (code, { filename }) => css, or through a built-in one (scss, sass, ass) that
 was loaded before: compileAsync() loads them by itself.
 */
-function stylesOf (ast, { filename, source, styles = {} }) {
-  return ast.styles.map(block => {
-    const lang = langOf(block.attributes ?? '');
-    if (lang === 'css') return block.code;
-    const preprocess = styles[lang] ?? preprocessor(lang);
-    if (!preprocess && builtIn(lang)) throw new CompileError(`<style lang="${lang}"> is not loaded yet: use compileAsync(), or await loadStyles('${lang}') first`, { filename, index: block.start, source });
-    if (!preprocess) throw new CompileError(`no preprocessor for <style lang="${lang}">, pass compile(source, { styles: { ${lang}: code => css } })`, { filename, index: block.start, source });
-    return String(preprocess(block.code, { filename }));
-  }).filter(css => css.trim()).join('\n\n');
+function preprocess (code, lang, { filename, index, source, styles = {} }) {
+  if (lang === 'css') return code;
+  const fn = styles[lang] ?? preprocessor(lang);
+  if (!fn && builtIn(lang)) throw new CompileError(`<style lang="${lang}"> is not loaded yet: use compileAsync(), or await loadStyles('${lang}') first`, { filename, index, source });
+  if (!fn) throw new CompileError(`no preprocessor for <style lang="${lang}">, pass compile(source, { styles: { ${lang}: code => css } })`, { filename, index, source });
+  return String(fn(code, { filename }));
 }
 
-function compileComponent (source, { filename = 'component.rat', runtime = '@rat/runtime', styles } = {}) {
-  const ast   = parse(source, { filename });
-  const names = new Set;
-  const cases = new Map;
+/*
+the css files of a component (style.js): <style src="…" /> and `style …`
+statements, as [{ mode, src, index }]. a <style> with src has no content of its own.
+*/
+function sheetsOf (ast, statements, { filename, source }) {
+  const tags = ast.styles.filter(block => attrOf(block.attributes, 'src')).map(block => ({ index: block.start, mode: attrOf(block.attributes, 'mode') ?? 'adopt', src: attrOf(block.attributes, 'src') }));
+  const all  = [...tags, ...statements];
+  for (const { index, mode } of all) if (!MODES.includes(mode)) throw new CompileError(`style mode "${mode}" is none of ${MODES.join(', ')}`, { filename, index, source });
+  return all;
+}
 
-  const modules  = ast.scripts.module  .map(block => transformScript(block.code, { cases, filename, names, offset: block.start, runtime: RUNTIME, source }).code);
-  const instance = ast.scripts.instance.map(block => transformScript(block.code, { cases, filename, names, offset: block.start, runtime: RUNTIME, source, lift: true }));
+// the css of a component: its <style> blocks, then the files it inlines
+function stylesOf (ast, sheets, options) {
+  const { base, filename, inlined = {}, source } = options;
 
-  const css       = stylesOf(ast, { filename, source, styles });
+  const blocks = ast.styles.filter(block => !attrOf(block.attributes, 'src')).map(block => preprocess(block.code, langOf(block.attributes ?? ''), { ...options, index: block.start }));
+
+  const files = sheets.filter(sheet => sheet.mode === 'inline').map(({ index, src }) => {
+    if (!(src in inlined)) throw new CompileError(`style inline '${src}' needs its file: use compileAsync(source, { read: path => text })`, { filename, index, source });
+    const css = base ? rebase(inlined[src], new URL(src, base)) : inlined[src];
+    return preprocess(css, langOfPath(src), { ...options, index });
+  });
+
+  return [...blocks, ...files].filter(css => css.trim()).join('\n\n');
+}
+
+// a css file's url in the compiled module: absolute against base when given, else against the module
+const urlOf = (src, base) => /^[a-z][\w+.-]*:/i.test(src) ? JSON.stringify(src)
+  : base ? JSON.stringify(new URL(src, base).href)
+  : `new URL(${JSON.stringify(src)}, import.meta.url).href`;
+
+function compileComponent (source, { base, filename = 'component.rat', inlined, runtime = '@rat/runtime', styles } = {}) {
+  const ast        = parse(source, { filename });
+  const names      = new Set;
+  const cases      = new Map;
+  const statements = [];
+
+  const modules  = ast.scripts.module  .map(block => transformScript(block.code, { cases, filename, names, offset: block.start, runtime: RUNTIME, sheets: statements, source }).code);
+  const instance = ast.scripts.instance.map(block => transformScript(block.code, { cases, filename, names, offset: block.start, runtime: RUNTIME, sheets: statements, source, lift: true }));
+
+  const sheets    = sheetsOf(ast, statements, { filename, source });
+  const linked    = sheets.filter(sheet => sheet.mode !== 'inline').map(({ mode, src }) => `${RUNTIME}.sheet('${mode}', ${urlOf(src, base)});`);
+  const css       = stylesOf(ast, sheets, { base, filename, inlined, source, styles });
   const scope     = css ? hash(`${filename}\n${css}`) : null;
   const fragments = [];
   const view      = generate(ast, { cases, filename, fragments, names, runtime: RUNTIME, scope, source });
@@ -75,6 +106,7 @@ function compileComponent (source, { filename = 'component.rat', runtime = '@rat
     `import * as ${RUNTIME} from ${JSON.stringify(runtime)};`,
     ...instance.flatMap(script => script.imports),
     ...modules.map(trimBlock),
+    linked.length && `\n${linked.join('\n')}`,
     css && `\nconst ${RUNTIME}style = ${JSON.stringify(scopeStyle(css, scope))};`,
     `\nexport default function ${nameOf(filename)} (props, children) {`,
     css && `  ${RUNTIME}.style('${scope}', ${RUNTIME}style);`,
@@ -130,11 +162,18 @@ function compile (source, options = {}) {
   return mode === 'module' ? compileModule(source, options) : compileComponent(source, options);
 }
 
-// compile() after loading the built-in style languages the source uses
+/*
+compile() after loading the built-in style languages the source uses, and
+reading the files it inlines (style inline 'x.css') through options.read,
+path => text or a promise of it, relative to the file.
+*/
 async function compileAsync (source, options = {}) {
-  const langs = langsIn(source).filter(lang => !options.styles?.[lang] && builtIn(lang));
-  if (langs.length) await loadStyles(langs);
-  return compile(source, options);
+  const sources = options.read ? [...new Set(inlineSources(source))] : [];
+  const inlined = Object.fromEntries(await Promise.all(sources.map(async path => [path, String(await options.read(path))])));
+
+  const langs = [...langsIn(source), ...sources.map(langOfPath)].filter(lang => lang !== 'css' && !options.styles?.[lang] && builtIn(lang));
+  if (langs.length) await loadStyles([...new Set(langs)]);
+  return compile(source, { ...options, inlined: { ...options.inlined, ...inlined } });
 }
 
 // :::::: EXPORT
