@@ -4,9 +4,10 @@
 
 // :::::::::::: IMPORT ::::::::::::
 
-import bunker  from '@bunker/kit';
-import domina  from '@domina/proxy';
-import gestalt from '@gestalt/engine';
+import bunker   from '@bunker/kit';
+import domina   from '@domina/proxy';
+import gestalt  from '@gestalt/engine';
+import observer from '@domina/observer';
 
 import * as commands from '@rat/commands';
 import * as hotkeys  from '@rat/hotkeys';
@@ -21,15 +22,16 @@ RAT.commands = commands;
 RAT.hotkeys  = hotkeys;
 
 // the gang
-RAT.bunker  = bunker;
-RAT.domina  = domina;
-RAT.gestalt = gestalt;
+RAT.bunker   = bunker;
+RAT.domina   = domina;
+RAT.gestalt  = gestalt;
+RAT.observer = observer;
 
 // :::::::::::: EXPORT ::::::::::::
 
 export {
   RAT, commands, hotkeys,
-  bunker, domina, gestalt,
+  bunker, domina, gestalt, observer,
 }
 
 export default RAT;
