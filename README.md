@@ -12,6 +12,9 @@ official:
 [playground](https://code.pulgasari.dev/rat/demos/playground/)
 
 demos: 
+[app](https://code.pulgasari.dev/rat/demos/app/)
+
+playground:
 [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat) ·
 [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat) ·
 [counter](https://code.pulgasari.dev/rat/demos/playground/#counter.rat) ·
