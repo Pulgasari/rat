@@ -1,0 +1,12 @@
+{
+  "name"         : "@rat/import",
+  "version"      : "0.0.1",
+  "description"  : "load a file by its extension (css, csv, env, html, ini, js, json5, jsonc, jsonl, jsx, less, md, sass, scss, svg, toml, ts, wasm, xml, yaml …) in the result you ask for, parsers from the host or a cdn, results cached",
+  "type"         : "module",
+  "main"         : "./index.js",
+  "types"        : "./index.d.ts",
+  "exports"      : { ".": "./index.js" },
+  "dependencies" : { "@bunker/db": "^0.2.0", "@bunker/policy": "^0.1.0" },
+  "sideEffects"  : false,
+  "license"      : "MIT"
+}
