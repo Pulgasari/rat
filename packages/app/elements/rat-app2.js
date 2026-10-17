@@ -4,7 +4,9 @@
 
 /*
 :::::: attr
-- sollte via @rat/types definiert werden können
+- sollte via @rat/types definiert werden können (muss nich sofort sein)
+:::::: observer
+- klingt @domina/observer ein
 :::::: router
 - sollte als @rat/router ausgelagert werden
 - wird hier dann nur eingebunden und genutzt
@@ -35,7 +37,7 @@ export class RatApp extends DominaElement {
     palette    : String,
     routing    : { type: String, default: 'hash', values: ['hash', 'none', 'path'] },
     scheme     : String,
-    skin       : String,
+    skin       : { type: String, onChange: () => this.applySkin() },
     transition : { type: String, default: 'fade' },
   };
 
@@ -90,17 +92,20 @@ export class RatApp extends DominaElement {
   get view  () { return this.views.find({ view: view.active }) ?? null; }
   get areas () { return this.children.filter({ localName: 'app-area' }); }
 
-  // an area by its name
-  area (name) { return this.areas.find({ name }) ?? null; }
-
-  // activates a view by its name
+  area (name)          { return this.areas.find({ name }) ?? null; }
   show (name, options) { return this.views.find({ name })?.activate(options); }
 
   ready () {
-    if (!this.hasAttribute('loading')) return Promise.resolve();
-    const done = () => { this.removeAttribute('loading'); this.emit('ready'); };
-    if (!document.startViewTransition || reducedMotion()) return Promise.resolve(done());
-    return document.startViewTransition(done).finished;
+    if (!this.loading) return Promise.resolve();
+    
+    const done = () => {
+      this.loading = false; 
+      this.emit('ready'); 
+    };
+    
+    return (!document.startViewTransition || reducedMotion()) 
+      ? Promise.resolve(done())
+      : document.startViewTransition(done).finished;
   }
 
   onConnected () {
