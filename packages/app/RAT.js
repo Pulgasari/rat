@@ -7,6 +7,7 @@
 import bunker   from '@bunker/kit';
 import domina   from '@domina/proxy';
 import gestalt  from '@gestalt/engine';
+import gestures from '@aufbau/gestures';
 import observer from '@domina/observer';
 
 import * as commands from '@rat/commands';
