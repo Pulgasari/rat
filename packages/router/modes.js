@@ -29,6 +29,23 @@ const onWindow = (types, fn) => {
 };
 
 /*
+import onEvents from '@domina/methods';
+
+const onWindow = (types, fn) => {
+  const off = onEvents(types, fn);
+  return () => off();
+};
+
+
+import domina from '@domina/domina';
+
+const onWindow = (types, fn) => {
+  const off = domina.onEvents(types, fn);
+  return () => off();
+};
+*/
+
+/*
 the history modes number their entries in history.state, so a back or forward a
 guard refuses is undone by going the same number of steps the other way, and
 the entry keeps its place. popstate only: it comes for hash changes as well, a
