@@ -23,7 +23,7 @@ a decided entry stays in its file, with what was built.
 - <a id="d-13"></a>**d-13** · props · **open** · [ideas/props](ideas/props.md#d-13)
 - <a id="d-14"></a>**d-14** · type notation in scripts → a schema as the initial value · [ideas/types](ideas/types.md#d-14)
 - <a id="d-15"></a>**d-15** · the index in `@for` · **open** · [ideas/loop-metadata](ideas/loop-metadata.md#d-15)
-- <a id="d-16"></a>**d-16** · commands with arguments in markup · **open** · [ideas/app](ideas/app.md#d-16)
+- <a id="d-16"></a>**d-16** · commands with arguments in markup → brackets, `go[settings]` · [ideas/app](ideas/app.md#d-16)
 - <a id="d-17"></a>**d-17** · router → a registry now, file based later · [ideas/app](ideas/app.md#d-17)
 - <a id="d-18"></a>**d-18** · `@rat/core` and `@rat/runtime` → separate · [ideas/app](ideas/app.md#d-18)
 - <a id="d-19"></a>**d-19** · `@scope` lower boundary · **open** · [ideas/styles](ideas/styles.md#d-19)

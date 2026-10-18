@@ -19,8 +19,14 @@ const stop = commands.listen(document);        // runs what markup fires
 ```
 
 ```html
-<button onclick='save'>save</button>   <!-- a string handler is a command -->
+<button onclick='save'>save</button>            <!-- a string handler is a command -->
+<button onclick='go[settings]'>…</button>         <!-- with arguments: go('settings', event) -->
+<button onclick='move[up, 3]'>…</button>          <!-- move('up', 3, event) -->
 ```
+
+arguments in brackets, like the key modifiers ([d-16](../../.md/ideas/app.md#d-16)): numbers,
+`true`, `false` and `null` are read as such, anything else is a string. the handler gets the
+arguments, then the event that fired it. `run('go[settings]')` works the same.
 
 | | |
 |---|---|
@@ -28,9 +34,10 @@ const stop = commands.listen(document);        // runs what markup fires
 | `.add(id, fn)`, `.remove(id)`, `.get(id)`, `.has(id)`, `.list()` | |
 | `.run(id, ...args)` | the command's return value, `undefined` for an unknown one |
 | `.listen(root = document)` | runs the `rat:command` events that reach `root` and stops them there. returns `stop` |
-| `command(target, name, event?)` | fires a bubbling, composed `rat:command` with `{ event, name }` |
+| `command(target, text, event?, args?)` | fires a bubbling, composed `rat:command` with `{ args, event, name }` |
+| `parseCommand(text)` | `'move[up, 3]'` → `{ name: 'move', args: ['up', 3] }` |
 | `commandListener(name)` | the handler a compiled `onclick='save'` gets |
 | `nameOf(id)` | `'toggle-play'` → `'togglePlay'` |
 
 a registry stops what it runs, so one listening on a component wins over the app's above it.
-how commands take arguments in markup is open ([d-16](../../.md/ideas/app.md#d-16)).
+

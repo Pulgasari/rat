@@ -30,7 +30,8 @@ createHotkeys({ commands }).define({
 
 ## createHotkeys({ commands, target })
 
-- a binding is a command name, a function, or `{ command, when, global, preventDefault }`
+- a binding is a command name (with arguments too: `'go[settings]'`), a function, or
+  `{ command, when, global, preventDefault }`
   (`action` is read as `command`, as zugriff names it).
 - without `commands`, a name fires `rat:command` from the focused element: a registry
   listening above it runs it.

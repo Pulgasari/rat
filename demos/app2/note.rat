@@ -1,0 +1,9 @@
+<script>
+  const next = Number(props.id) + 1;
+</script>
+
+<article>
+  <h1>note {props.id}</h1>
+  <p>mounted with the params of /notes/:id as props. another id mounts it anew.</p>
+  <a href={`#/notes/${next}`}>note {next}</a>
+</article>

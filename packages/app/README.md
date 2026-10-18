@@ -77,6 +77,55 @@ what the element holds until the component mounts stays: a loading screen withou
 `<rat-app>` is the entry of an app and always loads right away, `<rat-part>` is a piece of a
 page (an island, [parts](../../.md/ideas/parts.md)).
 
+## app shell: `<rat-app2>`, `<rat-view>`, `<rat-area>`
+
+experimental, the successor of `<app-root>` from `@aufbau/elements`, built on `@domina/element`,
+`@rat/router` and `@rat/commands`. `run.js` loads it (`@rat/app/shell`) when the page has a
+`<rat-app2>`. demo: [`demos/app2`](../../demos/app2/).
+
+```html
+<rat-app2 routing="hash" loading>
+  <rat-area dock="start" open>…</rat-area>
+  <rat-view route="/">…</rat-view>
+  <rat-view route="/notes/:id" src="./note.rat"></rat-view>
+  <rat-view route="/settings" name="settings">
+    <rat-view route="/">…</rat-view>
+    <rat-view route="profile" src="./profile.rat"></rat-view>
+  </rat-view>
+  <rat-view route="*">not found</rat-view>
+</rat-app2>
+```
+
+| `<rat-app2>` | |
+|---|---|
+| `routing` | `hash` (default), `path`, `query`, `memory`, `none`. `base` for `path` |
+| `transition` | of the views: `fade` (default), `slide`, `none`, or the name of a keyframes |
+| `loading` | the splash of `run.js` stays until the active views are mounted and `app.hold(promise)` is done |
+| `density`, `geometry`, `layout`, `look`, `mode`, `palette`, `skin` | handed to `@gestalt/core` |
+| `app.router`, `app.commands` | `@rat/router`, `@rat/commands` listening on the app (`go[settings]`, `back`) |
+| `app.view`, `app.views`, `app.area(name)`, `app.areas` | the deepest active view, every view, the areas |
+| `rat:ready`, `rat:navigate` | events, `rat:navigate` with `{ from, to, path, params }` |
+
+one per page, a second one warns and stays out of it.
+
+**matching**: per level the first view whose route matches, exactly, else as the start of the
+path (a view with views in it, or a `src` not loaded yet), else a route with `*`. the rest goes
+to the views inside, the params of all levels are `router.params`. `go[x]` takes the route `/x`,
+else the view `name="x"`.
+
+| `<rat-view>` | |
+|---|---|
+| `route` | relative to the view around it. a view without `route` is not routed |
+| `src` | loaded on the first activation, mounted with the params as props (and `props.view`). other params remount it |
+| `name`, `transition` | for `go[name]`, and its own transition |
+| `[active]` | set by the router only. an inactive view is inert and hidden, a mounted `src` stays |
+| `view.on('leave', fn, { unload })` | a guard, asked when a navigation takes the view away. `event.preventDefault()` keeps it, async is fine. returns its stop |
+| `rat:enter`, `rat:leave`, `rat:mount`, `rat:error` | events |
+
+`<rat-area>`: `dock` (`start`, `end`, `bottom`, `none` = main), `open`, `expanded`, `peek`,
+`overlay` (`auto` below `breakpoint`, `always`, `never`), `show()`, `hide()`, `toggle()`,
+`expand()`, a drag on its handle. the port of `<app-area>`.
+
 ## js
 
 ```js

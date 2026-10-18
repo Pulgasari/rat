@@ -1,0 +1,12 @@
+{
+  "name"         : "@rat/router",
+  "version"      : "0.0.1",
+  "description"  : "a router on its own: hash, path, query and memory modes, nested route patterns, leave guards, go/back as commands",
+  "type"         : "module",
+  "main"         : "./index.js",
+  "types"        : "./index.d.ts",
+  "exports"      : { ".": "./index.js" },
+  "dependencies" : { "@rat/signals": "0.0.1" },
+  "sideEffects"  : false,
+  "license"      : "MIT"
+}
