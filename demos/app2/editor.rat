@@ -1,0 +1,15 @@
+<script>
+  let $dirty = false;
+
+  // a leave guard on the view: unsaved changes ask before the route changes, and before the tab closes
+  props.view.on('leave', event => {
+    if ($dirty && (event.unload || !confirm('discard the changes?'))) event.preventDefault();
+  }, { unload: true });
+</script>
+
+<section>
+  <p>type something, then leave: the view asks first.</p>
+  <textarea oninput={() => $dirty = true}></textarea>
+  <button onclick={() => $dirty = false}>save</button>
+  <p>{$dirty ? 'unsaved changes' : 'saved'}</p>
+</section>

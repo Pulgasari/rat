@@ -1,0 +1,12 @@
+<nav.nav>
+  <button onclick='go[/]'>home</button>
+  <button onclick='go[/notes/3]'>note 3</button>
+  <button onclick='go[settings]'>settings</button>
+  <button onclick='go[editor]'>editor</button>
+  <button onclick='go[/nowhere]'>nowhere</button>
+  <button onclick='back'>back</button>
+</nav.nav>
+
+<style>
+  .nav { display: grid; gap: .5rem; }
+</style>

@@ -14,7 +14,10 @@ next to it (code.pulgasari.dev/rat/, /htx/, /domina/, or a local checkout of
 all three side by side). entries of an import map already on the page win:
 put it before this script to point anything elsewhere.
 
-it also draws the splash of an empty <rat-app>: logo, what is happening,
+a page with a <rat-app2> gets the app shell too (@rat/app/shell: <rat-app2>,
+<rat-view>, <rat-area>), the map has what it needs (@domina/element, @gestalt/core …).
+
+it also draws the splash of an empty <rat-app> (and of a <rat-app2>, its children hidden): logo, what is happening,
 spinner. css only, so it is there with the first paint, long before the
 compiler has loaded. background and color are the page's, the logo and the
 spinner are masks in currentColor. content inside <rat-app> replaces it, a
@@ -48,7 +51,10 @@ bust without devtools, on a phone too. .rat files are always revalidated.
       --rat-spinner : url("data:image/svg+xml,${encodeURIComponent(SPINNER)}");
     }
 
-    :where(rat-app:is(:not(:defined), [loading]):empty) {
+    /* <rat-app2> holds its views from the start: they stay hidden behind the same splash */
+    :where(rat-app2:is(:not(:defined), [loading])) > * { display: none !important; }
+
+    :where(rat-app:is(:not(:defined), [loading]):empty, rat-app2:is(:not(:defined), [loading])) {
       align-content  : center;
       display        : grid;
       gap            : 1.5rem;
@@ -57,7 +63,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
       text-align     : center;
     }
 
-    :where(rat-app:is(:not(:defined), [loading]):empty)::before {
+    :where(rat-app:is(:not(:defined), [loading]):empty, rat-app2:is(:not(:defined), [loading]))::before {
       aspect-ratio : 3937 / 3067;
       background   : currentColor;
       content      : '';
@@ -66,7 +72,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     }
 
     /* the text on top, the spinner below it: the background only fills the spinner's box, the mask shows the text above and the spinner's shape below */
-    :where(rat-app:is(:not(:defined), [loading]):empty)::after {
+    :where(rat-app:is(:not(:defined), [loading]):empty, rat-app2:is(:not(:defined), [loading]))::after {
       background        : linear-gradient(currentColor 0 0) bottom / 2rem 2rem no-repeat;
       content           : 'rat app is being built …' '\\A' attr(data-status);
       line-height       : 1.6;
@@ -75,7 +81,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
       white-space       : pre;
     }
 
-    :where(rat-app:not(:defined):empty)::after { content: 'rat app is being built …' '\\A' '${STATUS}'; }
+    :where(rat-app:not(:defined):empty, rat-app2:not(:defined))::after { content: 'rat app is being built …' '\\A' '${STATUS}'; }
   `;
 
   document.head.prepend(Object.assign(document.createElement('style'), { textContent: SPLASH }));
@@ -90,6 +96,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   const map = {
     //////////// @rat ////////////
     '@rat/app'        : at('./index.js'),
+    '@rat/app/shell'  : at('./elements/rat-app2.js'),
     '@rat/commands'   : at('../commands/index.js'),
     '@rat/compiler'   : at('../compiler/index.js'),
     '@rat/hotkeys'    : at('../hotkeys/index.js'),
@@ -99,17 +106,29 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     '@rat/signals'    : at('../signals/index.js'),
     '@rat/types'      : at('../types/index.js'),
     //////////// @bunker ////////////
+    '@bunker/core'    : at('../../../bunker/core/index.js'),
     '@bunker/db'      : at('../../../bunker/db/index.js'),
     '@bunker/policy'  : at('../../../bunker/policy/index.js'),
+    '@bunker/storage' : at('../../../bunker/storage/index.js'),
+    '@bunker/utils/'  : at('../../../bunker/utils/'),
     //////////// @domina ////////////
+    '@domina/chain'   : at('../../../domina/packages/chain/index.js'),
+    '@domina/element' : at('../../../domina/packages/element/index.js'),
     '@domina/methods/': at('../../../domina/packages/methods/'),
+    '@domina/observer': at('../../../domina/packages/observer/index.js'),
+    '@domina/proxy'   : at('../../../domina/packages/proxy/index.js'),
     '@domina/render'  : at('../../../domina/packages/render/index.js'),
+    //////////// @gestalt ////////////
+    '@gestalt/core'   : at('../../../gestalt/packages/core/index.js'),
     //////////// @htx ////////////
     '@htx/htx'        : at('../../../htx/packages/htx/index.js'),
     '@htx/js/render'  : at('../../../htx/packages/js/render.js'),
     //////////// @pulgasari ////////////
-    '@pulgasari/is'   : JSR + '@pulgasari/is',
-    '@pulgasari/str'  : JSR + '@pulgasari/str',
+    '@pulgasari/canonicalmap' : at('../../../js-packages/obj/CanonicalMap.js'),
+    '@pulgasari/coerce'       : at('../../../js-packages/coerce/index.js'),
+    '@pulgasari/is'           : JSR + '@pulgasari/is',
+    '@pulgasari/logger'       : JSR + '@pulgasari/logger',
+    '@pulgasari/str'          : JSR + '@pulgasari/str',
     //////////// other stuff ////////////
     'acorn'           : ESM + 'acorn@8.14.0',
   };
@@ -157,7 +176,11 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   const entry = resolve('@rat/app', location.href);
   const ready = fresh ? refetch(entry).then(count => console.info(`[rat] ?fresh: ${count} files refetched`)) : Promise.resolve();
 
+  // a page with a <rat-app2> gets the app shell as well: <rat-app2>, <rat-view>, <rat-area>
+  const parsed = new Promise(done => document.readyState === 'loading' ? addEventListener('DOMContentLoaded', done, { once: true }) : done());
+  const shell  = () => parsed.then(() => document.querySelector('rat-app2') && import(resolve('@rat/app/shell', location.href)));
+
   ready
-    .then(() => import(entry))
+    .then(() => Promise.all([import(entry), shell()]))
     .catch(error => console.error('[rat] @rat/app failed to load:', error));
 })();

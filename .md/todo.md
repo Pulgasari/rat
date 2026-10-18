@@ -60,8 +60,8 @@
 - d-26 (`@name` vs `use:name`): betrifft jede app-ui. d-16 ist entschieden (siehe app-gerüst)
 - welche app als testobjekt? (zugriff-teil, notes, todos …) danach richtet sich, was von "sollte" vorgezogen wird
 
-## app-gerüst (`<rat-app2>`, `<rat-view>`): entschieden, noch nicht gebaut
-skizze: `packages/app/elements/rat-app2.js`. look (skin, palette, density …) läuft über gestalt, `<rat-app2>` reicht nur durch.
+## app-gerüst (`<rat-app2>`, `<rat-view>`, `<rat-area>`): gebaut
+`packages/app/elements/` (`@rat/app/shell`), demo `demos/app2`. look (skin, palette, density …) läuft über gestalt, `<rat-app2>` reicht nur durch.
 
 **`@domina/element`**
 - `static props = { name: Schema }` statt `static attr`. jedes standard schema (`~standard`: `@rat/types`, zod, valibot), domina kennt nur die schnittstelle
@@ -90,6 +90,12 @@ skizze: `packages/app/elements/rat-app2.js`. look (skin, palette, density …) l
 - `<rat-view>`: `active`, `name`, `route` (relativ zur eltern-view), `src`, `transition`. aktiv macht nur der router
 - `<rat-area>` statt `<app-area>`: sidebar, drawer, bottom-sheet, das grid stellt `<rat-app2>`
 - entfällt gegenüber der skizze: routing-code, `start()` mit mutationobserver, `sync()`/`applySkin()`, die `defineProperty`-schleife, der spinner in `styles()`
+- matching pro ebene: erst exakt, dann als anfang des pfads (nur views mit views darin oder ungeladenem `src`), zuletzt routen mit `*`
+- guard pro view: `view.on('leave', fn, { unload })`, die app fragt nur die views, die die navigation wegnimmt (innerste zuerst)
+- `[loading]` endet von selbst, sobald die aktiven views gemountet sind und `app.hold(promise)` erledigt ist
+- `<rat-area>` übernimmt die semantik von `<app-area>`: eine angedockte area ist nur mit `open` (oder `peek`) sichtbar
+- [ ] `<rat-app>`/`<rat-part>` (`elements.js`) auf `@domina/element` heben, `<rat-app2>` dann `<rat-app>`?
+- [ ] hotkeys an `app.commands` (`@rat/hotkeys`)
 
 **commands mit argumenten (d-16 → entschieden)**
 - `onclick='go[settings]'`, mehrere mit komma: `move[up, 3]`. `rat:command` trägt `{ name, args, event }`

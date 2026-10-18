@@ -1,0 +1,8 @@
+<script>
+  let $name = 'rat';
+</script>
+
+<section>
+  <p>profile of <b>{$name}</b>, a src inside a nested view.</p>
+  <input bind:value={$name} />
+</section>
