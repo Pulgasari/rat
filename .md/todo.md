@@ -57,5 +57,29 @@
 - produktion: ein build-schritt (oder der sw kompiliert einmal und cached das ergebnis), sonst kompiliert jedes laden neu
 
 **klären**
-- d-16 (commands mit argumenten), d-26 (`@name` vs `use:name`): betreffen jede app-ui
+- d-26 (`@name` vs `use:name`): betrifft jede app-ui. d-16 ist entschieden (siehe app-gerüst)
 - welche app als testobjekt? (zugriff-teil, notes, todos …) danach richtet sich, was von "sollte" vorgezogen wird
+
+## app-gerüst (`<rat-app2>`, `<rat-view>`): entschieden, noch nicht gebaut
+skizze: `packages/app/elements/rat-app2.js`. look (skin, palette, density …) läuft über gestalt, `<rat-app2>` reicht nur durch.
+
+**`@domina/element`**
+- `static props = { name: Schema }` statt `static attr`. jedes standard schema (`~standard`: `@rat/types`, zod, valibot), domina kennt nur die schnittstelle
+- zugriff: `this.props.x`, dazu kurzform `this.x` (getter/setter pro prop). name kollidiert mit htmlelement (`title`, `hidden` …): warnung, dann nur über `.props`
+- `this.dom`: `@domina/proxy` auf das element begrenzt. `all()`, `find()`, `filter()` nehmen matcher-objekt (`{ active: true }`) oder selektor-string
+- `this.observe`: `@domina/observer`. `added(sel, fn)`, `removed(sel, fn)`, `resized(fn)`, `visible(fn)`, `attr(name, fn)`, räumt beim entfernen selbst auf
+
+**`@rat/router`**
+- eigenständig (`createRouter({ mode, base })`), einer pro app: `app.router`
+- modi: `hash`, `path`, `query`, `memory`, eigener als `{ read, write, listen }`
+- muster `:id`, `:id?`, `*`, eigener matcher. `path`-modus fängt links derselben herkunft ab, `data-native` lässt durch
+- `router.path`, `.params`, `.query`, `.go(to, { replace })`, `.back()`, `.on('change')`, `.$path` als signal
+- verschachtelt: `<rat-view>` in `<rat-view>`, `route` relativ zur eltern-view, pro ebene genau eine aktiv (erste passende), params aller ebenen gesammelt
+- guards: `router.on('leave', event => event.preventDefault())`, async, auch pro view, `{ unload: true }` hängt sich an `beforeunload`
+- `<rat-view route src>` lädt über den loader von `@rat/app`, params als props
+- [ ] später untersuchen: ein globaler router, den views direkt abonnieren
+
+**commands mit argumenten (d-16 → entschieden)**
+- `onclick='go[settings]'`, mehrere mit komma: `move[up, 3]`. `rat:command` trägt `{ name, args, event }`
+- der router meldet `go` und `back` an. `go[x]` nimmt die route (`/settings`, auch ohne `/`), eine view mit `name="settings"` ist ebenso erreichbar
+

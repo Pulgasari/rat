@@ -1,6 +1,6 @@
 # rat :: app: commands, router, packages
 
-status: commands with arguments: **open decision** ([d-16](#d-16)). router and package split: decided (d-17, d-18).
+status: commands with arguments: decided, brackets ([d-16](#d-16)). router and package split: decided (d-17, d-18).
 
 see also: [concept.md 6](../concept.md#6-app-commands-hotkeys-router); hyperapp.md in `pulgasari.github.io/md/webdev/libs/` (`[Action, payload]`, the shape of d-16 b)
 
@@ -10,6 +10,7 @@ see also: [concept.md 6](../concept.md#6-app-commands-hotkeys-router); hyperapp.
 - [ ] a) `onclick='open:settings'` (name, colon, argument)
 - [ ] b) `onclick={['open', 'settings']}`
 - [ ] c) a `command` attribute next to the handler: `command='open' value='settings'` (closer to the invoker commands api)
+- [x] d) brackets, like the key modifiers: `onclick='go[settings]'`, several with commas: `move[up, 3]`. `rat:command` carries `{ name, args, event }` (decided, not built)
 
 <a id="d-17"></a>
 ## d-17 · router → **a registry now, file based later (scheme open)**
