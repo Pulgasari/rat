@@ -22,8 +22,9 @@ params belong to whoever knows the routes: match() hands them to its callback,
 an app that matches its views sets router.params itself.
 */
 
-import { signal } from '@rat/signals';
+// :::::: IMPORT
 
+import { signal }        from '@rat/signals';
 import { modeOf, split } from './modes.js';
 import { matchRoute }    from './pattern.js';
 
@@ -105,17 +106,16 @@ function createRouter ({ base = '', initial = '/', key = 'route', mode = 'hash',
   }
 
   const router = {
-    $path,
-    mode,
+    $path, mode,
 
     get params () { return state.params; },
-    set params (params) { state.params = params ?? {}; },
     get path   () { return state.path; },
     get query  () { return state.query; },
 
-    back () { return place.back ? place.back() : history.back(); },
+    set params (params) { state.params = params ?? {}; },
 
-    go (to, options) { return navigate(pathOf(to), options); },
+    back ()            { return place.back ? place.back() : history.back(); },
+    go   (to, options) { return navigate(pathOf(to), options); },
 
     match (pattern, fn) {
       const matcher = { fn, pattern };
