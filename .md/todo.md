@@ -68,6 +68,10 @@ skizze: `packages/app/elements/rat-app2.js`. look (skin, palette, density …) l
 - zugriff: `this.props.x`, dazu kurzform `this.x` (getter/setter pro prop). name kollidiert mit htmlelement (`title`, `hidden` …): warnung, dann nur über `.props`
 - `this.dom`: `@domina/proxy` auf das element begrenzt. `all()`, `find()`, `filter()` nehmen matcher-objekt (`{ active: true }`) oder selektor-string
 - `this.observe`: `@domina/observer`. `added(sel, fn)`, `removed(sel, fn)`, `resized(fn)`, `visible(fn)`, `attr(name, fn)`, räumt beim entfernen selbst auf
+- schema regelt startwert (`initial`), attribut → prop (umwandlung des schemas: `'120'` → 120, `Bool` = anwesenheit), prop → attribut (einfache werte immer zurückgespiegelt, listen/records bleiben reine props)
+- ungültiger wert: warnung, alter wert bleibt (wie typisierte signals)
+- änderungen über `onChange` pro prop, keine signals
+- [ ] später: props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
 
 **`@rat/router`**
 - eigenständig (`createRouter({ mode, base })`), einer pro app: `app.router`
