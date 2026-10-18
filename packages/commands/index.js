@@ -17,24 +17,50 @@ names are one across kebab, camel and snake case: 'toggle-play', 'togglePlay'
 and 'toggle_play' are the same command.
 
 in markup a string handler is a command (onclick='save'): commandListener(name)
-fires a bubbling 'rat:command' with { event, name }. a registry listening on an
-ancestor runs it and stops it there, so a nested registry (a component's) wins
-over an outer one (the app's).
+fires a bubbling 'rat:command' with { args, event, name }. a registry listening
+on an ancestor runs it and stops it there, so a nested registry (a component's)
+wins over an outer one (the app's).
+
+arguments go in brackets, like the key modifiers (d-16):
+
+  onclick='go[settings]'     go('settings', event)
+  onclick='move[up, 3]'      move('up', 3, event)
+
+numbers, true, false and null are read as such, anything else is a string. the
+handler gets the arguments, then the event that fired it.
 */
 
 const COMMAND  = 'rat:command';
 const RESERVED = new Set(['add', 'get', 'has', 'list', 'listen', 'remove', 'run']);
+
+// 'move[up, 3]' -> { name: 'move', args: ['up', 3] }
+const LITERALS = { false: false, null: null, true: true };
+
+const argumentOf = text => text in LITERALS ? LITERALS[text] : /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
+
+const parsed = new Map;
+
+function parseCommand (text) {
+  if (!parsed.has(text)) {
+    const [, name = text, list] = /^([^[\]]+)\[(.*)\]$/.exec(String(text).trim()) ?? [];
+    parsed.set(text, { args: list === undefined || list.trim() === '' ? [] : list.split(',').map(part => argumentOf(part.trim())), name: name.trim() });
+  }
+  return parsed.get(text);
+}
 
 // 'toggle-play', 'toggle_play', 'togglePlay' -> 'togglePlay'
 const nameOf = id => String(id).replace(/[-_\s]+([a-z0-9])/gi, (_, char) => char.toUpperCase()).replace(/^[A-Z]/, char => char.toLowerCase());
 
 // ::: firing
 
-// a 'rat:command' from target, bubbling and through shadow roots
-const command = (target, name, event = null) => target.dispatchEvent(new CustomEvent(COMMAND, { bubbles: true, composed: true, detail: { event, name } }));
+// a 'rat:command' from target, bubbling and through shadow roots. 'go[settings]' brings its arguments
+function command (target, text, event = null, args = []) {
+  const { args: written, name } = parseCommand(text);
+  return target.dispatchEvent(new CustomEvent(COMMAND, { bubbles: true, composed: true, detail: { args: [...written, ...args], event, name } }));
+}
 
-// the handler a compiled onclick='save' gets
-const commandListener = name => event => command(event.currentTarget, name, event);
+// the handler a compiled onclick='save' or onclick='go[settings]' gets
+const commandListener = text => event => command(event.currentTarget, text, event);
 
 // ::: the registry
 
@@ -49,18 +75,24 @@ function createCommands (source = {}) {
 
     // runs the commands fired below root that this registry knows, and stops them there
     listen (root = document) {
+      // the name may carry its arguments still ('go[settings]' from a hotkey without a registry)
       const handle = event => {
-        const { event: origin, name } = event.detail ?? {};
+        const { args = [], event: origin, name: text } = event.detail ?? {};
+        const { args: written, name } = parseCommand(text);
         if (!map.has(nameOf(name))) return;
         event.stopPropagation();
-        map.get(nameOf(name))(origin, event);
+        map.get(nameOf(name))(...written, ...args, origin);
       };
       root.addEventListener(COMMAND, handle);
       return () => root.removeEventListener(COMMAND, handle);
     },
 
     remove (id)       { map.delete(nameOf(id)); return proxy; },
-    run (id, ...args) { return map.get(nameOf(id))?.(...args); },
+    // run('save'), run('go', 'settings'), run('go[settings]')
+    run (id, ...args) {
+      const { args: written, name } = parseCommand(id);
+      return map.get(nameOf(name))?.(...written, ...args);
+    },
   };
 
   // any other key is a command: get returns it, set registers it
@@ -79,4 +111,4 @@ function createCommands (source = {}) {
 
 // :::::: EXPORT
 
-export { COMMAND, command, commandListener, createCommands, nameOf };
+export { COMMAND, command, commandListener, createCommands, nameOf, parseCommand };
