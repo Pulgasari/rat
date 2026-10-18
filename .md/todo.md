@@ -70,6 +70,7 @@ skizze: `packages/app/elements/rat-app2.js`. look (skin, palette, density …) l
 - `this.observe`: `@domina/observer`. `added(sel, fn)`, `removed(sel, fn)`, `resized(fn)`, `visible(fn)`, `attr(name, fn)`, räumt beim entfernen selbst auf
 - schema regelt startwert (`initial`), attribut → prop (umwandlung des schemas: `'120'` → 120, `Bool` = anwesenheit), prop → attribut (einfache werte immer zurückgespiegelt, listen/records bleiben reine props)
 - ungültiger wert: warnung, alter wert bleibt (wie typisierte signals)
+- prop ist ein schema (kurz) oder `{ type, onChange }`: `type` ein standard schema oder `String`/`Number`/`Boolean`, `onChange` und weiteres (später `reflect: false`) versteht domina selbst, nicht das schema
 - änderungen über `onChange` pro prop, keine signals
 - [ ] später: props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
 
@@ -82,6 +83,13 @@ skizze: `packages/app/elements/rat-app2.js`. look (skin, palette, density …) l
 - guards: `router.on('leave', event => event.preventDefault())`, async, auch pro view, `{ unload: true }` hängt sich an `beforeunload`
 - `<rat-view route src>` lädt über den loader von `@rat/app`, params als props
 - [ ] später untersuchen: ein globaler router, den views direkt abonnieren
+
+**`<rat-app2>`, `<rat-view>`, `<rat-area>`**
+- genau eine `<rat-app2>` pro seite (das root-element), eine zweite: warnung, wird ignoriert
+- `<rat-app2>`: `app.router`, `app.commands` (`go`, `back` vom router), `ready()` beendet `[loading]` mit view transition. lade-screen ist der splash aus `run.js`
+- `<rat-view>`: `active`, `name`, `route` (relativ zur eltern-view), `src`, `transition`. aktiv macht nur der router
+- `<rat-area>` statt `<app-area>`: sidebar, drawer, bottom-sheet, das grid stellt `<rat-app2>`
+- entfällt gegenüber der skizze: routing-code, `start()` mit mutationobserver, `sync()`/`applySkin()`, die `defineProperty`-schleife, der spinner in `styles()`
 
 **commands mit argumenten (d-16 → entschieden)**
 - `onclick='go[settings]'`, mehrere mit komma: `move[up, 3]`. `rat:command` trägt `{ name, args, event }`
