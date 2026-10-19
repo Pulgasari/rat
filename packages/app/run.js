@@ -114,10 +114,10 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     //////////// @domina ////////////
     '@domina/chain'   : at('../../../domina/packages/chain/index.js'),
     '@domina/element' : at('../../../domina/packages/element/index.js'),
-    '@domina/methods/': at('../../../domina/packages/methods/'),
     '@domina/observer': at('../../../domina/packages/observer/index.js'),
     '@domina/proxy'   : at('../../../domina/packages/proxy/index.js'),
     '@domina/render'  : at('../../../domina/packages/render/index.js'),
+    '@domina/verbs/'  : at('../../../domina/packages/verbs/'),
     //////////// @gestalt ////////////
     '@gestalt/core'   : at('../../../gestalt/packages/core/index.js'),
     //////////// @htx ////////////
@@ -129,6 +129,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     '@pulgasari/is'           : JSR + '@pulgasari/is',
     '@pulgasari/logger'       : JSR + '@pulgasari/logger',
     '@pulgasari/str'          : JSR + '@pulgasari/str',
+    '@pulgasari/url'          : at('../../../js-packages/url/index.js'),
     //////////// other stuff ////////////
     'acorn'           : ESM + 'acorn@8.14.0',
   };

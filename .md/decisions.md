@@ -7,7 +7,7 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 
 ## props in `.rat`-komponenten (d-13)
 - b: `let { $title, size = 'm' } = props`. ein name mit `$` bleibt reaktiv (signal), ohne `$` ist es der wert beim mount. dieselbe `$`-regel wie überall
-- c (eigener `@props { … }`-block) verworfen: macht dasselbe wie b, nur mit neuer syntax statt destrukturierung
+- c (eigener `@props { … }`-block) verworfen: macht dasselbe wie b, nur mit neuer syntax statt destrukturierung. blocks sind fürs markup da
 
 ## vorbereitung (frühere festlegungen)
 - persistenz über `@bunker`: `$Record`/`$List` in indexeddb/opfs halten, `persist` in `@rat/types`
@@ -50,3 +50,6 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 - guard pro view: `view.on('leave', fn, { unload })`, die app fragt nur die views, die die navigation wegnimmt (innerste zuerst)
 - `[loading]` endet von selbst, sobald die aktiven views gemountet sind und `app.hold(promise)` erledigt ist
 - `<rat-area>` übernimmt die semantik von `<app-area>`: eine angedockte area ist nur mit `open` (oder `peek`) sichtbar
+
+## allgemein
+- modernes html nutzen, wo es geht (`<dialog>`, popover, view transitions …)

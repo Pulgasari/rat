@@ -7,8 +7,8 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] (?) `<rat-part>` auf `@domina/element`
 - [ ] `<rat-part>` lädt auch `.htx` und `.html`
 - [ ] error boundary: laufzeitfehler in komponenten in der view/part anzeigen statt die app zu verlieren
-- [ ] `<rat-overlay>`
-- [ ] eingebaute commands, z.b. `toggle[name]` (area, overlay … per `name`)
+- [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
+- [ ] umschalten per `name` (area, overlay …), beide formen bauen und in der praxis vergleichen: event `rat:toggle` und funktion `rat.toggle(name)`
 - [ ] hotkeys an `app.commands` (`@rat/hotkeys`)
 - [ ] auto-import per config: `autoImport: true` (verzeichnis der app), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
 - [ ] app-config (`config.rat.js`, `rat.config`, `rat.app`), plugins (`@rat/plugins/*`)
@@ -20,7 +20,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 ## syntax
 - [ ] props nach d-13 b umsetzen (`let { $title } = props`)
 - [ ] `let` vor `$name` auf oberster ebene im `<script>` optional (`const` bleibt pflicht)
-- [ ] persistenz eines signals: form klären (statt `$(init, '[persist]')`)
+- [ ] (ungeklärt, verschoben) persistenz eines signals: form klären (statt `$(init, '[persist]')`, idee: `persist $filter;`)
 - [ ] sichtbarer anfang/ende einer komponente statt `<>` (`<self>`?)
 - [ ] meta-angaben in der ersten zeile (`<!-- rat:root -->` o.ä.)
 - [ ] schema mit ui-hinweisen (`Enum({ values, element: { look } })`), form klären
