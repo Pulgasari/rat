@@ -10,6 +10,13 @@
 ## todo
 - [ ] räum mal dieses dokument auf, das ist aktuell unbenutzbar. todos sind entweder kalre punkte zum ankreuzen – oder es gehhört womöglich garnicht in diese file oder vielleichz ans ende.
 
+## `@rat/app`
+- [ ] `<rat-app>` entfernen + `<rat-app2>` wird zu `<rat-app>`
+- [ ] handling von runtime-errors in componenten und app via `<rat-app2>` (error boundary)
+
+## @rat/router
+- [ ] (?) später untersuchen: ein globaler router, den views direkt abonnieren
+
 ## syntax
 
 - [ ] `let` vor `$name` auf oberster ebene innerhalb von `<script>` in `.rat`-file optional machen
@@ -19,8 +26,19 @@
   - [x] `style link` + `<style mode='link' />`
   - [x] default (ohne mode-angabe) = `adopt`
 
+## sonstiges
+- [ ] hotkeys an `app.commands` (`@rat/hotkeys`)
+- [ ] später: props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
+
+## create packages (?)
+- [ ] `@rat/analyzer`
+- [ ] `@rat/cli`
+
+---
+
 ## vorbereitung
-- [x] was fehlt bis zu einer test-pwa (stichpunkte, nach dringlichkeit)
+
+was noch mindestens iwie geklärt/getan werden müsste, damit wir halbwegs mit mit dem app-bau anfangen könnten (und so dann in der praxis weiterentwickeln):
 
 **muss**
 - props entscheiden (d-13): heute nur `props.title`. für mehr als eine komponente braucht es eine feste form
@@ -32,13 +50,12 @@
 
 **sollte**
 - `@await` / async-blöcke (d-28) für daten aus fetch oder indexeddb, sonst alles von hand mit signals
-- fehleranzeige: compile-fehler zeigt `<rat-app>` schon, laufzeitfehler in komponenten noch nicht (keine error boundary)
+
 - keys in `@for`: `@for` erkennt eine zeile wieder am objekt selbst (`item => item`). ein neu geladenes oder kopiertes objekt (`{ ...todo, done: true }`, frisch aus der db) ist für ihn eine neue zeile: die alte wird weggeworfen, die neue neu gebaut. sichtbar wird das an fokus, halb getipptem text, offenen `<details>`, scrollpositionen in der zeile. lösung: ein schlüssel, z.b. `@for (todo of $todos; key todo.id)`
 - `@for`-index (d-15): wie man an den index kommt, ist noch offen (eigenes thema, unabhängig von keys)
 - produktion: ein build-schritt (oder der sw kompiliert einmal und cached das ergebnis), sonst kompiliert jedes laden neu
 
 **klären**
-- d-26 (`@name` vs `use:name`): betrifft jede app-ui. d-16 ist entschieden (siehe app-gerüst)
 - welche app als testobjekt? (zugriff-teil, notes, todos …) danach richtet sich, was von "sollte" vorgezogen wird
 
 ## app-gerüst (`<rat-app2>`, `<rat-view>`, `<rat-area>`): gebaut
@@ -53,7 +70,7 @@
 - ungültiger wert: warnung, alter wert bleibt (wie typisierte signals)
 - prop ist ein schema (kurz) oder `{ type, onChange }`: `type` ein standard schema oder `String`/`Number`/`Boolean`, `onChange` und weiteres (später `reflect: false`) versteht domina selbst, nicht das schema
 - änderungen über `onChange` pro prop, keine signals
-- [ ] später: props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
+
 
 **`@rat/router`**
 - eigenständig (`createRouter({ mode, base })`), einer pro app: `app.router`
@@ -63,27 +80,18 @@
 - verschachtelt: `<rat-view>` in `<rat-view>`, `route` relativ zur eltern-view, pro ebene genau eine aktiv (erste passende), params aller ebenen gesammelt
 - guards: `router.on('leave', event => event.preventDefault())`, async, auch pro view, `{ unload: true }` hängt sich an `beforeunload`
 - `<rat-view route src>` lädt über den loader von `@rat/app`, params als props
-- [ ] später untersuchen: ein globaler router, den views direkt abonnieren
+
 
 **`<rat-app2>`, `<rat-view>`, `<rat-area>`**
 - genau eine `<rat-app2>` pro seite (das root-element), eine zweite: warnung, wird ignoriert
 - `<rat-app2>`: `app.router`, `app.commands` (`go`, `back` vom router), `ready()` beendet `[loading]` mit view transition. lade-screen ist der splash aus `run.js`
 - `<rat-view>`: `active`, `name`, `route` (relativ zur eltern-view), `src`, `transition`. aktiv macht nur der router
 - `<rat-area>` statt `<app-area>`: sidebar, drawer, bottom-sheet, das grid stellt `<rat-app2>`
-- entfällt gegenüber der skizze: routing-code, `start()` mit mutationobserver, `sync()`/`applySkin()`, die `defineProperty`-schleife, der spinner in `styles()`
 - matching pro ebene: erst exakt, dann als anfang des pfads (nur views mit views darin oder ungeladenem `src`), zuletzt routen mit `*`
 - guard pro view: `view.on('leave', fn, { unload })`, die app fragt nur die views, die die navigation wegnimmt (innerste zuerst)
 - `[loading]` endet von selbst, sobald die aktiven views gemountet sind und `app.hold(promise)` erledigt ist
 - `<rat-area>` übernimmt die semantik von `<app-area>`: eine angedockte area ist nur mit `open` (oder `peek`) sichtbar
-- [ ] `<rat-app>`/`<rat-part>` (`elements.js`) auf `@domina/element` heben, `<rat-app2>` dann `<rat-app>`?
-- [ ] hotkeys an `app.commands` (`@rat/hotkeys`)
-
-**commands mit argumenten (d-16 → entschieden)**
-- `onclick='go[settings]'`, mehrere mit komma: `move[up, 3]`. `rat:command` trägt `{ name, args, event }`
-- der router meldet `go` und `back` an. `go[x]` nimmt die route (`/settings`, auch ohne `/`), eine view mit `name="settings"` ist ebenso erreichbar
 
 ---
 
-## create packages (?)
-- [ ] `@rat/analyzer`
-- [ ] `@rat/cli`
+
