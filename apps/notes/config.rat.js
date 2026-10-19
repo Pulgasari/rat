@@ -34,4 +34,5 @@ export default {
   settings : {
     dir  : Enum({ values: ['ltr', 'rtl'], element: { look: 'segments' } }),
     font : Enum({ values: gestalt.webfonts, init: 'Manrope', element: { look: 'combobox' } }),
-  };
+  },
+};
