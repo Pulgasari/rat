@@ -20,8 +20,11 @@ the key notation is @rat/hotkeys', the same as for app-wide hotkeys.
 import { commandListener }             from '@rat/commands';
 import { matchesCombos, parseCombos }  from '@rat/hotkeys';
 
+import { raise } from './errors.js';
+
 // a string handler names a command, resolved when the event fires: the value
-// may come from an expression (onclick={item.command})
+// may come from an expression (onclick={item.command}). an error of the handler,
+// thrown or a rejected promise, is raised from the element (errors.js)
 function listener (handler, { keys = null, prevent = false, times = 0 } = {}) {
   const combos = keys ? parseCombos(keys) : null;
   let   left   = times;
@@ -31,7 +34,11 @@ function listener (handler, { keys = null, prevent = false, times = 0 } = {}) {
     if (combos && !matchesCombos(event, combos)) return;
     if (prevent) event.preventDefault();
     if (times) left--;
-    (typeof handler === 'string' ? commandListener(handler) : handler).call(this, event);
+    try {
+      const result = (typeof handler === 'string' ? commandListener(handler) : handler).call(this, event);
+      if (typeof result?.catch === 'function') result.catch(error => raise(this, error));
+    }
+    catch (error) { raise(this, error); }
   };
 }
 

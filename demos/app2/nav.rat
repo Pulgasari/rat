@@ -4,6 +4,7 @@
   <button onclick='go[settings]'>settings</button>
   <button onclick='go[editor]'>editor</button>
   <button onclick='go[/nowhere]'>nowhere</button>
+  <button onclick='go[/broken]'>errors</button>
   <button onclick='back'>back</button>
 </nav.nav>
 

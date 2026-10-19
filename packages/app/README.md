@@ -69,9 +69,10 @@ were refetched. files from other origins (esm.sh) are left alone: their urls car
 |---|---|
 | `src` | the file, against the page. a new `src` mounts the new component |
 | `load` | `<rat-part>` only: `eager` (default), `visible` (once in view), `idle` |
-| `[loading]`, `[error]` | while loading, after a failure (the message is inside, `part="error"`) |
+| `[loading]`, `[error]` | while loading, after an error (see [errors](#errors)) |
 | `props` | a property, handed to the component when it mounts |
 | `rat:mount`, `rat:error` | events, bubbling |
+| `retry` | after an error: `<rat-part>` loads again with `start()` |
 
 what the element holds until the component mounts stays: a loading screen without code.
 `<rat-app>` is the entry of an app and always loads right away, `<rat-part>` is a piece of a
@@ -120,11 +121,31 @@ else the view `name="x"`.
 | `name`, `transition` | for `go[name]`, and its own transition |
 | `[active]` | set by the router only. an inactive view is inert and hidden, a mounted `src` stays |
 | `view.on('leave', fn, { unload })` | a guard, asked when a navigation takes the view away. `event.preventDefault()` keeps it, async is fine. returns its stop |
+| `view.retry()` | after an error, loads `src` again |
 | `rat:enter`, `rat:leave`, `rat:mount`, `rat:error` | events |
 
 `<rat-area>`: `dock` (`start`, `end`, `bottom`, `none` = main), `open`, `expanded`, `peek`,
 `overlay` (`auto` below `breakpoint`, `always`, `never`), `show()`, `hide()`, `toggle()`,
 `expand()`, a drag on its handle. the port of `<app-area>`.
+
+## errors
+
+`<rat-view>`, `<rat-part>` (and `<rat-app>`) and `<rat-app2>` are error boundaries. an error of a
+component, while it loads, renders, in an effect or in an event handler (a rejected promise
+too), is raised as `rat:error` from where it happened (`@rat/runtime`: `raise`, `guard`). the
+nearest boundary takes it:
+
+- a view or a part shows it in place of its component: `<pre part="error">` and, when it has a
+  `src`, `<button part="retry">`. `[error]` is set until the retry
+- `<rat-app2>` catches what no view or part took and shows it in a popover over the app
+- nobody: `reportError()`, the console as for any uncaught error
+
+`rat:error` bubbles on after that, `detail` is `{ error, boundary }`, `defaultPrevented` says it
+was taken:
+
+```js
+app.addEventListener('rat:error', ({ detail }) => log(detail.error, detail.boundary));
+```
 
 ## js
 

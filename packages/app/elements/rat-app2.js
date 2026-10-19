@@ -29,7 +29,10 @@ whatever app.hold(promise) got is done; ready() ends it then, in a view
 transition. density, geometry, layout, look, mode, palette and skin go to
 @gestalt/core as they are.
 
-events: rat:ready, rat:navigate ({ from, to, path, params }).
+the last error boundary: an error no view or part took shows in a popover over
+the app (see ../boundary.js and errors.js of @rat/runtime).
+
+events: rat:ready, rat:navigate ({ from, to, path, params }), rat:error.
 */
 
 // :::::: IMPORT
@@ -43,6 +46,8 @@ import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 
 import { RatArea } from './rat-area.js';
 import { RatView } from './rat-view.js';
+
+import { catchErrors } from '../boundary.js';
 
 // :::::: CONSTS
 
@@ -103,6 +108,18 @@ export class RatApp2 extends DominaElement {
       }
 
       &:has(> rat-area[dock="bottom"][peek]:state(overlay)) { padding-block-end: var(--area-peek, 1.75rem); }
+
+      & > [data-rat-errors] {
+        background      : Canvas;
+        border          : 1px solid color-mix(in oklab, CanvasText 25%, transparent);
+        border-radius   : 0.5rem;
+        color           : CanvasText;
+        inset           : auto 1rem 1rem auto;
+        max-inline-size : min(40rem, calc(100vw - 2rem));
+        padding         : 0.75rem 1rem;
+
+        & pre { margin: 0 0 0.5rem; white-space: pre-wrap; }
+      }
     }
 
     @keyframes rat-view-fade  { from { opacity: 0; } }
@@ -121,6 +138,7 @@ export class RatApp2 extends DominaElement {
   }
 
   #commands = createCommands();
+  #errors   = null;
   #holds    = new Set;
   #queued   = false;
   #router   = null;
@@ -153,6 +171,7 @@ export class RatApp2 extends DominaElement {
 
     this.observe.added('rat-view', () => this.schedule());
     this.observe.removed('rat-view', () => this.schedule());
+    this.track(catchErrors(this, error => this.report(error)));
   }
 
   onDisconnected () {
@@ -292,6 +311,22 @@ export class RatApp2 extends DominaElement {
     const next = new Set(this.match(event.to).views);
     return this.views.filter(view => view.active && !next.has(view)).reverse()
       .reduce((asking, view) => asking.then(pass => pass && view.ask(event)), Promise.resolve(true));
+  }
+
+  // :::::: ERRORS
+
+  // the last boundary (../boundary.js): what no view or part took, in a popover over the app
+  report (error) {
+    console.error(error);
+    if (!this.#errors) {
+      this.#errors = Object.assign(document.createElement('div'), { popover: 'manual' });
+      this.#errors.dataset.ratErrors = '';
+      const close = Object.assign(document.createElement('button'), { popoverTargetAction: 'hide', popoverTargetElement: this.#errors, textContent: 'close', type: 'button' });
+      this.#errors.append(document.createElement('pre'), close);
+      this.append(this.#errors);
+    }
+    this.#errors.querySelector('pre').textContent = error?.message ?? String(error);
+    this.#errors.showPopover?.();
   }
 
   // :::::: LOADING

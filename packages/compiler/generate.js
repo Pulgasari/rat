@@ -51,7 +51,6 @@ const BEHAVIOR = /^(?:@|use:)([\w-]+)(?::([\w-]+))?$/;
 
 const isEvent    = name => /^on[:a-z]/i.test(name) || ONCE.test(name);
 const isBehavior = name => name[0] === '@' || name.startsWith('use:');
-const isFunction = code => /^(?:async\s+)?(?:function\b|\([^)]*\)\s*=>|[\w$]+\s*=>)/.test(code.trim());
 
 // ::: generator
 
@@ -263,8 +262,8 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
   }
 
   // on:keydown[enter]!:once={fn} -> onkeydown=${$$.listener(fn, { keys: 'enter', prevent: true, times: 1 })}.
-  // a function literal goes in as it is, a string is a command, anything else
-  // may be either and is resolved when the event fires
+  // a string is a command, anything else goes through listener(): its errors
+  // reach the error boundary, and a value may be either, resolved when the event fires
   function event (name, value) {
     if (ONCE.test(name)) {
       if (/:(?:once|\d+)$/.test(name)) throw new Error(`[rat] "${name}" counts twice, once: and a count`);
@@ -282,7 +281,6 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     const [code] = valueOf(value);
     if (options.length)                       return `${attr}=${hole(`${$('listener')}(${code}, { ${options.join(', ')} })`)}`;
     if (value.kind === 'string')              return `${attr}=${hole(`${$('commandListener')}(${code})`)}`;
-    if (value.kind === 'expression' && isFunction(code)) return `${attr}=${hole(code)}`;
     return `${attr}=${hole(`${$('listener')}(${code})`)}`;
   }
 

@@ -6,7 +6,9 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] `<rat-app>` entfernen, `<rat-app2>` wird `<rat-app>` (mit `src`: lädt `app.rat` und mountet in sich)
 - [ ] (?) `<rat-part>` auf `@domina/element`
 - [ ] `<rat-part>` lädt auch `.htx` und `.html`
-- [ ] error boundary: laufzeitfehler in komponenten in der view/part anzeigen statt die app zu verlieren
+- [x] error boundary: `<rat-view>`, `<rat-part>`, `<rat-app2>` (popover als letzte), `raise`/`guard` in `@rat/runtime`
+- [ ] error boundary: fehler in command-handlern (`@rat/commands`) kommen noch nicht an
+- [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
 - [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
 - [ ] umschalten per `name` (area, overlay …), beide formen bauen und in der praxis vergleichen: event `rat:toggle` und funktion `rat.toggle(name)`
 - [ ] hotkeys an `app.commands` (`@rat/hotkeys`)

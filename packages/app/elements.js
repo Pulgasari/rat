@@ -22,15 +22,19 @@ rat-app is the entry of a whole app and always eager; rat-part is a piece of a
 page, an island in astro's words (ideas/parts.md).
 
 while loading the element has [loading] and in data-status what it is doing
-(the splash run.js draws for an empty <rat-app> shows it), after a failure
-[error] and the message inside. props: element.props = { … } before
-it mounts. events: rat:mount, rat:error (detail: the error).
+(the splash run.js draws for an empty <rat-app> shows it). both are error
+boundaries (boundary.js): an error of the component, while loading, rendering,
+in an effect or an event handler, replaces it with the message and a retry,
+[error] is set. props: element.props = { … } before it mounts. events:
+rat:mount, rat:error (from @rat/runtime, detail { error, boundary }).
 */
 
 // :::::: IMPORT
 
-import { mount } from '@rat/runtime';
-import { componentOf, load } from './loader.js';
+import { mount, raise } from '@rat/runtime';
+
+import { catchErrors, showError } from './boundary.js';
+import { componentOf, load }      from './loader.js';
 
 const idle = fn => globalThis.requestIdleCallback ? requestIdleCallback(fn) : setTimeout(fn, 1);
 
@@ -43,13 +47,22 @@ class RatPart extends HTMLElement {
   #cancel  = null;
   #dispose = null;
   #ticket  = 0;
+  #uncatch = null;
 
   props = {};
 
   get mode () { return this.getAttribute('load') ?? 'eager'; }
 
-  connectedCallback ()    { this.#schedule(); }
-  disconnectedCallback () { this.stop(); }
+  connectedCallback () {
+    this.#uncatch ??= catchErrors(this, error => this.#fail(error));
+    this.#schedule();
+  }
+
+  disconnectedCallback () {
+    this.#uncatch?.();
+    this.#uncatch = null;
+    this.stop();
+  }
 
   attributeChangedCallback (name, previous, next) {
     if (this.isConnected && previous !== null && previous !== next) this.start();
@@ -99,7 +112,7 @@ class RatPart extends HTMLElement {
     catch (error) {
       document.removeEventListener('rat:compile', status);
       if (ticket !== this.#ticket) return;
-      this.#fail(error);
+      raise(this, error);
     }
   }
 
@@ -111,15 +124,13 @@ class RatPart extends HTMLElement {
     this.#cancel = this.#dispose = null;
   }
 
+  // an error boundary (boundary.js): the component goes, the error takes its place
   #fail (error) {
-    console.error(error);
+    this.#dispose?.();
+    this.#dispose = null;
     this.removeAttribute('loading');
     delete this.dataset.status;
-    this.toggleAttribute('error', true);
-    const message = Object.assign(document.createElement('pre'), { textContent: error.message });
-    message.setAttribute('part', 'error');
-    this.replaceChildren(message);
-    this.dispatchEvent(new CustomEvent('rat:error', { bubbles: true, detail: error }));
+    showError(this, error, () => this.start());
   }
 }
 

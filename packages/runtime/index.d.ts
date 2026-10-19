@@ -66,12 +66,20 @@ export function bind (source: Signal<unknown>, name: string): (element: Element)
 /** A ref writing the element into a signal, or calling a function with it. */
 export function ref  (target: Signal<unknown> | ((element: Element) => void) | null | undefined): (element: Element) => void;
 
-/** The handler behind a key filter, preventDefault and a call limit. A string handler names a command. */
+/** The handler behind a key filter, preventDefault and a call limit. A string handler names a command. Its errors are raised from the element. */
 export function listener        (handler: ((event: Event) => void) | string, options?: { keys?: string, prevent?: boolean, times?: number }): (event: Event) => void;
 /** A listener firing 'rat:command' upwards with { event, name }. */
 export function commandListener (name: string): (event: Event) => void;
 
+/** Mounts a component. The first call throws, later errors (effects, rows) are raised from target. */
 export function mount (component: Component, target: string | Element, props?: Props): () => void;
+
+/** 'rat:error'. */
+export const ERROR: 'rat:error';
+/** Raises 'rat:error' from node: bubbling, composed, cancelable, detail { error, boundary }. Nobody took it: reportError(). Returns the boundary that took it. */
+export function raise (node: Node | null, error: unknown): Element | null;
+/** fn, its errors (thrown or a rejected promise) raised from node, or from this without node. */
+export function guard<T extends (...args: any[]) => any> (fn: T, node?: Node | null): T;
 export function style (id: string, css: string): void;
 /** A css file of a component: link (a <link> in the head) or adopt (a constructable stylesheet), once per url. */
 export function sheet (mode: 'adopt' | 'link', url: string): Promise<HTMLLinkElement | CSSStyleSheet>;
