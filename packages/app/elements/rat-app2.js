@@ -32,6 +32,11 @@ transition. density, geometry, layout, look, mode, palette and skin go to
 events: rat:ready, rat:navigate ({ from, to, path, params }).
 */
 
+/* --- TODO ---
+- `@domina/domina` einbinden
+-------------*/
+
+
 // :::::: IMPORT
 
 import { DominaElement }  from '@domina/element';
@@ -44,16 +49,21 @@ import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 import { RatArea } from './rat-area.js';
 import { RatView } from './rat-view.js';
 
+//TODO: sowas sollte bereits direkt am `DominaElement` hängen zum abfragen
 const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+// ::::::CONSTS
 
 const IN  = 'rat-view-in';
 const OUT = 'rat-view-out';
 
-// a value of gestalt's, handed on as it is. nothing set at the start is no change
-const look = name => ({ onChange (value, old) { if (value != null || old !== undefined) gestalt.set({ [name]: value ?? null }); }, type: String });
+// a value of gestalt's, handed on as it is
+// nothing set at the start is no change
+//todo: was zur hölle soll das darstellen?
+const look = name => ({ onChange (value, old) { if (value != null || old !== undefined) gestalt.set({ [name]: value ?? null }); }, type: String });     
+const isWild = view => view.route.includes('*'); // a view without route is not routed, one with * comes last
 
-// a view without route is not routed, one with * comes last
-const isWild = view => view.route.includes('*');
+// :::::: REFS
 
 let current = null;
 
@@ -63,15 +73,17 @@ export class RatApp2 extends DominaElement {
 
   static props = {
     base       : String,
-    density    : look('density'),
-    geometry   : look('geometry'),
-    layout     : look('layout'),
     loading    : Boolean,
     look       : look('look'),
     mode       : look('mode'),
-    palette    : look('palette'),
     routing    : Enum('hash', 'path', 'query', 'memory', 'none'),
+    
+    // gestalt
+    density    : look('density'),
+    geometry   : look('geometry'),
     skin       : look('skin'),
+    layout     : look('layout'),
+    palette    : look('palette'),
     transition : { default: 'fade', type: String },
   };
 
