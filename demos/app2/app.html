@@ -1,0 +1,45 @@
+<!-- rat:root -->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name='viewport' content="width=device-width, initial-scale=1.0" />
+  <title>RAT app2</title>
+  <script src='../../packages/app/run.js'></script>
+</head>
+
+<>
+  <rat-area src="nav.rat" dock="start" name="nav" overlay="never" open />
+
+    <rat-view route="/" name="home">
+      <h1>home</h1>
+      <p>a static view. the nav is a rat-part in a rat-area, its buttons are commands: go[settings], go[/notes/3], back.</p>
+    </rat-view>
+
+    <rat-view route="/notes/:id" name="note" src="note.rat" />
+
+    <rat-view route="/settings" name="settings" transition="fade">
+      <h1>settings</h1>
+      <nav><a href="#/settings">general</a> · <a href="#/settings/profile">profile</a> · <a href="#/settings/editor">editor</a></nav>
+
+      <rat-view route="/">
+        <p>general settings, the index of /settings.</p>
+      </rat-view>
+      <rat-view route="profile" name="profile" src="profile.rat"></rat-view>
+      <rat-view route="editor" name="editor" src="editor.rat"></rat-view>
+    </rat-view>
+
+    <rat-view route="*" name="missing">
+      <h1>not found</h1>
+      <p>no view for this route. <a href="#/">home</a></p>
+    </rat-view>
+</>
+
+<style>
+  :root { color-scheme: light dark; font: 15px/1.5 system-ui, sans-serif; }
+  body  { margin: 0; }
+
+  rat-area[dock="start"] { padding: 1rem; }
+  rat-view               { padding: 1rem 2rem; }
+  rat-view rat-view      { padding: 1rem 0; }
+  [error] > pre          { color: crimson; white-space: pre-wrap; }
+</style>
