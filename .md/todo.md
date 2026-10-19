@@ -8,7 +8,7 @@
 ---
 
 ## todo
-- [ ] räum mal dieses dokument auf, das ist aktuell unbenutzbar. todos sind entweder kalre punkte zum ankreuen. alles andere gehörts ans ende als für wadauchimmer.
+- [ ] räum mal dieses dokument auf, das ist aktuell unbenutzbar. todos sind entweder kalre punkte zum ankreuzen – oder es gehhört womöglich garnicht in diese file oder vielleichz ans ende.
 
 ## syntax
 
