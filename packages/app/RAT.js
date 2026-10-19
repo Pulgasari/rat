@@ -33,7 +33,7 @@ RAT.observer = observer;
 // :::::::::::: EXPORT ::::::::::::
 
 export {
-  RAT, commands, hotkeys,
+  RAT, commands, hotkeys, importFile,
   bunker, domina, gestalt, observer,
 }
 
