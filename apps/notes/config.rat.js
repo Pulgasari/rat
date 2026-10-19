@@ -6,7 +6,10 @@
 - ist dann am globalen `rat` verfügbar: `rat.config`
 */
 
+import config from './../zugriff.config.js';
+
 export default {
+  ...config,
   name        : 'Notes',
   dir         : 'ltr',
   display     : 'standalone',
