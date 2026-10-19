@@ -12,3 +12,4 @@
 
 ### nebenbei
 - [ ] das zeug aus `zugriff/.shared/js/modules/webdav` wäre vermutlich was passendes für/als `@bunker/webdav` zum auslagern
+- [ ] evtl. auf das folders/fs/filesystem- zeug aus `zugriff/shared` ?
