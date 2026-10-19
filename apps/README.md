@@ -9,3 +9,6 @@
 ## todo
 - [ ] was ich in `apps/notes` angefangen hab zu bauen (nich vollständig), sollte erstmal so halbwegs lauffähig gemacht werden. ein paar syntax-reshapes o.ä. sind evtl schon erkennbar. da am besten mal gucken, sammeln und mit mir abklären.
 - [ ] `<rat-part>` sollte wohl actually nich nur direkt `.rat` fressen, sondern auch `.htx` und schnöde `.html` files
+
+### nebenbei
+- [ ] das zeug aus `zugriff/.shared/js/modules/webdav` wäre vermutlich was passendes für/als `@bunker/webdav` zum auslagern
