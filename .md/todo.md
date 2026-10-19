@@ -29,6 +29,7 @@
 ## sonstiges
 - [ ] hotkeys an `app.commands` (`@rat/hotkeys`)
 - [ ] später: props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
+- [ ] `/.md` müsste eigtl. mal gründlich aufgeräumt werden (erst absprechen)
 
 ## create packages (?)
 - [ ] `@rat/analyzer`
