@@ -1,0 +1,57 @@
+/* cli — the terminal chrome. the colours are the palette's (--color-*), xterm
+   brings its own stylesheet */
+
+@import url('https://cdn.jsdelivr.net/npm/@xterm/xterm@5.5.0/css/xterm.css');
+
+app-root { flex: 1 1 auto; min-height: 0; }
+
+#app-head,
+#app-foot {
+  align-items     : center;
+  background      : color-mix(in oklch, var(--color-bg) 90%, black);
+  display         : flex;
+  flex            : 0 0 auto;
+  justify-content : space-between;
+}
+
+#app-head {
+  border-bottom : 1px solid color-mix(in oklch, var(--color-fg) 25%, transparent);
+  padding       : 8px 16px;
+
+  h1 {
+    color          : var(--color-ink);
+    font-size      : 0.95rem;
+    font-weight    : 600;
+    letter-spacing : 0.05em;
+  }
+}
+
+#app-main {
+  flex       : 1 1 auto;
+  min-height : 0;
+  overflow   : hidden;
+  padding    : 8px;
+  position   : relative;
+}
+
+#app-foot {
+  border-top : 1px solid color-mix(in oklch, var(--color-fg) 25%, transparent);
+  color      : color-mix(in oklch, var(--color-fg) 50%, transparent);
+  font-size  : 0.75rem;
+  padding    : 6px 16px;
+}
+
+#app-logo {
+  align-items : baseline;
+  display     : flex;
+  gap         : 0.5rem;
+}
+
+.version {
+  color     : color-mix(in oklch, var(--color-fg) 50%, transparent);
+  font-size : 0.8rem;
+}
+
+.terminal-container { height: 100%; width: 100%; }
+
+.xterm { height: 100%; }
