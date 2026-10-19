@@ -101,3 +101,8 @@
 - `onclick='go[settings]'`, mehrere mit komma: `move[up, 3]`. `rat:command` trägt `{ name, args, event }`
 - der router meldet `go` und `back` an. `go[x]` nimmt die route (`/settings`, auch ohne `/`), eine view mit `name="settings"` ist ebenso erreichbar
 
+---
+
+## create packages (?)
+- [ ] `@rat/analyzer`
+- [ ] `@rat/cli`
