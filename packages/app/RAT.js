@@ -12,6 +12,7 @@ import observer from '@domina/observer';
 
 import * as commands from '@rat/commands';
 import * as hotkeys  from '@rat/hotkeys';
+import importFile    from '@rat/import';
 
 // :::::::::::: BUILD ::::::::::::
 
@@ -21,6 +22,7 @@ const RAT = {};
 // the kids
 RAT.commands = commands;
 RAT.hotkeys  = hotkeys;
+RAT.import   = importFile;
 
 // the gang
 RAT.bunker   = bunker;
