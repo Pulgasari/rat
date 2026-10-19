@@ -1,10 +1,15 @@
 <!-- rat:root -->
 
+<script>
+  // $app
+  rat.app.title = 'Notes';
+  
+</script>
+
 <head>
   <meta charset="UTF-8">
   <meta name='viewport' content="width=device-width, initial-scale=1.0" />
   <title>RAT app2</title>
-  <script src='../../packages/app/run.js'></script>
 </head>
 
 <>
@@ -24,8 +29,8 @@
       <rat-view route="/">
         <p>general settings, the index of /settings.</p>
       </rat-view>
-      <rat-view route="profile" name="profile" src="profile.rat"></rat-view>
-      <rat-view route="editor" name="editor" src="editor.rat"></rat-view>
+      <rat-view name|route="profile" src="profile.rat" />
+      <rat-view name+route="editor"  src="editor.rat"  />
     </rat-view>
 
     <rat-view route="*" name="missing">
