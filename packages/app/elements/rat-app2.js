@@ -44,18 +44,21 @@ import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 import { RatArea } from './rat-area.js';
 import { RatView } from './rat-view.js';
 
-//TODO: sowas sollte bereits direkt am `DominaElement` hängen zum abfragen
-const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-
-// ::::::CONSTS
+// :::::: CONSTS
 
 const IN  = 'rat-view-in';
 const OUT = 'rat-view-out';
 
-// a value of gestalt's, handed on as it is
-// nothing set at the start is no change
-//todo: was zur hölle soll das darstellen?
-const look = name => ({ onChange (value, old) { if (value != null || old !== undefined) gestalt.set({ [name]: value ?? null }); }, type: String });     
+// a prop that hands its value to gestalt.set(). the first change of a prop never set is skipped:
+// gestalt.set({ skin: null }) would switch the skin off
+const gestaltProp = name => ({
+  type: String,
+  onChange (value, old) {
+    if (value == null && old === undefined) return;
+    gestalt.set({ [name]: value ?? null });
+  },
+});
+
 const isWild = view => view.route.includes('*'); // a view without route is not routed, one with * comes last
 
 // :::::: REFS
@@ -69,17 +72,17 @@ export class RatApp2 extends DominaElement {
   static props = {
     base       : String,
     loading    : Boolean,
-    look       : look('look'),
-    mode       : look('mode'),
     routing    : Enum('hash', 'path', 'query', 'memory', 'none'),
-    
-    // gestalt
-    density    : look('density'),
-    geometry   : look('geometry'),
-    skin       : look('skin'),
-    layout     : look('layout'),
-    palette    : look('palette'),
     transition : { default: 'fade', type: String },
+
+    // handed to gestalt
+    density    : gestaltProp('density'),
+    geometry   : gestaltProp('geometry'),
+    layout     : gestaltProp('layout'),
+    look       : gestaltProp('look'),
+    mode       : gestaltProp('mode'),
+    palette    : gestaltProp('palette'),
+    skin       : gestaltProp('skin'),
   };
 
   static styles () {
@@ -256,7 +259,7 @@ export class RatApp2 extends DominaElement {
     const on  = name(to,   this.transition);
     const off = name(from, this.transition);
 
-    if (!document.startViewTransition || reducedMotion() || (on === 'none' && off === 'none') || this.loading) return Promise.resolve(swap());
+    if (!document.startViewTransition || this.a11y.reducedMotion || (on === 'none' && off === 'none') || this.loading) return Promise.resolve(swap());
 
     const html = document.documentElement;
     html.style.setProperty('--rat-view-in',  on);
@@ -313,7 +316,7 @@ export class RatApp2 extends DominaElement {
   ready () {
     if (!this.loading) return Promise.resolve();
     const done = () => { this.loading = false; this.emit('rat:ready'); };
-    return !document.startViewTransition || reducedMotion() ? Promise.resolve(done()) : document.startViewTransition(done).finished;
+    return !document.startViewTransition || this.a11y.reducedMotion ? Promise.resolve(done()) : document.startViewTransition(done).finished;
   }
 }
 

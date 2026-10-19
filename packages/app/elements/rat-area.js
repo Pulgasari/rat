@@ -257,18 +257,18 @@ export class RatArea extends DominaElement {
   }
 
   watchBreakpoint () {
-    this._media?.();
+    this._breakpoint?.();
     const mode = this.overlay;
     const set  = overlay => { this.states.toggle('overlay', overlay && this.docked); this.update(); };
 
-    if (mode !== 'auto') { this._media = null; set(mode === 'always'); return; }
+    if (mode !== 'auto') { this._breakpoint = null; set(mode === 'always'); return; }
 
     const query  = globalThis.matchMedia?.(`(width < ${this.breakpoint})`);
     const change = () => set(Boolean(query?.matches));
     const stop   = () => query?.removeEventListener('change', change);
     query?.addEventListener('change', change);
     this.track(stop);
-    this._media = stop;
+    this._breakpoint = stop;
     set(Boolean(query?.matches));
   }
 
