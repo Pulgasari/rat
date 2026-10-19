@@ -129,9 +129,9 @@ export class RatApp2 extends DominaElement {
   get commands () { return this.#commands; }
   get router   () { return this.#router; }
 
-  get areas () { return this.dom.getList('rat-area'); }
+  get areas () { return this.dom.getListOfElements('rat-area'); }
   get view  () { return this.views.findLast({ active: true }) ?? null; }
-  get views () { return this.dom.getList('rat-view'); }
+  get views () { return this.dom.getListOfElements('rat-view'); }
 
   area (name) { return this.areas.find({ name }) ?? null; }
 

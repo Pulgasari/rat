@@ -113,6 +113,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     '@bunker/utils/'  : at('../../../bunker/utils/'),
     //////////// @domina ////////////
     '@domina/chain'   : at('../../../domina/packages/chain/index.js'),
+    '@domina/dom'     : at('../../../domina/packages/dom/index.js'),
     '@domina/element' : at('../../../domina/packages/element/index.js'),
     '@domina/observer': at('../../../domina/packages/observer/index.js'),
     '@domina/proxy'   : at('../../../domina/packages/proxy/index.js'),
