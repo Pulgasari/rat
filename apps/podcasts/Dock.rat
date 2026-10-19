@@ -1,0 +1,30 @@
+<!-- RAT :: Component :: Dock -->
+<script>
+  const $route = rat.app.route;
+
+function DockNavItem ({ icon, label, dialog, panel, route, view, match = [], current, onClick, ...rest }) {
+  if (dialog) onClick = () => zugriff.app.toggleDialog(dialog);
+  if (panel)  onClick = () => zugriff.app.togglePanel(panel);
+  if (route)  onClick = () => zugriff.app.go(route); // go(route)
+  if (view)   onClick = () => zugriff.app.go(view);
+
+  const active = current != null && [view ?? route, ...match].includes(current);
+
+  return html`<btn-tap class=${active ? 'col active' : 'col'} aria-current=${active ? 'page' : null} ...${{ icon, label, onClick, ...rest }} />`;
+}
+
+const ownsView = (item, name) => [item.view ?? item.route, ...(item.match ?? [])].includes(name);
+
+
+  const app  = zugriff.app;
+  const last = useRef(null);
+  const name = current ?? app?.current?.value ?? app?.state?.$route?.name;
+
+  if (name != null && items.some(item => ownsView(item, name))) last.current = name;
+</script>
+
+<aside class='Dock dock' id='app-dock' ...${rest}>
+  @for (item of items) {
+    {DockNavItem({ ...item, current: last.current })}
+  }
+</aside>
