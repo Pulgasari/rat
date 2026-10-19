@@ -28,6 +28,9 @@ export default {
   gestalt: {
     palette: 'zombie',
   },
+  plugins: {
+    folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
+  },
   settings : {
     dir  : Enum({ values: ['ltr', 'rtl'], element: { look: 'segments' } }),
     font : Enum({ values: gestalt.webfonts, init: 'Manrope', element: { look: 'combobox' } }),
