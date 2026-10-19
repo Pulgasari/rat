@@ -165,4 +165,16 @@ markup with parameters, declared once and used as a function ([d-27](ideas/fragm
   runs again when `$selected` changes; the renderer sees the same template and only
   patches its holes.
 
+# `<script>`
 
+```html
+<script>
+  style link 'https://code.pulgasari.dev/aufbau/css/aufbau.css';
+  style adopt 'https://code.pulgasari.dev/aufbau/gestalt/gestalt.css';
+  style inline 'localfile.css';
+</script>
+
+<style mode='link'   src='https://code.pulgasari.dev/aufbau/css/aufbau.css' />
+<style mode='adopt'  src='https://code.pulgasari.dev/aufbau/gestalt/gestalt.css' />
+<style mode='inline' src='localfile.css' />
+```
