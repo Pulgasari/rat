@@ -34,6 +34,7 @@
 ## create packages (?)
 - [ ] `@rat/analyzer`
 - [ ] `@rat/cli`
+- [ ] `@rat/database` (ursprünglich dachte ich mir auf basis von `@bunker/db` aber mittlerweile denk ich `@bunker` müsste generell komplett neugebaut werden. denn da geht einiges schief, obwohl es an sich durchaus was unter der haube hat)
 
 ---
 
@@ -53,11 +54,12 @@ was noch mindestens iwie geklärt/getan werden müsste, damit wir halbwegs mit m
 - `@await` / async-blöcke (d-28) für daten aus fetch oder indexeddb, sonst alles von hand mit signals
 
 - keys in `@for`: `@for` erkennt eine zeile wieder am objekt selbst (`item => item`). ein neu geladenes oder kopiertes objekt (`{ ...todo, done: true }`, frisch aus der db) ist für ihn eine neue zeile: die alte wird weggeworfen, die neue neu gebaut. sichtbar wird das an fokus, halb getipptem text, offenen `<details>`, scrollpositionen in der zeile. lösung: ein schlüssel, z.b. `@for (todo of $todos; key todo.id)`
+(anmerkung: `key` sollten wir generell mal besprechen, das wäre ja auch an andern stellen nützlich)
 - `@for`-index (d-15): wie man an den index kommt, ist noch offen (eigenes thema, unabhängig von keys)
-- produktion: ein build-schritt (oder der sw kompiliert einmal und cached das ergebnis), sonst kompiliert jedes laden neu
+- produktion: ein build-schritt (oder der sw kompiliert einmal und cached das ergebnis), sonst kompiliert jedes laden neu (anmerkung: das ist aktuell noch nicht so wichtig, würde ich im anschluss machen, solang echt grundstruktur in der praxis klar, die config der apps usw]
 
 **klären**
-- welche app als testobjekt? (zugriff-teil, notes, todos …) danach richtet sich, was von "sollte" vorgezogen wird
+- welche app als testobjekt? (zugriff-teil, notes, todos …) danach richtet sich, was von "sollte" vorgezogen wird (siehe `rat/apps` im repo)
 
 ## app-gerüst (`<rat-app2>`, `<rat-view>`, `<rat-area>`): gebaut
 `packages/app/elements/` (`@rat/app/shell`), demo `demos/app2`. look (skin, palette, density …) läuft über gestalt, `<rat-app2>` reicht nur durch.
