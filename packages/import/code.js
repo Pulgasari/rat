@@ -47,11 +47,17 @@ export async function importJS (path, options) {
   if (resolveMode('js', options) === 'raw') return fetchText(path, options);
   return import(/* @vite-ignore */ absolute(path));
 }
-
+/*
 export function importJSX (path, options) { return transpile(path, options, 'jsx'); }
 export function importTS  (path, options) { return transpile(path, options, extensionOf(path) === 'tsx' ? 'tsx' : 'ts'); }
 export function importTSX (path, options) { return transpile(path, options, 'tsx'); }
+*/
 
+export const
+importJSX = (path, options) => transpile (path, options, 'jsx'),
+importTS  = (path, options) => transpile (path, options, extensionOf(path) === 'tsx' ? 'tsx' : 'ts')),
+importTSX = (path, options) => transpile (path, options, 'jsx');
+  
 export async function importWASM (path, options) {
   options = toOptions(options);
   const mode     = resolveMode('wasm', options);
