@@ -20,9 +20,9 @@ a circle of .rat files (a imports b imports a) is an error: each would wait
 for the other.
 */
 
-import { parse } from 'acorn';
-
-import { compileAsync } from '@rat/compiler';
+import { parse }          from 'acorn';
+import { compileAsync }   from '@rat/compiler';
+import { isArray, isFn, isString } from './_shared.js';
 
 const RAT      = /\.rat(\.js)?$/;
 const RELATIVE = /^(\.{1,2}\/|\/)/;
@@ -37,13 +37,13 @@ const cache = new Map; // url -> Promise<blob url>
 function specifiers (code) {
   const found = [];
   const visit = node => {
-    if (!node || typeof node.type !== 'string') return;
+    if (!node || !isString(node.type)) return;
     if (/^(Import|ExportNamed|ExportAll)Declaration$/.test(node.type) && node.source) found.push({ dynamic: false, end: node.source.end, start: node.source.start, value: node.source.value });
     if (node.type === 'ImportExpression' && node.source.type === 'Literal' && typeof node.source.value === 'string') found.push({ dynamic: true, end: node.end, start: node.start, value: node.source.value });
     for (const key in node) {
       const value = node[key];
-      if (Array.isArray(value)) value.forEach(visit);
-      else if (value && typeof value.type === 'string') visit(value);
+      if (isArray(value)) value.forEach(visit);
+      else if (value && isString(value.type)) visit(value);
     }
   };
   visit(parse(code, { ecmaVersion: 'latest', sourceType: 'module' }));
@@ -113,7 +113,7 @@ function compileFile (url, chain = []) {
 const load = async url => import(await compileFile(url));
 
 // the component of a module: its default export, else its first function
-const componentOf = module => module.default ?? Object.values(module).find(value => typeof value === 'function') ?? null;
+const componentOf = module => module.default ?? Object.values(module).find(value => isFn(value)) ?? null;
 
 // :::::: EXPORT
 
