@@ -12,34 +12,12 @@
 
 ## syntax
 
+- [ ] `let` vor `$name` auf oberster ebene innerhalb von `<script>` in `.rat`-file optional machen
 - [x] syntax für css-files import/adopt
   - [x] `style adopt` + `<style mode='adopt' />`
   - [x] `style inline` + `<style mode='inline' />`
   - [x] `style link` + `<style mode='link' />`
   - [x] default (ohne mode-angabe) = `adopt`
-  - `link`: `<link rel=stylesheet>` im head, global. `adopt`: per fetch, constructable stylesheet, global. `inline`: beim compilieren in den `<style>` der komponente kopiert, also gescoped, kein request zur laufzeit. `.scss`/`.ass` laufen durch ihre sprache
-  - `url(…)` in adoptierten und inline-dateien zeigt auf die datei, nicht die seite. `@import` geht bei `adopt` nicht (constructable stylesheets können das nicht), dafür `link`
-  - im chromium geprüft, alle drei modi + tag-form + eigener `<style>` + `const style = …` bleibt normales js. doku: `syntax.md#css-files`
-
-```html
-<script>
-  style link 'https://code.pulgasari.dev/aufbau/css/aufbau.css';
-  style adopt 'https://code.pulgasari.dev/aufbau/gestalt/gestalt.css';
-  style inline 'localfile.css';
-</script>
-
-<style mode='link'   src='https://code.pulgasari.dev/aufbau/css/aufbau.css' />
-<style mode='adopt'  src='https://code.pulgasari.dev/aufbau/gestalt/gestalt.css' />
-<style mode='inline' src='localfile.css' />
-```
-
-- [ ] `const/let/var` vor `$name` optional machen (?)
-  - meine einschätzung: **nicht ganz weglassen.** das keyword trägt in rat bedeutung: `let $x` = signal (schreibbar), `const $x` = computed (abgeleitet). ohne keyword ist `$double = $count * 2` mehrdeutig: einmal ausgerechnet oder mitlaufend?
-  - zweites problem: `$x = 5` in einer funktion. neue variable oder zuweisung an die äußere? ohne keyword müsste "erstes vorkommen = deklaration" gelten, das kippt beim umsortieren von code
-  - was ginge: **nur `let` weglassbar**, auf oberster ebene im `<script>`: `$count = 0` = `let $count = 0`. `const` bleibt für computeds pflicht. das ist eindeutig und spart das häufigste keyword
-  - [ ] a) so lassen (keyword pflicht)
-  - [ ] b) `let` auf oberster ebene weglassbar, `const` bleibt
-  - [ ] c) beides weglassbar, computed per eigenem operator (z.b. `$double := $count * 2`)
 
 ## vorbereitung
 - [x] was fehlt bis zu einer test-pwa (stichpunkte, nach dringlichkeit)
