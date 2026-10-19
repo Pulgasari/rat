@@ -1,0 +1,44 @@
+<!-- rat:root -->
+
+<script config-src='./config.rat.js'>
+  // $app
+  rat.app.title = 'Notes';
+</script>
+
+<>
+  <rat-area name+src='nav' open />
+
+    <rat-view route='/' name='home'>
+      <h1>home</h1>
+      <p>a static view. the nav is a rat-part in a rat-area, its buttons are commands: go[settings], go[/notes/3], back.</p>
+    </rat-view>
+
+    <rat-view route="/notes/:id" name|src='note' />
+
+    <rat-view route="/settings" name="settings" transition="fade">
+      <h1>settings</h1>
+      <nav>
+        <a href="#/settings">general</a> · 
+        <a href="#/settings/profile">profile</a> · 
+        <a href="#/settings/editor">editor</a>
+      </nav>
+
+      <rat-view route="/">
+        <p>general settings, the index of /settings.</p>
+      </rat-view>
+      <rat-view name|route|src='profile' />
+      <rat-view name|route|src='editor'  />
+    </rat-view>
+
+    <rat-view name|route|src='404' />
+</>
+
+<style>
+  :root { color-scheme: light dark; font: 15px/1.5 system-ui, sans-serif; }
+  body  { margin: 0; }
+
+  rat-area[dock="start"] { padding: 1rem; }
+  rat-view               { padding: 1rem 2rem; }
+  rat-view rat-view      { padding: 1rem 0; }
+  [error] > pre          { color: crimson; white-space: pre-wrap; }
+</style>
