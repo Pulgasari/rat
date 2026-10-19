@@ -9,6 +9,49 @@
   rat.app.folders = await import('@rat/plugins/folders');
 
   $note = '';
+
+  // durable state — hydrates from + persists to localStorage
+  const open = app.persisted('open', null);   // { sourceId, path } | null
+
+  // :::::: FRAME
+  const area = app.area;
+  
+  // a drawer closes once something in it was picked, a sidebar stays
+  const closeMenu = () => { if (area('menu')?.isOverlay) area('menu').hide(); };
+  
+  function openNote (sourceId, path) {
+    open.value = { sourceId, path };
+    app.go('note');
+    closeMenu();
+  }
+
+  // :::::: MENU
+
+function Menu () {
+  return html`
+    <div class='menu'>
+      <${Brand} app=${app} />
+      <${SearchPanel} placeholder='filter notes ...' appStateId='filter' />
+
+      <${FolderTree}
+        lib=${app.lib}
+        filter=${app.state.$filter}
+        selected=${open.value}
+        onOpen=${openNote}
+        onRemoveSource=${id => { if (open.value?.sourceId === id) { open.value = null; app.go('start'); } }}
+        labelOf=${titleOf}
+        fileIcon='notes'
+        emptyText='No markdown files here'
+        expandedKey='expanded'
+      />
+
+      <div class='side-foot'>
+        <${InstallTip} />
+        <btn-push icon='folder-add' label='Open a folder' onClick=${addFolder} />
+      </div>
+    </div>
+  `;
+}
 </script>
 
 <>
@@ -17,6 +60,14 @@
     <rat-view route='/' name='home'>
       <h1>home</h1>
       <p>a static view. the nav is a rat-part in a rat-area, its buttons are commands: go[settings], go[/notes/3], back.</p>
+    </rat-view>
+
+    <rat-view>
+      <header>
+        <btn-icon icon='menu' title='notes' onClick=${() => area('menu')?.toggle()} />
+        <nav-crumbs path=${segments.join('/')} />
+        <btn-icon icon='settings' title='settings' onClick=${() => area('config')?.toggle()} />
+      </header>
     </rat-view>
 
     <rat-view route="/notes/:id" name|src='note' />
@@ -51,21 +102,6 @@
 </style>
 
 
-// apps/notes/app.js
-
-// :::::: IMPORT
-
-// the frame is aufbau's: an <app-root> with the views in its main area, the
-// folder tree in a menu area docked at the start (a sidebar when there is room,
-// a drawer when there is not) and the settings in a config area at the end
-
-import { computed }            from '@aufbau/signals';
-import { useEffect, useState }   from '/.shared/js/vendors.js';
-
-import FolderLibrary from '/.shared/js/modules/folders.js';
-
-const { Brand, Config, Dock, Empty, FolderTree, InstallTip, Reader, SearchPanel, Views } =
-  await zugriff.components('Brand', 'Config', 'Dock', 'Empty', 'FolderTree', 'InstallTip', 'Reader', 'SearchPanel', 'Views');
 
 
 // :::::: APP
@@ -79,21 +115,8 @@ app.state.$extend({
   filter : { type: 'scalar', value: '' },
 });
 
-// durable state — hydrates from + persists to localStorage
-const open = app.persisted('open', null);   // { sourceId, path } | null
 
-// :::::: FRAME
 
-const area = app.area;
-
-// a drawer closes once something in it was picked, a sidebar stays
-const closeMenu = () => { if (area('menu')?.isOverlay) area('menu').hide(); };
-
-function openNote (sourceId, path) {
-  open.value = { sourceId, path };
-  app.go('note');
-  closeMenu();
-}
 
 // :::::: ACTIONS
 
@@ -111,33 +134,7 @@ async function addFolder () {
 // derive a note's display title: the filename without its extension
 const titleOf = node => node.name.replace(/\.[^.]+$/, '');
 
-// :::::: MENU
 
-function Menu () {
-  return html`
-    <div class='menu'>
-      <${Brand} app=${app} />
-      <${SearchPanel} placeholder='filter notes ...' appStateId='filter' />
-
-      <${FolderTree}
-        lib=${app.lib}
-        filter=${app.state.$filter}
-        selected=${open.value}
-        onOpen=${openNote}
-        onRemoveSource=${id => { if (open.value?.sourceId === id) { open.value = null; app.go('start'); } }}
-        labelOf=${titleOf}
-        fileIcon='notes'
-        emptyText='No markdown files here'
-        expandedKey='expanded'
-      />
-
-      <div class='side-foot'>
-        <${InstallTip} />
-        <btn-push icon='folder-add' label='Open a folder' onClick=${addFolder} />
-      </div>
-    </div>
-  `;
-}
 
 // :::::: VIEWS
 
@@ -151,11 +148,7 @@ const currentNote = computed(() => {
 
 function Header ({ segments = [] }) {
   return html`
-    <header>
-      <btn-icon icon='menu' title='notes' onClick=${() => area('menu')?.toggle()} />
-      <nav-crumbs path=${segments.join('/')} />
-      <btn-icon icon='settings' title='settings' onClick=${() => area('config')?.toggle()} />
-    </header>
+    
   `;
 }
 
