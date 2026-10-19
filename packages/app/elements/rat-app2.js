@@ -32,11 +32,6 @@ transition. density, geometry, layout, look, mode, palette and skin go to
 events: rat:ready, rat:navigate ({ from, to, path, params }).
 */
 
-/* --- TODO ---
-- `@domina/domina` einbinden
--------------*/
-
-
 // :::::: IMPORT
 
 import { DominaElement }  from '@domina/element';
