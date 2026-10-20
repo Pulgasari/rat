@@ -4,6 +4,7 @@
 one entry, two inputs:
 
   .rat      markup first. <script module>, <script>, <style>, the rest is markup
+  .rat.html the same as .rat, for highlighting where .rat is unknown (github)
   .rat.js   plain js plus sugar, html`…` without ${…} is compiled as markup
 
 both run through the same passes (parse -> script -> generate) and emit an es

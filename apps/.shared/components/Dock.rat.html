@@ -1,0 +1,18 @@
+<script>
+  // <Dock items={[{ icon, label, to, match }, { icon, label, onclick }]} />
+  // a row of btn-tap. an item goes to its route, or runs its onclick. it is active
+  // while the route is its own or starts with one of match (a detail of its list)
+
+  import { rat } from '@rat/app';
+
+  const $path = rat.app?.router.$path.value ?? '/';
+
+  const owns     = (route, path) => route === '/' ? path === '/' : path === route || path.startsWith(`${route}/`);
+  const isActive = item => item.to != null && [item.to, ...(item.match ?? [])].some(route => owns(route, $path));
+  const run      = item => item.onclick ? item.onclick() : rat.app.router.go(item.to);
+</script>
+
+<nav.dock>
+  @for (item of props.items ?? [])
+    <btn-tap class={isActive(item) ? 'col active' : 'col'} aria-current={isActive(item) ? 'page' : null} icon={item.icon} label={item.label} onclick={() => run(item)} />
+</nav.dock>
