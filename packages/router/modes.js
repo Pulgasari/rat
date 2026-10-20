@@ -29,7 +29,7 @@ const onWindow = (types, fn) => {
 };
 
 /*
-import onEvents from '@domina/methods';
+import onEvents from '@domina/verbs';
 
 const onWindow = (types, fn) => {
   const off = onEvents(types, fn);

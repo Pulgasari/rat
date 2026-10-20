@@ -28,6 +28,9 @@ arguments go in brackets, like the key modifiers (d-16):
 
 numbers, true, false and null are read as such, anything else is a string. the
 handler gets the arguments, then the event that fired it.
+
+a name with : is an event, not a command: onclick='rat:toggle[menu]' fires
+'rat:toggle' with the same detail, for whoever listens to it (<rat-app> does).
 */
 
 const COMMAND  = 'rat:command';
@@ -53,10 +56,12 @@ const nameOf = id => String(id).replace(/[-_\s]+([a-z0-9])/gi, (_, char) => char
 
 // ::: firing
 
-// a 'rat:command' from target, bubbling and through shadow roots. 'go[settings]' brings its arguments
+// a 'rat:command' from target, bubbling and through shadow roots. 'go[settings]' brings its arguments.
+// a name with : is an event of its own instead: 'rat:toggle[menu]' fires 'rat:toggle', no registry needed
 function command (target, text, event = null, args = []) {
   const { args: written, name } = parseCommand(text);
-  return target.dispatchEvent(new CustomEvent(COMMAND, { bubbles: true, composed: true, detail: { args: [...written, ...args], event, name } }));
+  const type = name.includes(':') ? name : COMMAND;
+  return target.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, composed: true, detail: { args: [...written, ...args], event, name } }));
 }
 
 // the handler a compiled onclick='save' or onclick='go[settings]' gets

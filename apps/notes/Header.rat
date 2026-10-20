@@ -1,0 +1,9 @@
+<script>
+  // the bar above a view: the menu, where the note sits, the settings
+</script>
+
+<header>
+  <btn-icon icon='menu' title='notes' onclick='rat:toggle[menu]' />
+  <nav-crumbs path={props.path ?? ''} />
+  <btn-icon icon='settings' title='settings' onclick='rat:toggle[config]' />
+</header>

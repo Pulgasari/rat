@@ -1,134 +1,111 @@
-<!-- rat:root -->
+<script>
+  // the frame of notes: the folder tree in a menu area at the start (a sidebar
+  // where there is room, a drawer where there is not), the views in the middle,
+  // the settings in a config area at the end
 
-<!--
-- dank auto-import kein components-boilerplate
--->
+  import { autoloader } from '@aufbau/elements';
+  import { effect }     from '@rat/runtime';
 
-<script config-src='./config.rat.js'>
-  rat.app.title   = 'Notes';
-  rat.app.folders = await import('@rat/plugins/folders');
+  import FolderLibrary from '../.shared/folders/index.js';
 
-  $note   = $({ id: '', path: '' }, '[persist]'); // abgeleitet: Record({ id: String, path: String });
-  $filter = $('', '[persist]');                   // abgeleitet: String
+  import Brand      from '../.shared/components/Brand.rat';
+  import Empty      from '../.shared/components/Empty.rat';
+  import FolderTree from '../.shared/components/FolderTree.rat';
+  import Loading    from '../.shared/components/Loading.rat';
+  import Header     from './Header.rat';
 
-  // :::::: ACTIONS
-  const closeMenu = () => { if (area('menu')?.isOverlay) area('menu').hide(); };
+  import config from './config.rat.js';
+
+  autoloader();
+
+  const app = props.app;
+  const lib = new FolderLibrary({ id: 'notes', accept: config.plugins.folders.accept });
+
+  // the splash stays until the folders are known
+  app.hold(lib.load());
+
+  // the open note, { sourceId, path } | null. kept by hand until persistence is decided
+  const OPEN = 'notes:open';
+  const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
+
+  let $filter = '';
+  let $open   = stored();
+  let $text   = null;
+
+  const $note    = $open && lib.trees.value[$open.sourceId] ? lib.nodeAt($open.sourceId, $open.path) : null;
+  const $sources = lib.sources.value;
+  const $path    = $note ? $note.path : '';
+
+  const titleOf = node => node.name.replace(/\.[^.]+$/, '');
+
+  function remember (open) {
+    $open = open;
+    if (open) localStorage.setItem(OPEN, JSON.stringify(open));
+    else localStorage.removeItem(OPEN);
+  }
+
+  // a drawer closes once something in it was picked, a sidebar stays
+  const closeMenu = () => { const menu = app.area('menu'); if (menu?.isOverlay) menu.hide(); };
+
   function openNote (sourceId, path) {
-    $note = { sourceId, path };
-    rat.app.go('note');
+    remember({ path, sourceId });
+    app.router.go('/note');
     closeMenu();
   }
 
-const app = zugriff.app;
-app.lib = new FolderLibrary({  });
-
-  // durable state — hydrates from + persists to localStorage
-  const open = app.persisted('open', null);   // { sourceId, path } | null
-
-async function addFolder () {
-  if (!zugriff.fs.supported()) { app.toast({ error: 'This browser can’t open folders — try Chrome, Edge or another Chromium browser.' }); return; }
-  try {
-    const record = await app.lib.addFolder();
-    if (record) app.toast({ success: `Opened ${record.name}` });
+  function forget (sourceId) {
+    if ($open?.sourceId !== sourceId) return;
+    remember(null);
+    app.router.go('/');
   }
-  catch (e) { app.toast(e); }
-}
 
-const titleOf = node => node.name.replace(/\.[^.]+$/, '');
+  async function addFolder () {
+    try { await lib.addFolder(); }
+    catch (error) { alert(error.message); }
+  }
 
-// resolve the open note against the freshest scan
-const currentNote = computed(() => {
-  const o = open.value;
-  if (!o) return null;
-  const node = app.lib.nodeAt(o.sourceId, o.path);
-  return node ? { sourceId: o.sourceId, node } : null;
-});
-
-
-
-// no note open: open a folder, or pick a note from the tree
-function Start () {
-  const hasSources = app.lib.sources.value.length > 0;
-  const action     = hasSources ? '' : html`<btn-push label='Open a folder' icon='folder-add' onClick=${addFolder} />`;
-  const hint       = hasSources ? 'Choose a note to start reading.' : 'Open a folder of Markdown files to get started.';
-
-  return html`
-    <${Header} />
-    <${Empty} icon='notes' title='No note open' hint=${hint} action=${action} />
-  `;
-}
-
+  // the text of the open note, read fresh off disk
+  effect(() => {
+    const note = $note;
+    $text = null;
+    if (!note) return;
+    let alive = true;
+    lib.readText(note).then(text => { if (alive) $text = text; }, error => { if (alive) $text = `could not read that note: ${error.message}`; });
+    return () => { alive = false; };
+  });
 </script>
 
-<>
-  <rat-area name+src='nav' open />
+<rat-area name='menu' dock='start' open>
+  <div.menu>
+    <Brand name={config.name} icon='./app.svg' />
+    <input type='search' placeholder='filter notes ...' bind:value={$filter} />
+    <FolderTree lib={lib} filter={$filter} selected={$open} onopen={openNote} onremove={forget} labelOf={titleOf} fileIcon='notes' expandedKey='notes:expanded' emptyText='No markdown files here' />
+    <div.side-foot>
+      <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
+    </div.side-foot>
+  </div.menu>
+</rat-area>
 
-  <rat-view route='/' name='home'>
-    <h1>home</h1>
-    <p>a static view. the nav is a rat-part in a rat-area, its buttons are commands: go[settings], go[/notes/3], back.</p>
-  </rat-view>
+<rat-view route='/' name='start'>
+  <Header />
+  @if ($sources.length)
+    <Empty icon='notes' title='No note open' hint='Choose a note to start reading.' />
+  @else
+    <Empty icon='notes' title='No note open' hint='Open a folder of Markdown files to get started.'>
+      <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
+    </Empty>
+</rat-view>
 
-  <rat-view>
-    <header>
-      <btn-icon icon='menu' title='notes' onClick='toggle[sidebar]' />
-      <nav-crumbs path={segments.join('/')} />
-      <btn-icon icon|title='settings' onClick='toggle[settings]' />
-    </header>
-  </rat-view>
+<rat-view route='/note' name='note' transition='slide'>
+  <Header path={$path} />
+  @if ($text === null)
+    <Loading />
+  @else
+    <output-md id='notes-reader' format='markdown' raw={$text} />
+    <nav-toc target='#notes-reader' selector='h1, h2, h3' />
+</rat-view>
 
-  if (!note) return html`<${Start} />`;
-
-  <rat-view route="/notes/:id" name|src='note'>
-    <Header segments=${note.node.path.split('/')} />
-    @switch ($text)
-      @case (null)
-        <div class='booting'><svg-icon icon='loading' /></div>`
-      @case (default)
-        <Reader id='notes-reader' format='markdown' text={text} />
-        <nav-toc target='#notes-reader' selector='h1, h2, h3' />
-  </rat-view>
-
-  <rat-area name='sidebar'>
-    <Brand app={app} />
-    <SearchPanel signal={$filter} placeholder='filter notes ...' />
-
-    <data-tree
-      lib={app.lib}
-      filter={$filter}
-      selected={$note}
-      onOpen={openNote}
-      onRemoveSource={id => { if (open.value?.sourceId === id) { open.value = null; app.go('start'); } }}
-      labelOf={titleOf}
-      fileIcon='notes'
-      emptyText='No markdown files here'
-      expandedKey='expanded'
-    />
-
-    <div class='side-foot'>
-      <InstallTip />
-      <btn-push icon='folder-add' label='Open a folder' onClick={addFolder} />
-    </div>
-  </rat-area>
-
-  <rat-overlay name='settings' transition='fade'>
-    <h1>settings</h1>
-  </rat-overlay>
-</>
-
-<style>
-  :root { color-scheme: light dark; font: 15px/1.5 system-ui, sans-serif; }
-  body  { margin: 0; }
-
-  rat-area[dock="start"] { padding: 1rem; }
-  rat-view               { padding: 1rem 2rem; }
-  rat-view rat-view      { padding: 1rem 0; }
-  [error] > pre          { color: crimson; white-space: pre-wrap; }
-</style>
-
-
-
-
-
-
-
-
+<rat-area name='config' dock='end'>
+  <h2>settings</h2>
+  <p>comes later.</p>
+</rat-area>

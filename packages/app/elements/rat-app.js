@@ -1,7 +1,9 @@
-// @rat/app :: elements :: <rat-app2>
+// @rat/app :: elements :: <rat-app>
 
 /*
-  <rat-app2 routing="hash" palette="dracula" loading>
+  <rat-app src="app.rat" routing="hash" palette="dracula"></rat-app>
+
+  <rat-app routing="hash" palette="dracula" loading>
     <rat-area dock="start">…</rat-area>
     <rat-view route="/" src="./home.rat"></rat-view>
     <rat-view route="/settings" name="settings">
@@ -9,14 +11,22 @@
       <rat-view route="profile" src="./profile.rat"></rat-view>
     </rat-view>
     <rat-view route="*" src="./missing.rat"></rat-view>
-  </rat-app2>
+  </rat-app>
 
 the root of an app, one per page: a second one warns and stays out of it.
+src loads a .rat file and mounts its component (props.app is the element) in
+place of what the app holds, its views and areas then come from there. with a
+src the app is [loading] by itself until they are mounted.
 
   app.router     @rat/router, routing = hash | path | query | memory | none, base for path
   app.commands   @rat/commands, listening on the app: onclick='go[settings]', back
   app.view       the deepest active view, app.views every view below the app
   app.area(name) a <rat-area>, app.areas all of them
+
+areas open and close by their name, two forms to find out which serves better:
+
+  onclick='rat:toggle[menu]'       the event rat:toggle (@rat/commands), the app takes it
+  rat.toggle('menu', force?)       import { rat } from '@rat/app': rat.app is the app
 
 matching: per level the first view whose route matches, exactly, else as the
 start of the path (a view with views in it, or a src not loaded yet), else a
@@ -29,7 +39,10 @@ whatever app.hold(promise) got is done; ready() ends it then, in a view
 transition. density, geometry, layout, look, mode, palette and skin go to
 @gestalt/core as they are.
 
-events: rat:ready, rat:navigate ({ from, to, path, params }).
+the last error boundary: an error no view or part took shows in a popover over
+the app (see ../boundary.js and errors.js of @rat/runtime).
+
+events: rat:ready, rat:navigate ({ from, to, path, params }), rat:error.
 */
 
 // :::::: IMPORT
@@ -41,21 +54,28 @@ import { Enum }           from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 
-import { RatArea } from './rat-area.js';
-import { RatView } from './rat-view.js';
+import { mount } from '@rat/runtime';
 
-//TODO: sowas sollte bereits direkt am `DominaElement` hängen zum abfragen
-const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+import { catchErrors, showError } from '../boundary.js';
+import { componentOf, load }      from '../loader.js';
+import { RatArea }                from './rat-area.js';
+import { RatView }                from './rat-view.js';
 
-// ::::::CONSTS
+// :::::: CONSTS
 
 const IN  = 'rat-view-in';
 const OUT = 'rat-view-out';
 
-// a value of gestalt's, handed on as it is
-// nothing set at the start is no change
-//todo: was zur hölle soll das darstellen?
-const look = name => ({ onChange (value, old) { if (value != null || old !== undefined) gestalt.set({ [name]: value ?? null }); }, type: String });     
+// a prop that hands its value to gestalt.set(). the first change of a prop never set is skipped:
+// gestalt.set({ skin: null }) would switch the skin off
+const gestaltProp = name => ({
+  type: String,
+  onChange (value, old) {
+    if (value == null && old === undefined) return;
+    gestalt.set({ [name]: value ?? null });
+  },
+});
+
 const isWild = view => view.route.includes('*'); // a view without route is not routed, one with * comes last
 
 // :::::: REFS
@@ -64,27 +84,28 @@ let current = null;
 
 // :::::: ELEMENT
 
-export class RatApp2 extends DominaElement {
+export class RatApp extends DominaElement {
 
   static props = {
     base       : String,
     loading    : Boolean,
-    look       : look('look'),
-    mode       : look('mode'),
     routing    : Enum('hash', 'path', 'query', 'memory', 'none'),
-    
-    // gestalt
-    density    : look('density'),
-    geometry   : look('geometry'),
-    skin       : look('skin'),
-    layout     : look('layout'),
-    palette    : look('palette'),
+    src        : String,
     transition : { default: 'fade', type: String },
+
+    // handed to gestalt
+    density    : gestaltProp('density'),
+    geometry   : gestaltProp('geometry'),
+    layout     : gestaltProp('layout'),
+    look       : gestaltProp('look'),
+    mode       : gestaltProp('mode'),
+    palette    : gestaltProp('palette'),
+    skin       : gestaltProp('skin'),
   };
 
   static styles () {
     return `
-    rat-app2 {
+    rat-app {
       display: block;
 
       /* while loading the splash of run.js has the box */
@@ -100,6 +121,18 @@ export class RatApp2 extends DominaElement {
       }
 
       &:has(> rat-area[dock="bottom"][peek]:state(overlay)) { padding-block-end: var(--area-peek, 1.75rem); }
+
+      & > [data-rat-errors] {
+        background      : Canvas;
+        border          : 1px solid color-mix(in oklab, CanvasText 25%, transparent);
+        border-radius   : 0.5rem;
+        color           : CanvasText;
+        inset           : auto 1rem 1rem auto;
+        max-inline-size : min(40rem, calc(100vw - 2rem));
+        padding         : 0.75rem 1rem;
+
+        & pre { margin: 0 0 0.5rem; white-space: pre-wrap; }
+      }
     }
 
     @keyframes rat-view-fade  { from { opacity: 0; } }
@@ -118,7 +151,10 @@ export class RatApp2 extends DominaElement {
   }
 
   #commands = createCommands();
+  #dispose  = null;
+  #errors   = null;
   #holds    = new Set;
+  #mounting = false;
   #queued   = false;
   #router   = null;
   #started  = false;
@@ -126,20 +162,29 @@ export class RatApp2 extends DominaElement {
   get commands () { return this.#commands; }
   get router   () { return this.#router; }
 
-  get areas () { return this.dom.getList('rat-area'); }
+  get areas () { return this.dom.getListOfElements('rat-area'); }
   get view  () { return this.views.findLast({ active: true }) ?? null; }
-  get views () { return this.dom.getList('rat-view'); }
+  get views () { return this.dom.getListOfElements('rat-view'); }
 
   area (name) { return this.areas.find({ name }) ?? null; }
+
+  // a <rat-area> by its name, opened or closed: force true opens, false closes, none flips
+  toggle (name, force) {
+    const target = this.area(name);
+    target?.toggle(force);
+    return target;
+  }
 
   // :::::: LIFECYCLE
 
   onConnected () {
     if (current && current !== this && current.isConnected) {
-      console.warn('[rat] one <rat-app2> per page, this one stays out of it', this);
+      console.warn('[rat] one <rat-app> per page, this one stays out of it', this);
       return;
     }
     current = this;
+
+    if (this.src) this.hold(this.start());
 
     this.#router ??= createRouter({ base: this.base ?? '', mode: this.routing, resolve: name => this.resolve(name) }).bind(this.#commands);
     this.track(this.#commands.listen(this));
@@ -150,17 +195,58 @@ export class RatApp2 extends DominaElement {
 
     this.observe.added('rat-view', () => this.schedule());
     this.observe.removed('rat-view', () => this.schedule());
+    this.track(catchErrors(this, error => this.report(error)));
+    this.on('rat:toggle', ({ detail }) => this.toggle(...detail.args));
   }
 
   onDisconnected () {
     if (current === this) current = null;
   }
 
+  onAttributeChanged (name) {
+    if (name === 'src' && current === this) this.start();
+  }
+
+  // :::::: SRC
+
+  // the component of src in place of what the app held. matching waits for it
+  async start () {
+    const { src } = this;
+    if (!src) return;
+
+    const status = ({ detail }) => { this.dataset.status = `compiling ${detail.name}`; };
+    this.#mounting = true;
+    this.loading   = true;
+    this.dataset.status = `loading ${src}`;
+    document.addEventListener('rat:compile', status);
+
+    try {
+      const Component = componentOf(await load(new URL(src, this.baseURI).href));
+      if (!Component) throw new Error(`[rat] ${src} exports no component`);
+      this.#dispose?.();
+      this.replaceChildren();
+      this.#errors  = null;
+      this.#dispose = mount(Component, this, { app: this });
+      this.emit('rat:mount');
+    }
+    catch (error) {
+      this.loading = false;
+      showError(this, error, () => { this.removeAttribute('error'); this.start(); });
+    }
+    finally {
+      document.removeEventListener('rat:compile', status);
+      delete this.dataset.status;
+      this.#mounting = false;
+      this.#started  = false;
+      this.schedule();
+    }
+  }
+
   // :::::: MATCHING
 
   // the views of one level: those whose nearest view or app is parent
   levelOf (parent) {
-    return [...parent.querySelectorAll('rat-view[route]')].filter(view => view.parentElement.closest('rat-view, rat-app2') === parent);
+    return [...parent.querySelectorAll('rat-view[route]')].filter(view => view.parentElement.closest('rat-view, rat-app') === parent);
   }
 
   pick (views, path) {
@@ -202,7 +288,7 @@ export class RatApp2 extends DominaElement {
   // the full route of a view: the routes of the views around it joined, the params filled in
   routeOf (view) {
     const routes = [];
-    for (let at = view; at && at !== this; at = at.parentElement.closest('rat-view, rat-app2')) routes.unshift(at.route ?? '');
+    for (let at = view; at && at !== this; at = at.parentElement.closest('rat-view, rat-app')) routes.unshift(at.route ?? '');
     return fill(join(...routes), this.#router.params);
   }
 
@@ -219,7 +305,7 @@ export class RatApp2 extends DominaElement {
 
   // once per microtask, however many views came or the route changed meanwhile
   schedule () {
-    if (this.#queued || current !== this) return;
+    if (this.#queued || this.#mounting || current !== this) return;
     this.#queued = true;
     queueMicrotask(() => { this.#queued = false; this.follow(); });
   }
@@ -256,7 +342,7 @@ export class RatApp2 extends DominaElement {
     const on  = name(to,   this.transition);
     const off = name(from, this.transition);
 
-    if (!document.startViewTransition || reducedMotion() || (on === 'none' && off === 'none') || this.loading) return Promise.resolve(swap());
+    if (!document.startViewTransition || this.a11y.reducedMotion || (on === 'none' && off === 'none') || this.loading) return Promise.resolve(swap());
 
     const html = document.documentElement;
     html.style.setProperty('--rat-view-in',  on);
@@ -291,6 +377,22 @@ export class RatApp2 extends DominaElement {
       .reduce((asking, view) => asking.then(pass => pass && view.ask(event)), Promise.resolve(true));
   }
 
+  // :::::: ERRORS
+
+  // the last boundary (../boundary.js): what no view or part took, in a popover over the app
+  report (error) {
+    console.error(error);
+    if (!this.#errors) {
+      this.#errors = Object.assign(document.createElement('div'), { popover: 'manual' });
+      this.#errors.dataset.ratErrors = '';
+      const close = Object.assign(document.createElement('button'), { popoverTargetAction: 'hide', popoverTargetElement: this.#errors, textContent: 'close', type: 'button' });
+      this.#errors.append(document.createElement('pre'), close);
+      this.append(this.#errors);
+    }
+    this.#errors.querySelector('pre').textContent = error?.message ?? String(error);
+    this.#errors.showPopover?.();
+  }
+
   // :::::: LOADING
 
   // ready() waits for it too
@@ -313,13 +415,19 @@ export class RatApp2 extends DominaElement {
   ready () {
     if (!this.loading) return Promise.resolve();
     const done = () => { this.loading = false; this.emit('rat:ready'); };
-    return !document.startViewTransition || reducedMotion() ? Promise.resolve(done()) : document.startViewTransition(done).finished;
+    return !document.startViewTransition || this.a11y.reducedMotion ? Promise.resolve(done()) : document.startViewTransition(done).finished;
   }
 }
 
-RatApp2.init('rat-app2');
+RatApp.init('rat-app');
+
+// the app from anywhere: rat.app, rat.toggle('menu')
+const rat = {
+  get app () { return current; },
+  toggle (name, force) { return current?.toggle(name, force) ?? null; },
+};
 
 // :::::: EXPORT
 
-export { RatArea, RatView };
-export default RatApp2;
+export { RatArea, RatView, rat };
+export default RatApp;

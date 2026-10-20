@@ -10,7 +10,7 @@
 // ::: vendors
 import { computed, signal }  from '@aufbau/signals';
 import { useEffect, useRef } from '/.shared/js/vendors.js';
-import createElement from '@domina/methods/createElement.js';
+import createElement from '@domina/verbs/createElement.js';
 
 // the <iconify-icon> element, not awaited: the app runs without it, the grid fills in once it is there
 import('https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js').catch(() => {});

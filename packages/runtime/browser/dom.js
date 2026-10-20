@@ -18,6 +18,7 @@ calls with the element once its children are in place.
 
 import { each, html, match, raw, render as renderInto, unrender, when } from '@htx/js/render';
 import { effect, isFn, isSignal, isString, onCleanup, scope, untrack } from '../common/shared.js';
+import { guard }                                                       from './errors.js';
 
 // effects belong to no owner, the renderer disposes them. scopes neither: the
 // renderer disposes them with their part
@@ -36,10 +37,12 @@ function render (target, value, options) {
   return renderInto(target, value, merged);
 }
 
-// a component runs once, untracked, in a scope of its own
+// a component runs once, untracked, in a scope of its own. what throws later, in
+// its effects and rows, is raised from host (errors.js); the first call throws
 function mount (Component, target, props = {}) {
-  const host = isString(target) ? document.querySelector(target) : target;
-  const [, dispose] = scope(() => render(host, Component(props)), null);
+  const host    = isString(target) ? document.querySelector(target) : target;
+  const options = { effect: fn => effect(guard(fn, host), null), scope: fn => scope(guard(fn, host), null) };
+  const [, dispose] = scope(() => render(host, Component(props), options), null);
   return () => { unrender(host); dispose(); };
 }
 

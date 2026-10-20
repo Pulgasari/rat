@@ -16,9 +16,13 @@
   </style>
 </head>
 <body>
-  <rat-app2 routing="hash" transition="slide" loading>
+  <rat-app routing="hash" transition="slide" loading>
     <rat-area dock="start" name="nav" overlay="never" open>
       <rat-part src="nav.rat"></rat-part>
+    </rat-area>
+
+    <rat-area dock="bottom" name="sheet" overlay="always">
+      <p style="padding: 1rem">a bottom sheet, opened by name: rat:toggle[sheet] or rat.toggle('sheet').</p>
     </rat-area>
 
     <rat-view route="/" name="home">
@@ -39,10 +43,12 @@
       <rat-view route="editor" name="editor" src="editor.rat"></rat-view>
     </rat-view>
 
+    <rat-view route="/broken" name="broken" src="broken.rat"></rat-view>
+
     <rat-view route="*" name="missing">
       <h1>not found</h1>
       <p>no view for this route. <a href="#/">home</a></p>
     </rat-view>
-  </rat-app2>
+  </rat-app>
 </body>
 </html>

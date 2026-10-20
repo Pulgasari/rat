@@ -1,0 +1,17 @@
+<script>
+  let $count = 0;
+
+  function check (count) {
+    if (count > 0) throw new Error(`an effect failed at ${count}`);
+    return 'all fine';
+  }
+</script>
+
+<section>
+  <h1>errors</h1>
+  <p>each button breaks something. the view is the error boundary: it shows the error instead of the component, retry loads it again.</p>
+  <button onclick={() => { throw new Error('a handler failed'); }}>throw in a handler</button>
+  <button onclick={async () => { throw new Error('an async handler failed'); }}>reject in a handler</button>
+  <button onclick={() => $count++}>break an effect</button>
+  <p>{check($count)}</p>
+</section>

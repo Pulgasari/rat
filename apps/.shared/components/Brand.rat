@@ -1,0 +1,12 @@
+<script>
+  // <Brand name='Notes' icon='./app.svg' />: the app's icon and its name
+</script>
+
+<div.brand>
+  @if (props.icon): <svg-icon icon={props.icon} mode='image' />
+  <span>{props.name}</span>
+</div.brand>
+
+<style>
+  .brand { align-items: center; display: flex; font-weight: 600; gap: 0.5rem; }
+</style>

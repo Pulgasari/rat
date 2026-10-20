@@ -11,14 +11,10 @@ export class RatPart extends HTMLElement {
   stop (): void;
 }
 
-/** The entry of an app: a RatPart that always loads right away. */
-export class RatApp extends RatPart {}
-
-// ::: @rat/app/shell, see README
-
-/** The root of an app, one per page: router, commands, views, areas. */
-export class RatApp2 extends HTMLElement {
+/** The root of an app, one per page: router, commands, views, areas. src mounts a .rat file into it. */
+export class RatApp extends HTMLElement {
   routing    : 'hash' | 'path' | 'query' | 'memory' | 'none';
+  src?       : string;
   base?      : string;
   loading    : boolean;
   transition : string;
@@ -37,10 +33,16 @@ export class RatApp2 extends HTMLElement {
   readonly areas    : RatArea[];
 
   area (name: string): RatArea | null;
+  /** An area opened or closed by its name: force true opens, false closes, none flips. */
+  toggle (name: string, force?: boolean): RatArea | null;
   /** The views of a path, the outermost first, and the params of all levels. */
   match (path: string): { params: Record<string, string>; views: RatView[] };
   /** ready() waits for it too. */
   hold<T> (promise: Promise<T>): Promise<T>;
+  /** Loads src and mounts it in place of what the app holds. */
+  start (): Promise<void>;
+  /** The last error boundary: shows an error in a popover over the app. */
+  report (error: unknown): void;
   /** Ends [loading], in a view transition. */
   ready (): Promise<void>;
 }
@@ -52,7 +54,7 @@ export class RatView extends HTMLElement {
   route?      : string;
   src?        : string;
   transition? : string;
-  readonly app    : RatApp2 | null;
+  readonly app    : RatApp | null;
   readonly loaded : boolean;
   /** A leave guard, returns its stop. Any other type is an event listener. */
   on (type: 'leave', fn: (event: import('@rat/router').LeaveEvent) => unknown, options?: { unload?: boolean }): () => void;
@@ -68,13 +70,19 @@ export class RatArea extends HTMLElement {
   open       : boolean;
   overlay    : 'always' | 'auto' | 'never';
   peek       : boolean;
-  readonly app       : RatApp2 | null;
+  readonly app       : RatApp | null;
   readonly isOverlay : boolean;
   show (): this;
   hide (): this;
   toggle (force?: boolean): this;
   expand (force?: boolean): this;
 }
+
+/** The app from anywhere. */
+export const rat: {
+  readonly app: RatApp | null;
+  toggle (name: string, force?: boolean): RatArea | null;
+};
 
 /** The blob url of a compiled .rat / .rat.js file, its imports rewritten. One compile per url. */
 export function compileFile (url: string | URL): Promise<string>;
@@ -86,7 +94,6 @@ export function componentOf (module: Record<string, unknown>): ((props?: object)
 declare global {
   interface HTMLElementTagNameMap {
     'rat-app'  : RatApp;
-    'rat-app2' : RatApp2;
     'rat-area' : RatArea;
     'rat-part' : RatPart;
     'rat-view' : RatView;

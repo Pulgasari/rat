@@ -1,0 +1,114 @@
+<script>
+  // the folders of a FolderLibrary as a tree:
+  //   <FolderTree lib={lib} filter={$filter} selected={$open} onopen={(sourceId, path) => …} />
+  // a filter keeps the matching files and opens their branches. which branches are
+  // open is kept per expandedKey in localStorage (by hand until persistence is decided)
+
+  import Loading from './Loading.rat';
+
+  const lib     = props.lib;
+  const key     = props.expandedKey ?? 'foldertree:expanded';
+  const labelOf = props.labelOf ?? (node => node.name);
+
+  const read = () => { try { return JSON.parse(localStorage.getItem(key)) ?? []; } catch { return []; } };
+
+  let $expanded = read();
+
+  const $sources  = lib.sources.value;
+  const $perms    = lib.perms.value;
+  const $trees    = lib.trees.value;
+  const $scanning = lib.scanning.value;
+  const $query    = String(props.filter ?? '').trim().toLowerCase();
+
+  // a value per node: kind, source and path, the path may hold : itself
+  const valueOf = (kind, sourceId, path) => `${kind}:${sourceId}:${path}`;
+
+  function parse (value = '') {
+    const rest = value.slice(2);
+    const at   = rest.indexOf(':');
+    return { kind: value[0], path: rest.slice(at + 1), sourceId: rest.slice(0, at) };
+  }
+
+  // a tree pruned to the files whose path holds the query
+  function filtered (node, query) {
+    if (node.kind === 'file') return node.path.toLowerCase().includes(query) ? node : null;
+    const children = (node.children ?? []).map(child => filtered(child, query)).filter(Boolean);
+    return children.length ? { ...node, children } : null;
+  }
+
+  const shown      = sourceId => $query && $trees[sourceId] ? filtered($trees[sourceId], $query) : $trees[sourceId];
+  const isOpen     = (sourceId, path) => $expanded.includes(`${sourceId}:${path}`);
+  const isSelected = (sourceId, path) => props.selected?.sourceId === sourceId && props.selected?.path === path;
+
+  function select (event) {
+    const { kind, path, sourceId } = parse(event.detail?.value);
+    if (kind === 'f') props.onopen?.(sourceId, path);
+  }
+
+  function toggle (event) {
+    const { kind, path, sourceId } = parse(event.detail?.value);
+    if (kind !== 'd') return;
+    const id   = `${sourceId}:${path}`;
+    const rest = $expanded.filter(entry => entry !== id);
+    $expanded  = event.detail.expanded ? [...rest, id] : rest;
+    localStorage.setItem(key, JSON.stringify($expanded));
+  }
+
+  async function remove (source) {
+    if (!confirm(`Close “${source.name}”? Your files are untouched, this only forgets the folder.`)) return;
+    props.onremove?.(source.id);
+    await lib.removeFolder(source.id);
+  }
+
+  async function reconnect (source) {
+    const result = await lib.reconnect(source.id);
+    if (!result.granted) console.warn('[foldertree] reconnect failed', { source, ...result });
+  }
+</script>
+
+@fragment branch (dir, sourceId, open)
+  @for (child of dir.children ?? [])
+    @if (child.kind === 'file')
+      <data-node label={labelOf(child)} value={valueOf('f', sourceId, child.path)} icon={props.fileIcon} selected={isSelected(sourceId, child.path)} />
+    @else
+      <data-node label={child.name} value={valueOf('d', sourceId, child.path)} expanded={open || isOpen(sourceId, child.path)}>
+        {branch(child, sourceId, open)}
+      </data-node>
+
+<div.tree>
+  @for (source of $sources)
+    <div.source>
+      <div.head>
+        <svg-icon icon='folder' />
+        <span.name title={source.name}>{source.name}</span.name>
+        <btn-icon icon='refresh' label='refresh' disabled={$scanning[source.id] || $perms[source.id] !== 'granted'} onclick={() => lib.scan(source.id).catch(() => {})} />
+        <btn-icon icon='close' label='close' onclick={() => remove(source)} />
+      </div.head>
+      @if ($perms[source.id] !== 'granted')
+        <div.reconnect>
+          <span>{$perms[source.id] === 'denied' ? 'Permission was blocked.' : 'This folder needs permission again.'}</span>
+          <btn-push icon='folder-key' label='Reconnect' onclick={() => reconnect(source)} />
+          <btn-push icon='folder-search' label='Choose folder' onclick={() => lib.repick(source.id)} />
+        </div.reconnect>
+      @else
+        @if ($scanning[source.id] && !$trees[source.id])
+          <Loading text='scanning …' />
+        @else
+          @if (shown(source.id)?.children?.length)
+            <data-tree on:data-tree-select={select} on:data-tree-toggle={toggle}>
+              {branch(shown(source.id), source.id, Boolean($query))}
+            </data-tree>
+          @else
+            <p.empty>{$query ? (props.noMatchText ?? 'No matches') : (props.emptyText ?? 'This folder is empty')}</p.empty>
+    </div.source>
+  @else
+    <p.hint>{props.noSourcesText ?? 'No folders open yet.'}</p.hint>
+</div.tree>
+
+<style>
+  .tree  { display: grid; gap: 0.75rem; }
+  .head  { align-items: center; display: flex; gap: 0.25rem; }
+  .name  { flex: 1 1 auto; font-weight: 600; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reconnect { display: grid; gap: 0.5rem; }
+  .empty, .hint { opacity: 0.7; }
+</style>

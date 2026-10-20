@@ -5,7 +5,7 @@
   <rat-area dock="bottom" peek>…</rat-area>        a bottom sheet that peeks out
   <rat-area>…</rat-area>                           the main area (dock="none")
 
-a region of <rat-app2>, which lays them out in its grid. a docked area is
+a region of <rat-app>, which lays them out in its grid. a docked area is
 beside main from the breakpoint on and an overlay (drawer, sheet) below it,
 overlay="always" | "never" fixes that. open, expanded and peek say how far it
 is out; show(), hide(), toggle(), expand() and a drag on its handle change it,
@@ -199,7 +199,7 @@ export class RatArea extends DominaElement {
     `;
   }
 
-  get app       () { return this.closest('rat-app2'); }
+  get app       () { return this.closest('rat-app'); }
   get docked    () { return this.dock !== 'none'; }
   get isOverlay () { return this.states.has('overlay'); }
 
@@ -257,18 +257,18 @@ export class RatArea extends DominaElement {
   }
 
   watchBreakpoint () {
-    this._media?.();
+    this._breakpoint?.();
     const mode = this.overlay;
     const set  = overlay => { this.states.toggle('overlay', overlay && this.docked); this.update(); };
 
-    if (mode !== 'auto') { this._media = null; set(mode === 'always'); return; }
+    if (mode !== 'auto') { this._breakpoint = null; set(mode === 'always'); return; }
 
     const query  = globalThis.matchMedia?.(`(width < ${this.breakpoint})`);
     const change = () => set(Boolean(query?.matches));
     const stop   = () => query?.removeEventListener('change', change);
     query?.addEventListener('change', change);
     this.track(stop);
-    this._media = stop;
+    this._breakpoint = stop;
     set(Boolean(query?.matches));
   }
 
