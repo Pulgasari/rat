@@ -38,6 +38,8 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] später: build-schritt bzw. sw kompiliert einmal und cached
 
 ## sonstiges
+- [ ] `FolderLibrary` (`apps/.shared/folders/`) neu und sauber bauen, vermutlich schematisiert; ebenso `@bunker`
+- [ ] compiler: ein nicht geschlossenes element als solches melden (heute: `<style> is only allowed at the top level`)
 - [ ] props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
 - [ ] `/.md` gründlich aufräumen (erst absprechen)
 

@@ -4,26 +4,82 @@
   // the settings in a config area at the end
 
   import { autoloader } from '@aufbau/elements';
+  import { effect }     from '@rat/runtime';
 
-  import Brand   from '../.shared/components/Brand.rat';
-  import Empty   from '../.shared/components/Empty.rat';
-  import Header  from './Header.rat';
+  import FolderLibrary from '../.shared/folders/index.js';
+
+  import Brand      from '../.shared/components/Brand.rat';
+  import Empty      from '../.shared/components/Empty.rat';
+  import FolderTree from '../.shared/components/FolderTree.rat';
+  import Loading    from '../.shared/components/Loading.rat';
+  import Header     from './Header.rat';
 
   import config from './config.rat.js';
 
   autoloader();
 
-  let $filter = '';
+  const app = props.app;
+  const lib = new FolderLibrary({ id: 'notes', accept: config.plugins.folders.accept });
 
-  // stand-ins until the folders are there
-  const addFolder = () => console.info('[notes] open a folder: comes with the folder library');
+  // the splash stays until the folders are known
+  app.hold(lib.load());
+
+  // the open note, { sourceId, path } | null. kept by hand until persistence is decided
+  const OPEN = 'notes:open';
+  const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
+
+  let $filter = '';
+  let $open   = stored();
+  let $text   = null;
+
+  const $note    = $open && lib.trees.value[$open.sourceId] ? lib.nodeAt($open.sourceId, $open.path) : null;
+  const $sources = lib.sources.value;
+  const $path    = $note ? $note.path : '';
+
+  const titleOf = node => node.name.replace(/\.[^.]+$/, '');
+
+  function remember (open) {
+    $open = open;
+    if (open) localStorage.setItem(OPEN, JSON.stringify(open));
+    else localStorage.removeItem(OPEN);
+  }
+
+  // a drawer closes once something in it was picked, a sidebar stays
+  const closeMenu = () => { const menu = app.area('menu'); if (menu?.isOverlay) menu.hide(); };
+
+  function openNote (sourceId, path) {
+    remember({ path, sourceId });
+    app.router.go('/note');
+    closeMenu();
+  }
+
+  function forget (sourceId) {
+    if ($open?.sourceId !== sourceId) return;
+    remember(null);
+    app.router.go('/');
+  }
+
+  async function addFolder () {
+    try { await lib.addFolder(); }
+    catch (error) { alert(error.message); }
+  }
+
+  // the text of the open note, read fresh off disk
+  effect(() => {
+    const note = $note;
+    $text = null;
+    if (!note) return;
+    let alive = true;
+    lib.readText(note).then(text => { if (alive) $text = text; }, error => { if (alive) $text = `could not read that note: ${error.message}`; });
+    return () => { alive = false; };
+  });
 </script>
 
 <rat-area name='menu' dock='start' open>
   <div.menu>
     <Brand name={config.name} icon='./app.svg' />
     <input type='search' placeholder='filter notes ...' bind:value={$filter} />
-    <p.tree>the folder tree{$filter ? `, filtered by "${$filter}"` : ''}</p.tree>
+    <FolderTree lib={lib} filter={$filter} selected={$open} onopen={openNote} onremove={forget} labelOf={titleOf} fileIcon='notes' expandedKey='notes:expanded' emptyText='No markdown files here' />
     <div.side-foot>
       <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
     </div.side-foot>
@@ -32,15 +88,21 @@
 
 <rat-view route='/' name='start'>
   <Header />
-  <Empty icon='notes' title='No note open' hint='Open a folder of Markdown files to get started.'>
-    <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
-  </Empty>
+  @if ($sources.length)
+    <Empty icon='notes' title='No note open' hint='Choose a note to start reading.' />
+  @else
+    <Empty icon='notes' title='No note open' hint='Open a folder of Markdown files to get started.'>
+      <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
+    </Empty>
 </rat-view>
 
 <rat-view route='/note' name='note' transition='slide'>
-  <Header path='folder/a note' />
-  <output-md id='notes-reader' format='markdown' raw={'# a note\n\nthe text of the open note comes here.\n\n## a heading\n\nfor the table of contents.'} />
-  <nav-toc target='#notes-reader' selector='h1, h2, h3' />
+  <Header path={$path} />
+  @if ($text === null)
+    <Loading />
+  @else
+    <output-md id='notes-reader' format='markdown' raw={$text} />
+    <nav-toc target='#notes-reader' selector='h1, h2, h3' />
 </rat-view>
 
 <rat-area name='config' dock='end'>
