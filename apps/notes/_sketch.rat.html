@@ -83,7 +83,7 @@ function Start () {
     @switch ($text)
       @case (null)
         <div class='booting'><svg-icon icon='loading' /></div>`
-      @case (default)
+      @default
         <Reader id='notes-reader' format='markdown' text={text} />
         <nav-toc target='#notes-reader' selector='h1, h2, h3' />
   </rat-view>
