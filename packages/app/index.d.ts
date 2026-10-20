@@ -28,6 +28,10 @@ export class RatApp extends HTMLElement {
 
   readonly commands : import('@rat/commands').Commands;
   readonly router   : import('@rat/router').Router;
+  /** The config of config.rat.js, {} without one. */
+  readonly config   : Record<string, any>;
+  /** config-src: another file than config.rat.js next to src. */
+  configSrc?        : string;
   readonly view     : RatView | null;
   readonly views    : RatView[];
   readonly areas    : RatArea[];
@@ -43,6 +47,8 @@ export class RatApp extends HTMLElement {
   start (): Promise<void>;
   /** The last error boundary: shows an error in a popover over the app. */
   report (error: unknown): void;
+  /** Loads config.rat.js once: RAT and the plugins. */
+  configure (): Promise<Record<string, any>>;
   /** Ends [loading], in a view transition. */
   ready (): Promise<void>;
 }
@@ -79,10 +85,19 @@ export class RatArea extends HTMLElement {
 }
 
 /** The app from anywhere. */
+/** The app from anywhere. As RAT on globalThis with RAT: true in config.rat.js, else import RAT from '@rat/app'. */
 export const rat: {
-  readonly app: RatApp | null;
+  readonly app    : RatApp | null;
+  readonly config : Record<string, any> | null;
   toggle (name: string, force?: boolean): RatArea | null;
 };
+
+export default rat;
+
+declare global {
+  /** With RAT: true in config.rat.js. */
+  var RAT: typeof rat;
+}
 
 /** The blob url of a compiled .rat / .rat.js file, its imports rewritten. One compile per url. */
 export function compileFile (url: string | URL): Promise<string>;

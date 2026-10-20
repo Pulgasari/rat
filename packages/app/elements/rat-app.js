@@ -23,6 +23,11 @@ src the app is [loading] by itself until they are mounted.
   app.view       the deepest active view, app.views every view below the app
   app.area(name) a <rat-area>, app.areas all of them
 
+config.rat.js next to src (or config-src) is loaded before the app's code: its
+RAT: true puts rat on globalThis as RAT (a string names it otherwise), its
+plugins land on the app (RAT.app.database …, see ../plugins.js), the config
+itself is app.config.
+
 areas open and close by their name, two forms to find out which serves better:
 
   onclick='rat:toggle[menu]'       the event rat:toggle (@rat/commands), the app takes it
@@ -58,6 +63,7 @@ import { mount } from '@rat/runtime';
 
 import { catchErrors, showError } from '../boundary.js';
 import { componentOf, load }      from '../loader.js';
+import { usePlugins }             from '../plugins.js';
 import { RatArea }                from './rat-area.js';
 import { RatView }                from './rat-view.js';
 
@@ -88,6 +94,7 @@ export class RatApp extends DominaElement {
 
   static props = {
     base       : String,
+    configSrc  : String,
     loading    : Boolean,
     routing    : Enum('hash', 'path', 'query', 'memory', 'none'),
     src        : String,
@@ -151,6 +158,7 @@ export class RatApp extends DominaElement {
   }
 
   #commands = createCommands();
+  #config   = null;
   #dispose  = null;
   #errors   = null;
   #holds    = new Set;
@@ -160,6 +168,7 @@ export class RatApp extends DominaElement {
   #started  = false;
 
   get commands () { return this.#commands; }
+  get config   () { return this.#config ?? {}; }
   get router   () { return this.#router; }
 
   get areas () { return this.dom.getListOfElements('rat-area'); }
@@ -185,6 +194,7 @@ export class RatApp extends DominaElement {
     current = this;
 
     if (this.src) this.hold(this.start());
+    else if (this.configSrc) this.hold(this.configure());
 
     this.#router ??= createRouter({ base: this.base ?? '', mode: this.routing, resolve: name => this.resolve(name) }).bind(this.#commands);
     this.track(this.#commands.listen(this));
@@ -221,6 +231,7 @@ export class RatApp extends DominaElement {
     document.addEventListener('rat:compile', status);
 
     try {
+      await this.configure();
       const Component = componentOf(await load(new URL(src, this.baseURI).href));
       if (!Component) throw new Error(`[rat] ${src} exports no component`);
       this.#dispose?.();
@@ -240,6 +251,24 @@ export class RatApp extends DominaElement {
       this.#started  = false;
       this.schedule();
     }
+  }
+
+  // :::::: CONFIG
+
+  // config.rat.js next to src (config-src names another): RAT and the plugins, once, before
+  // the app's own code runs. without config-src a missing file is no config
+  async configure () {
+    if (this.#config) return this.#config;
+    const named = this.configSrc;
+    const url   = named ? new URL(named, this.baseURI).href : new URL('config.rat.js', new URL(this.src, this.baseURI)).href;
+
+    if (!named && !(await fetch(url, { cache: 'no-cache', method: 'HEAD' }).then(response => response.ok, () => false))) return this.#config = {};
+
+    const module = await load(url);
+    const config = module.default ?? { ...module };
+    if (config.RAT) globalThis[config.RAT === true ? 'RAT' : config.RAT] = rat;
+    await usePlugins(this, config);
+    return this.#config = config;
   }
 
   // :::::: MATCHING
@@ -423,7 +452,8 @@ RatApp.init('rat-app');
 
 // the app from anywhere: rat.app, rat.toggle('menu')
 const rat = {
-  get app () { return current; },
+  get app    () { return current; },
+  get config () { return current?.config ?? null; },
   toggle (name, force) { return current?.toggle(name, force) ?? null; },
 };
 

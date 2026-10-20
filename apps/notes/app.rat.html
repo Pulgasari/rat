@@ -14,12 +14,11 @@
   import Loading    from '../.shared/components/Loading.rat.html';
   import Header     from './Header.rat.html';
 
-  import config from './config.rat.js';
-
   autoloader();
 
-  const app = props.app;
-  const lib = new FolderLibrary({ id: 'notes', accept: config.plugins.folders.accept });
+  const app    = props.app;
+  const config = app.config;
+  const lib    = new FolderLibrary({ id: 'notes', accept: config.folders.accept });
 
   // the splash stays until the folders are known
   app.hold(lib.load());

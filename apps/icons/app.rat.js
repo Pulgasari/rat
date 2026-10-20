@@ -3,11 +3,10 @@
 // an Iconify browser: every set, every icon, search, favourites.
 // the grid renders through the <iconify-icon> webcomponent, so a page of hundreds
 // of icons is a couple of batched requests; the app's own chrome uses <svg-icon>.
-// data comes from api.iconify.design (modules/iconify.js), favourites from
-// @bunker/db (modules/db.js).
+// data comes from api.iconify.design (modules/iconify.js), favourites from the
+// database of config.rat.js (RAT.app.database.favs, @rat/bunker).
 
 import { autoloader } from '@aufbau/elements';
-import { rat }        from '@rat/app';
 import { effect }     from '@rat/runtime';
 
 import createElement from '@domina/verbs/createElement.js';
@@ -20,7 +19,6 @@ import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
 
 import * as api from './modules/iconify.js';
-import * as db  from './modules/db.js';
 
 // the <iconify-icon> element, not awaited: the app runs without it, the grid fills in once it is there
 import('https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js').catch(() => {});
@@ -46,7 +44,11 @@ effect(() => write('icons:query', $query));
 effect(() => write('icons:itemSize', $itemSize));
 
 // the set of the route /set/:prefix
-const $prefix = /^\/set\/(.+)$/.exec(rat.app?.router.$path.value ?? '')?.[1] ?? null;
+const $prefix = /^\/set\/(.+)$/.exec(RAT.app.router.$path.value)?.[1] ?? null;
+
+// the hearted icons: the table follows as $items, its names as a set
+const favs  = RAT.app.database.favs;
+const $favs = new Set(favs.$items.map(fav => fav.name));
 
 // :::::: DATA
 
@@ -67,7 +69,7 @@ async function loadSet (prefix) {
 
 effect(() => { loadSet($prefix ? decodeURIComponent($prefix) : null); });
 
-const go      = path => rat.app.router.go(path);
+const go      = path => RAT.app.router.go(path);
 const openSet = prefix => go(`/set/${encodeURIComponent(prefix)}`);
 
 let searchTimer = null;
@@ -89,11 +91,11 @@ function search (value) {
 
 function inspect (name) {
   $detail = name;
-  rat.toggle('context', true);
+  RAT.toggle('context', true);
 }
 
 function closeDetail () {
-  rat.toggle('context', false);
+  RAT.toggle('context', false);
   $detail = null;
 }
 
@@ -135,11 +137,11 @@ async function downloadSvg (name) {
   catch { toast.error('Could not download the SVG'); }
 }
 
-const isFav = name => db.favs.value.has(name);
+const isFav = name => $favs.has(name);
 
-function toggleFav (event, name) {
-  event.stopPropagation();
-  db.toggleFav(name);
+function toggleFav (name, event) {
+  event?.stopPropagation();
+  return isFav(name) ? favs.delete(name) : favs.add({ name });
 }
 
 // :::::: COMPONENTS
@@ -148,7 +150,7 @@ const IconCell = props => html`
   <button.cell title={props.name} onclick={() => inspect(props.name)}>
     <span.glyph><iconify-icon icon={props.name}></iconify-icon></span.glyph>
     <span.cname>{props.name.split(':')[1]}</span.cname>
-    <btn-push class={isFav(props.name) ? 'heart on' : 'heart'} icon={isFav(props.name) ? 'heart' : 'heart-outline'} title='Favourite' onclick={event => toggleFav(event, props.name)} />
+    <btn-push class={isFav(props.name) ? 'heart on' : 'heart'} icon={isFav(props.name) ? 'heart' : 'heart-outline'} title='Favourite' onclick={event => toggleFav(props.name, event)} />
   </button.cell>
 `;
 
@@ -285,8 +287,8 @@ const FavoritesView = () => html`
     <span.spacer></span.spacer>
     <SizeControl />
   </header.topbar>
-  @if (db.favs.value.size)
-    <IconGrid names={[...db.favs.value]} />
+  @if ($favs.size)
+    <IconGrid names={[...$favs]} />
   @else
     <Empty icon='heart' hint='No favourites yet: tap the heart on any icon.' />
 `;
@@ -302,7 +304,7 @@ const Detail = () => html`
           <btn-push icon='copy' label='copy name' onclick={() => copy($detail)} />
           <btn-push icon='svg' label='copy svg' onclick={() => copySvg($detail)} />
           <btn-push icon='download' label='download' onclick={() => downloadSvg($detail)} />
-          <btn-push icon={isFav($detail) ? 'heart' : 'heart-outline'} label={isFav($detail) ? 'Favourited' : 'Favourite'} onclick={() => db.toggleFav($detail)} />
+          <btn-push icon={isFav($detail) ? 'heart' : 'heart-outline'} label={isFav($detail) ? 'Favourited' : 'Favourite'} onclick={() => toggleFav($detail)} />
         </div.sheet-actions>
       </div.detail>
     </app-panel>
@@ -315,11 +317,11 @@ const dock = [
   { icon: 'search',   label: 'search',   to: '/search'                    },
   { icon: 'images',   label: 'sets',     to: '/sets', match: ['/set']     },
   { icon: 'heart',    label: 'favs',     to: '/favs'                      },
-  { icon: 'settings', label: 'settings', onclick: () => rat.toggle('config') },
+  { icon: 'settings', label: 'settings', onclick: () => RAT.toggle('config') },
 ];
 
 export default props => {
-  props.app.hold(Promise.all([db.loadFavs().catch(() => {}), loadCollections()]));
+  props.app.hold(loadCollections());
 
   // the query survives a reload, its results do not
   if ($query.trim()) search($query);

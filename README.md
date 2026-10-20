@@ -36,6 +36,7 @@ playground:
 | package         | path                                     | status |
 |-----------------|------------------------------------------|--------|
 | `@rat/app`      | [`packages/app`](packages/app)           | v0     |
+| `@rat/bunker`   | [`packages/bunker`](packages/bunker)     | v0     |
 | `@rat/commands` | [`packages/commands`](packages/commands) | v0     |
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
 | `@rat/hotkeys`  | [`packages/hotkeys`](packages/hotkeys)   | v0     |
