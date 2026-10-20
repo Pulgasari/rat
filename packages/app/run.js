@@ -163,7 +163,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   async function refetch (entry) {
     const seen  = new Set;
     const visit = async url => {
-      if (!url || seen.has(url) || new URL(url).origin !== location.origin || /\.rat$/.test(new URL(url).pathname)) return;
+      if (!url || seen.has(url) || new URL(url).origin !== location.origin || /\.rat(\.html)?$/.test(new URL(url).pathname)) return;
       seen.add(url);
       try {
         const code = await fetch(url, { cache: 'reload' }).then(response => response.ok ? response.text() : '');

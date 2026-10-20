@@ -6,7 +6,7 @@
   1. fetch the source, compile it (compileAsync: style languages load first).
   2. rewrite the imports of the result. a blob module has no path of its own,
      so './card.rat' inside it would resolve against blob: and fail:
-       .rat, .rat.js   compiled the same way, the import gets their blob url
+       .rat, .rat.html, .rat.js   compiled the same way, the import gets their blob url
        ./x.js, ../x    an absolute url, against the file's own url
        @rat/runtime    stays, for the import map
      a dynamic import('./x.rat') stays lazy: it goes through load() when it runs.
@@ -24,7 +24,7 @@ import { parse }          from 'acorn';
 import { compileAsync }   from '@rat/compiler';
 import { isArray, isFn, isString } from './_shared.js';
 
-const RAT      = /\.rat(\.js)?$/;
+const RAT      = /\.rat(\.js|\.html)?$/;   // .rat.html: a .rat file under another name, for highlighting where .rat is unknown
 const RELATIVE = /^(\.{1,2}\/|\/)/;
 const SELF     = import.meta.url;
 
