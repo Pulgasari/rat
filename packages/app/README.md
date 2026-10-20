@@ -106,6 +106,7 @@ what a part holds until the component mounts stays: a loading screen without cod
 | `density`, `geometry`, `layout`, `look`, `mode`, `palette`, `skin` | handed to `@gestalt/core` |
 | `app.router`, `app.commands` | `@rat/router`, `@rat/commands` listening on the app (`go[settings]`, `back`) |
 | `app.view`, `app.views`, `app.area(name)`, `app.areas` | the deepest active view, every view, the areas |
+| `onclick='rat:toggle[menu]'`, `rat.toggle('menu', force?)` | an area opened or closed by its name: the event (`@rat/commands`) or the function (`import { rat } from '@rat/app'`, `rat.app` is the app). both, to find out which serves better |
 | `rat:ready`, `rat:navigate` | events, `rat:navigate` with `{ from, to, path, params }` |
 
 one per page, a second one warns and stays out of it.

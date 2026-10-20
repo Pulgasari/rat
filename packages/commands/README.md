@@ -28,6 +28,10 @@ arguments in brackets, like the key modifiers ([d-16](../../.md/ideas/app.md#d-1
 `true`, `false` and `null` are read as such, anything else is a string. the handler gets the
 arguments, then the event that fired it. `run('go[settings]')` works the same.
 
+a name with `:` is an event of its own, not a command: `onclick='rat:toggle[menu]'` fires
+`rat:toggle` (bubbling, cancelable) with the same `detail`, no registry involved. `<rat-app>`
+listens to `rat:toggle`.
+
 | | |
 |---|---|
 | `createCommands(source?)` | a registry. names are one across kebab, camel and snake case |

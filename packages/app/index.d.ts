@@ -33,6 +33,8 @@ export class RatApp extends HTMLElement {
   readonly areas    : RatArea[];
 
   area (name: string): RatArea | null;
+  /** An area opened or closed by its name: force true opens, false closes, none flips. */
+  toggle (name: string, force?: boolean): RatArea | null;
   /** The views of a path, the outermost first, and the params of all levels. */
   match (path: string): { params: Record<string, string>; views: RatView[] };
   /** ready() waits for it too. */
@@ -75,6 +77,12 @@ export class RatArea extends HTMLElement {
   toggle (force?: boolean): this;
   expand (force?: boolean): this;
 }
+
+/** The app from anywhere. */
+export const rat: {
+  readonly app: RatApp | null;
+  toggle (name: string, force?: boolean): RatArea | null;
+};
 
 /** The blob url of a compiled .rat / .rat.js file, its imports rewritten. One compile per url. */
 export function compileFile (url: string | URL): Promise<string>;

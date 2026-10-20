@@ -7,7 +7,7 @@
 <rat-view>  a view of the app, activated by its router
 */
 
-export { RatApp }  from './rat-app.js';
-export { RatArea } from './rat-area.js';
-export { RatPart } from './rat-part.js';
-export { RatView } from './rat-view.js';
+export { RatApp, rat }  from './rat-app.js';
+export { RatArea }       from './rat-area.js';
+export { RatPart }       from './rat-part.js';
+export { RatView }       from './rat-view.js';

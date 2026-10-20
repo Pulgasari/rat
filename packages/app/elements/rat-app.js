@@ -23,6 +23,11 @@ src the app is [loading] by itself until they are mounted.
   app.view       the deepest active view, app.views every view below the app
   app.area(name) a <rat-area>, app.areas all of them
 
+areas open and close by their name, two forms to find out which serves better:
+
+  onclick='rat:toggle[menu]'       the event rat:toggle (@rat/commands), the app takes it
+  rat.toggle('menu', force?)       import { rat } from '@rat/app': rat.app is the app
+
 matching: per level the first view whose route matches, exactly, else as the
 start of the path (a view with views in it, or a src not loaded yet), else a
 route with *. what is left goes to the views inside it, the params of every
@@ -163,6 +168,13 @@ export class RatApp extends DominaElement {
 
   area (name) { return this.areas.find({ name }) ?? null; }
 
+  // a <rat-area> by its name, opened or closed: force true opens, false closes, none flips
+  toggle (name, force) {
+    const target = this.area(name);
+    target?.toggle(force);
+    return target;
+  }
+
   // :::::: LIFECYCLE
 
   onConnected () {
@@ -184,6 +196,7 @@ export class RatApp extends DominaElement {
     this.observe.added('rat-view', () => this.schedule());
     this.observe.removed('rat-view', () => this.schedule());
     this.track(catchErrors(this, error => this.report(error)));
+    this.on('rat:toggle', ({ detail }) => this.toggle(...detail.args));
   }
 
   onDisconnected () {
@@ -408,7 +421,13 @@ export class RatApp extends DominaElement {
 
 RatApp.init('rat-app');
 
+// the app from anywhere: rat.app, rat.toggle('menu')
+const rat = {
+  get app () { return current; },
+  toggle (name, force) { return current?.toggle(name, force) ?? null; },
+};
+
 // :::::: EXPORT
 
-export { RatArea, RatView };
+export { RatArea, RatView, rat };
 export default RatApp;
