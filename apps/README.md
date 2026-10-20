@@ -10,6 +10,8 @@
 - [x] vorübergehend müssen wir mal `.rat.html` als synonym mit `.rat` unterstützen, weil ich direkt auf gh sonst kein syntax-highlighting habe. (ich fix das später indem ich mobile editor mit gh verknüpfe.)
 - [x] `apps/notes` lauffähig: ordner öffnen, baum, filter, notiz lesen, inhaltsverzeichnis, beim neuladen bleibt alles
 - [ ] `apps/notes`: settings (config-area), dock unten auf schmalen bildschirmen, install-hinweis, toasts
+- [x] `apps/icons` als `.rat.js`: sets, set, suche, favoriten, detail im bottom-sheet, dock
+- [ ] `apps/icons`: settings, die rastergröße per geste (`@aufbau/gestures`), escape-hotkey
 - [ ] `<rat-part>` sollte wohl actually nich nur direkt `.rat` fressen, sondern auch `.htx` und schnöde `.html` files
 
 ### nebenbei
@@ -37,4 +39,7 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 - daten laden heißt `effect` + `then` + `alive`-flag: das ist genau der fall für `@await` (d-28)
 - ein vergessenes `</div.source>` meldet der compiler als `<style> is only allowed at the top level`: die meldung sollte das offene element nennen
 - `FolderLibrary` ist 1:1 aus zugriff übernommen (`.shared/folders/`), nur auf `@rat/signals`. neu bauen steht in `.md/todo.md`
+- `.rat.js`: in `html`…`` darf kein template-literal stehen (`` {`a ${b}`} ``), der backtick beendet das äußere template (js selbst). heute: `{'a ' + b}`. ein fall für die syntax-runde
+- `.rat.js`: zustand eines moduls (`let $query`) und komponenten als funktionen (`const Cell = props => html`…``) gehen ohne weiteres, auch `<Cell name={x} />` im markup
+- `apps/.shared/`: `toast.js` (über `<pop-toast>`), `storage.js` (von hand), `components/Dock.rat.html`
 
