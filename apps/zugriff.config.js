@@ -1,7 +1,6 @@
 // zugriff.config.js
 
 export default {
-  ...config,
   dir         : 'ltr',
   display     : 'standalone',
   lang        : 'en',
@@ -19,7 +18,11 @@ export default {
   gestalt: {
     palette: 'zombie',
   },
+  // schema mit ui-hinweisen: form noch offen (todo.md), bis dahin aus
+  /*
   settings : {
     dir  : Enum({ values: ['ltr', 'rtl'], element: { look: 'segments' } }),
     font : Enum({ values: gestalt.webfonts, init: 'Manrope', element: { look: 'combobox' } }),
-  };
+  },
+  */
+};

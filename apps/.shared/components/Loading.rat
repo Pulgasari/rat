@@ -1,0 +1,12 @@
+<script>
+  // <Loading />, <Loading text='scanning …' />
+</script>
+
+<div.loading>
+  <svg-icon icon='loading' />
+  @if (props.text): <span>{props.text}</span>
+</div.loading>
+
+<style>
+  .loading { align-items: center; display: flex; gap: 0.5rem; justify-content: center; padding: 1rem; }
+</style>

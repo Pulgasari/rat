@@ -102,6 +102,10 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     '@rat/runtime'    : at('../runtime/index.js'),
     '@rat/signals'    : at('../signals/index.js'),
     '@rat/types'      : at('../types/index.js'),
+    //////////// @aufbau ////////////
+    '@aufbau/elements'  : at('../../../aufbau/elements/index.js'),
+    '@aufbau/elements/' : at('../../../aufbau/elements/'),
+    '@aufbau/svg/'      : at('../../../aufbau/svg/'),
     //////////// @bunker ////////////
     '@bunker/core'    : at('../../../bunker/core/index.js'),
     '@bunker/db'      : at('../../../bunker/db/index.js'),
