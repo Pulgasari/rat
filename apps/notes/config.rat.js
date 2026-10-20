@@ -5,7 +5,7 @@
 - entweder default export oder mehrere top-level exports
 - ist dann am globalen `rat` verfügbar: `rat.config`
 
-(vorerst: ein normaler import in app.rat, siehe ../README.md)
+<rat-app> lädt sie selbst (app.config, mit RAT: true auch RAT.config)
 */
 
 import config from './../zugriff.config.js';
@@ -13,7 +13,6 @@ import config from './../zugriff.config.js';
 export default {
   ...config,
   name: 'Notes',
-  plugins: {
-    folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
-  },
+  // the folders hold markdown (FolderLibrary, until it is a plugin of @rat/bunker's Files)
+  folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
 };

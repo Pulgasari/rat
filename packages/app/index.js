@@ -5,3 +5,6 @@ import '@rat/types';
 
 export * from './elements/index.js';
 export * from './loader.js';
+
+// RAT without the global: import RAT from '@rat/app'
+export { rat as default } from './elements/index.js';

@@ -54,3 +54,18 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 
 ## allgemein
 - modernes html nutzen, wo es geht (`<dialog>`, popover, view transitions …)
+
+## persistente daten (`@rat/bunker`, später `@bunker`)
+- vier teile: **Store** (schlüssel/werte), **Database** (tabellen aus records, je tabelle ein store), **Files** (baum aus einträgen), **memo** (ttl/swr als wrapper, keine eigene ablage)
+- alles async für jeden treiber; treiber, die sofort antworten (local, session, cookie, memory), haben zusätzlich `getSync`/`setSync` (vor dem ersten paint)
+- codecs (wert ↔ was der treiber hält) und schema (prüft/wandelt den wert) sind getrennte schichten. schema auch für store, optional
+- cache api ist ein store mit url-schlüsseln, kein files
+- ein handle ist der eintrag, den die plattform ausstellt (festgenagelt, mit rechten, inhalt erst bei bedarf). files reicht einträge herum, pfade sind nur die adresse
+- `Id` (uuid, `Id.counter` fortlaufend), `Ref('tabelle')` in `@rat/types`
+- `.as(Type)` und `.$items` beide, in der praxis vergleichen. `List`/`$List`/`$items` kommen aus `rat.js`, der rest kennt rat nicht
+
+## config, `RAT`
+- `<rat-app src>` lädt `config.rat.js` daneben selbst (`config-src` für eine andere datei)
+- globales `RAT` als opt-in in der config (`RAT: true`, oder ein string als name). ohne global: `import RAT from '@rat/app'`
+- `plugins: { name: options | true | fn }` landen an `RAT.app.<name>`: `database`, `files`, `store`, `hotkeys`, eigene als funktion
+

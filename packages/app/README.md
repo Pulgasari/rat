@@ -130,6 +130,36 @@ else the view `name="x"`.
 `overlay` (`auto` below `breakpoint`, `always`, `never`), `show()`, `hide()`, `toggle()`,
 `expand()`, a drag on its handle. the port of `<app-area>`.
 
+## config, `RAT`, plugins
+
+`<rat-app src>` loads `config.rat.js` next to its `src` before the app's own code runs
+(`config-src` names another file, without `src` too). no such file: no config.
+
+```js
+// config.rat.js
+import { Id } from '@rat/types';
+
+export default {
+  RAT     : true,                     // globalThis.RAT, a string names it otherwise ('APP')
+  name    : 'icons',
+  plugins : {
+    database : { schema: { favs: { name: Id } } },               // RAT.app.database (@rat/bunker)
+    files    : true,                                              // RAT.app.files, opfs
+    store    : { driver: 'local' },                               // RAT.app.store
+    hotkeys  : { 'ctrl+k|/': 'go[search]', 'escape': 'rat:toggle[context]' },
+    player   : (app, config) => createPlayer(app),               // a function: a plugin of your own
+  },
+};
+```
+
+| | |
+|---|---|
+| `RAT` | opt-in. `RAT.app` is the app, `RAT.config` its config, `RAT.toggle(name)`. without the global: `import RAT from '@rat/app'` |
+| `app.config` | the config, `{}` without one |
+| `plugins` | each lands on the app under its name. `true` takes the defaults, `false` leaves it out, a name the app has already is left out with a warning |
+| `database`, `store` | named after the app (`name`, else `id`). `schema` is the tables (`tables` works too), `'indexed-db'` is `'indexeddb'` |
+| `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
+
 ## errors
 
 `<rat-view>`, `<rat-part>` and `<rat-app>` are error boundaries. an error of a

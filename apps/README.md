@@ -24,7 +24,7 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 
 | wunsch | vorerst |
 |---|---|
-| `<script config-src>`, `config.rat.js` als `rat.config` | `import config from './config.rat.js'` |
+| ~~`<script config-src>`, `config.rat.js` als `rat.config`~~ | gebaut: `<rat-app>` lädt `config.rat.js`, `RAT.config` |
 | auto-import der komponenten (per config) | explizite imports |
 | `$x = …` ohne `let` | `let $x = …` |
 | persistenz eines signals | von hand (`localStorage`) |
@@ -42,4 +42,5 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 - `.rat.js`: in `html`…`` darf kein template-literal stehen (`` {`a ${b}`} ``), der backtick beendet das äußere template (js selbst). heute: `{'a ' + b}`. ein fall für die syntax-runde
 - `.rat.js`: zustand eines moduls (`let $query`) und komponenten als funktionen (`const Cell = props => html`…``) gehen ohne weiteres, auch `<Cell name={x} />` im markup
 - `apps/.shared/`: `toast.js` (über `<pop-toast>`), `storage.js` (von hand), `components/Dock.rat.html`
+- icons läuft auf `config.rat.js` (`RAT: true`, plugins `database`, `hotkeys`), favoriten in `RAT.app.database.favs`, der api-cache als cache-store unter `memo`
 

@@ -1,23 +1,17 @@
 // apps/icons/modules/iconify.js
 //
-// the Iconify HTTP API — collections, one collection's icons, and search.
+// the Iconify HTTP API: collections, one collection's icons, and search.
 // api.iconify.design allows cross-origin requests, so these are plain fetches.
-// the collection list and each set's icon list are cached in @bunker/db with a
-// short ttl so re-opening a set is instant and offline-ish.
+// the collection list and each set's icon list are kept in the Cache API for a
+// day (@rat/bunker: a cache store under memo), re-opening a set is instant.
 
-import { db, ready } from './db.js';
+import { createStore, memo } from '@rat/bunker';
 
 const API = 'https://api.iconify.design';
-const TTL = 24 * 60 * 60 * 1000;   // 1 day
+const DAY = 24 * 60 * 60 * 1000;
 
-async function cached (key, fetcher) {
-  await ready();
-  const hit = await db.get('cache', key);
-  if (hit && Date.now() - hit.at < TTL) return hit.data;
-  const data = await fetcher();
-  await db.set('cache', key, { data, at: Date.now() });
-  return data;
-}
+const kept   = memo(createStore({ driver: 'cache', name: 'icons-api' }), { ttl: DAY });
+const cached = (key, fetcher) => kept.get(`${API}/rat-cache/${encodeURIComponent(key)}`, fetcher);
 
 async function getJson (url) {
   const res = await fetch(url, { headers: { accept: 'application/json' } });
