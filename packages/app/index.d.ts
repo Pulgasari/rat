@@ -11,14 +11,10 @@ export class RatPart extends HTMLElement {
   stop (): void;
 }
 
-/** The entry of an app: a RatPart that always loads right away. */
-export class RatApp extends RatPart {}
-
-// ::: @rat/app/shell, see README
-
-/** The root of an app, one per page: router, commands, views, areas. */
-export class RatApp2 extends HTMLElement {
+/** The root of an app, one per page: router, commands, views, areas. src mounts a .rat file into it. */
+export class RatApp extends HTMLElement {
   routing    : 'hash' | 'path' | 'query' | 'memory' | 'none';
+  src?       : string;
   base?      : string;
   loading    : boolean;
   transition : string;
@@ -41,6 +37,10 @@ export class RatApp2 extends HTMLElement {
   match (path: string): { params: Record<string, string>; views: RatView[] };
   /** ready() waits for it too. */
   hold<T> (promise: Promise<T>): Promise<T>;
+  /** Loads src and mounts it in place of what the app holds. */
+  start (): Promise<void>;
+  /** The last error boundary: shows an error in a popover over the app. */
+  report (error: unknown): void;
   /** Ends [loading], in a view transition. */
   ready (): Promise<void>;
 }
@@ -52,7 +52,7 @@ export class RatView extends HTMLElement {
   route?      : string;
   src?        : string;
   transition? : string;
-  readonly app    : RatApp2 | null;
+  readonly app    : RatApp | null;
   readonly loaded : boolean;
   /** A leave guard, returns its stop. Any other type is an event listener. */
   on (type: 'leave', fn: (event: import('@rat/router').LeaveEvent) => unknown, options?: { unload?: boolean }): () => void;
@@ -68,7 +68,7 @@ export class RatArea extends HTMLElement {
   open       : boolean;
   overlay    : 'always' | 'auto' | 'never';
   peek       : boolean;
-  readonly app       : RatApp2 | null;
+  readonly app       : RatApp | null;
   readonly isOverlay : boolean;
   show (): this;
   hide (): this;
@@ -86,7 +86,6 @@ export function componentOf (module: Record<string, unknown>): ((props?: object)
 declare global {
   interface HTMLElementTagNameMap {
     'rat-app'  : RatApp;
-    'rat-app2' : RatApp2;
     'rat-area' : RatArea;
     'rat-part' : RatPart;
     'rat-view' : RatView;

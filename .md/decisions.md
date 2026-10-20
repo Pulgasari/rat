@@ -17,8 +17,9 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 ## `@domina/element`: media, a11y
 - `this.media` (`dark`, `light`, `hover`, `coarse`, `print`, `matches(query)`, `on(query, fn)`), `this.a11y` (`reducedMotion`, `contrast`, `forcedColors`, `reducedTransparency`). a11y als eigener namespace, dort kommt später eine eigene schicht barrierefreiheit hinein
 
-## app-gerüst (`<rat-app2>`, `<rat-view>`, `<rat-area>`)
-`packages/app/elements/` (`@rat/app/shell`), demo `demos/app2`. look (skin, palette, density …) läuft über gestalt, `<rat-app2>` reicht nur durch.
+## app-gerüst (`<rat-app>`, `<rat-view>`, `<rat-area>`)
+- `<rat-app>` ist `<rat-app>` geworden (das alte `<rat-app>` als `<rat-part>`-variante ist weg), `src` lädt die app-komponente
+`packages/app/elements/`, demo `demos/app2`. look (skin, palette, density …) läuft über gestalt, `<rat-app>` reicht nur durch.
 
 **`@domina/element`**
 - `static props = { name: Schema }` statt `static attr`. jedes standard schema (`~standard`: `@rat/types`, zod, valibot), domina kennt nur die schnittstelle
@@ -41,11 +42,11 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 - `<rat-view route src>` lädt über den loader von `@rat/app`, params als props
 
 
-**`<rat-app2>`, `<rat-view>`, `<rat-area>`**
-- genau eine `<rat-app2>` pro seite (das root-element), eine zweite: warnung, wird ignoriert
-- `<rat-app2>`: `app.router`, `app.commands` (`go`, `back` vom router), `ready()` beendet `[loading]` mit view transition. lade-screen ist der splash aus `run.js`
+**`<rat-app>`, `<rat-view>`, `<rat-area>`**
+- genau eine `<rat-app>` pro seite (das root-element), eine zweite: warnung, wird ignoriert
+- `<rat-app>`: `app.router`, `app.commands` (`go`, `back` vom router), `ready()` beendet `[loading]` mit view transition. lade-screen ist der splash aus `run.js`
 - `<rat-view>`: `active`, `name`, `route` (relativ zur eltern-view), `src`, `transition`. aktiv macht nur der router
-- `<rat-area>` statt `<app-area>`: sidebar, drawer, bottom-sheet, das grid stellt `<rat-app2>`
+- `<rat-area>` statt `<app-area>`: sidebar, drawer, bottom-sheet, das grid stellt `<rat-app>`
 - matching pro ebene: erst exakt, dann als anfang des pfads (nur views mit views darin oder ungeladenem `src`), zuletzt routen mit `*`
 - guard pro view: `view.on('leave', fn, { unload })`, die app fragt nur die views, die die navigation wegnimmt (innerste zuerst)
 - `[loading]` endet von selbst, sobald die aktiven views gemountet sind und `app.hold(promise)` erledigt ist

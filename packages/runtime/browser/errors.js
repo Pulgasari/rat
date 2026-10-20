@@ -8,7 +8,7 @@ detail { error, boundary }.
 
 the nearest boundary takes it with preventDefault() and puts itself into
 detail.boundary: <rat-view> and <rat-part> show it in place of their component,
-<rat-app2> catches what no view took. an error nobody takes goes to
+<rat-app> catches what no view took. an error nobody takes goes to
 reportError(), the console as for any uncaught error.
 
   app.addEventListener('rat:error', ({ detail }) => log(detail.error, detail.boundary));

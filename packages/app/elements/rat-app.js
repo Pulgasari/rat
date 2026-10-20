@@ -1,7 +1,9 @@
-// @rat/app :: elements :: <rat-app2>
+// @rat/app :: elements :: <rat-app>
 
 /*
-  <rat-app2 routing="hash" palette="dracula" loading>
+  <rat-app src="app.rat" routing="hash" palette="dracula"></rat-app>
+
+  <rat-app routing="hash" palette="dracula" loading>
     <rat-area dock="start">…</rat-area>
     <rat-view route="/" src="./home.rat"></rat-view>
     <rat-view route="/settings" name="settings">
@@ -9,9 +11,12 @@
       <rat-view route="profile" src="./profile.rat"></rat-view>
     </rat-view>
     <rat-view route="*" src="./missing.rat"></rat-view>
-  </rat-app2>
+  </rat-app>
 
 the root of an app, one per page: a second one warns and stays out of it.
+src loads a .rat file and mounts its component (props.app is the element) in
+place of what the app holds, its views and areas then come from there. with a
+src the app is [loading] by itself until they are mounted.
 
   app.router     @rat/router, routing = hash | path | query | memory | none, base for path
   app.commands   @rat/commands, listening on the app: onclick='go[settings]', back
@@ -44,10 +49,12 @@ import { Enum }           from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 
-import { RatArea } from './rat-area.js';
-import { RatView } from './rat-view.js';
+import { mount } from '@rat/runtime';
 
-import { catchErrors } from '../boundary.js';
+import { catchErrors, showError } from '../boundary.js';
+import { componentOf, load }      from '../loader.js';
+import { RatArea }                from './rat-area.js';
+import { RatView }                from './rat-view.js';
 
 // :::::: CONSTS
 
@@ -72,12 +79,13 @@ let current = null;
 
 // :::::: ELEMENT
 
-export class RatApp2 extends DominaElement {
+export class RatApp extends DominaElement {
 
   static props = {
     base       : String,
     loading    : Boolean,
     routing    : Enum('hash', 'path', 'query', 'memory', 'none'),
+    src        : String,
     transition : { default: 'fade', type: String },
 
     // handed to gestalt
@@ -92,7 +100,7 @@ export class RatApp2 extends DominaElement {
 
   static styles () {
     return `
-    rat-app2 {
+    rat-app {
       display: block;
 
       /* while loading the splash of run.js has the box */
@@ -138,8 +146,10 @@ export class RatApp2 extends DominaElement {
   }
 
   #commands = createCommands();
+  #dispose  = null;
   #errors   = null;
   #holds    = new Set;
+  #mounting = false;
   #queued   = false;
   #router   = null;
   #started  = false;
@@ -157,10 +167,12 @@ export class RatApp2 extends DominaElement {
 
   onConnected () {
     if (current && current !== this && current.isConnected) {
-      console.warn('[rat] one <rat-app2> per page, this one stays out of it', this);
+      console.warn('[rat] one <rat-app> per page, this one stays out of it', this);
       return;
     }
     current = this;
+
+    if (this.src) this.hold(this.start());
 
     this.#router ??= createRouter({ base: this.base ?? '', mode: this.routing, resolve: name => this.resolve(name) }).bind(this.#commands);
     this.track(this.#commands.listen(this));
@@ -178,11 +190,50 @@ export class RatApp2 extends DominaElement {
     if (current === this) current = null;
   }
 
+  onAttributeChanged (name) {
+    if (name === 'src' && current === this) this.start();
+  }
+
+  // :::::: SRC
+
+  // the component of src in place of what the app held. matching waits for it
+  async start () {
+    const { src } = this;
+    if (!src) return;
+
+    const status = ({ detail }) => { this.dataset.status = `compiling ${detail.name}`; };
+    this.#mounting = true;
+    this.loading   = true;
+    this.dataset.status = `loading ${src}`;
+    document.addEventListener('rat:compile', status);
+
+    try {
+      const Component = componentOf(await load(new URL(src, this.baseURI).href));
+      if (!Component) throw new Error(`[rat] ${src} exports no component`);
+      this.#dispose?.();
+      this.replaceChildren();
+      this.#errors  = null;
+      this.#dispose = mount(Component, this, { app: this });
+      this.emit('rat:mount');
+    }
+    catch (error) {
+      this.loading = false;
+      showError(this, error, () => { this.removeAttribute('error'); this.start(); });
+    }
+    finally {
+      document.removeEventListener('rat:compile', status);
+      delete this.dataset.status;
+      this.#mounting = false;
+      this.#started  = false;
+      this.schedule();
+    }
+  }
+
   // :::::: MATCHING
 
   // the views of one level: those whose nearest view or app is parent
   levelOf (parent) {
-    return [...parent.querySelectorAll('rat-view[route]')].filter(view => view.parentElement.closest('rat-view, rat-app2') === parent);
+    return [...parent.querySelectorAll('rat-view[route]')].filter(view => view.parentElement.closest('rat-view, rat-app') === parent);
   }
 
   pick (views, path) {
@@ -224,7 +275,7 @@ export class RatApp2 extends DominaElement {
   // the full route of a view: the routes of the views around it joined, the params filled in
   routeOf (view) {
     const routes = [];
-    for (let at = view; at && at !== this; at = at.parentElement.closest('rat-view, rat-app2')) routes.unshift(at.route ?? '');
+    for (let at = view; at && at !== this; at = at.parentElement.closest('rat-view, rat-app')) routes.unshift(at.route ?? '');
     return fill(join(...routes), this.#router.params);
   }
 
@@ -241,7 +292,7 @@ export class RatApp2 extends DominaElement {
 
   // once per microtask, however many views came or the route changed meanwhile
   schedule () {
-    if (this.#queued || current !== this) return;
+    if (this.#queued || this.#mounting || current !== this) return;
     this.#queued = true;
     queueMicrotask(() => { this.#queued = false; this.follow(); });
   }
@@ -355,9 +406,9 @@ export class RatApp2 extends DominaElement {
   }
 }
 
-RatApp2.init('rat-app2');
+RatApp.init('rat-app');
 
 // :::::: EXPORT
 
 export { RatArea, RatView };
-export default RatApp2;
+export default RatApp;

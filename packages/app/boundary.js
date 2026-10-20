@@ -1,7 +1,7 @@
 // @rat/app :: boundary
 
 /*
-<rat-view>, <rat-part> and <rat-app2> are error boundaries: they take the
+<rat-view>, <rat-part> and <rat-app> are error boundaries: they take the
 'rat:error' raised below them (@rat/runtime, errors.js) that no inner boundary
 took. a view or a part shows the error in place of its component, with a
 retry when it has a src to load again. [error] is set meanwhile.

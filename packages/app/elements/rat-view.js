@@ -3,7 +3,7 @@
 /*
   <rat-view route="/notes/:id" src="./note.rat" name="note" transition="slide"></rat-view>
 
-a view of the app. only the router of <rat-app2> activates it: the view whose
+a view of the app. only the router of <rat-app> activates it: the view whose
 route matches is [active], the others are inert and hidden. a route is relative
 to the view around it, so views nest (one active per level).
 
@@ -61,7 +61,7 @@ export class RatView extends DominaElement {
   #params  = null;
   #ticket  = 0;
 
-  get app    () { return this.closest('rat-app2'); }
+  get app    () { return this.closest('rat-app'); }
   get loaded () { return !this.src || this.#loaded; }
 
   onConnected () {
