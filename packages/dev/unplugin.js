@@ -1,18 +1,16 @@
-// @rat/vite
-import { compile } from '@rat/compiler';
+// @rat/unplugin
+import { createUnplugin } from 'unplugin';
+import { compile }        from '@rat/compiler';
 
-const RAT = /\.rat(\.js)?$/;
+export const unplugin = createUnplugin((options = {}) => ({
+  name             : 'rat',
+  enforce          : 'pre',
+  transformInclude : id => /\.rat(\.js)?$/.test(id),
+  transform (source, id) { return compile(source, { ...options, filename: id }); },
+}));
 
-export function rat (options = {}) {
-  let dev = false;
-  return {
-    name    : 'rat',
-    enforce : 'pre',
-    configResolved (config) { dev = config.command === 'serve'; },
-    transform (source, id) {
-      if (!RAT.test(id.split('?')[0])) return;
-      const { code, map } = compile(source, { ...options, filename: id, hmr: dev });
-      return { code, map };
-    },
-  };
-}
+export const esbuild  = unplugin.esbuild;
+export const rolldown = unplugin.rolldown;
+export const rollup   = unplugin.rollup;
+export const vite     = unplugin.vite;
+export const webpack  = unplugin.webpack;
