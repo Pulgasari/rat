@@ -1,0 +1,12 @@
+{
+  "name"         : "@rat/bunker",
+  "version"      : "0.0.1",
+  "description"  : "persistent data in four parts: Store, Database, Files, memo. drivers for local, session, cookie, memory, indexeddb, cache and opfs, codecs, schemas, as(Type)",
+  "type"         : "module",
+  "main"         : "./index.js",
+  "types"        : "./index.d.ts",
+  "exports"      : { ".": "./index.js" },
+  "dependencies" : { "@rat/types": "0.0.1" },
+  "sideEffects"  : ["./index.js", "./rat.js"],
+  "license"      : "MIT"
+}

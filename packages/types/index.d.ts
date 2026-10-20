@@ -216,3 +216,18 @@ export interface ColorConstructor {
 export const Color: ColorConstructor;
 /** A Color whose reads subscribe and whose writes notify. */
 export const $Color: { new (input?: ColorInput): Color };
+
+// :::::: Id, Ref
+
+export interface IdSchema extends Schema<string | number | null> {
+  /** Keys counting up (1, 2, 3 …) instead of uuids. */
+  readonly counter: IdSchema;
+  /** A new key: a uuid, or for a counter the one after the largest of keys. */
+  make (keys?: Array<string | number>): string | number;
+}
+
+/** The primary key of a record. Missing on a write, the table makes one. */
+export declare const Id: IdSchema;
+/** The key of a record in another table. */
+export declare function Ref (table: string): Schema<string | number>;
+

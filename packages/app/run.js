@@ -94,6 +94,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   const map = {
     //////////// @rat ////////////
     '@rat/app'        : at('./index.js'),
+    '@rat/bunker'     : at('../bunker/index.js'),
     '@rat/commands'   : at('../commands/index.js'),
     '@rat/compiler'   : at('../compiler/index.js'),
     '@rat/hotkeys'    : at('../hotkeys/index.js'),
