@@ -9,12 +9,13 @@ export default {
   name : 'Podcasts',
   
   mods: {
-    database :{ 
+    database :{
       schema :{
         'podcasts' : Table( id: UUID ),
         'episodes' : Table( id: UUID, fav: Bool (false), progress: Time (0) ),
       }
     },
+    importeur: [ './../.shared/components/' ],
     offline  : true,
   },
 };
