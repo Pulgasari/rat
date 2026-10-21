@@ -1,17 +1,23 @@
 <script>
   // the frame of notes: the folder tree in a menu area at the start (a sidebar
   // where there is room, a drawer where there is not), the views in the middle,
-  // the settings in a config area at the end
+  // the settings in a config area at the end, a dock below on narrow screens
 
   import { autoloader } from '@aufbau/elements';
   import { effect }     from '@rat/runtime';
 
+  import { hint }        from '../.shared/install.js';
+  import { read, write } from '../.shared/storage.js';
+  import { toast }       from '../.shared/toast.js';
+
   import FolderLibrary from '../.shared/folders/index.js';
 
   import Brand      from '../.shared/components/Brand.rat.html';
+  import Dock       from '../.shared/components/Dock.rat.html';
   import Empty      from '../.shared/components/Empty.rat.html';
   import FolderTree from '../.shared/components/FolderTree.rat.html';
   import Loading    from '../.shared/components/Loading.rat.html';
+  import Settings   from '../.shared/components/Settings.rat.html';
   import Header     from './Header.rat.html';
 
   autoloader();
@@ -22,14 +28,18 @@
 
   // the splash stays until the folders are known
   app.hold(lib.load());
+  hint(config.name);
 
   // the open note, { sourceId, path } | null. kept by hand until persistence is decided
   const OPEN = 'notes:open';
   const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
 
-  let $filter = '';
-  let $open   = stored();
-  let $text   = null;
+  let $filter   = '';
+  let $open     = stored();
+  let $text     = null;
+  let $textSize = read('notes:textSize', 16);
+
+  effect(() => write('notes:textSize', $textSize));
 
   const $note    = $open && lib.trees.value[$open.sourceId] ? lib.nodeAt($open.sourceId, $open.path) : null;
   const $sources = lib.sources.value;
@@ -53,15 +63,22 @@
   }
 
   function forget (sourceId) {
+    toast('Folder removed');
     if ($open?.sourceId !== sourceId) return;
     remember(null);
     app.router.go('/');
   }
 
   async function addFolder () {
-    try { await lib.addFolder(); }
-    catch (error) { alert(error.message); }
+    try { if (await lib.addFolder()) toast.success('Folder added'); }
+    catch (error) { toast.error(error.message); }
   }
+
+  const dock = [
+    { icon: 'folder',   label: 'folders',  onclick: () => app.toggle('menu') },
+    { icon: 'notes',    label: 'note',     to: '/note' },
+    { icon: 'settings', label: 'settings', onclick: () => app.toggle('config') },
+  ];
 
   // the text of the open note, read fresh off disk
   effect(() => {
@@ -100,11 +117,20 @@
   @if ($text === null)
     <Loading />
   @else
-    <output-md id='notes-reader' format='markdown' raw={$text} />
+    <output-md id='notes-reader' format='markdown' raw={$text} style={'font-size: ' + $textSize + 'px'} />
     <nav-toc target='#notes-reader' selector='h1, h2, h3' />
 </rat-view>
 
+<rat-area name='dock' dock='bottom' overlay='never' open><Dock items={dock} /></rat-area>
+
 <rat-area name='config' dock='end'>
-  <h2>settings</h2>
-  <p>comes later.</p>
+  <Settings name={config.name}>
+    <section>
+      <h3>reading</h3>
+      <label>
+        <span>text size</span>
+        <input-number look='slider' min='12' max='24' step='1' value={$textSize} onchange={event => $textSize = Number(event.detail?.value ?? event.target.value)} />
+      </label>
+    </section>
+  </Settings>
 </rat-area>

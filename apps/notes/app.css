@@ -145,3 +145,9 @@ rat-view[name="note"] > nav-toc {
 @media (max-width: 820px) {
   rat-view[name="note"] > nav-toc { display: none; }
 }
+
+/* ── the dock: only where the menu is a drawer ───────────────────────────── */
+
+@media (min-width: 48rem) {
+  rat-area[name="dock"] { display: none; }
+}

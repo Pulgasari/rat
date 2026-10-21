@@ -1,0 +1,72 @@
+<script>
+  // <Settings name='Notes'>the app's own settings</Settings>
+  // the config area of an app: its own settings first, then the look (shared by every app,
+  // ../appearance.js) and installing, where the browser allows it
+
+  import { AXES, appearance, palettes, setAppearance } from '../appearance.js';
+  import { available, install, ios, standalone }      from '../install.js';
+  import { toast }                                     from '../toast.js';
+
+  let $values   = { ...appearance };
+  let $palettes = [];
+
+  const $canInstall = available.value;
+
+  palettes().then(list => { $palettes = list; });
+
+  function change (name, event) {
+    const value = event.detail?.value ?? event.target.value;
+    $values = { ...$values, [name]: value };
+    setAppearance(name, value);
+  }
+
+  async function installApp () {
+    if (await install()) toast.success(`${props.name ?? 'the app'} is installed`);
+  }
+</script>
+
+<div.settings>
+  <slot />
+
+  <section>
+    <h3>appearance</h3>
+    <label>
+      <span>palette</span>
+      <input-value look='combobox' value={$values.palette ?? 'zombie'} onchange={event => change('palette', event)}>
+        @for (name of $palettes): <input-option value={name}>{name}</input-option>
+      </input-value>
+    </label>
+    @for (axis of Object.keys(AXES))
+      <label>
+        <span>{axis}</span>
+        <input-value look='segments' value={$values[axis] ?? ''} onchange={event => change(axis, event)}>
+          @for (value of AXES[axis]): <input-option value={value}>{value}</input-option>
+        </input-value>
+      </label>
+  </section>
+
+  @if (!standalone)
+    <section>
+      <h3>install</h3>
+      @if ($canInstall)
+        <btn-push icon='download' label={'install ' + (props.name ?? 'the app')} onclick={installApp} />
+      @else
+        @if (ios)
+          <p.hint>Share, then "Add to Home Screen".</p.hint>
+        @else
+          <p.hint>Your browser does not offer installing right now.</p.hint>
+    </section>
+</div.settings>
+
+<style>
+  .settings {
+    display        : flex;
+    flex-direction : column;
+    gap            : 1.5rem;
+  }
+
+  section { display: grid; gap: 0.75rem; }
+  h3      { font-size: 0.8rem; letter-spacing: 0.05em; margin: 0; opacity: 0.7; text-transform: uppercase; }
+  label   { display: grid; gap: 0.25rem; }
+  .hint   { margin: 0; opacity: 0.7; }
+</style>

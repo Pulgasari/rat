@@ -12,10 +12,12 @@ import { effect }     from '@rat/runtime';
 
 import createElement from '@domina/verbs/createElement.js';
 
-import Dock    from '../.shared/components/Dock.rat.html';
-import Empty   from '../.shared/components/Empty.rat.html';
-import Loading from '../.shared/components/Loading.rat.html';
+import Dock     from '../.shared/components/Dock.rat.html';
+import Empty    from '../.shared/components/Empty.rat.html';
+import Loading  from '../.shared/components/Loading.rat.html';
+import Settings from '../.shared/components/Settings.rat.html';
 
+import { hint }        from '../.shared/install.js';
 import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
 
@@ -344,6 +346,7 @@ const dock = [
 export default props => {
   props.app.hold(loadCollections());
   props.app.commands.add('up', up);
+  hint('Icons');
 
   // the query survives a reload, its results do not
   if ($query.trim()) search($query);
@@ -358,8 +361,12 @@ export default props => {
     <rat-area name='dock' dock='bottom' overlay='never' open><Dock items={dock} /></rat-area>
     <rat-area name='context' dock='bottom' overlay='always' on:toggle={event => { if (!event.detail?.open) $detail = null; }}><Detail /></rat-area>
     <rat-area name='config' dock='end'>
-      <h2>settings</h2>
-      <p>comes later.</p>
+      <Settings name='Icons'>
+        <section>
+          <h3>grid</h3>
+          <label><span>cell size (or pinch the grid)</span><SizeControl /></label>
+        </section>
+      </Settings>
     </rat-area>
   `;
 };

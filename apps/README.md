@@ -9,10 +9,10 @@
 ## todo
 - [x] vorübergehend müssen wir mal `.rat.html` als synonym mit `.rat` unterstützen, weil ich direkt auf gh sonst kein syntax-highlighting habe. (ich fix das später indem ich mobile editor mit gh verknüpfe.)
 - [x] `apps/notes` lauffähig: ordner öffnen, baum, filter, notiz lesen, inhaltsverzeichnis, beim neuladen bleibt alles
-- [ ] `apps/notes`: settings (config-area), dock unten auf schmalen bildschirmen, install-hinweis, toasts
+- [x] `apps/notes`: settings (config-area), dock unten auf schmalen bildschirmen, install-hinweis, toasts
 - [x] `apps/icons` als `.rat.js`: sets, set, suche, favoriten, detail im bottom-sheet, dock
 - [x] `apps/icons`: die rastergröße per geste (pinch auf dem raster, `@aufbau/gestures`), escape-hotkey (eine ebene hoch: set → sets, suche leeren, sonst start; die detail-ansicht schließt ihr overlay selbst)
-- [ ] `apps/icons`: settings
+- [x] `apps/icons`: settings
 - [x] `<rat-part>` sollte wohl actually nich nur direkt `.rat` fressen, sondern auch `.htx` und schnöde `.html` files (der loader kann beides, damit auch `<rat-app>`, `<rat-view>` und imports)
 
 ### nebenbei
@@ -43,5 +43,7 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 - `.rat.js`: in `html`…`` darf kein template-literal stehen (`` {`a ${b}`} ``), der backtick beendet das äußere template (js selbst). heute: `{'a ' + b}`. ein fall für die syntax-runde
 - `.rat.js`: zustand eines moduls (`let $query`) und komponenten als funktionen (`const Cell = props => html`…``) gehen ohne weiteres, auch `<Cell name={x} />` im markup
 - `apps/.shared/`: `toast.js` (über `<pop-toast>`), `storage.js` (von hand), `components/Dock.rat.html`
+- `apps/.shared/components/Settings.rat.html`: die config-area jeder app. oben das eigene der app (slot), darunter das aussehen (`appearance.js`: palette, mode, geometry, density über `@gestalt/core`, einmal für alle apps gespeichert) und installieren (`install.js`: `beforeinstallprompt` in chromium, ein hinweis für ios). `hint(name)` toastet einmal, sobald installieren geht. jede app braucht dafür ein `manifest.webmanifest`
+- installieren: ob chromium ohne service worker anbietet, hängt von der version ab. kommt das angebot nicht, ist ein minimaler sw der nächste schritt
 - icons läuft auf `config.rat.js` (`RAT: true`, plugins `database`, `hotkeys`), favoriten in `RAT.app.database.favs`, der api-cache als cache-store unter `memo`
 

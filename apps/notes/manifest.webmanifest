@@ -1,0 +1,13 @@
+{
+  "name"             : "Notes",
+  "short_name"       : "Notes",
+  "start_url"        : "./",
+  "scope"            : "./",
+  "display"          : "standalone",
+  "orientation"      : "any",
+  "background_color" : "#282a36",
+  "theme_color"      : "#282a36",
+  "icons"            : [
+    { "src": "app.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
