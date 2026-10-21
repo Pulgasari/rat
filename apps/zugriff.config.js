@@ -1,6 +1,7 @@
 // zugriff.config.js
 
 export default {
+  // app
   dir         : 'ltr',
   display     : 'standalone',
   lang        : 'en',
@@ -12,12 +13,21 @@ export default {
     userScalable : 'no',
     fit          : 'cover',
   },
+  
+  // mods
+  mods: {
+    'auto-import': [ 
+      './.shared/components/'
+    ],
+  },
+  
   aufbau: {
     elements: { mode: 'auto' },
   },
   gestalt: {
     palette: 'zombie',
   },
+  
   // schema mit ui-hinweisen: form noch offen (todo.md), bis dahin aus
   /*
   settings : {
