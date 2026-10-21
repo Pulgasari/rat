@@ -13,6 +13,6 @@ import config from './../zugriff.config.js';
 export default {
   ...config,
   name: 'Notes',
-  // the folders hold markdown (FolderLibrary, until it is a plugin of @rat/bunker's Files)
+  // the folders hold markdown (FolderLibrary, until notes runs on @rat/bunker's Files)
   folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
 };

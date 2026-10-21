@@ -49,5 +49,5 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 - `apps/.shared/`: `toast.js` (über `<pop-toast>`), `storage.js` (von hand), `components/Dock.rat.html`
 - `apps/.shared/components/Settings.rat.html`: die config-area jeder app. oben das eigene der app (slot), darunter das aussehen (`appearance.js`: palette, mode, geometry, density über `@gestalt/core`, pro app gespeichert: schlüssel ist der ordner ihrer seite) und installieren (`install.js`: `beforeinstallprompt` in chromium, ein hinweis für ios). `hint(name)` toastet einmal, sobald installieren geht. jede app braucht dafür ein `manifest.webmanifest`
 - installieren: ob chromium ohne service worker anbietet, hängt von der version ab. kommt das angebot nicht, ist ein minimaler sw der nächste schritt
-- icons läuft auf `config.rat.js` (`RAT: true`, plugins `database`, `hotkeys`), favoriten in `RAT.app.database.favs`, der api-cache als cache-store unter `memo`
+- icons läuft auf `config.rat.js` (`RAT: true`, mods `database`, `hotkeys`), favoriten in `RAT.app.database.favs`, der api-cache als cache-store unter `memo`
 

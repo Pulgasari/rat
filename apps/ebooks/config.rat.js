@@ -5,7 +5,7 @@ import config from './../zugriff.config.js';
 export default {
   ...config,
   name: 'eBooks',
-  plugins: {
+  mods: {
     database: {},
   },
   imports: { // schlicht hier importmap erweiterbar -> run.js liest das mit aus?

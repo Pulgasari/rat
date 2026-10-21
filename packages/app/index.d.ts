@@ -47,7 +47,7 @@ export class RatApp extends HTMLElement {
   start (): Promise<void>;
   /** The last error boundary: shows an error in a popover over the app. */
   report (error: unknown): void;
-  /** Loads config.rat.js once: RAT and the plugins. */
+  /** Loads config.rat.js once: RAT and the mods. */
   configure (): Promise<Record<string, any>>;
   /** Ends [loading], in a view transition. */
   ready (): Promise<void>;

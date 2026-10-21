@@ -67,5 +67,5 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 ## config, `RAT`
 - `<rat-app src>` lädt `config.rat.js` daneben selbst (`config-src` für eine andere datei)
 - globales `RAT` als opt-in in der config (`RAT: true`, oder ein string als name). ohne global: `import RAT from '@rat/app'`
-- `plugins: { name: options | true | fn }` landen an `RAT.app.<name>`: `database`, `files`, `store`, `hotkeys`, eigene als funktion
+- `mods: { name: options | true }` (bausteine, die rat bereitstellt, nicht jede app braucht) landen an `RAT.app.<name>`: `database`, `files`, `store`, `hotkeys`. was die app selbst baut, ist ihr eigener code, kein mod
 

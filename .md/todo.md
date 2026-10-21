@@ -12,9 +12,9 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
 - [x] umschalten per `name`, beide formen gebaut, in der praxis vergleichen: `onclick='rat:toggle[menu]'` (ein command-name mit `:` ist ein eigenes event) und `rat.toggle('menu')` (`import { rat } from '@rat/app'`)
 - [ ] `<rat-overlay>` ebenso per `name` umschalten
-- [x] hotkeys an `app.commands` (`@rat/hotkeys`): plugin `hotkeys`
+- [x] hotkeys an `app.commands` (`@rat/hotkeys`): mod `hotkeys`
 - [ ] auto-import per config: `autoImport: true` (verzeichnis der app), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
-- [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), plugins (`database`, `files`, `store`, `hotkeys`, eigene)
+- [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), mods (`database`, `files`, `store`, `hotkeys`)
 - [ ] pwa-hülle: manifest, icons, service worker (cached `run.js`, pakete, `.rat`-dateien, cdn-urls)
 
 ## `@rat/router`

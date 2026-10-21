@@ -5,7 +5,7 @@ import config from './../zugriff.config.js';
 export default {
   ...config,
   name: 'Podcasts',
-  plugins: {
+  mods: {
     database: { // via @rat/bunker
       schema: {}, // die tabellen: name -> felder
     },
