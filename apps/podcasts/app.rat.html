@@ -30,16 +30,16 @@ import player  from 'modules/player.js';
 const { app } = RAT;
 
 app.player   = player;
-app.settings = {
-  menuPosition   : { type: 'enum', label: 'Menu',   look: 'segments', values: ['top', 'bottom', 'left', 'right'], default: 'bottom' },
-  playerPosition : { type: 'enum', label: 'Player', look: 'segments', values: ['top', 'bottom'],                  default: 'bottom' },
-};
+app.settings.assign ({
+    menuPosition : { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' },
+  playerPosition : { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' },
+});
 
 // :::: STATE
 
-$busy     : RAT.Str (''),
-$search   : RAT.Str (''),
-$progress : RAT.Record ({}),
+$busy     = RAT.Str (''),
+$search   = RAT.Str (''),
+$progress = RAT.Record ({}),
 
 // the db is the library; only the schema and the progress table are read up front.
 // a storage failure must not blank the app — it mounts either way, just empty.
@@ -74,7 +74,7 @@ RAT.app.commands.assign ({
   'skip-forward'  : () => RAT.app.player.skip(30),
 });
 
-
+/*
 cmd 'close-dialog'  = () => $dialog = null;
 cmd 'refresh-all'   = refreshAll;
 cmd 'add-podcast'   = () => RAT.app.state.dialog = 'add';
@@ -82,6 +82,7 @@ cmd 'open-settings' = () => area('config')?.show();
 cmd 'toggle-play'   = () => !!player.episode && player.toggle();
 cmd 'skip-back'     = () => player.skip(-15);
 cmd 'skip-forward'  = () => player.skip(30);
+*/
 
 // :::::: HOTKEYS
 
