@@ -4,16 +4,25 @@
 // :::::: IMPORT :::::::::::::::::::::::::::::::::::::::::::::::
 
 import { createThumbCache } from '/.shared/js/thumbs.js';
+
+// ::: components
 import PlayerPanel from 'PlayerPanel.rat';
+
+// ::: modules
 import library from 'modules/library.js';
 import player  from 'modules/player.js';
 
 // :::::: APP ::::::::::::::::::::::::::::::::::::::::::::::::::
 
-app.db      = app.database;
-app.library = library;
+// ::: mods | enabled and configured in config.rat.js
+// >> RAT.app.commands
+// >> RAT.app.database;
+// >> RAT.app.hotkeys
+// >> RAT.app.thumbnails;
+
+const { app } = RAT;
+
 app.player  = player;
-app.thumbs  = createThumbCache();
 
 const [{ Config, Dock, Slot, Views }, { PlayerPanel }, Export] = await Promise.all([
   zugriff.components('Config', 'Dock', 'Slot', 'Views'),
