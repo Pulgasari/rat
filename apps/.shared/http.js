@@ -66,6 +66,7 @@ async function viaNative (http, url, { accept, as }) {
   if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
   // json arrives parsed, unless the host sent it as text/plain
   return as === 'json' && typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+  //return Result.of(response.data).as(JSON);
 }
 
 // :::::: MAIN
