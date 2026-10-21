@@ -1,20 +1,14 @@
 <!-- rat:root -->
-<script config-src='./config.rat.js'>
-  // apps/podcasts/app.js
-
-const app = zugriff.app;
+<script>
 
 // :::::: IMPORT :::::::::::::::::::::::::::::::::::::::::::::::
 
 import { createThumbCache } from '/.shared/js/thumbs.js';
 import PlayerPanel from 'PlayerPanel.rat';
+import library from 'modules/library.js';
+import player  from 'modules/player.js';
 
 // :::::: APP ::::::::::::::::::::::::::::::::::::::::::::::::::
-
-// ::: HANDLE
-// before anything is imported that reads the handle: a component captured at module
-// scope sees whatever was on it at import time, and undefined stays undefined.
-const { library, player } = await app.modules('library', 'player');
 
 app.db      = app.database;
 app.library = library;
@@ -28,72 +22,66 @@ const [{ Config, Dock, Slot, Views }, { PlayerPanel }, Export] = await Promise.a
 ]);
 
 // :::: STATE
-// dialog is declared by createState; this app's own keys go on the same store.
-// nothing added here is persisted — a leaf has to ask for that. the settings are
-// persisted leaves as well, shown in the config area after the shared ones
+
 app.settings = {
   menuPosition   : { type: 'enum', label: 'Menu',   look: 'segments', values: ['top', 'bottom', 'left', 'right'], default: 'bottom' },
   playerPosition : { type: 'enum', label: 'Player', look: 'segments', values: ['top', 'bottom'],                  default: 'bottom' },
 };
 
-app.state.$extend({
-  busy           : { type: String, value: '' },   // a label while a long task runs
-  search         : { type: String, value: '' },   // shared episode filter, written by SearchPanel
-
-  // listening progress, keyed by episode id. the one part of the library that does
-  // not come out of the db per view — it is read per row and written while playing.
-  progress       : { type: 'record', value: {} },
-});
+$busy     : RAT.Str (''),
+$search   : RAT.Str (''),
+$progress : RAT.Record ({}),
 
 // the db is the library; only the schema and the progress table are read up front.
 // a storage failure must not blank the app — it mounts either way, just empty.
 await app.library.load().catch(error => app.toast.error(error));
-app.db.podcasts.toValues().then(rows => app.thumbs.prewarm(rows.map(podcast => podcast.image)));
+RAT.app.database.podcasts.as(List['value']).then(rows => app.thumbs.prewarm(rows.map(podcast => podcast.image)));
+RAT.app.database.podcasts.as(List['value']).then(rows => pipe(rows.map('[image]'), RAT.app.thumbs.prewarm));
+RAT.app.database.podcasts.as(List['value']).then(rows => rows.map('[image]') |> RAT.app.thumbs.prewarm);
 
 // :::::: ACTIONS
 
 async function refreshAll () {
-  if (!await app.db.podcasts.count()) { app.state.dialog = 'add'; return; }
-  app.state.busy = 'Refreshing…';
+  if (!await app.db.podcasts.count()) { $dialog = 'add'; return; }
+  $busy = 'Refreshing…';
   try {
-    const results = await app.library.refreshAll((n, total) => app.state.busy = `Refreshing ${n}/${total}…`);
+    const results = await app.library.refreshAll((n, total) => $busy = `Refreshing ${n}/${total}…`);
     const added   = results.reduce((sum, r) => sum + (r.added || 0), 0);
-    const failed  = results.filter(r => r.error).length;
+    const failed  = results.filter('[error]').length;
     const type    = failed ? 'error' : 'success';
     const message = `${added} new episode(s), ${failed} feed(s) failed.`;
-    app.toast({ message, type });
+    RAT.app.toast({ message, type });
   }
-  finally { app.state.busy = ''; }
+  finally { $busy = ''; }
 }
 
-app.actions = {
-  'close-dialog'  : () => app.state.dialog = null,
+RAT.app.commands.assign ({
+  'close-dialog'  : () => $dialog = null,
 
   'refresh-all'   : refreshAll,
-  'add-podcast'   : () => app.state.dialog = 'add',
+  'add-podcast'   : () => RAT.app.state.dialog = 'add',
   'open-settings' : () => area('config')?.show(),
 
-  'toggle-play'   : () => app.player.toggle(),
-  'skip-back'     : () => app.player.skip(-15),
-  'skip-forward'  : () => app.player.skip(30),
-};
+  'toggle-play'   : () => !!RAT.app.player.episode && RAT.app.player.toggle(),
+  'skip-back'     : () => RAT.app.player.skip(-15),
+  'skip-forward'  : () => RAT.app.player.skip(30),
+});
 
 // :::::: HOTKEYS
 
-app.hotkeys = {
-  'escape'      : { action: 'close-dialog', when: () => !!app.state.$dialog },
-
-  'space'       : { action: 'toggle-play',   when: !!app.player.episode },
-  'arrow-left'  : { action: 'skip-back',     when: !!app.player.episode },
-  'arrow-right' : { action: 'skip-forward',  when: !!app.player.episode },
-};
+RAT.app.hotkeys.assign ({
+  'escape'      : RAT.Command ('close-dialog'),
+  'space'       : RAT.Command ('toggle-play'),
+  'arrow-left'  : RAT.Command ('skip-back'),
+  'arrow-right' : RAT.Command ('skip-forward'),
+});
 
 // :::::: EFFECTS
 
 const $app = document.getElementById('app');
 app.effect(() => {
-  $app.dataset.menu   = app.state.$menuPosition;
-  $app.dataset.player = app.state.$playerPosition;
+  $data.menu   = $menuPosition;
+  $data.player = $playerPosition;
 });
 
 // :::::: FRAME ::::::::::::::::::::::::::::::::::::::::::::::
@@ -126,15 +114,6 @@ const dockItems = [
   { label: 'Settings', icon: 'settings',              onClick: () => area('config')?.toggle() },
 ];
 
-// :::::: ROOT ::::::::::::::::::::::::::::::::::::::::::::::::
-
-// the areas of #app, the root
-function App () {
-  return html`
-    
-  `;
-}
-
 </script>
 
 <>
@@ -142,12 +121,14 @@ function App () {
     <rat-views transition-on='glide'>
 
     </rat-views>
+    
     <PlayerPanel />
-    <Dock items=${dockItems} />
-    <Slot map=${app.dialogs} name=${app.state.$dialog} load='dialog' />
+    <Dock items={dockItems} />
+    <Slot map={app.dialogs} name={RAT.app.$dialog} load='dialog' />
   </app-area>
+      
   <app-area name='config' dock='end'>
-    <${Config}><${Export} /></${Config}>
+    <Config><Export /></Config>
   </app-area>
 </>
 
@@ -155,6 +136,13 @@ function App () {
 </style>
 
 
+<!-- SYNTAX-IDEEN:
+$attr, $data, $props, $style sind innerhalb von `.rat`-files automatisch vorhanden
+
+-->
+
+
+  
 
 
 
