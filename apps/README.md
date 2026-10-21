@@ -7,7 +7,9 @@
 3. ablaufen wird das vermutlich so, dass ich hier immer schrittweise von hand iwas mache, dabei feature-/syntax-erweiterungen/änderungen auf ne todo packe.
 
 ## quicklinks
-[notes](/notes)
+[icons](https://code.pulgasari.dev/rat/apps/icons/)
+[notes](https://code.pulgasari.dev/rat/apps/notes/)
+
 ## todo
 - [x] vorübergehend müssen wir mal `.rat.html` als synonym mit `.rat` unterstützen, weil ich direkt auf gh sonst kein syntax-highlighting habe. (ich fix das später indem ich mobile editor mit gh verknüpfe.)
 - [x] `apps/notes` lauffähig: ordner öffnen, baum, filter, notiz lesen, inhaltsverzeichnis, beim neuladen bleibt alles
