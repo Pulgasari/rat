@@ -42,6 +42,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
   let i = 0;
 
   const errors   = [];
+  const slips    = [];   // closing tags that closed another element than they name
   const warnings = [];
   const scripts  = { instance: [], module: [] };
   const styles   = [];
@@ -406,6 +407,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
 
       // a closing tag closes the innermost element whatever it says; a different name is a slip
       const written = node.close?.name;
+      if (written && written !== name) slips.push({ name, open: start, written });
       if (written && written !== name && written.split(/[.#]/)[0] !== node.tag) {
         warnings.push(fail(`</${written}> closes <${name}>`, node.close.start - offset));
       }
@@ -517,7 +519,14 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
   // <script>, <script module>, <style>: raw text, top level only
   function raw (name, start, context) {
     const misplaced = !blocks || context.depth;
-    if (misplaced) report(`<${name}> is only allowed at the top level of a .rat file`, start);
+    // no closing tag after it: a closing tag was forgotten above, and that element is named. the
+    // one a mismatched closing tag closed instead, or else the element it sits in
+    const after    = source.indexOf(`</${name}>`, i);
+    const unclosed = misplaced && blocks && context.tag && !/<\/[\w.#-]*>/.test(source.slice(after < 0 ? i : after + name.length + 3));
+    const slip     = slips.at(-1);
+    if (unclosed && slip) report(`<${slip.name}> is not closed, </${slip.written}> closed it instead and the <${name}> below ends up inside`, slip.open);
+    else if (unclosed)    report(`<${context.tag}> is not closed, the <${name}> below ends up inside`, context.open);
+    else if (misplaced)   report(`<${name}> is only allowed at the top level of a .rat file`, start);
     const open = source.indexOf('>', i);
     if (open < 0) { report(`unclosed <${name}>`, start); i = source.length; return null; }
     // <style src="…" /> has no content and no closing tag
