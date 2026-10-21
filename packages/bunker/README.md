@@ -50,7 +50,7 @@ import { Id, Ref, Enum }  from '@rat/types';
 
 const db = createDatabase({
   name   : 'podcasts',
-  tables : {
+  schema : {
     podcasts : { id: Id, title: String, url: URL },
     episodes : { id: Id, title: String, url: URL, podcast: Ref('podcasts') },
     progress : { episode: Ref('episodes'), point: Number },

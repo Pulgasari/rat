@@ -15,9 +15,8 @@ config.rat.js names its plugins, each lands on the app (RAT.app.<name>):
   };
 
 true takes the defaults. database and store are named after the app (name in
-the config, else its id), schema is the tables of a database (tables works as
-well), 'indexed-db' is 'indexeddb'. a hotkey's string is a command as in markup:
-go[x], rat:toggle[x], a name of app.commands.
+the config, else its id), 'indexed-db' is 'indexeddb'. a hotkey's string is a
+command as in markup: go[x], rat:toggle[x], a name of app.commands.
 */
 
 import { command }       from '@rat/commands';
@@ -29,8 +28,7 @@ const driverOf = driver => driver?.replace?.(/-/g, '') ?? driver;
 const PLUGINS = {
   async database (options, { app, config }) {
     const { createDatabase } = await import('@rat/bunker');
-    const { schema, tables = schema, ...rest } = options;
-    return createDatabase({ ...rest, driver: driverOf(rest.driver ?? 'indexeddb'), name: nameOf(options, config), tables });
+    return createDatabase({ ...options, driver: driverOf(options.driver ?? 'indexeddb'), name: nameOf(options, config) });
   },
 
   async files (options) {

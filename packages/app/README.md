@@ -157,7 +157,7 @@ export default {
 | `RAT` | opt-in. `RAT.app` is the app, `RAT.config` its config, `RAT.toggle(name)`. without the global: `import RAT from '@rat/app'` |
 | `app.config` | the config, `{}` without one |
 | `plugins` | each lands on the app under its name. `true` takes the defaults, `false` leaves it out, a name the app has already is left out with a warning |
-| `database`, `store` | named after the app (`name`, else `id`). `schema` is the tables (`tables` works too), `'indexed-db'` is `'indexeddb'` |
+| `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
 
 ## errors

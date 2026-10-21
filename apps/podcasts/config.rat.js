@@ -6,8 +6,8 @@ export default {
   ...config,
   name: 'Podcasts',
   plugins: {
-    database: { // via @bunker/db
-      tables: {}, // hier könnte eigtl direkt das schema definiert werden
+    database: { // via @rat/bunker
+      schema: {}, // die tabellen: name -> felder
     },
   },
 };

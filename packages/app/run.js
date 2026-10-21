@@ -133,7 +133,9 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     '@pulgasari/coerce'       : at('../../../js-packages/coerce/index.js'),
     '@pulgasari/is'           : JSR + '@pulgasari/is',
     '@pulgasari/logger'       : JSR + '@pulgasari/logger',
+    '@pulgasari/shift'        : at('../../../js-packages/shift/index.js'),
     '@pulgasari/str'          : JSR + '@pulgasari/str',
+    '@pulgasari/timing'       : at('../../../js-packages/timing/index.js'),
     '@pulgasari/url'          : at('../../../js-packages/url/index.js'),
     //////////// other stuff ////////////
     'acorn'           : ESM + 'acorn@8.14.0',

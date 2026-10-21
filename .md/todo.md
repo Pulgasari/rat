@@ -5,7 +5,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 ## `@rat/app`
 - [x] `<rat-app>` entfernen, `<rat-app2>` wird `<rat-app>` (mit `src`: lädt `app.rat` und mountet in sich)
 - [ ] (?) `<rat-part>` auf `@domina/element`
-- [ ] `<rat-part>` lädt auch `.htx` und `.html`
+- [x] `<rat-part>` lädt auch `.htx` und `.html` (der loader, für alle elemente und imports)
 - [x] error boundary: `<rat-view>`, `<rat-part>`, `<rat-app>` (popover als letzte), `raise`/`guard` in `@rat/runtime`
 - [ ] error boundary: fehler in command-handlern (`@rat/commands`) kommen noch nicht an
 - [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
@@ -34,7 +34,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] (idee, gemerkt) ein wert für mehrere attribute: `name+src='nav'` / `icon|title='settings'`
 
 ## apps
-- [ ] testobjekt: `apps/notes` lauffähig machen
+- [x] testobjekt: `apps/notes` lauffähig machen (dazu `apps/icons`, siehe `apps/README.md`)
 - [ ] später: build-schritt bzw. sw kompiliert einmal und cached
 
 ## sonstiges
@@ -48,4 +48,4 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 ## packages (?)
 - [ ] `@rat/analyzer`
 - [ ] `@rat/cli`
-- [ ] `@rat/database` (`@bunker` müsste dafür eigtl. neu gebaut werden)
+- [x] ~~`@rat/database`~~: ist `@rat/bunker` geworden
