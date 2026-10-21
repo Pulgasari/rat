@@ -50,4 +50,5 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 - `apps/.shared/components/Settings.rat.html`: die config-area jeder app. oben das eigene der app (slot), darunter das aussehen (`appearance.js`: palette, mode, geometry, density über `@gestalt/core`, pro app gespeichert: schlüssel ist der ordner ihrer seite) und installieren (`install.js`: `beforeinstallprompt` in chromium, ein hinweis für ios). `hint(name)` toastet einmal, sobald installieren geht. jede app braucht dafür ein `manifest.webmanifest`
 - installieren: ob chromium ohne service worker anbietet, hängt von der version ab. kommt das angebot nicht, ist ein minimaler sw der nächste schritt
 - icons läuft auf `config.rat.js` (`RAT: true`, mods `database`, `hotkeys`), favoriten in `RAT.app.database.favs`, der api-cache als cache-store unter `memo`
+- notes und icons laufen offline (`mods: { offline: true }`, je ein `sw.js`). was erst bei bedarf nachlädt (eine input-variante in den settings), ist offline nur da, wenn es online schon einmal gebraucht wurde
 

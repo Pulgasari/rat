@@ -262,7 +262,8 @@ export class RatApp extends DominaElement {
     const named = this.configSrc;
     const url   = named ? new URL(named, this.baseURI).href : new URL('config.rat.js', new URL(this.src, this.baseURI)).href;
 
-    if (!named && !(await fetch(url, { cache: 'no-cache', method: 'HEAD' }).then(response => response.ok, () => false))) return this.#config = {};
+    // a get, not a head: offline the service worker answers it from its cache
+    if (!named && !(await fetch(url, { cache: 'no-cache' }).then(response => response.ok, () => false))) return this.#config = {};
 
     const module = await load(url);
     const config = module.default ?? { ...module };

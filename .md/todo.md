@@ -15,7 +15,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [x] hotkeys an `app.commands` (`@rat/hotkeys`): mod `hotkeys`
 - [ ] auto-import per config: `autoImport: true` (verzeichnis der app), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
 - [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), mods (`database`, `files`, `store`, `hotkeys`)
-- [ ] pwa-hülle: manifest, icons, service worker (cached `run.js`, pakete, `.rat`-dateien, cdn-urls)
+- [x] pwa-hülle: manifest (apps), service worker als mod `offline` (`packages/app/sw.js`, je app ein `sw.js`), kompilate im cache (`rat:compiled`)
 
 ## `@rat/router`
 - [ ] (?) globaler router, den views direkt abonnieren
@@ -35,7 +35,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 
 ## apps
 - [x] testobjekt: `apps/notes` lauffähig machen (dazu `apps/icons`, siehe `apps/README.md`)
-- [ ] später: build-schritt bzw. sw kompiliert einmal und cached
+- [x] einmal kompilieren: der loader hält kompilate im cache api, compiler und acorn laden nur bei einer änderung
 
 ## sonstiges
 - [x] `@rat/bunker`: Store, Database, Files, memo (siehe decisions.md)

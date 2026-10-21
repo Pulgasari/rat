@@ -10,6 +10,7 @@ it wants, each lands on the app (RAT.app.<name>):
       database : { driver: 'indexeddb', schema: { podcasts: { id: Id, title: String } } },
       files    : true,                    // the origin private file system
       hotkeys  : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
+      offline  : true,                    // a service worker: offline once open, installable (sw.js)
       store    : { driver: 'local' },     // keys and values
     },
   };
@@ -41,6 +42,13 @@ const MODS = {
     const specs = Object.fromEntries(Object.entries(map).map(([keys, value]) =>
       [keys, typeof value === 'string' ? run(value) : typeof value?.command === 'string' ? { ...value, command: run(value.command) } : value]));
     return createHotkeys().define(specs);
+  },
+
+  // the app's sw.js next to its src (options.src names another), see sw.js
+  async offline (options, { app }) {
+    if (!navigator.serviceWorker) return null;
+    const url = new URL(options.src ?? 'sw.js', new URL(app.src ?? location.href, app.baseURI));
+    return navigator.serviceWorker.register(url).catch(error => { console.warn('[rat] mod offline:', error.message); return null; });
   },
 
   async store (options, { config }) {

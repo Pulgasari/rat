@@ -15,5 +15,6 @@ export default {
       'ctrl+3'   : 'go[favs]',
       'escape'   : 'up',
     },
+    offline  : true,
   },
 };

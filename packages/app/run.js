@@ -24,7 +24,8 @@ to swap either.
 ?fresh in the page's url (or data-fresh on this script) refetches every
 module of the same origin first, with cache: 'reload'. that overwrites the
 browser's http cache, so the imports after it get today's files: a cache
-bust without devtools, on a phone too. .rat files are always revalidated.
+bust without devtools, on a phone too. .rat files are always revalidated, and
+what the loader compiled from them is dropped (rat:compiled), so they compile anew.
 */
 
 (() => {
@@ -40,7 +41,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     <circle cx="20" cy="12" r="3"><animate id="c" attributeName="r" begin="a.end-0.45s"   dur="0.75s" values="3;.2;3"/></circle>
   </svg>`;
 
-  const STATUS = fresh ? 'fetching fresh files' : 'loading the compiler';
+  const STATUS = fresh ? 'fetching fresh files' : 'loading';
 
   // every selector in :where(), so any rule of the page wins
   const SPLASH = `
@@ -182,7 +183,9 @@ bust without devtools, on a phone too. .rat files are always revalidated.
   // ::: start
 
   const entry = resolve('@rat/app', location.href);
-  const ready = fresh ? refetch(entry).then(count => console.info(`[rat] ?fresh: ${count} files refetched`)) : Promise.resolve();
+  // ?fresh drops the compiled files of the loader as well (loader.js)
+  const drop  = () => globalThis.caches?.delete('rat:compiled').catch(() => {});
+  const ready = fresh ? Promise.all([refetch(entry), drop()]).then(([count]) => console.info(`[rat] ?fresh: ${count} files refetched, compiled files dropped`)) : Promise.resolve();
 
   ready
     .then(() => import(entry))

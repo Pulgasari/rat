@@ -18,6 +18,7 @@ export default {
   // the folders hold markdown, their handles are kept in the database (../.shared/folders.js)
   folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
   mods: {
-    database: { schema: { folders: FOLDERS } },
+    database : { schema: { folders: FOLDERS } },
+    offline  : true,
   },
 };

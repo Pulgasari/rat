@@ -33,6 +33,14 @@ demos: [`demos/app`](../../demos/app/), [`demos/app2`](../../demos/app2/) (views
 one compile per url, a failed one is dropped so the next try loads again. a circle of `.rat`
 files is an error naming the files. devtools show the compiled code under `<file>.rat.js`.
 
+## compiled once
+
+what the loader compiles is kept in the Cache API (`rat:compiled`), under the file's url and a
+hash of its source. an unchanged file is not compiled again, and as long as nothing has to be
+compiled, neither the compiler nor acorn is loaded: the second start of an app skips both (notes
+locally: 1.9 s → 0.5 s). a file that inlines a css file (`style inline`) compiles every time.
+`?fresh` drops them all; after a change to the compiler, `?fresh` once.
+
 ## splash
 
 compiling in the page takes a moment, most of it loading the compiler. `<rat-app>` shows a
@@ -158,6 +166,7 @@ export default {
 | `mods` | the parts rat provides that not every app needs, each lands on the app under its name. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
+| `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/sw.js')`): a worker reaches only the pages below its own folder. files of the page's origin network first, of other origins cache first |
 
 ## errors
 
