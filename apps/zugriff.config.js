@@ -20,7 +20,8 @@ export default {
       './.shared/components/'
     ],
   },
-  
+
+  // the gang
   aufbau: {
     elements: { mode: 'auto' },
   },
@@ -28,11 +29,25 @@ export default {
     palette: 'zombie',
   },
   
-  // schema mit ui-hinweisen: form noch offen (todo.md), bis dahin aus
-  /*
-  settings : {
-    dir  : Enum({ values: ['ltr', 'rtl'], element: { look: 'segments' } }),
-    font : Enum({ values: gestalt.webfonts, init: 'Manrope', element: { look: 'combobox' } }),
-  },
-  */
 };
+
+/*
+// schema mit ui-hinweisen: form noch offen (todo.md), bis dahin aus
+
+import { Union } from '@rat/types';
+const Webfonts = Union.from (gestalt.webfonts);
+
+settings : {
+  dir  : Enum({ values: ['ltr', 'rtl'],                    element: { tag: 'input-choice', look: 'segments' } }),
+  font : Enum({ values: Webfonts, init: 'Manrope', element: { tag: 'input-choice', look: 'combobox' } }),
+},
+
+import { Union } from '@rat/types';
+const Webfonts = RAT.Union.from (gestalt.webfonts);
+
+settings : {
+  dir  : RAT.Enum({ values: ['ltr', 'rtl'],                    element: { tag: 'input-choice', look: 'segments' } }),
+  font : RAT.Enum({ values: gestalt.webfonts, init: 'Manrope', element: { tag: 'input-choice', look: 'combobox' } }),
+},
+  
+*/
