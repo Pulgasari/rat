@@ -22,7 +22,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 
 ## syntax
 - [ ] props nach d-13 b umsetzen (`let { $title } = props`)
-- [ ] `let` vor `$name` auf oberster ebene im `<script>` optional (`const` bleibt pflicht)
+- [x] `let` vor `$name` auf oberster ebene im `<script>` optional (`const` bleibt pflicht, nicht in `.rat.js`)
 - [ ] (ungeklärt, verschoben, jetzt mit `@rat/bunker` als unterbau) persistenz eines signals: form klären (statt `$(init, '[persist]')`, idee: `persist $filter;`)
 - [ ] sichtbarer anfang/ende einer komponente statt `<>` (`<self>`?)
 - [ ] meta-angaben in der ersten zeile (`<!-- rat:root -->` o.ä.)

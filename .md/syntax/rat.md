@@ -39,6 +39,18 @@ they are no attributes: an `@` on an element is a [behavior](#behaviors).
 
 the component is named after the file: `todo-list.rat` → `TodoList`.
 
+at the top level of a `<script>`, `let` before a `$name` may be left out: the first assignment to
+a `$name` declared nowhere at the top level declares it.
+
+```html
+<script>
+  $count = 0;                    // let $count = 0
+  const $double = $count * 2;    // const stays: a computed is never implied
+</script>
+```
+
+not in `.rat.js`: there a `$count = 0` without a declaration stays what it is in js.
+
 ### three body forms
 
 every block body can be written three ways, mixed freely, per branch:

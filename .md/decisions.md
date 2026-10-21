@@ -69,3 +69,6 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 - globales `RAT` als opt-in in der config (`RAT: true`, oder ein string als name). ohne global: `import RAT from '@rat/app'`
 - `mods: { name: options | true }` (bausteine, die rat bereitstellt, nicht jede app braucht) landen an `RAT.app.<name>`: `database`, `files`, `store`, `hotkeys`. was die app selbst baut, ist ihr eigener code, kein mod
 
+## syntax
+- `let` vor `$name` ist auf oberster ebene im `<script>` einer `.rat`-datei optional: die erste zuweisung an einen nirgends deklarierten `$name` deklariert ihn. `const` (computed) bleibt pflicht, in `.rat.js` gilt js
+
