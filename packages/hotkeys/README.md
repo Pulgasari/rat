@@ -38,6 +38,8 @@ createHotkeys({ commands }).define({
 - typing in an input, textarea, select or contenteditable is left alone, unless ctrl, alt or
   meta is held or the binding is `global`.
 - `preventDefault` is on unless set to `false`.
+- a keydown someone already used up (`defaultPrevented`) runs nothing: an overlay that closes on
+  escape (`<rat-area>`) keeps an escape hotkey behind it quiet.
 - `.define(map)`, `.remove(...keys)`, `.list()`, `.destroy()`. defining a combo again replaces it.
 
 `keyName`, `parseCombos`, `matchesCombo(s)` and `trackHeldKeys` are what `@rat/runtime`

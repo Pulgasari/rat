@@ -13,6 +13,7 @@ export default {
       'ctrl+1'   : 'go[/]',
       'ctrl+2'   : 'go[sets]',
       'ctrl+3'   : 'go[favs]',
+      'escape'   : 'up',
     },
   },
 };

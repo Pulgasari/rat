@@ -35,7 +35,9 @@ function createHotkeys ({ commands = null, target = globalThis } = {}) {
     : commands ? event => commands.run(command, event)
     : fire(command);
 
+  // a key someone else used up (an overlay that closed on escape) is no shortcut
   const onKeydown = event => {
+    if (event.defaultPrevented) return;
     for (const { combo, spec } of byKey.get(keyName(event.key)) ?? []) {
       if (!matchesCombo(event, combo)) continue;
       if (!spec.global && !(event.ctrlKey || event.metaKey || event.altKey) && isEditable(event.composedPath?.()[0] ?? event.target)) return;

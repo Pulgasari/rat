@@ -106,6 +106,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     //////////// @aufbau ////////////
     '@aufbau/elements'  : at('../../../aufbau/elements/index.js'),
     '@aufbau/elements/' : at('../../../aufbau/elements/'),
+    '@aufbau/gestures'  : at('../../../aufbau/gestures/index.js'),
     '@aufbau/svg/'      : at('../../../aufbau/svg/'),
     //////////// @bunker ////////////
     '@bunker/core'    : at('../../../bunker/core/index.js'),
@@ -124,6 +125,7 @@ bust without devtools, on a phone too. .rat files are always revalidated.
     //////////// @gestalt ////////////
     '@gestalt/core'   : at('../../../gestalt/packages/core/index.js'),
     //////////// @htx ////////////
+    '@htx/compiler'   : at('../../../htx/packages/compiler/index.js'),
     '@htx/htx'        : at('../../../htx/packages/htx/index.js'),
     '@htx/js/render'  : at('../../../htx/packages/js/render.js'),
     //////////// @pulgasari ////////////
