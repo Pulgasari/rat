@@ -43,7 +43,7 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 - `.rat.js`: in `html`…`` darf kein template-literal stehen (`` {`a ${b}`} ``), der backtick beendet das äußere template (js selbst). heute: `{'a ' + b}`. ein fall für die syntax-runde
 - `.rat.js`: zustand eines moduls (`let $query`) und komponenten als funktionen (`const Cell = props => html`…``) gehen ohne weiteres, auch `<Cell name={x} />` im markup
 - `apps/.shared/`: `toast.js` (über `<pop-toast>`), `storage.js` (von hand), `components/Dock.rat.html`
-- `apps/.shared/components/Settings.rat.html`: die config-area jeder app. oben das eigene der app (slot), darunter das aussehen (`appearance.js`: palette, mode, geometry, density über `@gestalt/core`, einmal für alle apps gespeichert) und installieren (`install.js`: `beforeinstallprompt` in chromium, ein hinweis für ios). `hint(name)` toastet einmal, sobald installieren geht. jede app braucht dafür ein `manifest.webmanifest`
+- `apps/.shared/components/Settings.rat.html`: die config-area jeder app. oben das eigene der app (slot), darunter das aussehen (`appearance.js`: palette, mode, geometry, density über `@gestalt/core`, pro app gespeichert: schlüssel ist der ordner ihrer seite) und installieren (`install.js`: `beforeinstallprompt` in chromium, ein hinweis für ios). `hint(name)` toastet einmal, sobald installieren geht. jede app braucht dafür ein `manifest.webmanifest`
 - installieren: ob chromium ohne service worker anbietet, hängt von der version ab. kommt das angebot nicht, ist ein minimaler sw der nächste schritt
 - icons läuft auf `config.rat.js` (`RAT: true`, plugins `database`, `hotkeys`), favoriten in `RAT.app.database.favs`, der api-cache als cache-store unter `memo`
 

@@ -1,7 +1,8 @@
 // apps/.shared/appearance.js
 //
-// the look of every app on this origin through @gestalt/core: palette, mode, geometry,
-// density. stored once for all apps, set again as soon as this module loads
+// the look of an app through @gestalt/core: palette, mode, geometry, density. stored per
+// app (the folder of its page, apps are independent of each other), set again as soon
+// as this module loads
 //
 //   setAppearance('mode', 'dark');  appearance.mode  // 'dark'
 
@@ -9,7 +10,7 @@ import { gestalt } from '@gestalt/core';
 
 import { read, write } from './storage.js';
 
-const KEY = 'zugriff:appearance';
+const KEY = `appearance:${new URL('.', location.href).pathname}`;
 
 export const AXES = {
   density  : gestalt.densities,
