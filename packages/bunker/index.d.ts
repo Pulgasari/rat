@@ -86,12 +86,14 @@ export declare class Table<R extends Record<string, any> = Record<string, any>> 
 export interface DatabaseOptions {
   name?   : string;
   driver? : DriverName | Driver;
-  tables? : Record<string, Record<string, Field> | null>;
+  /** table -> its fields. */
+  schema? : Record<string, Record<string, Field> | null>;
 }
 
 export declare class Database {
   constructor (options?: DatabaseOptions);
   readonly name   : string;
+  /** The names of the tables. */
   readonly tables : string[];
   table (name: string): Table;
   [table: string]: Table | unknown;

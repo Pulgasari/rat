@@ -635,8 +635,32 @@ cases: the named cases found, extended in place (name -> the parts they hand out
 sheets: given, the `style …` statements are cut out and collected there (style.js).
 returns { code, imports, program } — imports only split off when lift is set.
 */
+// $count = 0 at the top level of a .rat script is let $count = 0: the first assignment to a $name
+// declared nowhere at the top level. const stays written, a computed is never implied
+function implicitLet (code, options) {
+  const program  = parseOrFail(code, options);
+  const declared = new Set;
+  for (const node of program.body) {
+    if (node.type === 'VariableDeclaration') for (const { id } of node.declarations) if (id.type === 'Identifier') declared.add(id.name);
+    if (node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration') declared.add(node.id?.name);
+    if (node.type === 'ImportDeclaration') for (const { local } of node.specifiers) declared.add(local.name);
+  }
+
+  const edits = [];
+  for (const node of program.body) {
+    const { expression: assignment } = node;
+    if (node.type !== 'ExpressionStatement' || assignment.type !== 'AssignmentExpression' || assignment.operator !== '=') continue;
+    const { name, type } = assignment.left;
+    if (type !== 'Identifier' || !/^\$\w/.test(name) || declared.has(name)) continue;
+    declared.add(name);
+    edits.push({ end: node.start, pos: node.start, text: 'let ' });
+  }
+  return edits.length ? applyEdits(code, edits) : code;
+}
+
 function transformScript (code, { cases = new Map, filename, lift = false, names = new Set, offset = 0, runtime = '$$', sheets, source = code, extraEdits } = {}) {
   let   sugared  = sweeten     (code,    { cases, filename, offset, source });
+  if (!filename?.endsWith('.js')) sugared = implicitLet(sugared, { filename, offset, source });
   if (sheets) {
     const statements = styleStatements(sugared);
     sheets.push(...statements.found.map(sheet => ({ ...sheet, index: sheet.index + offset })));

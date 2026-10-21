@@ -31,6 +31,9 @@ handler gets the arguments, then the event that fired it.
 
 a name with : is an event, not a command: onclick='rat:toggle[menu]' fires
 'rat:toggle' with the same detail, for whoever listens to it (<rat-app> does).
+
+an error of a handler, thrown or a rejected promise, reaches the nearest error
+boundary as 'rat:error' from the element the command came from.
 */
 
 const COMMAND  = 'rat:command';
@@ -67,6 +70,13 @@ function command (target, text, event = null, args = []) {
 // the handler a compiled onclick='save' or onclick='go[settings]' gets
 const commandListener = text => event => command(event.currentTarget, text, event);
 
+// an error of a handler goes up as 'rat:error' from where the command was fired, to the nearest
+// error boundary. the same as raise() of @rat/runtime, which this package can not import (it imports this one)
+function raise (node, error) {
+  const event = new CustomEvent('rat:error', { bubbles: true, cancelable: true, composed: true, detail: { boundary: null, error } });
+  if (!node?.isConnected || node.dispatchEvent(event)) (globalThis.reportError ?? console.error)(error);
+}
+
 // ::: the registry
 
 function createCommands (source = {}) {
@@ -86,7 +96,12 @@ function createCommands (source = {}) {
         const { args: written, name } = parseCommand(text);
         if (!map.has(nameOf(name))) return;
         event.stopPropagation();
-        map.get(nameOf(name))(...written, ...args, origin);
+        const from = event.composedPath()[0];
+        try {
+          const result = map.get(nameOf(name))(...written, ...args, origin);
+          if (typeof result?.catch === 'function') result.catch(error => raise(from, error));
+        }
+        catch (error) { raise(from, error); }
       };
       root.addEventListener(COMMAND, handle);
       return () => root.removeEventListener(COMMAND, handle);

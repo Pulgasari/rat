@@ -50,7 +50,7 @@ import { Id, Ref, Enum }  from '@rat/types';
 
 const db = createDatabase({
   name   : 'podcasts',
-  tables : {
+  schema : {
     podcasts : { id: Id, title: String, url: URL },
     episodes : { id: Id, title: String, url: URL, podcast: Ref('podcasts') },
     progress : { episode: Ref('episodes'), point: Number },
@@ -136,12 +136,12 @@ behind it. one load per key at a time. the store holds `{ at, value }`.
 
 ## in a rat app
 
-`config.rat.js` makes them plugins of the app (see `@rat/app`):
+`config.rat.js` makes them mods of the app (see `@rat/app`):
 
 ```js
 export default {
   RAT     : true,
-  plugins : {
+  mods    : {
     database : { schema: { favs: { name: Id } } },   // RAT.app.database
     files    : true,                                  // RAT.app.files, opfs
     store    : { driver: 'local' },                   // RAT.app.store

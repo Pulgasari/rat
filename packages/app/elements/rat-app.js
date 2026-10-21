@@ -25,7 +25,7 @@ src the app is [loading] by itself until they are mounted.
 
 config.rat.js next to src (or config-src) is loaded before the app's code: its
 RAT: true puts rat on globalThis as RAT (a string names it otherwise), its
-plugins land on the app (RAT.app.database …, see ../plugins.js), the config
+mods land on the app (RAT.app.database …, see ../mods.js), the config
 itself is app.config.
 
 areas open and close by their name, two forms to find out which serves better:
@@ -63,7 +63,7 @@ import { mount } from '@rat/runtime';
 
 import { catchErrors, showError } from '../boundary.js';
 import { componentOf, load }      from '../loader.js';
-import { usePlugins }             from '../plugins.js';
+import { useMods }                from '../mods.js';
 import { RatArea }                from './rat-area.js';
 import { RatView }                from './rat-view.js';
 
@@ -255,19 +255,20 @@ export class RatApp extends DominaElement {
 
   // :::::: CONFIG
 
-  // config.rat.js next to src (config-src names another): RAT and the plugins, once, before
+  // config.rat.js next to src (config-src names another): RAT and the mods, once, before
   // the app's own code runs. without config-src a missing file is no config
   async configure () {
     if (this.#config) return this.#config;
     const named = this.configSrc;
     const url   = named ? new URL(named, this.baseURI).href : new URL('config.rat.js', new URL(this.src, this.baseURI)).href;
 
-    if (!named && !(await fetch(url, { cache: 'no-cache', method: 'HEAD' }).then(response => response.ok, () => false))) return this.#config = {};
+    // a get, not a head: offline the service worker answers it from its cache
+    if (!named && !(await fetch(url, { cache: 'no-cache' }).then(response => response.ok, () => false))) return this.#config = {};
 
     const module = await load(url);
     const config = module.default ?? { ...module };
     if (config.RAT) globalThis[config.RAT === true ? 'RAT' : config.RAT] = rat;
-    await usePlugins(this, config);
+    await useMods(this, config);
     return this.#config = config;
   }
 

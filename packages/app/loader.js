@@ -20,10 +20,14 @@ document, detail { name, url } (the splash of <rat-app> shows it).
 one compile per url, a failed one is dropped so the next try loads again.
 a circle of .rat files (a imports b imports a) is an error: each would wait
 for the other.
+
+what a file compiles to is kept in the Cache API (rat:compiled), under its url
+and a hash of its source: an unchanged file is not compiled again, and as long
+as nothing has to be compiled, the compiler is not even loaded. a file that
+inlines a css file (style inline) is compiled every time, its css may change.
+?fresh (run.js) drops them all, VERSION does when the compiled output changes.
 */
 
-import { parse }          from 'acorn';
-import { compileAsync }   from '@rat/compiler';
 import { isArray, isFn, isString } from './_shared.js';
 
 const HTML     = /\.html?$/;
@@ -34,11 +38,22 @@ const SELF     = import.meta.url;
 
 const cache = new Map; // url -> Promise<blob url>
 
+const COMPILED = 'rat:compiled';
+const VERSION  = 1;
+
+// fnv-1a over the source, enough to tell an edit
+function hashOf (text) {
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 0x01000193);
+  return (hash >>> 0).toString(36);
+}
+
 // ::: imports
 
 // [{ start, end, value, dynamic }] for every import / export … from with a string literal.
 // for import('…') start and end span the whole call, for the rest the string
-function specifiers (code) {
+async function specifiers (code) {
+  const { parse } = await import('acorn');
   const found = [];
   const visit = node => {
     if (!node || !isString(node.type)) return;
@@ -70,8 +85,8 @@ function replacement ({ dynamic, value }, url, chain) {
   return compileFile(target, chain).then(blob => JSON.stringify(blob));
 }
 
-async function rewrite (code, url, chain) {
-  const found = specifiers(code).filter(({ value }) => isUrl(value)).sort((a, b) => a.start - b.start);
+async function rewrite ({ code, found: all }, url, chain) {
+  const found = all.filter(({ value }) => isUrl(value)).sort((a, b) => a.start - b.start);
   const texts = await Promise.all(found.map(specifier => replacement(specifier, url, chain)));
 
   // from the end, so earlier positions stay valid
@@ -92,23 +107,44 @@ async function build (url, chain) {
   const source = await response.text();
   const name   = new URL(url).pathname.split('/').pop();
 
-  document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
-
-  const code = await rewrite(await compileSource(source, url, name), url, chain);
+  const code = await rewrite(await compiledOf(source, url, name), url, chain);
   return URL.createObjectURL(new Blob([`${code}\n//# sourceURL=${url}.js\n`], { type: 'text/javascript' }));
 }
 
-// source -> module code, by the kind of the file
+// { code, found }: kept from an earlier compile of the same source, or compiled now
+async function compiledOf (source, url, name) {
+  const store = globalThis.caches ? await caches.open(COMPILED).catch(() => null) : null;
+  const key   = `${url}${url.includes('?') ? '&' : '?'}rat-compiled=${VERSION}.${hashOf(source)}`;
+  const hit   = await store?.match(key);
+  if (hit) return hit.json();
+
+  document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
+  const { code, inlined } = await compileSource(source, url, name);
+  const result = { code, found: await specifiers(code) };
+
+  if (store && !inlined) {
+    await store.delete(url, { ignoreSearch: true });
+    await store.put(key, new Response(JSON.stringify(result), { headers: { 'content-type': 'application/json' } }));
+  }
+  return result;
+}
+
+// source -> { code, inlined }: module code by the kind of the file, inlined when it read another file
 async function compileSource (source, url, name) {
   const kind = kindOf(url);
-  if (kind === 'html') return `import { raw } from '@rat/runtime';\nconst source = ${JSON.stringify(source)};\nexport default () => raw(source);\n`;
+  if (kind === 'html') return { code: `import { raw } from '@rat/runtime';\nconst source = ${JSON.stringify(source)};\nexport default () => raw(source);\n` };
 
   try {
-    if (kind === 'htx') return (await import('@htx/compiler')).compile(source, { adapter: '@rat/runtime', filename: name }).code;
+    if (kind === 'htx') return { code: (await import('@htx/compiler')).compile(source, { adapter: '@rat/runtime', filename: name }).code };
 
     // base: css files resolve against this file, not the blob. read: what style inline needs
-    const read = path => fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
-    return (await compileAsync(source, { base: url, filename: name, read })).code;
+    let inlined = false;
+    const read  = path => {
+      inlined = true;
+      return fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
+    };
+    const { compileAsync } = await import('@rat/compiler');
+    return { code: (await compileAsync(source, { base: url, filename: name, read })).code, inlined };
   }
   catch (error) { error.message = `${url}\n${error.message}`; throw error; }
 }

@@ -5,7 +5,7 @@ tables of records, each table a store whose keys are the records' ids:
 
   const db = createDatabase({
     name   : 'podcasts',
-    tables : {
+    schema : {
       podcasts : { id: Id, title: String, url: URL },
       episodes : { id: Id, title: String, url: URL, podcast: Ref('podcasts') },
       progress : { id: Ref('episodes'), point: Number },
@@ -98,9 +98,10 @@ class Table extends Store {
 class Database {
   #tables = new Map;
 
-  constructor ({ driver = 'indexeddb', name = 'bunker', tables = {}, ...options } = {}) {
+  // schema: table -> its fields
+  constructor ({ driver = 'indexeddb', name = 'bunker', schema = {}, ...options } = {}) {
     this.name = name;
-    for (const [table, fields] of Object.entries(tables)) {
+    for (const [table, fields] of Object.entries(schema)) {
       const store = driver === 'indexeddb' ? { driver, name, table } : { driver, name: `${name}:${table}` };
       const instance = new Table({ ...options, ...store, fields, title: table });
       this.#tables.set(table, instance);

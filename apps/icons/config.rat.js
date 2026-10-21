@@ -5,7 +5,7 @@ import { Id } from '@rat/types';
 export default {
   RAT     : true,
   name    : 'icons',
-  plugins : {
+  mods    : {
     // the icons the user hearted, by name ('mdi:home')
     database : { schema: { favs: { name: Id } } },
     hotkeys  : {
@@ -15,5 +15,6 @@ export default {
       'ctrl+3'   : 'go[favs]',
       'escape'   : 'up',
     },
+    offline  : true,
   },
 };
