@@ -5,8 +5,15 @@
 
 import { createThumbCache } from '/.shared/js/thumbs.js';
 
-// ::: components
-import PlayerPanel from 'PlayerPanel.rat';
+// ::: shared components
+auto: import Config from './../.shared/components/Config.rat';
+auto: import Dock   from './../.shared/components/Dock.rat';
+auto: import Slot   from './../.shared/components/Slot.rat';
+auto: import Views  from './../.shared/components/Views.rat';
+
+// ::: local components
+auto: import Export from 'Export.rat';
+auto: import Player from 'Player.rat';
 
 // ::: modules
 import library from 'modules/library.js';
@@ -22,20 +29,13 @@ import player  from 'modules/player.js';
 
 const { app } = RAT;
 
-app.player  = player;
-
-const [{ Config, Dock, Slot, Views }, { PlayerPanel }, Export] = await Promise.all([
-  zugriff.components('Config', 'Dock', 'Slot', 'Views'),
-  app.panels('PlayerPanel'),
-  app.component('Export'),
-]);
-
-// :::: STATE
-
+app.player   = player;
 app.settings = {
   menuPosition   : { type: 'enum', label: 'Menu',   look: 'segments', values: ['top', 'bottom', 'left', 'right'], default: 'bottom' },
   playerPosition : { type: 'enum', label: 'Player', look: 'segments', values: ['top', 'bottom'],                  default: 'bottom' },
 };
+
+// :::: STATE
 
 $busy     : RAT.Str (''),
 $search   : RAT.Str (''),
@@ -66,15 +66,22 @@ async function refreshAll () {
 
 RAT.app.commands.assign ({
   'close-dialog'  : () => $dialog = null,
-
   'refresh-all'   : refreshAll,
   'add-podcast'   : () => RAT.app.state.dialog = 'add',
   'open-settings' : () => area('config')?.show(),
-
   'toggle-play'   : () => !!RAT.app.player.episode && RAT.app.player.toggle(),
   'skip-back'     : () => RAT.app.player.skip(-15),
   'skip-forward'  : () => RAT.app.player.skip(30),
 });
+
+
+cmd 'close-dialog'  = () => $dialog = null;
+cmd 'refresh-all'   = refreshAll;
+cmd 'add-podcast'   = () => RAT.app.state.dialog = 'add';
+cmd 'open-settings' = () => area('config')?.show();
+cmd 'toggle-play'   = () => !!player.episode && player.toggle();
+cmd 'skip-back'     = () => player.skip(-15);
+cmd 'skip-forward'  = () => player.skip(30);
 
 // :::::: HOTKEYS
 
@@ -146,8 +153,9 @@ const dockItems = [
 
 
 <!-- SYNTAX-IDEEN:
-$attr, $data, $props, $style sind innerhalb von `.rat`-files automatisch vorhanden
 
+- $attr, $data, $props, $style sind innerhalb von `.rat`-files automatisch vorhanden
+- aber eigtl auch bissl magisch. vllt eher $this oder $self
 -->
 
 
