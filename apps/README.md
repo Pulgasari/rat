@@ -1,5 +1,7 @@
 # apps
 
+
+
 1. hier können wir generell etwas die form "üben", wie ich sie bei zugriff habe.
 
 2. mit der zeit bauen wir die zugriff-apps hier neue, und ziehen das dann alles in zugriff-repo um
@@ -10,14 +12,17 @@
 [icons](https://code.pulgasari.dev/rat/apps/icons/)
 [notes](https://code.pulgasari.dev/rat/apps/notes/)
 
+---
+
 ## todo
-- [x] vorübergehend müssen wir mal `.rat.html` als synonym mit `.rat` unterstützen, weil ich direkt auf gh sonst kein syntax-highlighting habe. (ich fix das später indem ich mobile editor mit gh verknüpfe.)
-- [x] `apps/notes` lauffähig: ordner öffnen, baum, filter, notiz lesen, inhaltsverzeichnis, beim neuladen bleibt alles
-- [x] `apps/notes`: settings (config-area), dock unten auf schmalen bildschirmen, install-hinweis, toasts
-- [x] `apps/icons` als `.rat.js`: sets, set, suche, favoriten, detail im bottom-sheet, dock
-- [x] `apps/icons`: die rastergröße per geste (pinch auf dem raster, `@aufbau/gestures`), escape-hotkey (eine ebene hoch: set → sets, suche leeren, sonst start; die detail-ansicht schließt ihr overlay selbst)
-- [x] `apps/icons`: settings
-- [x] `<rat-part>` sollte wohl actually nich nur direkt `.rat` fressen, sondern auch `.htx` und schnöde `.html` files (der loader kann beides, damit auch `<rat-app>`, `<rat-view>` und imports)
+
+### umsetzbar
+- [ ] syntax für signal in component holen
+- [ ] syntax für signals persistent machen
+
+- daten laden heißt `effect` + `then` + `alive`-flag: das ist genau der fall für `@await` (d-28)
+
+### unklar
 
 ### nebenbei
 - [ ] das zeug aus `zugriff/.shared/js/modules/webdav` wäre vermutlich was passendes für/als `@bunker/webdav` zum auslagern
@@ -41,7 +46,8 @@ was die apps gern schreiben würden, und was sie bis zur entscheidung stattdesse
 
 - signals von außen (`lib.sources.value`) kommen per `const $sources = lib.sources.value` in die reaktivität. geht, ist aber eine brücke pro wert
 - persistenz zweimal von hand (`localStorage`: offene notiz, aufgeklappte ordner): die entscheidung dazu wird dringlicher
-- daten laden heißt `effect` + `then` + `alive`-flag: das ist genau der fall für `@await` (d-28)
+
+- 
 - ein vergessenes `</div.source>` meldet der compiler als `<style> is only allowed at the top level`: die meldung sollte das offene element nennen
 - ordner: `.shared/folders.js` (130 zeilen statt `FolderLibrary` mit drei kopierten modulen) auf `@rat/bunker`: handles in der tabelle `folders` der app-datenbank, bäume über `Files`. die capacitor-nachbildung aus zugriff ist dabei weggefallen, die kommt wieder, wenn eine app nativ laufen soll
 - `.rat.js`: in `html`…`` darf kein template-literal stehen (`` {`a ${b}`} ``), der backtick beendet das äußere template (js selbst). heute: `{'a ' + b}`. ein fall für die syntax-runde
