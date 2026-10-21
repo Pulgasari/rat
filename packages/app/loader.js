@@ -4,9 +4,11 @@
 .rat files in the page, without a build (ideas/no-build.md):
 
   1. fetch the source, compile it (compileAsync: style languages load first).
+     .htx files go through @htx/compiler (adapter @rat/runtime), a plain .html file
+     becomes a component that renders it as it is (raw, scripts in it do not run).
   2. rewrite the imports of the result. a blob module has no path of its own,
      so './card.rat' inside it would resolve against blob: and fail:
-       .rat, .rat.html, .rat.js   compiled the same way, the import gets their blob url
+       .rat, .rat.html, .rat.js, .htx, .html   compiled the same way, the import gets their blob url
        ./x.js, ../x    an absolute url, against the file's own url
        @rat/runtime    stays, for the import map
      a dynamic import('./x.rat') stays lazy: it goes through load() when it runs.
@@ -24,6 +26,8 @@ import { parse }          from 'acorn';
 import { compileAsync }   from '@rat/compiler';
 import { isArray, isFn, isString } from './_shared.js';
 
+const HTML     = /\.html?$/;
+const HTX      = /\.htx$/;
 const RAT      = /\.rat(\.js|\.html)?$/;   // .rat.html: a .rat file under another name, for highlighting where .rat is unknown
 const RELATIVE = /^(\.{1,2}\/|\/)/;
 const SELF     = import.meta.url;
@@ -50,12 +54,18 @@ function specifiers (code) {
   return found;
 }
 
+// what a file is compiled as: rat, htx, html, or null for anything else
+const kindOf = url => {
+  const path = new URL(url).pathname;
+  return RAT.test(path) ? 'rat' : HTX.test(path) ? 'htx' : HTML.test(path) ? 'html' : null;
+};
+
 const isUrl = specifier => RELATIVE.test(specifier) || /^[a-z][\w+.-]*:/i.test(specifier);
 
 // the replacement for one specifier, a promise for a static .rat import (compiled in parallel)
 function replacement ({ dynamic, value }, url, chain) {
   const target = new URL(value, url).href;
-  if (!RAT.test(new URL(target).pathname)) return dynamic ? `import(${JSON.stringify(target)})` : JSON.stringify(target);
+  if (!kindOf(target)) return dynamic ? `import(${JSON.stringify(target)})` : JSON.stringify(target);
   if (dynamic) return `import(${JSON.stringify(SELF)}).then(app => app.load(${JSON.stringify(target)}))`;
   return compileFile(target, chain).then(blob => JSON.stringify(blob));
 }
@@ -84,18 +94,26 @@ async function build (url, chain) {
 
   document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
 
-  let compiled;
-  // base: css files resolve against this file, not the blob. read: what style inline needs
-  const read = path => fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
-
-  try { compiled = await compileAsync(source, { base: url, filename: name, read }); }
-  catch (error) { error.message = `${url}\n${error.message}`; throw error; }
-
-  const code = await rewrite(compiled.code, url, chain);
+  const code = await rewrite(await compileSource(source, url, name), url, chain);
   return URL.createObjectURL(new Blob([`${code}\n//# sourceURL=${url}.js\n`], { type: 'text/javascript' }));
 }
 
-// the blob url of a compiled .rat / .rat.js file. chain: the files that import it, for circles
+// source -> module code, by the kind of the file
+async function compileSource (source, url, name) {
+  const kind = kindOf(url);
+  if (kind === 'html') return `import { raw } from '@rat/runtime';\nconst source = ${JSON.stringify(source)};\nexport default () => raw(source);\n`;
+
+  try {
+    if (kind === 'htx') return (await import('@htx/compiler')).compile(source, { adapter: '@rat/runtime', filename: name }).code;
+
+    // base: css files resolve against this file, not the blob. read: what style inline needs
+    const read = path => fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
+    return (await compileAsync(source, { base: url, filename: name, read })).code;
+  }
+  catch (error) { error.message = `${url}\n${error.message}`; throw error; }
+}
+
+// the blob url of a compiled .rat / .rat.js / .htx / .html file. chain: the files that import it, for circles
 function compileFile (url, chain = []) {
   url = new URL(url, document.baseURI).href;
   if (chain.includes(url)) throw new Error(`[rat] circular import: ${[...chain, url].join(' -> ')}`);
@@ -109,7 +127,7 @@ function compileFile (url, chain = []) {
   return cache.get(url);
 }
 
-// the module of a .rat / .rat.js file
+// the module of a .rat / .rat.js / .htx / .html file
 const load = async url => import(await compileFile(url));
 
 // the component of a module: its default export, else its first function

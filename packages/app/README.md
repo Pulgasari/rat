@@ -20,7 +20,7 @@ demos: [`demos/app`](../../demos/app/), [`demos/app2`](../../demos/app2/) (views
    on the page wins: put it before `run.js` to point anything elsewhere. then it imports
    `index.js`, which defines the elements and loads `@rat/types` (the registry of reactive
    variants).
-2. **the loader** fetches a `.rat` / `.rat.js` file, compiles it (`compileAsync`, so a
+2. **the loader** fetches a `.rat` / `.rat.js` file (or an `.htx` file, compiled by `@htx/compiler` against `@rat/runtime`, or plain `.html`, rendered as it is), compiles it (`compileAsync`, so a
    `<style lang="scss">` works), and imports the result from a blob url. a blob module has no
    path of its own, so the loader rewrites the imports of the compiled code first (parsed with
    acorn):
@@ -73,7 +73,7 @@ drawer, bottom sheet), `<rat-part>` a piece of any page (an island,
 
 | `<rat-part>` | |
 |---|---|
-| `src` | the file, against the page. a new `src` mounts the new component |
+| `src` | the file, against the page: `.rat` (`.rat.js`, `.rat.html`), `.htx` (through `@htx/compiler`), or plain `.html` (shown as it is, scripts in it do not run). a new `src` mounts the new component |
 | `load` | `eager` (default), `visible` (once in view), `idle` |
 | `[loading]`, `[error]` | while loading, after an error (see [errors](#errors)) |
 | `props` | a property, handed to the component when it mounts |
