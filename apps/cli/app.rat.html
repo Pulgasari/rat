@@ -1,3 +1,4 @@
+<script>
 // cli/app.js
 // a terminal over the origin's opfs. the commands that need real work go to a
 // worker, the rest run here.
@@ -225,7 +226,7 @@ async function handleCommand(rawInput, term, worker, finishCallback) {
 }
 
 // Helper: Programmatic file upload to OPFS
-function triggerFileUpload(term, callback) {
+function triggerFileUpload (term, callback) {
   const input = document.createElement('input');
   input.type = 'file';
 
@@ -254,12 +255,12 @@ function triggerFileUpload(term, callback) {
 
 
 // Helper: Download file from OPFS
-async function triggerFileDownload(filename, term) {
+async function triggerFileDownload (filename, term) {
   try {
     const buffer = await vfs.readFile(filename);
-    const blob = new Blob([buffer]);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const blob   = new Blob([buffer]);
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement('a');
     a.href = url;
     a.download = filename;
     a.click();
@@ -270,6 +271,4 @@ async function triggerFileDownload(filename, term) {
   }
 }
 
-// :::::: BOOT ::::::::::::::::::::::::::::::::::::::::::::::
-
-app.init({ App });
+</script>
