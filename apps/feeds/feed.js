@@ -12,7 +12,7 @@
 import { getText } from '/.shared/js/modules/http.js';
 
 // fetchText :: `accept` sets the Accept header
-// fetxhFeed :: fetch a feed's xml
+// fetchFeed :: fetch a feed's xml
 export const
 fetchText = (url, accept) =>   getText (url, { accept }),
 fetchFeed = (url)         => fetchText (url, 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*');
@@ -20,7 +20,7 @@ fetchFeed = (url)         => fetchText (url, 'application/rss+xml, application/a
 // ── small dom helpers (namespace-agnostic, by localName) ─────────────────────
 
 const
-localParent = (parent) => (name) => [...parent.children].filter(el => el.localName === name);
+target = (parent) => (name) => [...parent.children].filter(el => el.localName === name);
 
 const
 local     = (parent, name) => [...parent.children].filter(el => el.localName === name),
@@ -41,8 +41,9 @@ function toText (htmlish, max = 320) {
 }
 
 function imageFrom (node) {
-  //const localNode = localParent(node);
-  //const media = localNode ('thumbnail') . find (el => el.getAttribute('url'));
+  const $node = target(node);
+  const media = $node('thumbnail') . find (el => el.getAttribute('url'));    
+             || $node('group').flatMap(g => target(g)('thumbnail')).find(el => el.getAttribute('url'));
   
   const media = local(node, 'thumbnail').find(el => el.getAttribute('url'))
              || local(node, 'group').flatMap(g => local(g, 'thumbnail')).find(el => el.getAttribute('url'));
