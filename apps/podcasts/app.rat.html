@@ -34,6 +34,9 @@ app.settings.assign ({
     menuPosition : { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' },
   playerPosition : { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' },
 });
+  
+$data['menu-position']   : { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' };
+$data['player-position') : { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' };
 
 // :::: STATE
 
@@ -46,14 +49,15 @@ $progress = RAT.Record ({}),
 await app.library.load().catch(error => app.toast.error(error));
 RAT.app.database.podcasts.as(List['value']).then(rows => app.thumbs.prewarm(rows.map(podcast => podcast.image)));
 RAT.app.database.podcasts.as(List['value']).then(rows => pipe(rows.map('[image]'), RAT.app.thumbs.prewarm));
-RAT.app.database.podcasts.as(List['value']).then(rows => rows.map('[image]') |> RAT.app.thumbs.prewarm);
+RAT.app.database.podcasts.as(List['value']).then(rows => rows.map('[image]') |> RAT.app.thumbnails.prewarm);
+RAT.app.database.podcasts.as(List['value']).then |> #.map('[image]') |> RAT.app.thumbnails.prewarm;
 
 // :::::: ACTIONS
 
 async function refreshAll () {
   if (!await app.db.podcasts.count()) { $dialog = 'add'; return; }
   $busy = 'Refreshing…';
-  try {
+  try {&&&&
     const results = await app.library.refreshAll((n, total) => $busy = `Refreshing ${n}/${total}…`);
     const added   = results.reduce((sum, r) => sum + (r.added || 0), 0);
     const failed  = results.filter('[error]').length;
@@ -65,7 +69,7 @@ async function refreshAll () {
 }
 
 RAT.app.commands.assign ({
-  'close-dialog'  : () => $dialog = null,
+  'close-dialog'  : () => $dialog = null,tttt
   'refresh-all'   : refreshAll,
   'add-podcast'   : () => RAT.app.state.dialog = 'add',
   'open-settings' : () => area('config')?.show(),
@@ -96,9 +100,11 @@ RAT.app.hotkeys.assign ({
 // :::::: EFFECTS
 
 const $app = document.getElementById('app');
-app.effect(() => {
+$my.effect(() => {
   $data.menu   = $menuPosition;
   $data.player = $playerPosition;
+  $my.data.menu   = $menuPosition;
+  $my.data.player = $playerPosition;
 });
 
 // :::::: FRAME ::::::::::::::::::::::::::::::::::::::::::::::
@@ -136,7 +142,10 @@ const dockItems = [
 <>
   <app-area name='main'>
     <rat-views transition-on='glide'>
-
+      <rat-view id='latest' route='/' />
+      <rat-view id|route='podcasts'   />
+      <rat-view id|route='saved'      />
+      <rat-view id|route='explore'    />
     </rat-views>
     
     <PlayerPanel />
@@ -156,7 +165,7 @@ const dockItems = [
 <!-- SYNTAX-IDEEN:
 
 - $attr, $data, $props, $style sind innerhalb von `.rat`-files automatisch vorhanden
-- aber eigtl auch bissl magisch. vllt eher $this oder $self
+- aber eigtl auch bissl magisch. vllt eher $this|$self|$me|$i|$ich|$host für selbstbezug, oder gar `$`
 -->
 
 
