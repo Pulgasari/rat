@@ -11,7 +11,8 @@
 - [x] `apps/notes` lauffähig: ordner öffnen, baum, filter, notiz lesen, inhaltsverzeichnis, beim neuladen bleibt alles
 - [ ] `apps/notes`: settings (config-area), dock unten auf schmalen bildschirmen, install-hinweis, toasts
 - [x] `apps/icons` als `.rat.js`: sets, set, suche, favoriten, detail im bottom-sheet, dock
-- [ ] `apps/icons`: settings, die rastergröße per geste (`@aufbau/gestures`), escape-hotkey
+- [x] `apps/icons`: die rastergröße per geste (pinch auf dem raster, `@aufbau/gestures`), escape-hotkey (eine ebene hoch: set → sets, suche leeren, sonst start; die detail-ansicht schließt ihr overlay selbst)
+- [ ] `apps/icons`: settings
 - [x] `<rat-part>` sollte wohl actually nich nur direkt `.rat` fressen, sondern auch `.htx` und schnöde `.html` files (der loader kann beides, damit auch `<rat-app>`, `<rat-view>` und imports)
 
 ### nebenbei

@@ -7,6 +7,7 @@
 // database of config.rat.js (RAT.app.database.favs, @rat/bunker).
 
 import { autoloader } from '@aufbau/elements';
+import gestures       from '@aufbau/gestures';
 import { effect }     from '@rat/runtime';
 
 import createElement from '@domina/verbs/createElement.js';
@@ -99,6 +100,14 @@ function closeDetail () {
   $detail = null;
 }
 
+// escape: one level up. the detail closes by itself (an overlay uses the key up first)
+function up () {
+  const path = RAT.app.router.$path.value;
+  if (path.startsWith('/set/')) go('/sets');
+  else if (path === '/search' && $query) search('');
+  else if (path !== '/') go('/');
+}
+
 // :::::: HELPERS
 
 const count = number => number?.toLocaleString?.() ?? String(number ?? 0);
@@ -154,9 +163,21 @@ const IconCell = props => html`
   </button.cell>
 `;
 
+// pinch on the grid (two fingers, a trackpad pinch): the cell size follows
+const SIZES = { max: 200, min: 56 };
+
+const pinchSize = element => {
+  let start = $itemSize;
+  const handle = gestures(element, {
+    onPinchStart : () => { start = $itemSize; },
+    onPinchMove  : gesture => { $itemSize = Math.round(Math.min(SIZES.max, Math.max(SIZES.min, start * gesture.scale))); },
+  });
+  return () => handle.destroy();
+};
+
 const IconGrid = props => html`
   @if (props.names?.length)
-    <div.grid style={'--isz: ' + $itemSize + 'px'}>
+    <div.grid style={'--isz: ' + $itemSize + 'px'} @pinch-size>
       @for (name of props.names): <IconCell name={name} />
     </div.grid>
   @else
@@ -166,7 +187,7 @@ const IconGrid = props => html`
 const SizeControl = () => html`
   <div.size>
     <svg-icon icon='zoom-out' />
-    <input type='range' min='56' max='200' step='1' value={$itemSize} oninput={event => $itemSize = Number(event.target.value)} />
+    <input type='range' min={SIZES.min} max={SIZES.max} step='1' value={$itemSize} oninput={event => $itemSize = Number(event.target.value)} />
     <svg-icon icon='zoom-in' />
   </div.size>
 `;
@@ -322,6 +343,7 @@ const dock = [
 
 export default props => {
   props.app.hold(loadCollections());
+  props.app.commands.add('up', up);
 
   // the query survives a reload, its results do not
   if ($query.trim()) search($query);

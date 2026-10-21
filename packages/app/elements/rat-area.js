@@ -233,7 +233,8 @@ export class RatArea extends DominaElement {
     this.parts('handle').onPointerDown(event => this.drag(event));
 
     this.$(document).onKeyDown(event => {
-      if (event.key === 'Escape' && this.isOverlay && this.open && !event.defaultPrevented) this.hide();
+      // the key is used up: a hotkey on escape behind it does not run too
+      if (event.key === 'Escape' && this.isOverlay && this.open && !event.defaultPrevented) { event.preventDefault(); this.hide(); }
     });
   }
 
