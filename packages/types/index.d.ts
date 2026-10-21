@@ -231,3 +231,17 @@ export declare const Id: IdSchema;
 /** The key of a record in another table. */
 export declare function Ref (table: string): Schema<string | number>;
 
+// :::::: choice
+
+/** A test of choice: a schema, a typeof constructor, a class, a predicate, a RegExp, a pattern object or tuple, a literal. */
+export type Test = unknown;
+
+export interface Choice {
+  /** Pairs of test and handler, the first match wins, a function alone at the end is the fallback. */
+  <R = unknown> (...cases: Array<[Test, ((value: any) => R) | R] | ((value: any) => R)>): (value: unknown) => R | undefined;
+  /** A single test. */
+  matches (test: Test, value: unknown): boolean;
+}
+
+export declare const choice: Choice;
+

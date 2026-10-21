@@ -5,6 +5,7 @@ export {
   Schema, isSchema,
 } from './schema.js';
 
+export { choice }  from './choice.js';
 export { Color }   from './color.js';
 export { Enum }    from './enum.js';
 export { Id, Ref } from './id.js';

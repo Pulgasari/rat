@@ -71,4 +71,5 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 
 ## syntax
 - `let` vor `$name` ist auf oberster ebene im `<script>` einer `.rat`-datei optional: die erste zuweisung an einen nirgends deklarierten `$name` deklariert ihn. `const` (computed) bleibt pflicht, in `.rat.js` gilt js
+- `choice` in `@rat/types` ist rats switch-ersatz (aus den entwürfen `shift`/`typeshift`): paare aus test und handler, erster treffer gewinnt, eine funktion allein am ende ist der fallback. tests sind schemas (der handler bekommt den umgewandelten wert), typeof-konstruktoren, klassen, prädikate, regexp, muster-objekte/-tupel, literale
 
