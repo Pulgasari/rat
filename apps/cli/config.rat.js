@@ -1,5 +1,9 @@
 // cli/app.config.js
 
+export default {
+  id: 'cli',
+};
+
 import { gestalt } from '@gestalt/core';
 
 // xterm needs concrete colours, so they are read back from the resolved theme
