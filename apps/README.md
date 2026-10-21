@@ -9,6 +9,8 @@
 3. ablaufen wird das vermutlich so, dass ich hier immer schrittweise von hand iwas mache, dabei feature-/syntax-erweiterungen/änderungen auf ne todo packe.
 
 ## quicklinks
+[cli](https://code.pulgasari.dev/rat/apps/cli/)
+[ebooks](https://code.pulgasari.dev/rat/apps/eboons/)
 [feeds](https://code.pulgasari.dev/rat/apps/feeds/)
 [icons](https://code.pulgasari.dev/rat/apps/icons/)
 [notes](https://code.pulgasari.dev/rat/apps/notes/)
