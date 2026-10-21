@@ -1,5 +1,5 @@
 <script>
-  // the folders of a FolderLibrary as a tree:
+  // the folders of ../folders.js as a tree:
   //   <FolderTree lib={lib} filter={$filter} selected={$open} onopen={(sourceId, path) => …} />
   // a filter keeps the matching files and opens their branches. which branches are
   // open is kept per expandedKey in localStorage (by hand until persistence is decided)
@@ -57,7 +57,7 @@
   async function remove (source) {
     if (!confirm(`Close “${source.name}”? Your files are untouched, this only forgets the folder.`)) return;
     props.onremove?.(source.id);
-    await lib.removeFolder(source.id);
+    await lib.remove(source.id);
   }
 
   async function reconnect (source) {

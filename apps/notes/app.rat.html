@@ -10,7 +10,7 @@
   import { read, write } from '../.shared/storage.js';
   import { toast }       from '../.shared/toast.js';
 
-  import FolderLibrary from '../.shared/folders/index.js';
+  import { createFolders } from '../.shared/folders.js';
 
   import Brand      from '../.shared/components/Brand.rat.html';
   import Dock       from '../.shared/components/Dock.rat.html';
@@ -24,7 +24,7 @@
 
   const app    = props.app;
   const config = app.config;
-  const lib    = new FolderLibrary({ id: 'notes', accept: config.folders.accept });
+  const lib    = createFolders({ accept: config.folders.accept, id: 'notes', table: app.database.folders });
 
   // the splash stays until the folders are known
   app.hold(lib.load());
@@ -70,7 +70,7 @@
   }
 
   async function addFolder () {
-    try { if (await lib.addFolder()) toast.success('Folder added'); }
+    try { if (await lib.add()) toast.success('Folder added'); }
     catch (error) { toast.error(error.message); }
   }
 
@@ -86,7 +86,7 @@
     $text = null;
     if (!note) return;
     let alive = true;
-    lib.readText(note).then(text => { if (alive) $text = text; }, error => { if (alive) $text = `could not read that note: ${error.message}`; });
+    lib.read(note).then(text => { if (alive) $text = text; }, error => { if (alive) $text = `could not read that note: ${error.message}`; });
     return () => { alive = false; };
   });
 </script>

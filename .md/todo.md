@@ -39,7 +39,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 
 ## sonstiges
 - [x] `@rat/bunker`: Store, Database, Files, memo (siehe decisions.md)
-- [ ] notes: `FolderLibrary` durch `@rat/bunker` Files ersetzen (granted folder, handle in einer tabelle)
+- [x] notes: `FolderLibrary` durch `@rat/bunker` Files ersetzt (`apps/.shared/folders.js`, handles in der tabelle `folders`)
 - [ ] `@rat/bunker` nach `@bunker` umziehen, sobald es sich in den apps bewährt hat
 - [x] compiler: ein nicht geschlossenes element als solches melden (auch das, das ein falsches schließ-tag zugemacht hat)
 - [ ] props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
