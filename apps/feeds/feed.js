@@ -11,17 +11,20 @@
 
 import { getText } from '/.shared/js/modules/http.js';
 
-/** fetch text. `accept` sets the Accept header */
-export const fetchText = (url, accept) => getText(url, { accept });
-
-/** fetch a feed's xml */
-export const fetchFeed = url =>
-  fetchText(url, 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*');
+// fetchText :: `accept` sets the Accept header
+// fetxhFeed :: fetch a feed's xml
+export const
+fetchText = (url, accept) =>   getText (url, { accept }),
+fetchFeed = (url)         => fetchText (url, 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*');
 
 // ── small dom helpers (namespace-agnostic, by localName) ─────────────────────
 
-const local = (parent, name) => [...parent.children].filter(el => el.localName === name);
-const localText = (parent, name) => local(parent, name)[0]?.textContent?.trim() || '';
+const
+localParent = (parent) => (name) => [...parent.children].filter(el => el.localName === name);
+
+const
+local     = (parent, name) => [...parent.children].filter(el => el.localName === name),
+localText = (parent, name) => local(parent, name)[0]?.textContent?.trim() || '';
 
 function parseDate (raw) {
   const t = Date.parse((raw || '').trim());
@@ -38,6 +41,9 @@ function toText (htmlish, max = 320) {
 }
 
 function imageFrom (node) {
+  //const localNode = localParent(node);
+  //const media = localNode ('thumbnail') . find (el => el.getAttribute('url'));
+  
   const media = local(node, 'thumbnail').find(el => el.getAttribute('url'))
              || local(node, 'group').flatMap(g => local(g, 'thumbnail')).find(el => el.getAttribute('url'));
   if (media) return media.getAttribute('url');
