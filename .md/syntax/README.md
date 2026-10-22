@@ -11,6 +11,6 @@ open choices are linked to [ideas/](ideas/README.md).
 ## inside `.rat` files:
 
 **directives:**
-[@if]()
-[@for]()
-[@fragment]()
+[`@if`]()
+[`@for`]()
+[`@fragment`]()
