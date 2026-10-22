@@ -38,9 +38,7 @@ boundary as 'rat:error' from the element the command came from.
 
 const COMMAND  = 'rat:command';
 const RESERVED = new Set(['add', 'get', 'has', 'list', 'listen', 'remove', 'run']);
-
-// 'move[up, 3]' -> { name: 'move', args: ['up', 3] }
-const LITERALS = { false: false, null: null, true: true };
+const LITERALS = { false: false, null: null, true: true }; // 'move[up, 3]' -> { name: 'move', args: ['up', 3] }
 
 const argumentOf = text => text in LITERALS ? LITERALS[text] : /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
 
@@ -116,13 +114,13 @@ function createCommands (source = {}) {
   };
 
   // any other key is a command: get returns it, set registers it
-  const proxy = new Proxy(api, {
-    deleteProperty (target, key)    { return map.delete(nameOf(key)); },
-    get (target, key)               { return typeof key !== 'string' || RESERVED.has(key) ? target[key] : map.get(nameOf(key)); },
-    getOwnPropertyDescriptor (target, key) { return map.has(nameOf(key)) ? { configurable: true, enumerable: true, value: map.get(nameOf(key)), writable: true } : undefined; },
-    has (target, key)               { return RESERVED.has(key) || map.has(nameOf(key)); },
-    ownKeys ()                      { return [...map.keys()]; },
-    set (target, key, value)        { if (RESERVED.has(key)) return false; map.set(nameOf(key), value); return true; },
+  const proxy = new Proxy (api, {
+    deleteProperty           (target, key)        { return map.delete(nameOf(key)); },
+    get                      (target, key)        { return typeof key !== 'string' || RESERVED.has(key) ? target[key] : map.get(nameOf(key)); },
+    getOwnPropertyDescriptor (target, key)        { return map.has(nameOf(key)) ? { configurable: true, enumerable: true, value: map.get(nameOf(key)), writable: true } : undefined; },
+    has                      (target, key)        { return RESERVED.has(key) || map.has(nameOf(key)); },
+    ownKeys                  ()                   { return [...map.keys()]; },
+    set                      (target, key, value) { if (RESERVED.has(key)) return false; map.set(nameOf(key), value); return true; },
   });
 
   for (const [id, fn] of Object.entries(source)) map.set(nameOf(id), fn);
