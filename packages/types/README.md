@@ -92,20 +92,7 @@ new $Enum('grid', 'list', 'masonry')  // the same value, reactive
 same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`),
 see below.
 
-## data types
-
-### List
-
-a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and
-`set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` …
-return plain arrays.
-
-```js
-const tags = new List(['a', 'b']);
-tags.push('c');
-tags.at(-1);      // 'c'
-tags.length;      // 3
-```
+## Basic DataTypes
 
 ### Enum
 
@@ -125,8 +112,18 @@ viewmode.value = 'table';  // TypeError: one of grid, list, masonry
 viewmode.values;           // ['grid', 'list', 'masonry']
 ```
 
-`new Enum(View)` starts from a schema (`View = Enum('grid', 'list').default('list')` starts at
-`'list'`), `new Enum(other)` copies another one at its value.
+`new Enum(View)` starts from a schema (`View = Enum('grid', 'list').default('list')` starts at `'list'`), `new Enum(other)` copies another one at its value.
+
+### List
+
+a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays.
+
+```js
+const tags = new List(['a', 'b']);
+tags.push('c');
+tags.at(-1);      // 'c'
+tags.length;      // 3
+```
 
 ### Record
 
@@ -160,6 +157,8 @@ entry.with(1, 4);                    // a new tuple ('rat', 4)
 entry.equals(new Tuple('rat', 3));   // true
 ```
 
+## Additional Data Types
+
 ### Color
 
 one color, read and written in any notation. it holds rgba, `hex` and `h` `s` `l` are read and
@@ -179,7 +178,7 @@ accent.set('hsl(200 50% 50%)');
 
 a gray has no hue: after `s = 0`, `h` reads 0. named css colors (`'red'`) are not read yet.
 
-## schemas
+# Schemas
 
 schemas are values ([concept 5](../../.md/concept.md#5-types-are-values), [d-14 a](../../.md/ideas/types.md#d-14)):
 they check and coerce a value, know where a signal starts and describe themselves. they speak
