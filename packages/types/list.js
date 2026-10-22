@@ -12,6 +12,7 @@ as a getter and at(index) / set(index, value) instead of [index]. $List, its
 reactive variant, is in reactive.js.
 */
 
+import { reactive, register } from '@rat/signals';
 import { Schema, typed } from './schema.js';
 
 // ::: the data type
@@ -21,7 +22,7 @@ class ListType {
 
   constructor (items = []) { this.#items = [...items]; }
 
-  static from (items) { return new this(items); }
+  static from    (items) { return new this(items); }
   static of   (...items) { return new this(items); }
 
   get length () { return this.#items.length; }
@@ -91,8 +92,32 @@ const listOf = item => new ListSchema({
   },
 });
 
+
+// ::: List + $List
+
+const LIST_READS = ['length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator];
+
 const List = typed(ListType, listOf);
+
+const $List = reactive(List, {
+  reads  : LIST_READS,
+  writes : {
+    clear   : list => list.length > 0,
+    pop     : list => list.length > 0,
+    push    : (list, ...items) => items.length > 0,
+    remove  : (list, value) => list.includes(value),
+    replace : true,
+    reverse : list => list.length > 1,
+    set     : (list, index, value) => !Object.is(list.at(index), value),
+    shift   : list => list.length > 0,
+    sort    : list => list.length > 1,
+    splice  : true,
+    unshift : (list, ...items) => items.length > 0,
+  },
+});
+
+register (List, $List);
 
 // :::::: EXPORT
 
-export { List, ListSchema };
+export { List, $List, ListSchema };
