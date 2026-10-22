@@ -231,37 +231,32 @@ initial value and checks every write.
 
 ## reactive variants
 
-made with `reactive()` from [`@rat/signals`](../signals/README.md). they look like the originals,
-only named with `$`, and work the same in `.js`, `.rat.js` and `.rat`:
+made with `reactive()` from [`@rat/signals`](../signals/README.md). they look like the originals, only named with `$`, and work the same in `.js`, `.rat.js` and `.rat`:
 
 ```js
 import { $Enum, $Map } from '@rat/types';
 
 const $seen = new $Map;
 $seen.set('a', 1);
-$seen.get('a');          // reading tracks, set() updates whatever read it
+$seen.get('a'); // reading tracks, set() updates whatever read it
 
 const $view = new $Enum('grid', 'list', 'masonry');
-$view.cycle();           // whatever read $view.value updates
+$view.cycle(); // whatever read $view.value updates
 
 const $accent = new $Color('#ff8800');
-$accent.l = 70;          // whatever read $accent.hex, .r, .h … updates
+$accent.l = 70; // whatever read $accent.hex, .r, .h … updates
 
 const $settings = new $Record(Settings);
-$settings.zoom = 120;    // whatever read any field updates
+$settings.zoom = 120; // whatever read any field updates
 ```
 
-- reading methods and getters subscribe, writing methods and setters notify, a write that
-  changes nothing notifies nobody (`set` with the same value, `pop` on an empty list).
-- `$Record` has one version for all fields: a write to one field updates whatever read any
-  field (d-23 b). a signal per field would be finer, and pays off only for large records.
-- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and
-  `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a
-  signal holding a `$List` (d-23 c), and can be reassigned:
+- reading methods and getters subscribe, writing methods and setters notify, a write that changes nothing notifies nobody (`set` with the same value, `pop` on an empty list).
+- `$Record` has one version for all fields: a write to one field updates whatever read any field (d-23 b). a signal per field would be finer, and pays off only for large records.
+- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c), and can be reassigned:
 
 ```html
 <script>
-  import '@rat/types';            // once, anywhere in the app: fills the registry
+  import '@rat/types'; // once, anywhere in the app: fills the registry
 
   let $todos = [];
   const add  = title => $todos.push({ title, done: false });   // reactive
