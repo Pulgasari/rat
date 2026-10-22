@@ -24,8 +24,8 @@ const openFeed  = id => { $feedId = id; RAT.app.go('feed', id); closeMenu(); };
 const articleFeeds = computed(() => db.feeds.value.filter(f => f.kind !== 'youtube'));
 const youtubeFeeds = computed(() => db.feeds.value.filter(f => f.kind === 'youtube'));
 
-const $articleFeeds = () => RAT.app.database.feeds.without ({ kind: 'youtube' });
-const $youtubeFeeds = () => RAT.app.database.feeds.with    ({ kind: 'youtube' });
+const $articleFeeds = RAT.app.database.feeds.without ({ kind: 'youtube' });
+const $youtubeFeeds = RAT.app.database.feeds.with    ({ kind: 'youtube' });
 
 $articleFeeds <- RAT.app.database.feeds.without ({ kind: 'youtube' });
 $youtubeFeeds <- RAT.app.database.feeds.with    ({ kind: 'youtube' });
