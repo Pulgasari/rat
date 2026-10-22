@@ -119,27 +119,7 @@ function NavItem ({ name, icon, label, count }) {
     </button>`;
 }
 
-function FeedItem ({ feed: f }) {
-  const list   = db.itemsByFeed.value[f.id] || [];
-  const unread = db.unreadIn(list);
-  const active = app.current.value === 'feed' && app.state.$feedId === f.id;
-  const spin   = db.refreshing.value[f.id];
-  return html`
-    <div class=${'feed-row' + (active ? ' active' : '')}>
-      <button class="feed-open" onClick=${() => open('feed', f.id)} title=${f.title}>
-        <span class="feed-ic">
-          ${spin ? html`<svg-icon icon="loading" />`
-                 : f.image ? html`<img src=${f.image} alt="" loading="lazy" onError=${e => e.target.style.display = 'none'} />`
-                           : html`<svg-icon icon=${f.kind === 'youtube' ? 'youtube' : 'rss'} />`}
-        </span>
-        <span class="feed-name">${f.title}</span>
-        ${f.error ? html`<svg-icon icon="alert" class="feed-err" />`
-                  : unread > 0 && html`<span class="nav-count">${unread}</span>`}
-      </button>
-      <button class="feed-x" title="Unfollow" onClick=${() => removeFeed(f)}>
-        <svg-icon icon="close" /></button>
-    </div>`;
-}
+
 
 function Sidebar () {
   const arts = articleFeeds.value, tubes = youtubeFeeds.value;
@@ -288,4 +268,24 @@ function Header ({ name }) {
     <svg-icon icon="svg-spinners:bars-scale-middle" />
   </div>
 
+@fragment feedItem (feed):
+
+  const list   = db.itemsByFeed.value[f.id] || [];
+  const unread = db.unreadIn(list);
+  const active = app.current.value === 'feed' && app.state.$feedId === f.id;
+  const spin   = db.refreshing.value[f.id];
+  
+<div.feed-item class:active={active}>
+      <button class="feed-open" onClick=${() => open('feed', f.id)} title=${f.title}>
+        <span class="feed-ic">
+          ${spin ? html`<svg-icon icon="loading" />`
+                 : f.image ? html`<img src=${f.image} alt="" loading="lazy" onError=${e => e.target.style.display = 'none'} />`
+                           : html`<svg-icon icon=${f.kind === 'youtube' ? 'youtube' : 'rss'} />`}
+        </span>
+        <span class="feed-name">${f.title}</span>
+        ${f.error ? html`<svg-icon icon="alert" class="feed-err" />`
+                  : unread > 0 && html`<span class="nav-count">${unread}</span>`}
+      </button>
+  <btn-icon icon='close' title='unfollow' onClick={() => removeFeed(f)}>
+</div.feed-item>
 
