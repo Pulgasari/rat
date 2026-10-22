@@ -29,29 +29,8 @@ import { reactive, register } from '@rat/signals';
 
 //import { Color }            from './color.js';
 //import { Enum }             from './enum.js';
-import { List }             from './list.js';
+//import { List }             from './list.js';
 //import { GET, Record, SET } from './record.js';
-
-// ::: $List
-
-const LIST_READS = ['length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator];
-
-const $List = reactive(List, {
-  reads  : LIST_READS,
-  writes : {
-    clear   : list => list.length > 0,
-    pop     : list => list.length > 0,
-    push    : (list, ...items) => items.length > 0,
-    remove  : (list, value) => list.includes(value),
-    replace : true,
-    reverse : list => list.length > 1,
-    set     : (list, index, value) => !Object.is(list.at(index), value),
-    shift   : list => list.length > 0,
-    sort    : list => list.length > 1,
-    splice  : true,
-    unshift : (list, ...items) => items.length > 0,
-  },
-});
 
 // ::: Map, Set
 
@@ -80,12 +59,9 @@ const $Set = reactive(Set, {
 // ::: registry
 
 register(Array,  $List);
-
-
-register(List,   $List);
 register(Map,    $Map);
 register(Set,    $Set);
 
 // :::::: EXPORT
 
-export { $List, $Map, $Set };
+export { $Map, $Set };
