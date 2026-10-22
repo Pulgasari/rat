@@ -18,7 +18,7 @@ import './rat.js';
 
 export { cast, register }                  from './cast.js';
 export { codecs }                          from './codecs.js';
-export { Database, Table, createDatabase } from './database.js';
+export * from './database.js';
 export { drivers }                         from './drivers.js';
 export { Entry, Files, createFiles }       from './files.js';
 export { memo }                            from './memo.js';
