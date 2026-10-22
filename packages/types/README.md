@@ -376,3 +376,9 @@ Color
 Vec2 Vector2
 Vec3 Vector3
 ```
+
+Hier steht:
+
+> the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c), and can be reassigned:
+
+aber das is doch Quatsch. Ich hab nie gesagt, da solle dann magisch und unlogisch plötzlich `$List` statt `$Array' draus werden.
