@@ -40,9 +40,7 @@ three things, kept apart:
 | **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
 | **reactive variants** | subclasses of data types whose reads subscribe and whose writes notify | `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set` |
 
-**one name, two forms.** where a data type has a schema, both go by the same name:
-`new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js
-already: `new Map` is a map, `Map()` is something else (an error there).
+**one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
 ```js
 new List(['a', 'b'])                  // a list
@@ -61,16 +59,16 @@ new $Enum('grid', 'list', 'masonry')  // the same value, reactive
 | `List` | yes | `List(Str)` | `$List` |
 | `Record` | yes | `Record({ … })` | `$Record` |
 | `Tuple` | yes, frozen | `Tuple(Str, Num)` | none: a change is a new tuple |
-| `Union` | none | `Union(Num, Str)` | none |
+| `Union` | none | `Union(Num, Str)` | none | 
 | `Bool`, `Num`, `Str` | plain js | the schema itself | none |
 
-`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the
-same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`),
-see below.
+`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`),.see below.
 
-## Basic DataTypes
+# Basic DataTypes
 
-### Enum
+## Bool
+
+## Enum
 
 holds one value out of a fixed list.
 
@@ -90,7 +88,7 @@ viewmode.values;           // ['grid', 'list', 'masonry']
 
 `new Enum(View)` starts from a schema (`View = Enum('grid', 'list').default('list')` starts at `'list'`), `new Enum(other)` copies another one at its value.
 
-### List
+## List
 
 a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays.
 
@@ -101,7 +99,7 @@ tags.at(-1);      // 'c'
 tags.length;      // 3
 ```
 
-### Record
+## Record
 
 a sealed object with fixed fields. with a schema, every field write is checked.
 
@@ -121,7 +119,7 @@ JSON.stringify(settings);                      // '{"view":"list","zoom":80}'
 
 a field may be called anything but `assign`, `schema` and `toJSON`.
 
-### Tuple
+## Tuple
 
 a fixed number of values in a fixed order, frozen.
 
@@ -156,10 +154,13 @@ a gray has no hue: after `s = 0`, `h` reads 0. named css colors (`'red'`) are no
 
 # Schemas
 
-schemas are values ([concept 5](../../.md/concept.md#5-types-are-values), [d-14 a](../../.md/ideas/types.md#d-14)):
-they check and coerce a value, know where a signal starts and describe themselves. they speak
-the standard schema interface (`~standard`), so a signal takes them, and so do zod- or
-valibot-aware libraries. `Schema.is` is the predicate.
+schemas are values:
+- they check and coerce a value, know where a signal starts and describe themselves.
+- they speak the standard schema interface (`~standard`), so a signal takes them, and so do zod- or valibot-aware libraries.
+- `Schema.is` is the predicate.
+
+<../../.md/concept.md#5-types-are-values>
+<../../.md/ideas/types.md#d-14>
 
 ```js
 import { Bool, Enum, List, Num, Record, Str } from '@rat/types';
@@ -194,8 +195,7 @@ Settings.initial;                                        // { tags: [], view: 'g
 | `.default(x)`, `.optional()`, `.check(fn, message)` | on every schema |
 | `validate(x)`, `is(x)`, `parse(x)`, `describe` | `{ value }` or `{ issues: [{ message, path }] }` |
 
-a schema as a signal's initial value makes a typed signal (d-14 a): it starts at the schema's
-initial value and checks every write.
+a schema as a signal's initial value makes a typed signal (d-14 a): it starts at the schema's initial value and checks every write.
 
 ```html
 <script>
@@ -243,9 +243,7 @@ $settings.zoom = 120; // whatever read any field updates
 
 ### typed signal or `$Enum`?
 
-`let $view = Enum('grid', 'list')` is a signal holding a string: `$view` reads `'grid'`, a write
-is checked. `new $Enum('grid', 'list')` is an object: `$view.value` reads, `$view.cycle()` moves
-on. the first fits a value that is only set, the second one that is stepped through.
+`let $view = Enum('grid', 'list')` is a signal holding a string: `$view` reads `'grid'`, a write is checked. `new $Enum('grid', 'list')` is an object: `$view.value` reads, `$view.cycle()` moves on. the first fits a value that is only set, the second one that is stepped through.
 
 not yet: `persist` through `@bunker`, the compiler reading a static schema, the
 sketch below (unique values, optionally sorted) as options on `List`.
