@@ -1,5 +1,12 @@
 # @rat/types
 
+## overview
+- [Types](#)
+  - [Basic](#)
+  - [Additional](#)
+- [Schemas](#)
+- [`choice`](#)
+
 [Color](#color) ·
 [Enum](#enum) ·
 [List](#list) ·
