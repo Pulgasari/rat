@@ -1,15 +1,8 @@
-// apps/feeds/app.js
-// the feeds reader on the shared handle. the runtime binds zugriff (+ zugriff.app, html) to
-// window before this runs, so nothing here imports the runtime. the library lives in the db
-// module (app.db); ephemeral ui state on app.state.
-
+<script>
 // ::: vendors
 import { computed }         from '@aufbau/signals';
 import { useEffect }        from '/.shared/js/vendors.js';
-
 import PopPrompt from '@aufbau/elements/webcomponents/pop-prompt.js';
-
-// ::: shared
 import { Config } from '/.shared/js/components/Config.js';
 
 // ::: app modules
@@ -20,6 +13,9 @@ const { Image } = await zugriff.components('Image');
 // ::: the app handle
 const app = zugriff.app;
 app.db = db;
+
+// RAT.app.database
+const { app } = RAT;
 
 // :::::: STATE
 // ephemeral ui state on app.state (no `.value`); the library itself is app.db (plain
@@ -330,3 +326,4 @@ function App () {
 // :::::: BOOT
 
 app.init({ App });
+</script>
