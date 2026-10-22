@@ -15,17 +15,6 @@ const db  = RAT.app.database;
 $busy   = ''; // a label while a long task runs
 $feedId = 0;
 
-const area = app.area;
-const menu = () => area('menu');
-
-// ::: actions
-const closeMenu = () => { if (menu()?.isOverlay) menu().hide(); };
-const open = (name, id = null) => {
-  if (id) $feedId = id;
-  app.go(name);
-  closeMenu();
-};
-
 // ::: actions
 const closeMenu = () => RAT.exec('close[#sidebar]');
 const openFeed  = id => { $feedId = id; RAT.app.go('feed', id); closeMenu(); };
@@ -35,9 +24,11 @@ const openFeed  = id => { $feedId = id; RAT.app.go('feed', id); closeMenu(); };
 const articleFeeds = computed(() => db.feeds.value.filter(f => f.kind !== 'youtube'));
 const youtubeFeeds = computed(() => db.feeds.value.filter(f => f.kind === 'youtube'));
 
-const $youtubeFeeds  = () => RAT.app.database.feeds.with({ kind: 'youtube' });
+const $articleFeeds = () => RAT.app.database.feeds.without ({ kind: 'youtube' });
+const $youtubeFeeds = () => RAT.app.database.feeds.with    ({ kind: 'youtube' });
 
-$youtubeFeeds << RAT.app.database.feeds.with({ kind: 'youtube' });
+$articleFeeds <- RAT.app.database.feeds.without ({ kind: 'youtube' });
+$youtubeFeeds <- RAT.app.database.feeds.with    ({ kind: 'youtube' });
 
   
 // the list + heading of a view
@@ -68,6 +59,11 @@ function fmtWhen (ms) {
 
 const hostOf = url => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } };
 const feedName = it => db.feedById(it.feedId)?.title || hostOf(it.link);
+
+const feedName = (it) => RAT.app.database.feeds.with({ id: it.feedId }).pluck('name');
+const feedName = (it) => RAT.app.database.feeds.selectRow({ id: it.feedId }).name;
+const feedName = (it) => RAT.app.database.query(`SELECT ROW WHERE id = ${it.feedId}`).name;
+const feedName = (it) => @db select table 'feeds' then select row where id is it.feedId then extract name
 
 // :::::: ACTIONS
 
