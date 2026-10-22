@@ -94,7 +94,7 @@ class Table extends Store {
   async count () { return (await this.keys()).length; }
 }
 
-class BunkerDB {
+class Database {
   #tables = new Map;
 
   // schema: table -> its fields
@@ -102,7 +102,7 @@ class BunkerDB {
     this.name = name;
     for (const [table, fields] of Object.entries(schema)) {
       const store    = driver === 'indexeddb' ? { driver, name, table } : { driver, name: `${name}:${table}` };
-      const instance = new BunkerDBTable ({ ...options, ...store, fields, title: table });
+      const instance = new DatabaseTable ({ ...options, ...store, fields, title: table });
       this.#tables.set(table, instance);
       if (!(table in this)) Object.defineProperty(this, table, { enumerable: true, value: instance });
     }
@@ -117,8 +117,8 @@ class BunkerDB {
   }
 }
 
-const createDatabase = options => new BunkerDB (options);
+const createDatabase = options => new Database (options);
 
 // :::::: EXPORT
 
-export { BunkerDB, BunkerDBTable, createDatabase };
+export { Database, DatabaseTable, createDatabase };
