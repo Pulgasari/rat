@@ -3,28 +3,35 @@
 /*
 keys and values, the same for every driver:
 
-  const prefs = createStore({ driver: 'local', name: 'notes' });
+  const prefs = createStore ({ driver: 'local', name: 'notes' });
 
   await prefs.set('theme', 'dark');
-  await prefs.get('theme');                // 'dark', undefined without one
-  await prefs.get('zoom', 100);            // a fallback
-  await prefs.has('theme');  await prefs.delete('theme');  await prefs.clear();
-  await prefs.keys();  await prefs.values();  await prefs.entries();
+  await prefs.get('theme');           // 'dark', undefined without one
+  await prefs.get('zoom', 100);       // a fallback
+  await prefs.has('theme'); 
+  await prefs.delete('theme');  
+  await prefs.clear();
+  await prefs.keys();
+  await prefs.values();
+  await prefs.entries();
 
-  prefs.getSync('theme')                   a sync driver only (local, session, cookie, memory):
-  prefs.setSync('theme', 'dark')           read before the first paint
-  prefs.on('change', ({ type, keys }) => …)   returns its stop, another tab included where the driver can
-  await prefs.as(Map)                      see cast.js
+  prefs.getSync('theme');         // a sync driver only (local, session, cookie, memory):
+  prefs.setSync('theme', 'dark'); // read before the first paint
+  
+  prefs.on('change', ({ type, keys }) => …)  // returns its stop, another tab included where the driver can
+  await prefs.as(Map)                        // see cast.js
 
-schema: any standard schema (@rat/types, zod …) checks every value set, a value
-that fails throws. codec: see codecs.js, the driver picks one.
+schema: any standard schema (@rat/types, zod …) checks every value set,
+a value that fails throws. 
+
+codec: see codecs.js, the driver picks one.
 */
 
 import { cast }     from './cast.js';
 import { codecOf }  from './codecs.js';
 import { driverOf } from './drivers.js';
 
-class Store {
+class BunkerStore {
   #codec;
   #driver;
   #listeners = new Set;
@@ -49,9 +56,8 @@ class Store {
     return stored === undefined ? fallback : this.#codec.decode(stored);
   }
 
-  async has (key) { return (await this.#driver.get(key)) !== undefined; }
-
-  async keys () { return [...await this.#driver.keys()]; }
+  async has  (key) { return (await this.#driver.get(key)) !== undefined; }
+  async keys ()    { return [...await this.#driver.keys()]; }
 
   async values () {
     if (this.#driver.values) return Promise.all((await this.#driver.values()).map(stored => this.#codec.decode(stored)));
@@ -130,8 +136,16 @@ class Store {
   emit (change) { for (const fn of this.#listeners) fn(change); }
 }
 
-const createStore = options => new Store(options);
+
 
 // :::::: EXPORT
 
+export default BunkerStore;
+
+// :::::: EXPORT 2
+
+const Store       = BunkerStore;
+const createStore = options => new Store (options);
+
 export { Store, createStore };
+
