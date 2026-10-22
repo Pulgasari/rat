@@ -28,7 +28,7 @@ they are registered too, so $() and every `let $x = …` in a .rat script pick t
 import { reactive, register } from '@rat/signals';
 
 import { Color }            from './color.js';
-import { Enum }             from './enum.js';
+//import { Enum }             from './enum.js';
 import { List }             from './list.js';
 //import { GET, Record, SET } from './record.js';
 
@@ -75,15 +75,6 @@ const $Set = reactive(Set, {
 
 // ::: $Enum
 
-const $Enum = reactive(Enum, {
-  reads  : ['value', 'is', 'toJSON', 'toString', 'valueOf'],
-  writes : {
-    cycle : enumeration => enumeration.values.length > 1,
-    value : (enumeration, value) => !enumeration.is(value),
-  },
-});
-
-
 
 // ::: $Color
 
@@ -108,11 +99,11 @@ const $Color = reactive(Color, {
 
 register(Array,  $List);
 register(Color,  $Color);
-register(Enum,   $Enum);
+
 register(List,   $List);
 register(Map,    $Map);
 register(Set,    $Set);
 
 // :::::: EXPORT
 
-export { $Color, $Enum, $List, $Map, $Set };
+export { $Color, $List, $Map, $Set };
