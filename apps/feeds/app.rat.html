@@ -6,9 +6,7 @@ import PopPrompt from '@aufbau/elements/webcomponents/pop-prompt.js';
 import { Config } from '/.shared/js/components/Config.js';
 
 // ::: app modules
-import * as db           from './modules/db.js';
-
-const { Image } = await zugriff.components('Image');
+//import * as db           from './modules/db.js';
 
 // ::: the app handle
 const app = zugriff.app;
@@ -16,32 +14,19 @@ app.db = db;
 
 // RAT.app.database
 const { app } = RAT;
+const { database: db } = app;
 
-// :::::: STATE
-// ephemeral ui state on app.state (no `.value`); the library itself is app.db (plain
-// signals).
-// the view on screen is #app's business (app-view, the hash).
 
-app.state.$extend({
-  busy   : { type: 'scalar', value: ''                },   // a label while a long task runs
-  feedId : { type: 'scalar', value: null, persist: true },   // the feed of the 'feed' view
-});
-
-const flash = (text, kind = 'ok') => kind === 'err' ? app.toast.error(text) : app.toast.success(text);
-
-// :::::: FRAME
-// #app is the <app-root>: the views in the main area, the feeds in the menu area,
-// the settings in the config area
+$busy   = ''; // a label while a long task runs
+$feedId = 0;
 
 const area = app.area;
 const menu = () => area('menu');
 
-// a drawer closes once something in it was picked, a sidebar stays
+// ::: actions
 const closeMenu = () => { if (menu()?.isOverlay) menu().hide(); };
-
-// the feed view shows app.state.feedId, persisted so a reload lands on the same feed
 const open = (name, id = null) => {
-  if (id) app.state.feedId = id;
+  if (id) $feedId = id;
   app.go(name);
   closeMenu();
 };
@@ -287,12 +272,6 @@ const listView = name => () => html`
   <main><${Body} name=${name} /></main>
 `;
 
-app.views = {
-  latest  : { route: '/',        view: listView('latest')  },
-  youtube : { route: '/youtube', view: listView('youtube') },
-  feed    : { route: '/feed',    view: listView('feed')    },
-};
-
 // :::::: APP
 
 const { Views } = await zugriff.components('Views');
@@ -323,7 +302,9 @@ function App () {
   `;
 }
 
-// :::::: BOOT
-
-app.init({ App });
 </script>
+
+
+<rat-view name='latest' route='/' />
+<rat-view name|route='feed'    />
+<rat-view name|route='youtube' />
