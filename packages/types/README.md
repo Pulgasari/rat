@@ -25,6 +25,8 @@
 
 ---
 
+# introduction
+
 three things, kept apart:
 
 | | what it is | examples |
