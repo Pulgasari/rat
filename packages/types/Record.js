@@ -94,4 +94,4 @@ const Record = typed(RecordType, recordOf);
 
 // :::::: EXPORT
 
-export { GET, Record, SET };
+export { Record, GET, SET };
