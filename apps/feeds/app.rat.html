@@ -36,6 +36,11 @@ const open = (name, id = null) => {
 const articleFeeds = computed(() => db.feeds.value.filter(f => f.kind !== 'youtube'));
 const youtubeFeeds = computed(() => db.feeds.value.filter(f => f.kind === 'youtube'));
 
+const $youtubeFeeds  = () => RAT.app.database.feeds.with({ kind: 'youtube' });
+
+$youtubeFeeds << RAT.app.database.feeds.with({ kind: 'youtube' });
+
+  
 // the list + heading of a view
 function viewOf (name) {
   if (name === 'youtube') return { title: 'YouTube', icon: 'youtube', kind: 'youtube', list: db.latestVideos.value };
@@ -266,45 +271,26 @@ function Header ({ name }) {
     </header>`;
 }
 
-// the three views are one list with its header, each over its own items
-const listView = name => () => html`
-  <${Header} name=${name} />
-  <main><${Body} name=${name} /></main>
-`;
-
-// :::::: APP
-
-const { Views } = await zugriff.components('Views');
-
-// the feeds are the way through: a sidebar from the start where there is room
-function App () {
-  useEffect(() => {
-    db.load().then(() => {
-      // refresh feeds that haven't been fetched in a while, quietly, on load
-      const stale = db.feeds.value.filter(f => Date.now() - (f.lastFetched || 0) > 10 * 60 * 1000);
-      if (stale.length) db.refreshAll().catch(() => {});
-    }).catch(err => flash('Could not open the library: ' + err.message, 'err'));
-  }, []);
-
-  useEffect(() => {
-    if (!db.ready.value) return;
-    Promise.all(['app-root', 'app-area'].map(tag => customElements.whenDefined(tag))).then(() => {
-      if (!menu()?.isOverlay) menu()?.show();
-    });
-  }, [db.ready.value]);
-
-  if (!db.ready.value) return html`<div class="booting"><svg-icon icon="svg-spinners:bars-scale-middle" /></div>`;
-
-  return html`
-    <app-area name='main'><${Views} /></app-area>
-    <app-area name='menu' dock='start'><${Sidebar} /></app-area>
-    <app-area name='config' dock='end'><${Config} /></app-area>
-  `;
-}
-
 </script>
 
+@if (app.database.ready)
+  <app-area name='main'>
+    <rat-view name='latest' route='/' />
+    <rat-view name|route='feed'    />
+    <rat-view name|route='youtube' />
+  </app-area>
+  
+  <app-area name='menu' dock='start'>
+    <Sidebar/>
+  </app-area>
+  
+  <app-area name='config' dock='end'>
+    <Config/>
+  </app-area>
 
-<rat-view name='latest' route='/' />
-<rat-view name|route='feed'    />
-<rat-view name|route='youtube' />
+@else
+  <div class="booting">
+    <svg-icon icon="svg-spinners:bars-scale-middle" />
+  </div>
+
+
