@@ -8,3 +8,9 @@ open choices are linked to [ideas/](ideas/README.md).
 - [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
 
+## inside `.rat` files:
+
+**directives:**
+[@if]()
+[@for]()
+[@fragment]()
