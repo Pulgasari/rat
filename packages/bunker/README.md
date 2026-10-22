@@ -47,12 +47,16 @@ db.table('podcasts');                             // the same as db.podcasts
 ## as(Type), $items
 
 ```js
-await table.as(Array);   await table.as(Object);   await table.as(Map);
-await table.as('keys');  await table.as('values');  await table.as('entries');
-await table.as(List);                  // a List of the values, a snapshot
+await table.as(Array);
+await table.as(Object);
+await table.as(Map);
+await table.as('keys');
+await table.as('values');
+await table.as('entries');
+await table.as(List); // a List of the values, a snapshot
 
-table.as($List);                       // a $List that follows the table: every change reads it anew
-table.$items;                          // the same, one per table, for markup:
+table.as($List); // a $List that follows the table: every change reads it anew
+table.$items;    // the same, one per table, for markup:
 
 // @for (podcast of RAT.app.database.podcasts.$items) …
 ```
