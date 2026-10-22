@@ -18,7 +18,12 @@ hue, so h read back after s = 0 is 0. named css colors are not read (yet).
 $Color, its reactive variant, is in reactive.js.
 */
 
+// :::::: IMPORT
+
+import { reactive, register } from '@rat/signals';
 import { Schema, isObject, typed } from './schema.js';
+
+// :::::: HELPERS
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const turn  = hue => (hue % 360 + 360) % 360;
@@ -148,8 +153,29 @@ class ColorType {
 
 Object.defineProperty(ColorType, 'name', { value: 'Color' });
 
+// ::: Color + $Color
+
+const differs = name => (color, value) => !Object.is(color[name], value);
+
 const Color = typed(ColorType, colorOf);
+
+const $Color = reactive(Color, {
+  reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
+  writes : {
+    a   : differs('a'),
+    b   : differs('b'),
+    g   : differs('g'),
+    h   : differs('h'),
+    hex : differs('hex'),
+    l   : differs('l'),
+    r   : differs('r'),
+    s   : differs('s'),
+    set : (color, input) => !color.equals(input),
+  },
+});
+
+register(Color,  $Color);
 
 // :::::: EXPORT
 
-export { Color };
+export { Color, $Color };
