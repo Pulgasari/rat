@@ -31,7 +31,7 @@ import { cast }     from './cast.js';
 import { codecOf }  from './codecs.js';
 import { driverOf } from './drivers.js';
 
-class BunkerStore {
+class Store {
   #codec;
   #driver;
   #listeners = new Set;
@@ -136,16 +136,9 @@ class BunkerStore {
   emit (change) { for (const fn of this.#listeners) fn(change); }
 }
 
-
-
 // :::::: EXPORT
 
-export default BunkerStore;
-
-// :::::: EXPORT 2
-
-const Store       = BunkerStore;
 const createStore = options => new Store (options);
 
 export { Store, createStore };
-
+export default Store;
