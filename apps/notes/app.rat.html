@@ -1,46 +1,51 @@
 <script>
-  // the frame of notes: the folder tree in a menu area at the start (a sidebar
-  // where there is room, a drawer where there is not), the views in the middle,
-  // the settings in a config area at the end, a dock below on narrow screens
 
-  import { autoloader } from '@aufbau/elements';
-  import { effect }     from '@rat/runtime';
+// :::::::::::: IMPORT
 
-  import { hint }        from '../.shared/install.js';
-  import { read, write } from '../.shared/storage.js';
-  import { toast }       from '../.shared/toast.js';
+import { autoloader } from '@aufbau/elements';
+import { effect }     from '@rat/runtime';
 
-  import { createFolders } from '../.shared/folders.js';
+// ::: modules
+import { createFolders } from '../.shared/folders.js';
+import { hint }          from '../.shared/install.js';
+import { read, write }   from '../.shared/storage.js';
+import { toast }         from '../.shared/toast.js';
+  
+// ::: components
+import Brand      from '../.shared/components/Brand.rat.html';
+import Dock       from '../.shared/components/Dock.rat.html';
+import Empty      from '../.shared/components/Empty.rat.html';
+import FolderTree from '../.shared/components/FolderTree.rat.html';
+import Loading    from '../.shared/components/Loading.rat.html';
+import Settings   from '../.shared/components/Settings.rat.html';
+import Header     from './Header.rat.html';
 
-  import Brand      from '../.shared/components/Brand.rat.html';
-  import Dock       from '../.shared/components/Dock.rat.html';
-  import Empty      from '../.shared/components/Empty.rat.html';
-  import FolderTree from '../.shared/components/FolderTree.rat.html';
-  import Loading    from '../.shared/components/Loading.rat.html';
-  import Settings   from '../.shared/components/Settings.rat.html';
-  import Header     from './Header.rat.html';
+// :::::::::::: CONFIG | INIT
 
-  autoloader();
+autoloader(); // @aufbau/elements
 
-  const app    = props.app;
-  const config = app.config;
-  const lib    = createFolders({ accept: config.folders.accept, id: 'notes', table: app.database.folders });
+const app    = props.app;
+const config = app.config;
+const lib    = createFolders({ accept: config.folders.accept, id: 'notes', table: app.database.folders });
 
-  // the splash stays until the folders are known
-  app.hold(lib.load());
-  hint(config.name);
+// the splash stays until the folders are known
+app.hold(lib.load());
+hint(config.name);
 
-  // the open note, { sourceId, path } | null. kept by hand until persistence is decided
-  const OPEN = 'notes:open';
-  const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
+// the open note, { sourceId, path } | null. kept by hand until persistence is decided
+const OPEN = 'notes:open';
+const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
 
+  // ::: signal
   let $filter   = '';
   let $open     = stored();
   let $text     = null;
   let $textSize = read('notes:textSize', 16);
 
+  // ::: effect
   effect(() => write('notes:textSize', $textSize));
 
+  // ::: computed
   const $note    = $open && lib.trees.value[$open.sourceId] ? lib.nodeAt($open.sourceId, $open.path) : null;
   const $sources = lib.sources.value;
   const $path    = $note ? $note.path : '';
