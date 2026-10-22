@@ -34,29 +34,17 @@ a behavior is a function `(element, value) => cleanup`. it runs again when the v
 
 **cost.** small in the runtime. the larger work is writing the behaviors.
 
-<a id="d-26"></a>
-## d-26 · behaviors: `@name` or `use:name`
-
-both are built, as you asked, until practice decides.
-
-- [ ] a) `@tooltip={…}` only
-- [ ] b) `use:tooltip={…}` only
-- [ ] c) both stay
-
 ## notes
 
-`use` kenn ich von svelte und mochte das sehr. aber wenn ich mich recht erinnere, war die konstruktion dieser behaviours teilweise unnötig kompliziert. (?)
+on "unnecessarily complicated": in svelte a behavior had to return `{ update, destroy }`. 
 
-hier hatte ich schon den gedanken `@` hierfür zu verwenden. so wäre "sonderlogik"/"logik außerhalb" wie auch "verknüpfung" markiert. bei `use` denkt man sich dasverhältnis eigtl eher anders(rum): als würde dem element was reingegeben.
+in rat the simplest behavior is a function that returns its cleanup, and it simply runs again when the value changes; 
 
-können wkr aber unter vorbehalt mal in beiden formen (also `use:` und `@`) umsetzen (was sich in der praxis besser anfühlt, wird sich dann herausstellen).
+`{ update, destroy }` is optional, for behaviors that can update in place.
 
-**reply:** built in both forms ([d-26](#d-26)). on "unnecessarily
-complicated": in svelte a behavior had to return `{ update, destroy }`. in rat the
-simplest behavior is a function that returns its cleanup, and it simply runs again when
-the value changes; `{ update, destroy }` is optional, for behaviors that can update in
-place. `@x:arg` passes the part after the colon as the third argument. the demo:
-`demos/examples/behaviors.rat` with `@pattern`, `use:filter` and `@flash:click`.
+`@x:arg` passes the part after the colon as the third argument. 
+
+the demo: `demos/examples/behaviors.rat` with `@pattern`, `use:filter` and `@flash:click`.
 
 `<div @gestures:swipeable on:swipeLeft={...} />` works as written, if a `gestures`
 behavior exists that dispatches `swipeleft` events: event names are lowercased.
