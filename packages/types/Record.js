@@ -105,6 +105,8 @@ const $Record = reactive(Record, {
   },
 });
 
+register(Record, $Record);
+
 // :::::: EXPORT
 
 export { Record, $Record };
