@@ -51,7 +51,7 @@ const fieldOf = (name, spec) => {
   throw new TypeError(`[bunker] field ${name}: a schema, or String, Number, Boolean, URL, Object, Array`);
 };
 
-class Table extends Store {
+class DatabaseTable extends Store {
   #key;
   #keySchema;
 
