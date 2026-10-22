@@ -32,11 +32,16 @@ is the result as it is. nothing matches and no fallback: undefined.
   choice.matches(test, value)    a single test, true or false
 */
 
-const TYPEOF = new Map([[BigInt, 'bigint'], [Boolean, 'boolean'], [Function, 'function'], [Number, 'number'], [String, 'string'], [Symbol, 'symbol']]);
-const NONE   = Symbol('none');
+const isArray    = Array.isArray;
+const isClass    = (sth) => /^[A-Z]/.test(sth.name) && typeof sth.prototype === 'object';
+const isFn       = (sth) => typeof sth === 'function';
+const isRegExp   = (sth) => sth instanceof RegExp;
+const isSchema   = (sth) => typeof sth?.['~standard']?.validate === 'function';
+const isString   = (sth) => typeof sth === 'string';
+const isThenable = (sth) => typeof sth?.then === 'function';
 
-const isClass  = fn => /^[A-Z]/.test(fn.name) && typeof fn.prototype === 'object';
-const isSchema = test => typeof test?.['~standard']?.validate === 'function';
+const NONE   = Symbol('none');
+const TYPEOF = new Map([[BigInt, 'bigint'], [Boolean, 'boolean'], [Function, 'function'], [Number, 'number'], [String, 'string'], [Symbol, 'symbol']]);
 
 // the value the test lets through (a schema's result), or NONE
 function check (test, value) {
@@ -45,10 +50,10 @@ function check (test, value) {
     if (typeof result?.then === 'function') throw new TypeError('[rat] choice: an async schema can not be a case');
     return result.issues ? NONE : result.value;
   }
-  if (TYPEOF.has(test))           return typeof value === TYPEOF.get(test) ? value : NONE;
-  if (typeof test === 'function') return (isClass(test) ? value instanceof test : test(value)) ? value : NONE;
-  if (test instanceof RegExp)     return typeof value === 'string' && test.test(value) ? value : NONE;
-  if (Array.isArray(test))        return Array.isArray(value) && value.length === test.length && test.every((item, index) => check(item, value[index]) !== NONE) ? value : NONE;
+  if (TYPEOF.has(test)) return typeof value === TYPEOF.get(test) ? value : NONE;
+  if       (isFn(test)) return (isClass(test) ? value instanceof test : test(value)) ? value : NONE;
+  if   (isRegExp(test)) return isString(value) && test.test(value) ? value : NONE;
+  if    (isArray(test)) return isArray(value) && value.length === test.length && test.every((item, index) => check(item, value[index]) !== NONE) ? value : NONE;
   if (test !== null && typeof test === 'object') {
     if (value === null || typeof value !== 'object') return NONE;
     return Object.keys(test).every(key => check(test[key], value[key]) !== NONE) ? value : NONE;
@@ -57,16 +62,16 @@ function check (test, value) {
 }
 
 function choice (...cases) {
-  const fallback = typeof cases.at(-1) === 'function' ? cases.pop() : null;
+  const fallback = isFn(cases.at(-1)) ? cases.pop() : null;
 
   for (const entry of cases) {
-    if (!Array.isArray(entry) || entry.length !== 2) throw new TypeError('[rat] choice: a case is [test, handler], only the fallback stands alone at the end');
+    if (!isArray(entry) || entry.length !== 2) throw new TypeError('[rat] choice: a case is [test, handler], only the fallback stands alone at the end');
   }
 
   return value => {
     for (const [test, handler] of cases) {
       const passed = check(test, value);
-      if (passed !== NONE) return typeof handler === 'function' ? handler(passed) : handler;
+      if (passed !== NONE) return isFn(handler) ? handler(passed) : handler;
     }
     return fallback ? fallback(value) : undefined;
   };
