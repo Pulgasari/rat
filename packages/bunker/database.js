@@ -30,7 +30,6 @@ the keys under `name:table`.
 */
 
 import { Bool, Id, Num, Record, Schema, Str } from '@rat/types';
-
 import { Store } from './store.js';
 
 const isUrl = value => { try { return Boolean(new URL(value)); } catch { return false; } };
@@ -95,15 +94,15 @@ class Table extends Store {
   async count () { return (await this.keys()).length; }
 }
 
-class Database {
+class BunkerDB {
   #tables = new Map;
 
   // schema: table -> its fields
   constructor ({ driver = 'indexeddb', name = 'bunker', schema = {}, ...options } = {}) {
     this.name = name;
     for (const [table, fields] of Object.entries(schema)) {
-      const store = driver === 'indexeddb' ? { driver, name, table } : { driver, name: `${name}:${table}` };
-      const instance = new Table({ ...options, ...store, fields, title: table });
+      const store    = driver === 'indexeddb' ? { driver, name, table } : { driver, name: `${name}:${table}` };
+      const instance = new BunkerDBTable ({ ...options, ...store, fields, title: table });
       this.#tables.set(table, instance);
       if (!(table in this)) Object.defineProperty(this, table, { enumerable: true, value: instance });
     }
@@ -118,8 +117,8 @@ class Database {
   }
 }
 
-const createDatabase = options => new Database(options);
+const createDatabase = options => new BunkerDB (options);
 
 // :::::: EXPORT
 
-export { Database, Table, createDatabase };
+export { BunkerDB, BunkerDBTable, createDatabase };
