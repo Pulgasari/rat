@@ -7,53 +7,22 @@
 - [Schemas](#)
 - [`choice`](#)
 
+## quicklinks
+
+### Data Types
 [Color](#color) ·
+[Dict](#dict) ·
 [Enum](#enum) ·
 [List](#list) ·
 [Point](#point) ·
 [Tree](#tree) ·
 [Union](#union)
 
-#### choice
-
-rat's switch: pairs of a test and what to do, tried from the top, the first match wins. a
-function alone at the end is the fallback. it grew out of the drafts `@pulgasari/shift`
-(named predicates) and `@pulgasari/typeshift` (patterns as strings), see
-`pulgasari.github.io/md/analyze/shift-typeshift.md`.
-
-```js
-import { choice, Num, Str } from '@rat/types';
-
-const toElements = choice(
-  [null,       ()     => [document.documentElement]],
-  [Str,        target => [...document.querySelectorAll(target)]],
-  [Element,    target => [target]],
-  [isIterable, target => [...target].filter(isElement)],
-  ()          => [],
-);
-```
-
-| test | matches |
-|---|---|
-| a schema (`Num.range(0, 255)`, `Enum(…)`, `Record({…})`, any standard schema) | what it validates. the handler gets the value as the schema made it: `Num` turns `'120'` into `120` |
-| `String`, `Number`, `Boolean`, `BigInt`, `Symbol`, `Function` | by `typeof`, nothing coerced |
-| a class (`Element`, `Date`, `Map` …) | by `instanceof`: a function whose name starts with a capital |
-| a predicate (`isIterable`, `value => value > 3`) | what it says |
-| a `RegExp` | a string it matches |
-| an object `{ type: 'user', name: String }` | every key against its own test, more keys allowed |
-| an array `[Number, Number]` | a tuple: as many items, each against its test |
-| anything else (`null`, `'grid'`, `3`) | the literal, `Object.is` |
-
-a handler that is no function is the result as it is (`[null, 'nothing']`). nothing matches and
-no fallback: `undefined`. a single test: `choice.matches(test, value)`.
-
-pairs instead of object keys: the order is what is written (keys that look like numbers would
-jump ahead), and a test can be anything, not only a name.
-
-## reactive variants
+### Data Types (reactive)
 [$Array](#) ·
 [$Bool](#) ·
 [$Color](#) ·
+[$Dict](#) ·
 [$Enum](#) ·
 [$Map](#) ·
 [$List](#list) ·
@@ -287,24 +256,42 @@ sketch below (unique values, optionally sorted) as options on `List`.
 
 ---
 
-[Color](#color)
-[Choice](#choice)
-[Dict](#dict)
-[List](#list)
-[Point](#point)
-[Tree](#tree)
 
-#### reactive variants
-[$Array](#)
-[$Bool](#)
-[$Choice](#)
-[$Color](#)
-[$Dict](#)
-[$Map](#)
-[$List](#list)
-[$Point](#point)
-[$Set](#)
-[$Tree](#)
+# choice
+
+rat's switch: pairs of a test and what to do, tried from the top, the first match wins. a
+function alone at the end is the fallback. it grew out of the drafts `@pulgasari/shift`
+(named predicates) and `@pulgasari/typeshift` (patterns as strings), see
+`pulgasari.github.io/md/analyze/shift-typeshift.md`.
+
+```js
+import { choice, Num, Str } from '@rat/types';
+
+const toElements = choice(
+  [null,       ()     => [document.documentElement]],
+  [Str,        target => [...document.querySelectorAll(target)]],
+  [Element,    target => [target]],
+  [isIterable, target => [...target].filter(isElement)],
+  ()          => [],
+);
+```
+
+| test | matches |
+|---|---|
+| a schema (`Num.range(0, 255)`, `Enum(…)`, `Record({…})`, any standard schema) | what it validates. the handler gets the value as the schema made it: `Num` turns `'120'` into `120` |
+| `String`, `Number`, `Boolean`, `BigInt`, `Symbol`, `Function` | by `typeof`, nothing coerced |
+| a class (`Element`, `Date`, `Map` …) | by `instanceof`: a function whose name starts with a capital |
+| a predicate (`isIterable`, `value => value > 3`) | what it says |
+| a `RegExp` | a string it matches |
+| an object `{ type: 'user', name: String }` | every key against its own test, more keys allowed |
+| an array `[Number, Number]` | a tuple: as many items, each against its test |
+| anything else (`null`, `'grid'`, `3`) | the literal, `Object.is` |
+
+a handler that is no function is the result as it is (`[null, 'nothing']`). nothing matches and
+no fallback: `undefined`. a single test: `choice.matches(test, value)`.
+
+pairs instead of object keys: the order is what is written (keys that look like numbers would
+jump ahead), and a test can be anything, not only a name.
 
 ---
 
