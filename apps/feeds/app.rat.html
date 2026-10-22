@@ -1,21 +1,16 @@
 <script>
-// ::: vendors
-import { computed }         from '@aufbau/signals';
-import { useEffect }        from '/.shared/js/vendors.js';
-import PopPrompt from '@aufbau/elements/webcomponents/pop-prompt.js';
-import { Config } from '/.shared/js/components/Config.js';
+// :::::::::::: IMPORT
 
-// ::: app modules
-//import * as db           from './modules/db.js';
-
-// ::: the app handle
-const app = zugriff.app;
-app.db = db;
+// :::::::::::: CONFIG | INIT
 
 // RAT.app.database
 const { app } = RAT;
 const { database: db } = app;
 
+const app = RAT.app;
+const db  = RAT.app.database;
+
+// :::::::::::: STATE
 
 $busy   = ''; // a label while a long task runs
 $feedId = 0;
@@ -31,6 +26,10 @@ const open = (name, id = null) => {
   closeMenu();
 };
 
+// ::: actions
+const closeMenu = () => RAT.exec('close[#sidebar]');
+const openFeed  = id => { $feedId = id; RAT.app.go('feed', id); closeMenu(); };
+  
 // :::::: DERIVED
 
 const articleFeeds = computed(() => db.feeds.value.filter(f => f.kind !== 'youtube'));
