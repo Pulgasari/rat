@@ -227,23 +227,7 @@ function Body ({ name }) {
 
 // the menu button shows where the menu is a drawer
 function Header ({ name }) {
-  const v = viewOf(name);
-  return html`
-    <header class="topbar">
-      <button class="ibtn nav-toggle" aria-label="Menu" onClick=${() => menu()?.toggle()}>
-        <svg-icon icon="menu" /></button>
-      <svg-icon icon=${v.icon} class="topbar-ic" />
-      <h1 class="topbar-title" title=${v.title}>${v.title}</h1>
-      ${v.feed?.link && html`<a class="ibtn" href=${v.feed.link} target="_blank" rel="noopener noreferrer" title="Open site">
-        <svg-icon icon="mdi:open-in-new" /></a>`}
-      <span class="topbar-spacer"></span>
-      ${app.state.$busy && html`<span class="topbar-busy"><svg-icon icon="loading" /> ${app.state.$busy}</span>`}
-      ${v.list.length > 0 && html`
-        <button class="ibtn" title="Mark all read" onClick=${() => markAllRead(name)}>
-          <svg-icon icon="mdi:check-all" /></button>`}
-      <button class="ibtn" title="Refresh" onClick=${() => refreshView(name)} disabled=${!!app.state.$busy}>
-        <svg-icon icon="refresh" /></button>
-    </header>`;
+  
 }
 
 </script>
@@ -276,7 +260,7 @@ function Header ({ name }) {
   const spin   = db.refreshing.value[f.id];
   
 <div.feed-item class:active={active}>
-      <button class="feed-open" onClick=${() => open('feed', f.id)} title=${f.title}>
+      <button class="feed-open" onClick=${;) => open('feed', f.id)} title=${f.title}>
         <span class="feed-ic">
           ${spin ? html`<svg-icon icon="loading" />`
                  : f.image ? html`<img src=${f.image} alt="" loading="lazy" onError=${e => e.target.style.display = 'none'} />`
@@ -289,3 +273,23 @@ function Header ({ name }) {
   <btn-icon icon='close' title='unfollow' onClick={() => removeFeed(f)}>
 </div.feed-item>
 
+@fragment Header :
+const v = viewOf(name);
+<header class="topbar">
+      <btn-icon icon='menu' class="ibtn nav-toggle" aria-label="Menu" onClick=${() => menu()?.toggle()} />
+      
+      <svg-icon icon=${v.icon} class="topbar-ic" />
+      <h1 title=${v.title}>${v.title}</h1>
+      ${v.feed?.link && html`<a class="ibtn" href=${v.feed.link} target="_blank" rel="noopener noreferrer" title="Open site">
+        <svg-icon icon="mdi:open-in-new" /></a>`}
+      
+<span class="topbar-spacer"></span>
+      
+@if ($busy): <span class="topbar-busy"><svg-icon icon="loading" /> {$busy}</span>
+
+@if (v.list.length > 0):
+<btn-icon icon='mdi:check-all' title="Mark all read" onClick={() => markAllRead(name)}>
+
+<btn-icon icon|title='refresh' onClick={() => refres(&&&&hView(name)} disabled={!!$busy} />
+      
+</header>
