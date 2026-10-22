@@ -1,0 +1,20 @@
+import { reactive, register } from '@rat/signals';
+
+// ::: $Map
+
+const $Map = reactive(Map, {
+  reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', Symbol.iterator],
+  writes : {
+    clear  : map => map.size > 0,
+    delete : (map, key) => map.has(key),
+    set    : (map, key, value) => !map.has(key) || !Object.is(map.get(key), value),
+  },
+});
+
+// ::: registry
+
+register(Map, $Map);
+
+// :::::: EXPORT
+
+export { $Map };
