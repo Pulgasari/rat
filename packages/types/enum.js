@@ -15,6 +15,7 @@ Enum is a data type and, called, its schema:
 $Enum, its reactive variant, is in reactive.js.
 */
 
+import { reactive, register } from '@rat/signals';
 import { Schema, typed } from './schema.js';
 
 // ::: the schema
@@ -62,8 +63,20 @@ class EnumType {
 
 Object.defineProperty(EnumType, 'name', { value: 'Enum' });
 
+// ::: Enum + $Enum
+
 const Enum = typed(EnumType, enumOf);
+
+const $Enum = reactive(Enum, {
+  reads  : ['value', 'is', 'toJSON', 'toString', 'valueOf'],
+  writes : {
+    cycle : enumeration => enumeration.values.length > 1,
+    value : (enumeration, value) => !enumeration.is(value),
+  },
+});
+
+register(Enum, $Enum);
 
 // :::::: EXPORT
 
-export { Enum };
+export { Enum, $Enum };
