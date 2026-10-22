@@ -30,7 +30,7 @@ import { reactive, register } from '@rat/signals';
 import { Color }            from './color.js';
 import { Enum }             from './enum.js';
 import { List }             from './list.js';
-import { GET, Record, SET } from './record.js';
+//import { GET, Record, SET } from './record.js';
 
 // ::: $List
 
@@ -83,16 +83,7 @@ const $Enum = reactive(Enum, {
   },
 });
 
-// ::: $Record
 
-// one version for the whole record: a field write updates whatever read any field
-const $Record = reactive(Record, {
-  reads  : [GET, 'toJSON'],
-  writes : {
-    [SET]  : (record, key, value) => !Object.is(record[GET](key), value),
-    assign : true,
-  },
-});
 
 // ::: $Color
 
@@ -125,4 +116,4 @@ register(Set,    $Set);
 
 // :::::: EXPORT
 
-export { $Color, $Enum, $List, $Map, $Record, $Set };
+export { $Color, $Enum, $List, $Map, $Set };
