@@ -1,13 +1,6 @@
 # @rat/types
 
 ## overview
-- [Types](#)
-  - [Basic](#)
-  - [Additional](#)
-- [Schemas](#)
-- [`choice`](#)
-
-## quicklinks
 
 ### Data Types
 [Color](#color) ·
