@@ -14,9 +14,10 @@ Record is a data type and, called, its schema:
   settings.size = 3;         // TypeError: no such field, a record is sealed
   settings.assign({ view: 'list', zoom: 80 });
 
-fields are accessors on the instance, the values sit behind GET / SET, so a
-field may be called anything but assign, schema and toJSON. $Record, its reactive
-variant, is in reactive.js.
+fields are accessors on the instance, the values sit behind GET / SET, 
+so a field may be called anything but assign, schema and toJSON. 
+
+$Record, its reactive variant, is in reactive.js.
 */
 
 import { Schema, isObject, typed } from './schema.js';
