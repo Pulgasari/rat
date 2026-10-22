@@ -1,9 +1,11 @@
 // @rat/types :: reactive variants
 
 /*
-the reactive variants, made with reactive() from @rat/signals: $List, $Map,
-$Set, $Enum, $Record, $Color. they look like the originals, only their reads subscribe and their
-writes notify. in plain js they are used directly:
+the reactive variants, made with reactive() from @rat/signals: 
+$List, $Map, $Set, $Enum, $Record, $Color. 
+
+they look like the originals, only their reads subscribe and their writes notify.
+in plain js they are used directly:
 
   const $seen = new $Map;
   $seen.set(id, true);      // whatever read $seen updates
@@ -16,10 +18,10 @@ they are registered too, so $() and every `let $x = …` in a .rat script pick t
   let $seen  = new Map;     // a signal holding a $Map
   $seen.set(id, true);
 
-  const $view = new $Enum('grid', 'list', 'masonry');
+  const $view = new $Enum ('grid', 'list', 'masonry');
   $view.cycle();            // whatever read $view.value updates
 
-  const $accent = new $Color('#ff8800');
+  const $accent = new $Color ('#ff8800');
   $accent.l = 70;           // whatever read $accent.hex, .r … updates
 */
 
