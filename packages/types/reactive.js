@@ -27,11 +27,6 @@ they are registered too, so $() and every `let $x = …` in a .rat script pick t
 
 import { reactive, register } from '@rat/signals';
 
-//import { Color }            from './color.js';
-//import { Enum }             from './enum.js';
-//import { List }             from './list.js';
-//import { GET, Record, SET } from './record.js';
-
 // ::: Map, Set
 
 const $Map = reactive(Map, {
@@ -51,10 +46,6 @@ const $Set = reactive(Set, {
     delete : (set, value) => set.has(value),
   },
 });
-
-// ::: $Enum
-
-
 
 // ::: registry
 
