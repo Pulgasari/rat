@@ -111,7 +111,6 @@ register(Color,  $Color);
 register(Enum,   $Enum);
 register(List,   $List);
 register(Map,    $Map);
-register(Record, $Record);
 register(Set,    $Set);
 
 // :::::: EXPORT
