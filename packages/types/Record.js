@@ -20,6 +20,7 @@ so a field may be called anything but assign, schema and toJSON.
 $Record, its reactive variant, is in reactive.js.
 */
 
+import { reactive } from '@rat/signals';
 import { Schema, isObject, typed } from './schema.js';
 
 const GET = Symbol('rat.record.get');
@@ -92,6 +93,18 @@ Object.defineProperty(RecordType, 'name', { value: 'Record' });
 
 const Record = typed(RecordType, recordOf);
 
+// ::: $Record
+// one version for the whole record:
+// a field write updates whatever read any field
+
+const $Record = reactive(Record, {
+  reads  : [GET, 'toJSON'],
+  writes : {
+    [SET]  : (record, key, value) => !Object.is(record[GET](key), value),
+    assign : true,
+  },
+});
+
 // :::::: EXPORT
 
-export { Record, GET, SET };
+export { Record, $Record };
