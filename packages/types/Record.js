@@ -20,7 +20,7 @@ so a field may be called anything but assign, schema and toJSON.
 $Record, its reactive variant, is in reactive.js.
 */
 
-import { reactive } from '@rat/signals';
+import { reactive, register } from '@rat/signals';
 import { Schema, isObject, typed } from './schema.js';
 
 const GET = Symbol('rat.record.get');
