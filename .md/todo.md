@@ -10,7 +10,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [x] error boundary: fehler in command-handlern (`@rat/commands`) kommen an, als `rat:error` vom auslösenden element
 - [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
 - [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
-- [x] umschalten per `name`, beide formen gebaut, in der praxis vergleichen: `onclick='rat:toggle[menu]'` (ein command-name mit `:` ist ein eigenes event) und `rat.toggle('menu')` (`import { rat } from '@rat/app'`)
+- [x] umschalten per `name`, beide formen gebaut, in der praxis vergleichen: `onclick='rat:toggle[menu]'` (ein command-name mit `:` ist ein eigenes event) und `RAT.toggle('menu')` (globales `RAT`)
 - [ ] `<rat-overlay>` ebenso per `name` umschalten
 - [x] hotkeys an `app.commands` (`@rat/hotkeys`): mod `hotkeys`
 - [x] auto-import per config: `autoImport: true` (verzeichnis der config), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`

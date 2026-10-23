@@ -3,6 +3,7 @@
 export * from '@rat/signals';
 export { NONE, any, either, is, match, part, pass, pattern, rest } from '@rat/types';
 
+export * from './common/rat.js';
 export * from './common/range.js';
 
 export * from './browser/cases.js';

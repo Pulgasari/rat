@@ -140,7 +140,6 @@ behind it. one load per key at a time. the store holds `{ at, value }`.
 
 ```js
 export default {
-  RAT     : true,
   mods    : {
     database : { schema: { favs: { name: Id } } },   // RAT.app.database
     files    : true,                                  // RAT.app.files, opfs

@@ -5,7 +5,6 @@ the parts rat provides that not every app needs. config.rat.js names the mods
 it wants, each lands on the app (RAT.app.<name>):
 
   export default {
-    RAT  : true,                          // globalThis.RAT; a string names it otherwise ('APP')
     mods : {
       database : { driver: 'indexeddb', schema: { podcasts: { id: Id, title: String } } },
       files    : true,                    // the origin private file system
