@@ -1,4 +1,4 @@
-// @rat/router
+// @rat/app :: router
 
 import type { ReadSignal } from '@rat/signals';
 

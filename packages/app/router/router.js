@@ -1,4 +1,4 @@
-// @rat/router :: router
+// @rat/app :: router :: router
 
 /*
   const router = createRouter({ mode: 'hash' }).start();

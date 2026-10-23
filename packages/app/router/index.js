@@ -1,4 +1,4 @@
-// @rat/router
+// @rat/app :: router
 
 export * from './modes.js';
 export * from './pattern.js';

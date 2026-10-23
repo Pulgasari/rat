@@ -18,7 +18,7 @@ src loads a .rat file and mounts its component (props.app is the element) in
 place of what the app holds, its views and areas then come from there. with a
 src the app is [loading] by itself until they are mounted.
 
-  app.router     @rat/router, routing = hash | path | query | memory | none, base for path
+  app.router     ../router, routing = hash | path | query | memory | none, base for path
   app.commands   @rat/commands, listening on the app: onclick='go[settings]', back
   app.view       the deepest active view, app.views every view below the app
   app.area(name) a <rat-area>, app.areas all of them
@@ -57,7 +57,7 @@ import { gestalt }        from '@gestalt/core';
 import { createCommands } from '@rat/commands';
 import { Enum }           from '@rat/types';
 
-import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
+import { createRouter, fill, join, matchRoute, segmentsOf } from '../router/index.js';
 
 import { RAT, mount } from '@rat/runtime';
 
