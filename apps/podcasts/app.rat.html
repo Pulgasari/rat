@@ -5,8 +5,6 @@
 
 import { createThumbCache } from '/.shared/js/thumbs.js';
 
-// ::: components: through autoImport (config.rat.js), ./components/ and ../.shared/components/
-
 // ::: modules
 import library   from './library.js';
 import player    from './player.js';
@@ -22,20 +20,16 @@ import { state } from './state.js';
 
 const { app } = RAT;
 
-app.player   = player;
-app.settings.assign ({
-    menuPosition : { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' },
-  playerPosition : { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' },
-});
-  
-$data['menu-position']   : { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' };
-$data['player-position') : { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' };
+app.player = player;
 
 // :::: STATE
 
 $busy     = RAT.Str (''),
 $search   = RAT.Str (''),
 $progress = RAT.Record ({}),
+
+this.data['menu-position']   = { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' };
+this.data['player-position'] = { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' };
 
 // the db is the library; only the schema and the progress table are read up front.
 // a storage failure must not blank the app — it mounts either way, just empty.
@@ -61,34 +55,20 @@ async function refreshAll () {
   finally { $busy = ''; }
 }
 
-RAT.app.commands.assign ({
-  'close-dialog'  : () => $dialog = null,tttt
-  'refresh-all'   : refreshAll,
-  'add-podcast'   : () => RAT.app.state.dialog = 'add',
-  'open-settings' : () => area('config')?.show(),
-  'toggle-play'   : () => !!RAT.app.player.episode && RAT.app.player.toggle(),
-  'skip-back'     : () => RAT.app.player.skip(-15),
-  'skip-forward'  : () => RAT.app.player.skip(30),
-});
-
-/*
-cmd 'close-dialog'  = () => $dialog = null;
-cmd 'refresh-all'   = refreshAll;
-cmd 'add-podcast'   = () => RAT.app.state.dialog = 'add';
-cmd 'open-settings' = () => area('config')?.show();
-cmd 'toggle-play'   = () => !!player.episode && player.toggle();
-cmd 'skip-back'     = () => player.skip(-15);
-cmd 'skip-forward'  = () => player.skip(30);
-*/
+RAT.app.commands['close-dialog']  = () => $dialog = null;
+RAT.app.commands['refresh-all']   = refreshAll;
+RAT.app.commands['add-podcast']   = () => RAT.app.state.dialog = 'add';
+RAT.app.commands['open-settings'] = () => area('config')?.show();
+RAT.app.commands['toggle-play']   = () => !!RAT.app.player.episode && RAT.app.player.toggle();
+RAT.app.commands['skip-back']     = () => RAT.app.player.skip(-15);
+RAT.app.commands['skip-forward']  = () => RAT.app.player.skip(30);
 
 // :::::: HOTKEYS
 
-RAT.app.hotkeys.assign ({
-  'escape'      : RAT.Command ('close-dialog'),
-  'space'       : RAT.Command ('toggle-play'),
-  'arrow-left'  : RAT.Command ('skip-back'),
-  'arrow-right' : RAT.Command ('skip-forward'),
-});
+RAT.app.hotkeys['escape']      = RAT.Command ('close-dialog');
+RAT.app.hotkeys['space']       = RAT.Command ('toggle-play');
+RAT.app.hotkeys['arrow-left']  = RAT.Command ('skip-back');
+RAT.app.hotkeys['arrow-right'] = RAT.Command ('skip-forward');
 
 // :::::: EFFECTS
 
@@ -102,18 +82,9 @@ $my.effect(() => {
 
 // :::::: FRAME ::::::::::::::::::::::::::::::::::::::::::::::
 
-const area = app.area;
-
-// the lists have a route, the details do not: they render once app.go() opened them,
-// and a reload lands on the first list. explore-podcast is opened with a feed url
-// rather than an id, a podcast that is not subscribed has no record to point at
 app.views = {
-  latest            : { route: '/',         view: 'LatestView' },
   episode           : 'EpisodeDetailView',
-  podcasts          : { route: '/podcasts', view: 'PodcastsView' },
   podcast           : 'PodcastDetailView',
-  saved             : { route: '/saved',    view: 'SavedView' },
-  explore           : { route: '/explore',  view: 'ExploreView' },
   'explore-podcast' : 'ExplorePodcastView',
 };
 
