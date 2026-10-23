@@ -14,7 +14,7 @@ two languages, one grammar, two entry states:
 
 | id | files | root state | semantics |
 |---|---|---|---|
-| `rat` | `.rat` | `markup` | markup first: tags, `{…}` holes, `@if`/`@for`/`@switch`, `<script>`, `<style>` |
+| `rat` | `.rat` | `markup` | markup first: tags, `{…}` holes, `@if`/`@for`/`@match`, `<script>`, `<style>` |
 | `ratjs` | `.rat.js` | `script` | script first: js + sugar (`$signals`, `\|>`), ``html`…` `` is markup again |
 
 everything inside a hole is `script`, everything inside ``html`…` `` is `markup`, so both
@@ -160,7 +160,7 @@ lessons that cost a broken parse each, both caught by `build.js check`:
 
 - tree-sitter's lexer takes the **longest valid token**. wherever a rule may end, the
   tokens that may follow are valid too, and `text` is long. so every block head must be
-  complete before it can end: `( … )` after `@if` / `@for` / `@switch`, one value after
+  complete before it can end: `( … )` after `@if` / `@for` / `@match`, one value after
   `@case`. otherwise `@if (a) {` lexes `(a) ` as text.
 - `:` never starts text, so `@if (…): …` reads the `:` as the end of the head (a string
   literal beats a regex of the same length).

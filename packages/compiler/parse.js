@@ -11,7 +11,7 @@ finds the closing token). the script pass parses and rewrites it later.
   Expression { code, start, end }
   If         { branches: [{ test, children }], fallback }
   For        { item, index, list, children, fallback }
-  Switch     { subject, cases: [{ test, children }], fallback }
+  Match      { subject, cases: [{ test, children }], fallback }
   FragmentDef { name, params, children }    @fragment name (params), top level only
 
 every node has start and end, offsets in the file. an expression is
@@ -29,7 +29,7 @@ import { CompileError, scanCase, scanClose, tt } from './util.js';
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 
-const BLOCK_START  = /@(if|for|switch|fragment)\b/y;
+const BLOCK_START  = /@(if|for|match|fragment)\b/y;
 const CONTINUATION = /@(else|case|default)(?![\w$])/y;
 const INLINE_SPACE = /[ \t]*/y;
 const NAME        = /[^\s=/>"'{]+/y;
@@ -242,7 +242,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
 
   // ::: blocks
 
-  const BLOCKS = { fragment: fragmentBlock, for: forBlock, if: ifBlock, switch: switchBlock };
+  const BLOCKS = { fragment: fragmentBlock, for: forBlock, if: ifBlock, match: matchBlock };
 
   // context.block: inside a block body, where a @fragment would close over the block
   function block (context) {
@@ -346,8 +346,8 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     return { index, item: binding, list: { code: list, end: start + listOffset + list.length, start: start + listOffset } };
   }
 
-  // @switch (…) { @case … }, or without braces: the @case lines indented below it
-  function switchBlock (context, base) {
+  // @match (…) { @case … }, or without braces: the @case lines indented below it
+  function matchBlock (context, base) {
     const subject = condition();
     const cases   = [];
     let fallback  = null;
@@ -355,7 +355,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     sticky(INLINE_SPACE);
     const braced = peek('{');
     if (braced) i++;
-    else if (!atLineEnd()) throw fail('expected "{" or a line break after @switch (…)');
+    else if (!atLineEnd()) throw fail('expected "{" or a line break after @match (…)');
 
     while (true) {
       const start = i;
@@ -375,10 +375,10 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
       }
       if (continues('@default')) { fallback = body(context, indentAt(at)); continue; }
       if (!braced) { i = start; break; }
-      throw fail('expected @case, @default or "}" in @switch');
+      throw fail('expected @case, @default or "}" in @match');
     }
 
-    return { type: 'Switch', cases, fallback, subject };
+    return { type: 'Match', cases, fallback, subject };
   }
 
   // ::: elements
@@ -472,7 +472,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
       }
 
       // @name is a behavior now. control flow is a block around the element
-      if (name === '@if' || name === '@for' || name === '@switch') { report(`${name} is a block, not an attribute: write it around the element`, at); continue; }
+      if (name === '@if' || name === '@for' || name === '@match') { report(`${name} is a block, not an attribute: write it around the element`, at); continue; }
 
       // a | inside [ … ] is part of a key filter (on:keydown[ctrl+c|space+a]), not a prop group
       const names = name.split(/\|(?![^[]*\])/);
@@ -578,8 +578,8 @@ function normalize (children, pre = false) {
 
     if (node.type === 'Element') node.children = normalize(node.children, pre || node.tag === 'pre');
     if (node.type === 'If')      { for (const branch of node.branches) branch.children = normalize(branch.children, pre); }
-    if (node.type === 'Switch')  { for (const branch of node.cases)    branch.children = normalize(branch.children, pre); }
-    if (node.type === 'For' || node.type === 'If' || node.type === 'Switch' || node.type === 'FragmentDef') {
+    if (node.type === 'Match')  { for (const branch of node.cases)    branch.children = normalize(branch.children, pre); }
+    if (node.type === 'For' || node.type === 'If' || node.type === 'Match' || node.type === 'FragmentDef') {
       if (node.children) node.children = normalize(node.children, pre);
       if (node.fallback) node.fallback = normalize(node.fallback, pre);
     }

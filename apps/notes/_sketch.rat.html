@@ -80,7 +80,7 @@ function Start () {
 
   <rat-view route="/notes/:id" name|src='note'>
     <Header segments=${note.node.path.split('/')} />
-    @switch ($text)
+    @match ($text)
       @case (null)
         <div class='booting'><svg-icon icon='loading' /></div>`
       @default

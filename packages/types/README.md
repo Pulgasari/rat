@@ -250,47 +250,51 @@ sketch below (unique values, optionally sorted) as options on `List`.
 ---
 
 
-# choice
+# match
 
-rat's switch: pairs of a test and what to do, tried from the top, the first match wins. a
-function alone at the end is the fallback. it grew out of the drafts `@pulgasari/shift`
-(named predicates) and `@pulgasari/typeshift` (patterns as strings), see
-`pulgasari.github.io/md/analyze/shift-typeshift.md`.
+rat's switch, and the one place where a value is tested: `match`, `is`, `@match` and named
+cases in rat files compile to it, plain js calls it. it grew out of the drafts
+`@pulgasari/shift` and `@pulgasari/typeshift`, see `pulgasari.github.io/md/analyze/shift-typeshift.md`.
 
 ```js
-import { choice, Num, Str } from '@rat/types';
+import { match, part } from '@rat/types';
 
-const toElements = choice(
-  [null,       ()     => [document.documentElement]],
-  [Str,        target => [...document.querySelectorAll(target)]],
-  [Element,    target => [target]],
-  [isIterable, target => [...target].filter(isElement)],
-  ()          => [],
-);
+const toElements = target => match(target, [
+  [null,       ()               => [document.documentElement]],
+  [String,     selector         => [...document.querySelectorAll(selector)]],
+  [Element,    element          => [element]],
+  [{ items: part('items') }, (_, { items }) => items],
+], () => []);
 ```
+
+arms are `[test, result]`, tried from the top. a function as result gets the value the test let
+through and the parts it bound, anything else is the result as it is. nothing matches:
+`otherwise`, called with the value when it is a function.
 
 | test | matches |
 |---|---|
-| a schema (`Num.range(0, 255)`, `Enum(…)`, `Record({…})`, any standard schema) | what it validates. the handler gets the value as the schema made it: `Num` turns `'120'` into `120` |
-| `String`, `Number`, `Boolean`, `BigInt`, `Symbol`, `Function` | by `typeof`, nothing coerced |
+| a schema (`Num.range(0, 255)`, `Enum(…)`, `Record({…})`, any standard schema) | what it validates. the value is what the schema made: `Num` turns `'120'` into `120` |
+| `String`, `Number`, `Boolean`, `BigInt`, `Symbol`, `Function`, `Object` | by `typeof` (`Object`: not `null`), nothing coerced |
 | a class (`Element`, `Date`, `Map` …) | by `instanceof`: a function whose name starts with a capital |
 | a predicate (`isIterable`, `value => value > 3`) | what it says |
 | a `RegExp` | a string it matches |
-| an object `{ type: 'user', name: String }` | every key against its own test, more keys allowed |
-| an array `[Number, Number]` | a tuple: as many items, each against its test |
+| an object `{ type: 'user', name: String }` | every key against its own test, more keys allowed, not `null` |
+| an array `[Number, Number]` | a tuple: as many items, each against its test. `rest()` at the end: at least as many |
+| `any` | anything |
+| `part('name')`, `part('name', test)` | anything (or what `test` lets through), handed out as a part |
+| `either(a, b, …)` | the first of them that matches |
+| `pattern(test, guard)` | a named case: `test`, then `guard(value, parts)` |
 | anything else (`null`, `'grid'`, `3`) | the literal, `Object.is` |
 
-a handler that is no function is the result as it is (`[null, 'nothing']`). nothing matches and
-no fallback: `undefined`. a single test: `choice.matches(test, value)`.
-
-pairs instead of object keys: the order is what is written (keys that look like numbers would
-jump ahead), and a test can be anything, not only a name.
+| | |
+|---|---|
+| `is(value, test)` | true or false |
+| `pass(value, test)` | the value the test lets through, or `NONE` |
+| `which(value, tests)` | `{ index, parts }` of the first test that matches, index `-1` for none |
 
 ---
 
 # types
-
-## Choice
 
 ## Color
 

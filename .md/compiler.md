@@ -97,7 +97,7 @@ export default function Counter (props, children) {
 |---|---|
 | `{expr}` | `${() => expr}`, a live hole |
 | `@if` / `@else if` / `@else` | `when(() => test, then, otherwise)`, nested per `@else if` |
-| `@switch` / `@case` / `@default` | `match(() => subject, [[value, branch], …], fallback)` |
+| `@match` / `@case` / `@default` | `cases(() => subject, [test, …], [branch, …], fallback)` |
 | `@for (x, i of list)` … `@else` | `each(() => list, item => item, (x, i) => row, fallback)`, keyed by identity |
 | `on:keydown[enter]!:once={fn}` | `onkeydown=${$$.listener(fn, { keys, prevent, times })}` |
 | `onclick="save"` | `onclick=${$$.commandListener("save")}`. an expression that is no function literal goes through `$$.listener()`, which resolves a string when the event fires |

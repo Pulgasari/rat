@@ -71,10 +71,11 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 
 ## syntax
 - `let` vor `$name` ist auf oberster ebene im `<script>` einer `.rat`-datei optional: die erste zuweisung an einen nirgends deklarierten `$name` deklariert ihn. `const` (computed) bleibt pflicht, in `.rat.js` gilt js
-- `choice` in `@rat/types` ist rats switch-ersatz (aus den entwürfen `shift`/`typeshift`): paare aus test und handler, erster treffer gewinnt, eine funktion allein am ende ist der fallback. tests sind schemas (der handler bekommt den umgewandelten wert), typeof-konstruktoren, klassen, prädikate, regexp, muster-objekte/-tupel, literale
 
 ## offline, start
 - service worker als mod `offline`: dateien der eigenen herkunft network-first (eine änderung zeigt sich beim nächsten laden), fremde cache-first mit auffrischen dahinter. jede app braucht ein `sw.js` neben ihrer seite (`importScripts`), ein worker reicht nur bis zu seinem ordner
 - kompilate hält der loader selbst (cache api `rat:compiled`, schlüssel url + hash des quelltexts): der sw kann blob-module nicht cachen. `?fresh` verwirft sie
-- `match` ist rats switch im script (compiler): `match (x) { muster => ergebnis, … }`, ohne `(x)` eine funktion. dieselben muster wie `case`/`is`/`@case`, `#` ist der wert (bei einem schema der umgewandelte), `_` ist alles, `a | b` beides. form vorläufig, wird später verbessert. `is` und `@case` verstehen dafür auch schemas, klassen, prädikate und regexp
+- `match` ist rats switch im script (compiler): `match (x) { muster => ergebnis, … }`, ohne `(x)` eine funktion. dieselben muster wie `case`/`is`/`@case`, `#` ist der wert (bei einem schema der umgewandelte), `_` ist alles, `a | b` beides. form vorläufig, wird später verbessert
+- testen gibt es genau einmal: `match.js` in `@rat/types` (`match`, `is`, `pass`, `pattern`, `which`). der compiler übersetzt muster nur in daten (`part('name')`, `either`, `rest`, `any`), `match`, `is`, `@match` und benannte cases laufen alle darüber, die runtime importiert es. `choice` entfällt, `match()` ist die form für plain js
+- `@switch` heißt `@match`, die zweige bleiben `@case`/`@default`
 

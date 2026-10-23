@@ -193,13 +193,9 @@ d-30, ideas 5. a case is a pattern with a name:
   case Adult   = { age } if age >= 18;             a guard, after the parts
   case Email   = string if #.includes('@');        # in a guard is the value
 
-becomes a pattern, a function returning its parts or null:
+becomes a pattern of @rat/types (match.js), the test as data:
 
-  const Failed = $$.pattern($$value => {
-    if (!($$value != null && $$value?.status === 'error')) return null;
-    const message = $$value?.message;
-    return { message };
-  });
+  const Failed = $$.pattern({ status: 'error', message: $$.part('message') });
 
 `case` at the start of a statement is a syntax error in plain js, so the name is
 free in compiled files. a capitalized name is required (`case Name =`), which
@@ -208,12 +204,14 @@ also keeps `case x = 1:` inside a switch what it was.
 the pattern itself:
   { key: pattern, name }   an object; a shorthand or a lowercase name binds a part
   [a, b, ...rest]          an array, at least as long as its elements
-  'x', 1, true, null       compared with ===
+  'x', 1, true, null       a literal
   string, number …         typeof
-  Other                    another case, through $$.is
-  anything else            an expression, compared with ===
+  Other, Num.range(0, 9)   another case, a schema, a class, a regexp: a test of its own
+  a | b                    either, binding no parts
+  _                        anything
+  anything else            an expression, its value is the test
 */
-const TYPES = new Set(['bigint', 'boolean', 'function', 'number', 'object', 'string', 'symbol', 'undefined']);
+const TYPES = new Map([['bigint', 'BigInt'], ['boolean', 'Boolean'], ['function', 'Function'], ['number', 'Number'], ['object', 'Object'], ['string', 'String'], ['symbol', 'Symbol']]);
 const VALUE = '$$value';
 
 // tokens that leave an expression open at the end of a line: the declaration goes on
@@ -251,109 +249,97 @@ function caseDeclarations (code, offset = 0, found = new Map, runtime = '$$') {
     const from    = list[at + 3]?.start ?? code.length;
     const end     = list[last].end;
     const pattern = code.slice(from, guard ? list[guard].start : end).trim();
-    const test    = guard ? code.slice(list[guard].end, end).trim().replace(/#(?![\w$\\])/g, () => VALUE) : null;
+    const test    = guard ? code.slice(list[guard].end, end).trim() : null;
     if (!pattern) throw fail(`case ${name.value} has no pattern`, list[at + 2].start);
 
     const compiled = compilePattern(pattern, { fail: message => fail(`${message} in case ${name.value}`, from), runtime });
-    found.set(name.value, compiled.parts.map(([part]) => part));
+    found.set(name.value, compiled.parts);
 
-    edits.push({ end, pos: token.start, text: `const ${name.value} = ${patternFunction(compiled, test, runtime)}` });
+    edits.push({ end, pos: token.start, text: `const ${name.value} = ${patternCall(compiled, test, runtime)}` });
     at = last;
   }
 
   return applyEdits(code, edits);
 }
 
-function patternFunction ({ parts, tests }, guard, runtime) {
-  const lines = [];
-  if (tests.length) lines.push(`if (!(${tests.join(' && ')})) return null;`);
-  for (const [name, access] of parts) lines.push(`const ${name} = ${access};`);
-  const out = `{ ${parts.map(([name]) => name).join(', ')} }`.replace('{  }', '{}');
-  lines.push(guard ? `return (${guard}) ? ${out} : null;` : `return ${out};`);
-  return `${runtime}.pattern(${VALUE} => { ${lines.join(' ')} })`;
+// a function as replacement: '$$' in a replacement string would be read as one $
+const topicOf = text => text.replace(/#(?![\w$\\])/g, () => VALUE);
+
+// (value, parts) => code, # in code is the value
+function arrow (code, parts) {
+  const body = topicOf(code);
+  if (parts.length)        return `(${VALUE}, { ${parts.join(', ')} }) => (${body})`;
+  if (body.includes(VALUE)) return `(${VALUE}) => (${body})`;
+  return `() => (${body})`;
 }
 
-// { tests, parts }: conditions on the value and [name, access] for every part it hands out
+const patternCall = ({ parts, test }, guard, runtime) => guard ? `${runtime}.pattern(${test}, ${arrow(guard, parts)})` : `${runtime}.pattern(${test})`;
+
+// { test, parts }: the pattern as a test of @rat/types and the names of the parts it hands out
 function compilePattern (code, { fail, runtime }) {
   let node;
   try { node = parseExpressionAt(code, 0, ACORN); }
   catch (error) { throw fail(reason(error)); }
   if (code.slice(node.end).trim()) throw fail('expected a single pattern');
 
-  const tests = [];
   const parts = [];
   const text  = node => code.slice(node.start, node.end);
 
-  const bind = (name, access) => {
-    if (parts.some(([known]) => known === name)) throw fail(`the part "${name}" is bound twice`);
-    parts.push([name, access]);
+  const bind = name => {
+    if (parts.includes(name)) throw fail(`the part "${name}" is bound twice`);
+    parts.push(name);
+    return `${runtime}.part('${name}')`;
   };
 
-  function visit (node, access) {
+  function visit (node) {
     switch (node.type) {
       case 'ObjectExpression': {
-        tests.push(`${access} != null`);
+        const entries = [];
         for (const property of node.properties) {
           if (property.type === 'SpreadElement') continue;
           if (property.computed) throw fail('a computed key can not be a pattern');
-          const key   = property.key.type === 'Identifier' ? property.key.name : String(property.key.value);
-          const inner = /^[A-Za-z_$][\w$]*$/.test(key) ? `${access}?.${key}` : `${access}?.[${JSON.stringify(key)}]`;
-          if (property.shorthand) bind(key, inner);
-          else visit(property.value, inner);
+          const key = property.key.type === 'Identifier' ? property.key.name : String(property.key.value);
+          entries.push(`${/^[A-Za-z_$][\w$]*$/.test(key) ? key : JSON.stringify(key)}: ${property.shorthand ? bind(key) : visit(property.value)}`);
         }
-        return;
+        return entries.length ? `{ ${entries.join(', ')} }` : '{}';
       }
       case 'ArrayExpression': {
-        const rest  = node.elements.some(element => element?.type === 'SpreadElement');
-        const fixed = node.elements.filter(element => element?.type !== 'SpreadElement');
-        tests.push(`Array.isArray(${access})`, `${access}.length ${rest ? '>=' : '==='} ${fixed.length}`);
-        node.elements.forEach((element, index) => {
-          if (!element) return;
-          if (element.type === 'SpreadElement') {
-            if (element.argument.type === 'Identifier') bind(element.argument.name, `${access}.slice(${index})`);
-            return;
-          }
-          visit(element, `${access}[${index}]`);
+        const items = node.elements.map((element, index) => {
+          if (!element) return `${runtime}.any`;
+          if (element.type !== 'SpreadElement') return visit(element);
+          if (index !== node.elements.length - 1) throw fail('...rest comes last');
+          if (element.argument.type !== 'Identifier') return `${runtime}.rest()`;
+          bind(element.argument.name);
+          return `${runtime}.rest('${element.argument.name}')`;
         });
-        return;
+        return `[${items.join(', ')}]`;
       }
-      case 'Identifier': {
-        if (node.name === '_')         return;
-        if (node.name === 'undefined') return void tests.push(`${access} === undefined`);
-        if (TYPES.has(node.name))      return void tests.push(node.name === 'object' ? `(typeof ${access} === 'object' && ${access} !== null)` : `typeof ${access} === '${node.name}'`);
-        if (/^[A-Z]/.test(node.name))  return void tests.push(`${runtime}.is(${access}, ${node.name})`);
-        return bind(node.name, access);
-      }
-      case 'MemberExpression':
-        // Cases.Failed: another case; a lowercase chain is a value to compare with
-        if (/^[A-Z]/.test(node.property.name ?? '')) return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
-        return void tests.push(`${access} === ${text(node)}`);
-      // Num.range(0, 255), new Thing, /^#/: a test of its own (a schema, a class, a regexp)
-      case 'CallExpression':
-      case 'NewExpression':
-        return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
-      case 'Literal':
-        if (node.regex) return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
-        return void tests.push(`${access} === (${text(node)})`);
-      // 'idle' | 'paused': either, binding no parts
+      case 'Identifier':
+        if (node.name === '_')         return `${runtime}.any`;
+        if (node.name === 'undefined') return 'undefined';
+        if (TYPES.has(node.name))      return TYPES.get(node.name);
+        if (/^[A-Z]/.test(node.name))  return node.name;
+        return bind(node.name);
       case 'BinaryExpression':
         if (node.operator === '|') {
           const either = [];
-          for (const side of [node.left, node.right]) {
+          const flat   = side => side.type === 'BinaryExpression' && side.operator === '|' ? (flat(side.left), flat(side.right)) : either.push(side);
+          flat(node);
+          const tests = either.map(side => {
             const inner = compilePattern(text(side), { fail, runtime });
             if (inner.parts.length) throw fail('a pattern with | binds no parts');
-            either.push(inner.tests.length ? inner.tests.join(' && ').replaceAll(VALUE, () => access) : 'true');
-          }
-          return void tests.push(`((${either[0]}) || (${either[1]}))`);
+            return inner.test;
+          });
+          return `${runtime}.either(${tests.join(', ')})`;
         }
-        return void tests.push(`${access} === (${text(node)})`);
+        return `(${text(node)})`;
       default:
-        tests.push(`${access} === (${text(node)})`);
+        return text(node);
     }
   }
 
-  visit(node, VALUE);
-  return { parts, tests };
+  const test = visit(node);
+  return { parts, test };
 }
 
 // ::: sugar :: match
@@ -380,9 +366,13 @@ a function of one value:
 
 # in an arm is the value. no arm matches: undefined. `match (x) {` and
 `match {` are syntax errors in plain js, the { has to be on the line of match
-or its ). becomes an arrow function, called with the value or handed out.
+or its ). becomes a call of match from @rat/types:
+
+  $$.match(event, [
+    [{ type: 'user', name: $$.part('name') }, ($$value, { name }) => (`user ${name}`)],
+    …
+  ])
 */
-const CAST = '$$cast';
 
 // the arms of a match: [{ pattern, guard, body, at }], split at the top level commas
 function armsOf (code, list, open, close, fail) {
@@ -422,32 +412,10 @@ function level (list, from, index) {
   return depth;
 }
 
-// a pattern that is a test as a whole: its value may be cast (Num.range(0, 255), Element, a case)
-function isWholeTest (pattern) {
-  let node;
-  try { node = parseExpressionAt(pattern, 0, ACORN); } catch { return false; }
-  if (pattern.slice(node.end).trim()) return false;
-  if (node.type === 'Identifier')       return /^[A-Z]/.test(node.name);
-  if (node.type === 'MemberExpression') return /^[A-Z]/.test(node.property.name ?? '');
-  if (node.type === 'Literal')          return Boolean(node.regex);
-  return node.type === 'CallExpression' || node.type === 'NewExpression';
-}
-
-// a function as replacement: '$$' in a replacement string would be read as one $
-const topicOf = (text, name) => text.replace(/#(?![\w$\\])/g, () => name);
-
 function armCode ({ at, body, guard, pattern }, { fail, runtime }) {
-  if (pattern === '_') return `${guard ? `if (${topicOf(guard, VALUE)}) ` : ''}return (${topicOf(body, VALUE)});`;
-
-  if (isWholeTest(pattern)) {
-    const test = guard ? ` && (${topicOf(guard, CAST)})` : '';
-    return `{ const ${CAST} = ${runtime}.cast(${VALUE}, ${pattern}); if (${CAST} !== ${runtime}.NONE${test}) return (${topicOf(body, CAST)}); }`;
-  }
-
-  const { parts, tests } = compilePattern(pattern, { fail: message => fail(`${message} in an arm of match`, at), runtime });
-  const lines = parts.map(([name, access]) => `const ${name} = ${access};`);
-  lines.push(`${guard ? `if (${topicOf(guard, VALUE)}) ` : ''}return (${topicOf(body, VALUE)});`);
-  return `if (${tests.length ? tests.join(' && ') : 'true'}) { ${lines.join(' ')} }`;
+  const compiled = compilePattern(pattern, { fail: message => fail(`${message} in an arm of match`, at), runtime });
+  const test     = guard ? patternCall(compiled, guard, runtime) : compiled.test;
+  return `[${test}, ${arrow(body, compiled.parts)}]`;
 }
 
 function matchExpressions (code, offset = 0, runtime = '$$') {
@@ -475,9 +443,9 @@ function matchExpressions (code, offset = 0, runtime = '$$') {
     const close   = closing(list, open);
     const value   = subject === null ? null : code.slice(list[at + 1].end, list[subject].start).trim();
     const arms    = armsOf(code, list, open, close, fail).map(arm => armCode(arm, { fail, runtime }));
-    const fn      = `((${VALUE}) => { ${arms.join(' ')} })`;
+    const call    = `${runtime}.match(${value ?? VALUE}, [${arms.join(', ')}])`;
 
-    code = code.slice(0, list[at].start) + (value === null ? fn : `${fn}(${value})`) + code.slice(list[close].end);
+    code = code.slice(0, list[at].start) + (value === null ? `((${VALUE}) => ${call})` : call) + code.slice(list[close].end);
   }
   throw new Error('[rat] match rewrite did not settle');
 }

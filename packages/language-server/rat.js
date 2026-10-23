@@ -244,10 +244,10 @@ const BLOCKS = [
   { detail: 'braces',      label: '@for',    snippet: '@for (${1:item} of ${2:list}) {\n\t$0\n}' },
   { detail: 'with @else',  label: '@for …@else', snippet: '@for (${1:item} of ${2:list}) {\n\t$3\n} @else {\n\t$0\n}' },
   { detail: 'one line',    label: '@for:',   snippet: '@for (${1:item} of ${2:list}): $0' },
-  { detail: 'braces',      label: '@switch', snippet: '@switch (${1:value}) {\n\t@case ${2:value} { $3 }\n\t@default { $0 }\n}' },
+  { detail: 'braces',      label: '@match',  snippet: '@match (${1:value}) {\n\t@case ${2:value} { $3 }\n\t@default { $0 }\n}' },
   { detail: 'continues @if, @for', label: '@else', snippet: '@else {\n\t$0\n}' },
-  { detail: 'inside @switch', label: '@case', snippet: '@case ${1:value} { $0 }' },
-  { detail: 'inside @switch', label: '@default', snippet: '@default { $0 }' },
+  { detail: 'inside @match', label: '@case', snippet: '@case ${1:value} { $0 }' },
+  { detail: 'inside @match', label: '@default', snippet: '@default { $0 }' },
   { detail: 'markup with parameters, top level', label: '@fragment', snippet: '@fragment ${1:name} (${2:item})\n\t$0' },
 ];
 
@@ -265,7 +265,7 @@ function complete (model, document, offset, where) {
   const line   = text.slice(text.lastIndexOf('\n', offset - 1) + 1, offset);
   const blocks = /(^|[\s>}])(@\w*)$/.exec(line);
 
-  // @if, @for, @switch where a block can start
+  // @if, @for, @match where a block can start
   if (blocks && where === 'text') {
     const start = offset - blocks[2].length;
     return BLOCKS.map(item => ({ detail: item.detail, filterText: item.label, insertTextFormat: SNIPPET, kind: COMPLETION.Snippet, label: item.label, textEdit: { newText: item.snippet, range: range(document, start, offset) } }));

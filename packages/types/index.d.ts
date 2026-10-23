@@ -231,17 +231,30 @@ export declare const Id: IdSchema;
 /** The key of a record in another table. */
 export declare function Ref (table: string): Schema<string | number>;
 
-// :::::: choice
+// :::::: match
 
-/** A test of choice: a schema, a typeof constructor, a class, a predicate, a RegExp, a pattern object or tuple, a literal. */
+/** A schema, a typeof constructor, a class, a predicate, a RegExp, an object or a tuple of tests, any, a part, either, a pattern, a literal. */
 export type Test = unknown;
 
-export interface Choice {
-  /** Pairs of test and handler, the first match wins, a function alone at the end is the fallback. */
-  <R = unknown> (...cases: Array<[Test, ((value: any) => R) | R] | ((value: any) => R)>): (value: unknown) => R | undefined;
-  /** A single test. */
-  matches (test: Test, value: unknown): boolean;
-}
+/** The result of an arm: a function gets the value the test let through and the parts it bound. */
+export type Arm<R = unknown> = [Test, ((value: any, parts: Record<string, any>) => R) | R];
 
-export declare const choice: Choice;
+export declare const NONE: unique symbol;
+/** Anything. */
+export declare const any: Readonly<object>;
 
+/** The first arm whose test matches gives the result, else otherwise. */
+export declare function match<R = unknown> (value: unknown, arms: Arm<R>[], otherwise?: ((value: any) => R) | R): R | undefined;
+export declare function is (value: unknown, test: Test): boolean;
+/** The value the test lets through (as a schema made it), or NONE. */
+export declare function pass (value: unknown, test: Test): unknown;
+export declare function which (value: unknown, tests: Test[]): { index: number, parts: Record<string, any> | null };
+
+/** The first test that matches. */
+export declare function either (...tests: Test[]): Test;
+/** Anything (or what test lets through), handed out as the part name. */
+export declare function part (name: string, test?: Test): Test;
+/** A named case: test, then guard. */
+export declare function pattern (test: Test, guard?: ((value: any, parts: Record<string, any>) => boolean) | null): Test;
+/** The end of a tuple: at least as many items, the rest handed out as name. */
+export declare function rest (name?: string | null): Test;

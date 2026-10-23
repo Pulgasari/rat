@@ -25,18 +25,10 @@ export function unrender (target: Element | DocumentFragment): void;
 
 export function each<T> (items: Iterable<T> | (() => Iterable<T>), key: (item: T, index: number) => unknown, row: (item: T, index: number) => unknown, otherwise?: (() => unknown) | null): unknown;
 export function when    (condition: unknown, then: () => unknown, otherwise?: (() => unknown) | null): unknown;
-export function match<T> (subject: T | (() => T), cases: [T, () => unknown][], otherwise?: (() => unknown) | null): unknown;
 export function raw     (html: string | null | undefined): unknown;
 
-/** A named case: the parts it hands out, or null for no match. */
-export type Pattern<P extends object = object> = ((value: unknown) => P | null) & { readonly __pattern: true };
-
-export function pattern<P extends object> (fn: (value: unknown) => P | null): Pattern<P>;
-export function isPattern (value: unknown): value is Pattern;
-/** value is Case: a pattern decides, anything else compares with Object.is. */
-export function is        (value: unknown, test: unknown): boolean;
-export function which     (value: unknown, tests: unknown[]): { index: number, parts: object | null };
-/** A @switch with patterns: a branch gets the parts of its case as a getter. */
+export { NONE, any, either, is, match, part, pass, pattern, rest } from '@rat/types';
+/** A @match block: a branch gets the parts of its case as a getter. */
 export function cases     (subject: () => unknown, tests: unknown[], views: ((parts: () => object) => unknown)[], otherwise?: (() => unknown) | null): unknown;
 
 /** What a..b makes: lazy, iterable, with the array methods. */

@@ -2,7 +2,7 @@
 
 inside `.rat` files directives are put around or in front of markup.
 
-`@if`, `@for` and `@switch` are blocks around markup.
+`@if`, `@for` and `@match` are blocks around markup.
 
 they are no attributes: an `@` on an element is a [behavior](#behaviors).
 
@@ -121,30 +121,30 @@ rules (v0):
 - elements are reused by item identity (keyed by identity).
 - *(planned)* an explicit key: `@for (todo of $todos; key todo.id)`.
 
-### `@switch`
+### `@match`
 
 ```html
-@switch ($view) {
+@match ($view) {
   @case 'grid' { <grid-view /> }
   @case 'list': <list-view />
   @default     { <p>unknown</p> }
 }
 
-@switch ($view)
+@match ($view)
   @case 'grid'
     <grid-view />
   @default
     <p>unknown</p>
 ```
 
-- without braces, the `@case` / `@default` lines are the ones indented deeper than `@switch`.
+- without braces, the `@case` / `@default` lines are the ones indented deeper than `@match`.
 - a `@case` value ends at `{`, `:` or the end of its line. a value with a top level `:`
   (a ternary) goes in parens.
-- a `@case` with a [named case](#named-cases) matches by pattern, anything else with
-  `Object.is`. a case declared in the same file hands out its parts to the branch, live:
+- a `@case` is a test like an arm of [match](syntax.md#match-1) (a case, a schema, a class, a literal …).
+  a case declared in the same file hands out its parts to the branch, live:
 
 ```html
-@switch ($state)
+@match ($state)
   @case Loading: <p>loading …</p>
   @case Failed:  <p.alert>{message}</p>     <!-- message comes from the case -->
   @case 'idle':  <p>…</p>

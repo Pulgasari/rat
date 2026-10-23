@@ -16,7 +16,7 @@ calls with the element once its children are in place.
 
 // :::::: IMPORT
 
-import { each, html, match, raw, render as renderInto, unrender, when } from '@htx/js/render';
+import { each, html, raw, render as renderInto, unrender, when } from '@htx/js/render';
 import { effect, isFn, isSignal, isString, onCleanup, scope, untrack } from '../common/shared.js';
 import { guard }                                                       from './errors.js';
 
@@ -142,4 +142,4 @@ function sheet (mode, url) {
   return done;
 }
 
-export { bind, each, html, match, mount, raw, ref, render, sheet, style, unrender, use, when };
+export { bind, each, html, mount, raw, ref, render, sheet, style, unrender, use, when };
