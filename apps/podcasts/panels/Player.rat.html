@@ -2,36 +2,35 @@
 // podcasts :: panels/PlayerPanel.js
 // the docked player bar — artwork/meta, transport, scrubber and speed/done/close.
 
-import Art             from './../components/Artwork.js';
-import { useTable }    from './../modules/hooks.js';
+import Artwork         from './../components/Artwork.js';
 import { fmtDuration } from './../modules/methods.js';
 
+const app = RAT.app;
 const RATES = [0.8, 1, 1.2, 1.5, 1.75, 2];
-const app = zugriff.app;
 
-export default function PlayerPanel () {
-  const episode  = app.player.episode;
-  const podcasts = useTable('podcasts', () => app.db.podcasts.toValues(), ['all']);
-  if (!episode) return null;
 
-  const podcast = podcasts?.find(p => p.id === episode.podcastId);
-  const dur     = app.player.duration || episode.duration || 0;
-  const time    = app.player.time;
+const episode  = app.player.episode;
+const podcasts = useTable('podcasts', () => app.db.podcasts.toValues(), ['all']);
+if (!episode) return null;
 
-  const cycleRate = () => {
-    const i = RATES.indexOf(app.player.rate);
-    app.player.setRate(RATES[(i + 1) % RATES.length] ?? 1);
-  };
+const podcast = podcasts?.find(p => p.id === episode.podcastId);
+const dur     = app.player.duration || episode.duration || 0;
+const time    = app.player.time;
+
+const cycleRate = () => {
+  const i = RATES.indexOf(app.player.rate);
+  app.player.setRate(RATES[(i + 1) % RATES.length] ?? 1);
+};
 </script>
 
-    <div class="player">
-      <div class="meta">
-        <${Art} src=${episode.image || podcast?.image} size=${52} />
-        <div class="info">
-          <div class="title" title=${episode.title}>${episode.title}</div>
-          <div class="podcast">${podcast?.title || ''}</div>
-        </div>
-      </div>
+<div.player>
+  <div.meta>
+    <Artwork src={episode.image || podcast?.image} size={52} />
+    <div.info>
+      <div.title title={episode.title}>{episode.title}</div>
+      <div.podcast>{podcast?.title || ''}</div>
+    </div.info>
+  </div.metq>
 
       <div class="controls">
         <btn-icon
@@ -67,25 +66,18 @@ export default function PlayerPanel () {
         <span class="pl-time">${dur ? '-' + fmtDuration(dur - time) : ''}</span>
       </div>
 
-      <div class="pl-right">
-        <button
-          class="rate"
-          title="Playback speed"
-          onClick=${cycleRate}>
-          ${app.player.rate}×
-        </button>
+<div class="pl-right">
+  <button.rate title="Playback speed" onClick=${cycleRate}>
+    {app.player.rate}
+  </button.rate>
         
-        <btn-icon 
-          icon=${app.library.stateOf(episode.id).done ? 'mdi:check-circle' : 'mdi:check-circle-outline'}
-          label="Mark as done"
-          aria-pressed=${app.library.stateOf(episode.id).done}
-          onClick=${() => app.library.toggleDone(episode.id)} 
-          />
+  <btn-icon 
+    icon={app.library.stateOf(episode.id).done ? 'mdi:check-circle' : 'mdi:check-circle-outline'}
+    label="Mark as done"
+    aria-pressed=${app.library.stateOf(episode.id).done}
+    onClick=${() => app.library.toggleDone(episode.id)} 
+  />
           
-        <btn-icon
-          icon="close"
-          label="Close player"
-          onClick=${() => app.player.close()}
-          />
-      </div>
-    </div>
+    <btn-icon icon='close' label='close player' onClick={app.player.close} />
+  </div>
+</div>
