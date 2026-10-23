@@ -12,7 +12,7 @@ values. called, it is the schema:
   todos.column('title');                                // ['milk', 'eggs']
   todos.where({ done: false });                         // the rows a test of match.js lets through
 
-a row is a plain frozen object, its position is its key. every List method
+a row is a plain frozen object with exactly the columns, its position is its key. every List method
 works, the ones that add or replace rows check them. $Table has one version
 for the whole table: any write updates whatever read the table.
 */
@@ -58,7 +58,9 @@ class TableType extends List {
     if (!schema) throw new TypeError('[rat] a Table needs a Table schema or a Record schema');
 
     const row   = schema.parts.row;
-    const parse = entry => Object.freeze(row.parse({ ...row.initial, ...entry }));
+    const keys  = Object.keys(row.parts);
+    // only the columns: a field the schema does not know is dropped
+    const parse = entry => { const parsed = row.parse({ ...row.initial, ...entry }); return Object.freeze(Object.fromEntries(keys.map(key => [key, parsed[key]]))); };
     super((copy ? source.toArray() : rows).map(parse));
 
     Object.defineProperty(this, 'schema', { value: schema });

@@ -6,6 +6,7 @@ export {
 } from './schema.js';
 
 // Basic DataTypes + their reactive variant
+export { $Bool, $Num, $Str } from './scalars.js';
 export {         $Array  } from './Array.js';
 export { Enum,   $Enum   } from './Enum.js';
 export { List,   $List   } from './List.js';

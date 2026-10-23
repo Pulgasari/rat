@@ -159,6 +159,26 @@ export const Record: RecordConstructor;
 /** A Record whose field reads subscribe and whose field writes notify, one version for all fields. */
 export const $Record: { new <T extends object>(schema: Schema<T>, values?: Partial<T>): Record<T>; new <T extends object>(values: T | Record<T>): Record<T> };
 
+/** A value with a schema, like $Enum: reads subscribe, writes are checked and notify. */
+export interface Scalar<T> {
+  readonly schema : Schema<T>;
+  value : T;
+  toJSON (): T;
+  toString (): string;
+  valueOf (): T;
+}
+
+export interface $Bool extends Scalar<boolean> { off (): boolean; on (): boolean; toggle (): boolean; }
+/** inc and dec stop at the bounds of the schema. */
+export interface $Num  extends Scalar<number>  { dec (step?: number): number; inc (step?: number): number; }
+export interface $Str  extends Scalar<string>  { clear (): string; }
+
+type ScalarConstructor<S, T> = { new (value?: T, schema?: Schema<T>): S; new (schema: Schema<T>): S };
+
+export const $Bool: ScalarConstructor<$Bool, boolean>;
+export const $Num : ScalarConstructor<$Num, number>;
+export const $Str : ScalarConstructor<$Str, string>;
+
 /** A List of rows that follow one record schema. A row is frozen, its position is its key. */
 export interface Table<T extends object> extends List<Readonly<T>> {
   readonly schema  : Schema<T[]>;

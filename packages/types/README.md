@@ -57,9 +57,9 @@ new $Enum('grid', 'list', 'masonry')  // the same value, reactive
 | `Table` | yes | `Table({ … })` | `$Table` |
 | `Tuple` | yes, frozen | `Tuple(Str, Num)` | none: a change is a new tuple |
 | `Union` | none | `Union(Num, Str)` | none | 
-| `Bool`, `Num`, `Str` | plain js | the schema itself | none |
+| `Bool`, `Num`, `Str` | plain js | the schema itself | `$Bool`, `$Num`, `$Str` |
 
-`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`),.see below.
+`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`), or for `Bool`, `Num`, `Str` the objects `$Bool`, `$Num`, `$Str` with methods, see below.
 
 # Basic DataTypes
 
@@ -118,7 +118,7 @@ a field may be called anything but `assign`, `schema` and `toJSON`.
 
 ## Table
 
-a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object, its position is its key.
+a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object with exactly the columns (a field the schema does not know is dropped), its position is its key.
 
 ```js
 const Todos = Table({ title: Str, done: Bool });       // or Table(Record({ … }))
@@ -259,6 +259,21 @@ $todos[0] = other;
 
 <p>{$todos.length} todos</p>
 @for (todo of $todos): <li>{todo.title}</li>
+```
+
+### `$Bool`, `$Num`, `$Str`
+
+objects with `value`, like `$Enum`: a write is checked by the schema, `toString`/`valueOf` give the value.
+
+```js
+const $open = new $Bool;                          // false
+$open.toggle();  $open.on();  $open.off();
+
+const $zoom = new $Num(100, Num.range(50, 200));  // or new $Num(Num.range(50, 200)): at its initial value
+$zoom.inc(10);  $zoom.dec(10);                    // stop at the bounds of the schema
+
+const $query = new $Str('');
+$query.clear();
 ```
 
 ### typed signal or `$Enum`?
