@@ -123,6 +123,8 @@ const toWords = (value) => String(value ?? '')
   .split(' ')
   .filter(Boolean);
 
+const upperFirst = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+
 const CamelCase = {
   pattern   : /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
   transform : value => toWords(value).map((word, index) => index ? upperFirst(word) : word).join(''),
