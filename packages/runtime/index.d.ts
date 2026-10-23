@@ -29,6 +29,9 @@ export function raw     (html: string | null | undefined): unknown;
 
 export { NONE, any, either, is, match, part, pass, pattern, rest } from '@rat/types';
 
+/** let { $x } = source: a signal per key, the property's own signal or a computed that follows it. defaults: key -> null | () => fallback. */
+export declare function signalsOf<T extends object> (source: T, defaults: Record<string, (() => unknown) | null>): T;
+
 /** The one global of rat (globalThis.RAT): every export of @rat/types, and app, config, toggle from @rat/app. */
 export declare const RAT: typeof import('@rat/types') & { readonly app: HTMLElement | null; readonly config: Record<string, unknown> | null; toggle (name: string, force?: boolean): boolean | null };
 /** A @match block: a branch gets the parts of its case as a getter. */

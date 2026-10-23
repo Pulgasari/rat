@@ -6,7 +6,8 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 - `style adopt` / `style inline` / `style link` im `<script>`, als tag `<style mode='adopt|inline|link' src='…' />`. ohne mode: `adopt`
 
 ## props in `.rat`-komponenten (d-13)
-- b: `let { $title, size = 'm' } = props`. ein name mit `$` bleibt reaktiv (signal), ohne `$` ist es der wert beim mount. dieselbe `$`-regel wie überall
+- `this` in einer `.rat`-komponente: `this.props` ist `props` (`props` bleibt vorerst). ein versuch: mehr kommt erst dazu, wenn es gebraucht wird
+- b: `let { $title, size = 'm' } = props`. ein name mit `$` bleibt reaktiv (signal), ohne `$` ist es der wert beim mount. dieselbe `$`-regel wie überall. gebaut, für jedes objekt: ist die eigenschaft ein signal, ist es genau dieses (`let { $sources } = lib`), sonst ein computed, das ihr folgt (nur lesbar). ein default (`$size = 'm'`) gilt, solange sie `undefined` ist
 - c (eigener `@props { … }`-block) verworfen: macht dasselbe wie b, nur mit neuer syntax statt destrukturierung. blocks sind fürs markup da
 
 ## vorbereitung (frühere festlegungen)

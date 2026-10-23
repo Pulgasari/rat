@@ -645,10 +645,35 @@ const isVariant = init => init?.type === 'NewExpression' && init.callee.type ===
 // top level `let $x = …` / `const $x = …`, as { edits, names, variants }. a let goes through $(),
 // which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded).
 // a variant instance is no signal and gets no .value, it is used as written
-function declarations (program, runtime) {
+function declarations (program, runtime, source, known = new Set) {
   const names    = new Set;
   const variants = new Set;
   const edits    = [];
+  const skip     = new Set; // nodes that moved elsewhere, reads() leaves them alone
+
+  // a default's code with .value for the reactive names known so far
+  const codeOf = node => applyEdits(source.slice(node.start, node.end), reads(node, new Set([...known, ...names])).map(edit => ({ ...edit, pos: edit.pos - node.start })));
+
+  // let { $filter, $size = 'm' } = this.props
+  // -> let { "filter": $filter, "size": $size } = $$.signalsOf(this.props, { filter: null, size: () => ('m') })
+  const destructure = (pattern, init) => {
+    const defaults = [];
+    for (const property of pattern.properties) {
+      if (property.type !== 'Property' || property.computed) continue;
+      const assigned = property.value.type === 'AssignmentPattern';
+      const target   = assigned ? property.value.left : property.value;
+      if (target.type !== 'Identifier' || !/^\$\w/.test(target.name)) continue;
+
+      const key = property.shorthand ? target.name.slice(1) : property.key.name ?? String(property.key.value);
+      defaults.push(`${JSON.stringify(key)}: ${assigned ? `() => (${codeOf(property.value.right)})` : 'null'}`);
+      if (assigned) walk(property.value.right, node => { skip.add(node); });
+      names.add(target.name);
+      edits.push({ end: property.end, pos: property.start, text: `${JSON.stringify(key)}: ${target.name}` });
+    }
+    if (!defaults.length) return;
+    edits.push({ order: -1, pos: init.start, text: `${runtime}.signalsOf(` });
+    edits.push({ order: 1,  pos: init.end,   text: `, { ${defaults.join(', ')} })` });
+  };
 
   for (const statement of program.body) {
     const declaration = statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
@@ -656,6 +681,7 @@ function declarations (program, runtime) {
 
     for (const declarator of declaration.declarations) {
       const { id, init } = declarator;
+      if (id.type === 'ObjectPattern' && init) { destructure(id, init); continue; }
       if (id.type !== 'Identifier' || !id.name.startsWith('$') || id.name.length < 2) continue;
       if (isVariant(init)) { variants.add(id.name); continue; }
       names.add(id.name);
@@ -673,7 +699,7 @@ function declarations (program, runtime) {
     }
   }
 
-  return { edits, names, variants };
+  return { edits, names, skip, variants };
 }
 
 // a variant binding changes through its methods. reassigned, whatever read it would keep the old object
@@ -717,6 +743,19 @@ function declared (code, offset = 0) {
     for (; next < list.length; next++) {
       const item = list[next];
       if (expectName) {
+        // let { $filter, size } = …: the $names of the pattern
+        if (item.type === tt.braceL) {
+          const close = closing(list, next);
+          for (let at = next + 1; at < close; at++) {
+            const name = list[at];
+            if (name.type === tt.name && name.value[0] === '$' && name.value.length > 1 && [tt.braceL, tt.comma, tt.colon].includes(list[at - 1].type) && [tt.comma, tt.braceR, tt.eq].includes(list[at + 1]?.type)) {
+              out.push({ end: name.end + offset, kind: 'signal', name: name.value, start: name.start + offset, statement: token.start + offset });
+            }
+          }
+          next = close;
+          expectName = false;
+          continue;
+        }
         if (item.type === tt.name && item.value[0] === '$' && item.value.length > 1) {
           const variant = list[next + 1]?.type === tt.eq && list[next + 2]?.type === tt._new && /^\$[A-Z]/.test(list[next + 3]?.value ?? '');
           out.push({ end: item.end + offset, kind: variant ? 'variant' : kind, name: item.value, start: item.start + offset, statement: token.start + offset });
@@ -782,14 +821,14 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
     sugared = statements.code;
   }
   const program  = parseOrFail (sugared, { filename, offset, source });
-  const declared = declarations(program, runtime);
+  const declared = declarations(program, runtime, sugared, names);
 
   for (const name of declared.names) names.add(name);
 
   const target = reassigned(program, declared.variants);
   if (target) throw new CompileError(`${target.name} is a reactive variant, it changes through its methods and is not reassigned`, { filename, index: offset + target.start, source });
 
-  const edits   = [...declared.edits, ...reads(program, names, bindings(program))];
+  const edits   = [...declared.edits, ...reads(program, names, new Set([...bindings(program), ...declared.skip]))];
   const imports = [];
 
   for (const node of program.body) {

@@ -20,7 +20,7 @@ a decided entry stays in its file, with what was built.
 - <a id="d-10"></a>**d-10** · further pipe operators · **open** · [ideas/pipes](ideas/pipes.md#d-10)
 - <a id="d-11"></a>**d-11** · the template tag in `.rat.js` → `html`, `htx` and `rat` · [ideas/templates-in-js](ideas/templates-in-js.md#d-11)
 - <a id="d-12"></a>**d-12** · `{…}` holes in plain `.js` files → no · [ideas/templates-in-js](ideas/templates-in-js.md#d-12)
-- <a id="d-13"></a>**d-13** · props · **open** · [ideas/props](ideas/props.md#d-13)
+- <a id="d-13"></a>**d-13** · props · **b** (decisions.md) · [ideas/props](ideas/props.md#d-13)
 - <a id="d-14"></a>**d-14** · type notation in scripts → a schema as the initial value · [ideas/types](ideas/types.md#d-14)
 - <a id="d-15"></a>**d-15** · the index in `@for` · **open** · [ideas/loop-metadata](ideas/loop-metadata.md#d-15)
 - <a id="d-16"></a>**d-16** · commands with arguments in markup → brackets, `go[settings]` · [ideas/app](ideas/app.md#d-16)
