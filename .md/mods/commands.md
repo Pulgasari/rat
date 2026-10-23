@@ -12,6 +12,8 @@ RAT.app.commands.set('refresh-all', refreshAll);
 RAT.app.commands['refresh-all'] = refreshAll;
 ```
 
+define multiple commands at once.
+
 ```js
 RAT.app.commands.assign ({
   'refresh-all'   : refreshAll,
