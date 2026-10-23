@@ -1,19 +1,15 @@
-// podcasts :: dialogs/AddPodcastDialog.js
+<script>
+import Artwork from './Artwork.js';
+//import Loading from '/.shared/js/components/Loading.js';
+//import Modal   from '/.shared/js/components/Modal.js';
 
-import { useSignal } from '@aufbau/signals';
-import { useEffect } from '/.shared/js/vendors.js';
-
-import Artwork from './../components/Artwork.js';
-import Loading from '/.shared/js/components/Loading.js';
-import Modal   from '/.shared/js/components/Modal.js';
-
-import { searchPodcasts } from './../modules/search.js';
-import { looksLikeUrl }   from './../modules/methods.js';
+import { searchPodcasts } from './modules/search.js';
+import { looksLikeUrl }   from './methods.js';
 
 const app      = zugriff.app;
 const DEBOUNCE = 300;
 
-function AddPodcastDialog () {
+
   const query   = useSignal('');
   const results = useSignal([]);
   const busy    = useSignal(false);
@@ -63,9 +59,9 @@ function AddPodcastDialog () {
   const actions = [
     { label: 'cancel', onClick: close },
   ];
+</script>
 
-  return html`
-    <${Modal}
+    <Modal
       headline='Add a podcast'
       info='Search by name, or paste an RSS feed URL.'
       actions=${actions}
@@ -100,7 +96,5 @@ function AddPodcastDialog () {
         </ul>
      `}
     <//>
-  `;
-}
+  
 
-export default AddPodcastDialog;
