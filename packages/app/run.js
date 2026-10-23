@@ -101,7 +101,6 @@ what the loader compiled from them is dropped (rat:compiled), so they compile an
     '@rat/compiler'   : at('../compiler/index.js'),
     '@rat/hotkeys'    : at('../hotkeys/index.js'),
     '@rat/import'     : at('../import/index.js'),
-    '@rat/router'     : at('../router/index.js'),
     '@rat/runtime'    : at('../runtime/index.js'),
     '@rat/signals'    : at('../signals/index.js'),
     '@rat/types'      : at('../types/index.js'),

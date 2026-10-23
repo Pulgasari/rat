@@ -1,10 +1,10 @@
-# @rat/router
+# @rat/app :: router
 
 a router on its own: no element, no framework. `<rat-app>` and `<rat-view>` from
 [`@rat/app`](../app) use it, any page can as well.
 
 ```js
-import { createRouter } from '@rat/router';
+import { createRouter } from '@rat/app/router/index.js';
 
 const router = createRouter({ mode: 'hash' }).start();
 

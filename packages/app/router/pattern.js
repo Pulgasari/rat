@@ -1,4 +1,4 @@
-// @rat/router :: pattern
+// @rat/app :: router :: pattern
 
 /*
 route patterns, matched segment by segment:

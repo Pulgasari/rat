@@ -1,4 +1,4 @@
-// @rat/router :: modes
+// @rat/app :: router :: modes
 
 /*
 where a route lives. a mode is { read, write, listen }:
