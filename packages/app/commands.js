@@ -16,6 +16,35 @@ class CommandsManager {
 
 class CommandsListener {}
 
+
+
+// @rat/commands
+
+import { $Map } from '@rat/types';
+
+// one name in any spelling: 'toggle-play', 'togglePlay', 'toggle_play', 'Toggle Play' -> 'toggle-play'
+const keyOf = name => …;
+
+class Commands {
+  #map = new $Map;   // key -> fn, reactive: a ui (palette, settings) follows it
+
+  // write
+  set    (name, fn) {}   // fn must be a function
+  assign (entries)  {}   // { name: fn, … }
+  delete (name)     {}
+  clear  ()         {}
+
+  // read
+  get  (name) {}         // fn | undefined
+  has  (name) {}
+  keys ()     {}         // the keys, for a list in a ui
+
+  // run
+  run (name, ...args) {} // fn(...args)
+}
+
+const createCommands = entries => new Commands().assign(entries);
+
 /*
 commands are the vocabulary of an app, the things it can do: save, openSettings,
 togglePlay. ui, hotkeys and code fire them by name instead of importing each
