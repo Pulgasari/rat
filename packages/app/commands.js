@@ -156,7 +156,7 @@ const LowerCase = {
 
 const MockingCase = {
   pattern   : /^(?:(?:[a-z][A-Z])*[a-z]?|(?:[A-Z][a-z])*[A-Z]?)$/,
-  transform : value => value, // ???
+  transform : value => [...String(value ?? '')].map((char, index) => index % 2 ? char.toUpperCase() : char.toLowerCase()).join(''),     
 }
 
 const PascalCase = {
