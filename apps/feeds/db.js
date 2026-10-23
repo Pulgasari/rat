@@ -1,6 +1,6 @@
 // apps/feeds/db.js
 //
-// storage for the reader — three @bunker/db stores:
+// storage for the reader — three tables of RAT.app.database (config.rat.js):
 //
 //   feeds   one record per subscribed feed (url, resolved title/link/image,
 //           kind: 'feed' | 'youtube', addedAt, lastFetched, error?)
@@ -11,11 +11,11 @@
 // everything is on-device; a "refresh" re-fetches feeds (feed.js) and upserts
 // the entries. nothing here talks to the network except through feed.js.
 
-import { signal, computed } from '@aufbau/signals';
-import { createDb } from '@bunker/db';
+import { computed, signal } from '@rat/signals';
+
 import * as feed from './feed.js';
 
-const db  = createDb('zugriff-feeds');
+const db  = () => RAT.app.database;
 const SEP = '\n';
 const keyOf = (feedId, guid) => feedId + SEP + guid;
 
@@ -48,13 +48,10 @@ export const unreadIn = list => list.reduce((n, it) => n + (readSet.value.has(it
 // ── loading ────────────────────────────────────────────────────────────────
 
 export async function load () {
-  await db.setup({ feeds: {}, items: {}, read: {} });
-  const [feedRows, itemRows, readRows] = await Promise.all([
-    db.getAll('feeds'), db.getAll('items'), db.getAll('read'),
-  ]);
-  feeds.value   = Object.values(feedRows).sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
-  items.value   = Object.values(itemRows);
-  readSet.value = new Set(Object.keys(readRows));
+  const [feedRows, itemRows, readKeys] = await Promise.all([db().feeds.values(), db().items.values(), db().read.keys()]);
+  feeds.value   = feedRows.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+  items.value   = itemRows;
+  readSet.value = new Set(readKeys);
   ready.value   = true;
 }
 
@@ -86,7 +83,7 @@ export async function addFeed (input) {
     lastFetched: Date.now(),
     error   : '',
   };
-  await db.set('feeds', rec.id, rec);
+  await db().feeds.set(rec.id, rec);
   feeds.value = [...feeds.value, rec];
   await upsertItems(rec, parsed.items);
   return rec;
@@ -108,12 +105,12 @@ export async function refresh (id) {
       lastFetched: Date.now(),
       error: '',
     };
-    await db.set('feeds', id, patch);
+    await db().feeds.set(id, patch);
     feeds.value = feeds.value.map(x => x.id === id ? patch : x);
     return await upsertItems(patch, parsed.items);
   } catch (err) {
     const patch = { ...f, error: err?.message || String(err), lastFetched: Date.now() };
-    await db.set('feeds', id, patch);
+    await db().feeds.set(id, patch);
     feeds.value = feeds.value.map(x => x.id === id ? patch : x);
     throw err;
   } finally {
@@ -141,7 +138,7 @@ async function upsertItems (f, parsedItems) {
                   title: it.title, link: it.link, author: it.author,
                   pubDate: it.pubDate || Date.now(), summary: it.summary, image: it.image };
     fresh.push(rec);
-    await db.set('items', key, rec);
+    await db().items.set(key, rec);
   }
   if (fresh.length) items.value = [...items.value, ...fresh];
   return fresh.length;
@@ -150,9 +147,8 @@ async function upsertItems (f, parsedItems) {
 /** forget a feed and everything of its that we stored */
 export async function removeFeed (id) {
   const doomed = items.value.filter(i => i.feedId === id).map(i => i.key);
-  await db.delete('feeds', id);
-  await Promise.all(doomed.map(k => db.delete('items', k)));
-  await Promise.all(doomed.map(k => db.delete('read', k)));
+  await db().feeds.delete(id);
+  await Promise.all(doomed.flatMap(k => [db().items.delete(k), db().read.delete(k)]));
   feeds.value = feeds.value.filter(f => f.id !== id);
   items.value = items.value.filter(i => i.feedId !== id);
   if (doomed.length) {
@@ -166,13 +162,13 @@ export async function removeFeed (id) {
 
 export function markRead (key, read = true) {
   const set = new Set(readSet.value);
-  if (read) { if (set.has(key)) return; set.add(key); db.set('read', key, 1); }
-  else      { if (!set.has(key)) return; set.delete(key); db.delete('read', key); }
+  if (read) { if (set.has(key)) return; set.add(key); db().read.set(key, 1); }
+  else      { if (!set.has(key)) return; set.delete(key); db().read.delete(key); }
   readSet.value = set;
 }
 
 export async function markAllRead (list) {
   const set = new Set(readSet.value);
-  await Promise.all(list.map(it => { if (!set.has(it.key)) { set.add(it.key); return db.set('read', it.key, 1); } }));
+  await Promise.all(list.map(it => { if (!set.has(it.key)) { set.add(it.key); return db().read.set(it.key, 1); } }));
   readSet.value = set;
 }

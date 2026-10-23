@@ -1,0 +1,43 @@
+<script>
+  // <ListView name='latest' | 'youtube' | 'feed' />: the three views are one list with its
+  // header, each over its own items
+
+  import * as db from './../db.js';
+
+  import { addFeed, markAllRead, refreshView, toggleMenu, viewOf } from './../actions.js';
+  import { state } from './../state.js';
+
+  let { $name } = this.props;
+  let { $busy } = state;
+
+  const $view     = viewOf($name);
+  const $hasFeeds = db.feeds.value.length > 0;
+</script>
+
+<header.topbar>
+  <button.ibtn.nav-toggle aria-label='Menu' onclick={toggleMenu}><svg-icon icon='menu' /></button>
+  <svg-icon.topbar-ic icon={$view.icon} />
+  <h1.topbar-title title={$view.title}>{$view.title}</h1>
+  @if ($view.feed?.link)
+    <a.ibtn href={$view.feed.link} target='_blank' rel='noopener noreferrer' title='Open site'><svg-icon icon='mdi:open-in-new' /></a>
+  <span.topbar-spacer></span>
+  @if ($busy): <span.topbar-busy><svg-icon icon='loading' /> {$busy}</span>
+  @if ($view.list.length)
+    <button.ibtn title='Mark all read' onclick={() => markAllRead($name)}><svg-icon icon='mdi:check-all' /></button>
+  <button.ibtn title='Refresh' disabled={!!$busy} onclick={() => refreshView($name)}><svg-icon icon='refresh' /></button>
+</header.topbar>
+
+<main>
+  @if (!$view.list.length)
+    <Empty icon={$hasFeeds ? 'mdi:check-all' : 'rss'} title={$hasFeeds ? 'Nothing here yet — try Refresh.' : 'Follow a feed to see the latest here.'}>
+      @if (!$hasFeeds): <button.cta onclick={addFeed}><svg-icon icon='plus' /> Add your first feed</button>
+    </Empty>
+  @else if ($view.kind === 'youtube')
+    <div.videos>
+      @for (item of $view.list): <VideoCard item={item} />
+    </div.videos>
+  @else
+    <div.posts>
+      @for (item of $view.list): <ArticleRow item={item} />
+    </div.posts>
+</main>

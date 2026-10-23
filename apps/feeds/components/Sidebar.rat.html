@@ -1,0 +1,52 @@
+<script>
+  // <Sidebar />: the lists and the feeds, the way through the app
+
+  import * as db from './../db.js';
+
+  import { addFeed, articleFeeds, current, open, refreshView, toggleConfig, youtubeFeeds } from './../actions.js';
+  import { state } from './../state.js';
+
+  let { $busy } = state;
+
+  const $articles = articleFeeds.value;
+  const $tubes    = youtubeFeeds.value;
+</script>
+
+@fragment navItem (name, icon, label, count)
+  <button.nav-item class:active={current.value === name} title={label} onclick={() => open(name)}>
+    <svg-icon icon={icon} />
+    <span.nav-label>{label}</span>
+    @if (count > 0): <span.nav-count>{count}</span>
+  </button.nav-item>
+
+<div.sidebar>
+  <Brand name='Feeds' icon='./app.svg' />
+
+  <button.add-btn onclick={addFeed}><svg-icon icon='plus' /> Add feed</button.add-btn>
+
+  <div.nav-scroll>
+    <div.nav-group>
+      {navItem('latest', 'mdi:playlist-star', 'Latest', db.unreadIn(db.latestArticles.value))}
+      @if ($tubes.length): {navItem('youtube', 'youtube', 'YouTube', db.unreadIn(db.latestVideos.value))}
+    </div.nav-group>
+
+    @if ($articles.length)
+      <div.nav-group>
+        <div.nav-title>Feeds</div.nav-title>
+        @for (feed of $articles): <FeedItem feed={feed} />
+      </div.nav-group>
+
+    @if ($tubes.length)
+      <div.nav-group>
+        <div.nav-title><svg-icon icon='youtube' /> YouTube</div.nav-title>
+        @for (feed of $tubes): <FeedItem feed={feed} />
+      </div.nav-group>
+
+    @if (!db.feeds.value.length): <p.nav-hint>No feeds yet — add one above.</p>
+  </div.nav-scroll>
+
+  <div.side-foot>
+    <button.foot-btn disabled={!!$busy || !db.feeds.value.length} onclick={() => refreshView()}><svg-icon icon='refresh' /> Refresh</button.foot-btn>
+    <button.foot-btn onclick={toggleConfig}><svg-icon icon='settings' /> Settings</button.foot-btn>
+  </div.side-foot>
+</div.sidebar>

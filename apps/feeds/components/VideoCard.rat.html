@@ -1,0 +1,23 @@
+<script>
+  // <VideoCard item={item} />: one video of a youtube feed
+
+  import * as db from './../db.js';
+
+  import fmt          from './../../.shared/fmt.js';
+  import { feedName } from './../actions.js';
+
+  const item    = this.props.item;
+  const $unread = !db.isRead(item.key);
+</script>
+
+<a.vid class:read={!$unread} href={item.link} target='_blank' rel='noopener noreferrer' onclick={() => db.markRead(item.key)}>
+  <div.vid-thumb>
+    @if (item.image)
+      <Image src={item.image} />
+    @else
+      <div.vid-noimg><svg-icon icon='youtube' /></div>
+    @if ($unread): <span.vid-new>new</span>
+  </div.vid-thumb>
+  <div.vid-title>{item.title}</div.vid-title>
+  <div.vid-meta>{feedName(item)} · {fmt.since(item.pubDate)}</div.vid-meta>
+</a.vid>
