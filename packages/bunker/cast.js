@@ -9,7 +9,7 @@ store.as(Type): the store's content in the form Type stands for.
   await store.as('keys')     the keys, 'values' and 'entries' as well
 
 a form of your own: register(Type, store => …). a promise is a snapshot, a
-form that follows the store (rat's $List, see rat.js) subscribes to its changes
+form that follows the store (rat's $List, see bunker.js of @rat/app) subscribes to its changes
 and returns at once.
 */
 

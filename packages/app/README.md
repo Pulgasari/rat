@@ -162,10 +162,11 @@ export default {
 |---|---|
 | `RAT` | always there, from `@rat/runtime`: every export of `@rat/types` (`RAT.Enum` …), `RAT.app` the app, `RAT.config` its config, `RAT.toggle(name)`. as a module: `import RAT from '@rat/app'`, `import { RAT } from '@rat/runtime'`. another name: `globalThis.APP = RAT` |
 | `app.config` | the config, `{}` without one |
-| `mods` | the parts rat provides that not every app needs, each lands on the app under its name. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
+| `mods` | the parts rat provides that not every app needs, each a module of `@rat/app` (`database.js`, `files.js`, `folders.js`, `hotkeys.js`, `offline.js`, `store.js`, `thumbnails.js`, listed in `mods.js`), loaded only when named. each lands on the app under its name, in the order written. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
+| `folders` | folders the user grants, in the database's table `folders` (`schema: { folders: FOLDERS }`, the database first). `createFolders` and `FOLDERS` from `@rat/app/folders.js` |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
-| `thumbnails` | small webp copies of images in opfs (`createThumbs` of `@rat/bunker`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
+| `thumbnails` | small webp copies of images in opfs (`createThumbs`, `@rat/app/thumbnails.js`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
 | `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/sw.js')`): a worker reaches only the pages below its own folder. files of the page's origin network first, of other origins cache first |
 
 ## errors

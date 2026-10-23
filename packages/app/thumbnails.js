@@ -1,10 +1,10 @@
-// @rat/bunker :: thumbs
+// @rat/app :: thumbnails
 
 /*
 a thumbnail cache on the device: hand it an image url and it returns a small
 webp copy from the origin private file system (Files on opfs), made the first
 time by fetching the original and downscaling it on a canvas. after that the
-original host is not touched again.
+original host is not touched again. in an app: mods: { thumbnails: { … } }, RAT.app.thumbnails
 
   const thumbs = createThumbs({ proxy: 'https://proxy/?url={url}' });
   const url    = await thumbs.request(imageUrl);   // an object url, or null: show the original then
@@ -25,7 +25,7 @@ maxBytes (64 mb, the oldest go past it), proxy (a template with {url}, or a
 function returning one), resizer.
 */
 
-import { createFiles } from './files.js';
+import { createFiles } from '@rat/bunker';
 
 const nativeHttp = () => globalThis.Capacitor?.isNativePlatform?.() ? globalThis.Capacitor.Plugins?.CapacitorHttp ?? null : null;
 const fromBase64 = (data, type) => new Blob([Uint8Array.from(atob(data), char => char.charCodeAt(0))], { type });
@@ -249,6 +249,10 @@ function createThumbs ({ concurrency = 3, dir = 'thumbs', maxBytes = 64 * 1024 *
   return thumbs;
 }
 
+// the mod: RAT.app.thumbnails
+const thumbnails = options => createThumbs(options);
+
 // :::::: EXPORT
 
 export { createThumbs };
+export default thumbnails;

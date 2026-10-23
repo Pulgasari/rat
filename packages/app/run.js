@@ -95,6 +95,7 @@ what the loader compiled from them is dropped (rat:compiled), so they compile an
   const map = {
     //////////// @rat ////////////
     '@rat/app'        : at('./index.js'),
+    '@rat/app/'       : at('./'),
     '@rat/bunker'     : at('../bunker/index.js'),
     '@rat/commands'   : at('../commands/index.js'),
     '@rat/compiler'   : at('../compiler/index.js'),
