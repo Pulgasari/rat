@@ -5,7 +5,7 @@ open choices are linked to [ideas/](ideas/README.md).
 
 - [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes) · [behaviors](#behaviors) · [event modifiers](#event-modifiers)
 - [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@switch`](#switch), [`@fragment`](#fragment)
-- [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
+- [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [match](#match), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
 
 
@@ -264,6 +264,54 @@ const adults = $users.filter(user => user is Adult);
   `is` elsewhere stays a name (`obj.is(x)`, `const is = …`).
 - a case compiles to `$$.pattern(value => parts | null)`; `x is Case` to `$$.is(x, Case)`.
   anything that is not a pattern compares with `Object.is`, so `x is 'idle'` works too.
+
+### match
+
+rat's switch, as an expression: arms `pattern => result`, tried from the top, the first match
+gives the result. the patterns are those of named cases.
+
+```js
+const label = match (event) {
+  { type: 'user', name }     => `user ${name}`,      // parts of the pattern are names in the result
+  { age } if age >= 18       => 'adult',             // a guard after the pattern
+  Num.range(0, 255)          => `byte ${#}`,         // a schema, class, predicate, regexp: # is the value it let through
+  Loading                    => 'loading …',         // a named case
+  'idle' | 'paused'          => 'waiting',           // either
+  _                          => 'unknown',           // anything
+};
+
+// without a value: a function of one value
+const toElements = match {
+  null    => [document.documentElement],
+  string  => [...document.querySelectorAll(#)],
+  Element => [#],
+  _       => [],
+};
+```
+
+- `#` in an arm is the value: the one matched, or for a schema the value it made (`Num` turns
+  `'120'` into `120`). a pipe inside an arm can not use `#` for its own value.
+- no arm matches: `undefined`. `_` is anything, also inside a pattern (`[_, y]`).
+- `match (x) {` and `match {` are syntax errors in plain js, so nothing valid changes meaning.
+  the `{` stays on the line of `match` or its `)`. `str.match(…)` is untouched.
+- a match compiles to an arrow function, called with the value or handed out. no `await` in
+  its arms.
+- in `.rat` scripts, holes and `.rat.js`.
+
+the tests a pattern can hold, here as in `case`, `is` and `@case`:
+
+| | |
+|---|---|
+| `{ key: pattern, name }`, `[a, b, ...rest]` | an object, an array (see [named cases](#named-cases)) |
+| `'x'`, `1`, `true`, `null` | equal |
+| `string`, `number` … | `typeof` |
+| `String`, `Number`, `Boolean` … | `typeof` as well |
+| `Element`, `Date` (a capital) | `instanceof`, or another case |
+| `Num.range(0, 255)`, `Enum('a', 'b')` | a schema: validated |
+| `isIterable` (a function in a variable) | a predicate: what it returns. a plain function compared by `is` is called, not compared |
+| `/^#/` | a string it matches |
+| `a \| b` | either, binding no parts |
+| `_` | anything |
 
 ### pipe
 

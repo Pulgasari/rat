@@ -76,4 +76,5 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 ## offline, start
 - service worker als mod `offline`: dateien der eigenen herkunft network-first (eine änderung zeigt sich beim nächsten laden), fremde cache-first mit auffrischen dahinter. jede app braucht ein `sw.js` neben ihrer seite (`importScripts`), ein worker reicht nur bis zu seinem ordner
 - kompilate hält der loader selbst (cache api `rat:compiled`, schlüssel url + hash des quelltexts): der sw kann blob-module nicht cachen. `?fresh` verwirft sie
+- `match` ist rats switch im script (compiler): `match (x) { muster => ergebnis, … }`, ohne `(x)` eine funktion. dieselben muster wie `case`/`is`/`@case`, `#` ist der wert (bei einem schema der umgewandelte), `_` ist alles, `a | b` beides. form vorläufig, wird später verbessert. `is` und `@case` verstehen dafür auch schemas, klassen, prädikate und regexp
 

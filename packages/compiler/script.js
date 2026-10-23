@@ -251,7 +251,7 @@ function caseDeclarations (code, offset = 0, found = new Map, runtime = '$$') {
     const from    = list[at + 3]?.start ?? code.length;
     const end     = list[last].end;
     const pattern = code.slice(from, guard ? list[guard].start : end).trim();
-    const test    = guard ? code.slice(list[guard].end, end).trim().replace(/#(?![\w$\\])/g, VALUE) : null;
+    const test    = guard ? code.slice(list[guard].end, end).trim().replace(/#(?![\w$\\])/g, () => VALUE) : null;
     if (!pattern) throw fail(`case ${name.value} has no pattern`, list[at + 2].start);
 
     const compiled = compilePattern(pattern, { fail: message => fail(`${message} in case ${name.value}`, from), runtime });
@@ -318,6 +318,7 @@ function compilePattern (code, { fail, runtime }) {
         return;
       }
       case 'Identifier': {
+        if (node.name === '_')         return;
         if (node.name === 'undefined') return void tests.push(`${access} === undefined`);
         if (TYPES.has(node.name))      return void tests.push(node.name === 'object' ? `(typeof ${access} === 'object' && ${access} !== null)` : `typeof ${access} === '${node.name}'`);
         if (/^[A-Z]/.test(node.name))  return void tests.push(`${runtime}.is(${access}, ${node.name})`);
@@ -327,6 +328,25 @@ function compilePattern (code, { fail, runtime }) {
         // Cases.Failed: another case; a lowercase chain is a value to compare with
         if (/^[A-Z]/.test(node.property.name ?? '')) return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
         return void tests.push(`${access} === ${text(node)}`);
+      // Num.range(0, 255), new Thing, /^#/: a test of its own (a schema, a class, a regexp)
+      case 'CallExpression':
+      case 'NewExpression':
+        return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
+      case 'Literal':
+        if (node.regex) return void tests.push(`${runtime}.is(${access}, ${text(node)})`);
+        return void tests.push(`${access} === (${text(node)})`);
+      // 'idle' | 'paused': either, binding no parts
+      case 'BinaryExpression':
+        if (node.operator === '|') {
+          const either = [];
+          for (const side of [node.left, node.right]) {
+            const inner = compilePattern(text(side), { fail, runtime });
+            if (inner.parts.length) throw fail('a pattern with | binds no parts');
+            either.push(inner.tests.length ? inner.tests.join(' && ').replaceAll(VALUE, () => access) : 'true');
+          }
+          return void tests.push(`((${either[0]}) || (${either[1]}))`);
+        }
+        return void tests.push(`${access} === (${text(node)})`);
       default:
         tests.push(`${access} === (${text(node)})`);
     }
@@ -334,6 +354,132 @@ function compilePattern (code, { fail, runtime }) {
 
   visit(node, VALUE);
   return { parts, tests };
+}
+
+// ::: sugar :: match
+
+/*
+rat's switch, as an expression. arms are `pattern => result`, tried from the
+top, the first that matches gives the result. without a value in parens it is
+a function of one value:
+
+  const label = match (event) {
+    { type: 'user', name }     => `user ${name}`,      parts of the pattern are names in the result
+    { age } if age >= 18       => 'adult',             a guard after the pattern
+    Num.range(0, 255)          => `byte ${#}`,         a schema, a class, a predicate, a regexp: # is the value it let through
+    Loading                    => 'loading …',         a named case
+    'idle' | 'paused'          => 'waiting',           either
+    _                          => 'unknown',           anything
+  };
+
+  const toElements = match {
+    null    => [document.documentElement],
+    string  => [...document.querySelectorAll(#)],
+    _       => [],
+  };
+
+# in an arm is the value. no arm matches: undefined. `match (x) {` and
+`match {` are syntax errors in plain js, the { has to be on the line of match
+or its ). becomes an arrow function, called with the value or handed out.
+*/
+const CAST = '$$cast';
+
+// the arms of a match: [{ pattern, guard, body, at }], split at the top level commas
+function armsOf (code, list, open, close, fail) {
+  const arms = [];
+  let depth  = 0;
+  let from   = open + 1;
+  for (let at = open + 1; at <= close; at++) {
+    const token = list[at];
+    if (at < close && OPENERS.has(token.type)) { depth++; continue; }
+    if (at < close && CLOSERS.has(token.type)) { depth--; continue; }
+    if (depth > 0 || (at < close && token.type !== tt.comma)) continue;
+    if (from < at) {
+      const arrow = list.slice(from, at).findIndex((item, index) => item.type === tt.arrow && level(list, from, from + index) === 0);
+      if (arrow < 0) throw fail('an arm of match is pattern => result', list[from].start);
+      const split = from + arrow;
+      const guard = list.slice(from, split).findIndex((item, index) => item.type === tt._if && level(list, from, from + index) === 0);
+      const head  = code.slice(list[from].start, list[guard < 0 ? split : from + guard].start).trim();
+      arms.push({
+        at      : list[from].start,
+        body    : code.slice(list[split].end, list[at - 1].end).trim(),
+        guard   : guard < 0 ? null : code.slice(list[from + guard].end, list[split].start).trim(),
+        pattern : head,
+      });
+    }
+    from = at + 1;
+  }
+  return arms;
+}
+
+// the bracket depth of index, counted from from
+function level (list, from, index) {
+  let depth = 0;
+  for (let at = from; at < index; at++) {
+    if (OPENERS.has(list[at].type)) depth++;
+    else if (CLOSERS.has(list[at].type)) depth--;
+  }
+  return depth;
+}
+
+// a pattern that is a test as a whole: its value may be cast (Num.range(0, 255), Element, a case)
+function isWholeTest (pattern) {
+  let node;
+  try { node = parseExpressionAt(pattern, 0, ACORN); } catch { return false; }
+  if (pattern.slice(node.end).trim()) return false;
+  if (node.type === 'Identifier')       return /^[A-Z]/.test(node.name);
+  if (node.type === 'MemberExpression') return /^[A-Z]/.test(node.property.name ?? '');
+  if (node.type === 'Literal')          return Boolean(node.regex);
+  return node.type === 'CallExpression' || node.type === 'NewExpression';
+}
+
+// a function as replacement: '$$' in a replacement string would be read as one $
+const topicOf = (text, name) => text.replace(/#(?![\w$\\])/g, () => name);
+
+function armCode ({ at, body, guard, pattern }, { fail, runtime }) {
+  if (pattern === '_') return `${guard ? `if (${topicOf(guard, VALUE)}) ` : ''}return (${topicOf(body, VALUE)});`;
+
+  if (isWholeTest(pattern)) {
+    const test = guard ? ` && (${topicOf(guard, CAST)})` : '';
+    return `{ const ${CAST} = ${runtime}.cast(${VALUE}, ${pattern}); if (${CAST} !== ${runtime}.NONE${test}) return (${topicOf(body, CAST)}); }`;
+  }
+
+  const { parts, tests } = compilePattern(pattern, { fail: message => fail(`${message} in an arm of match`, at), runtime });
+  const lines = parts.map(([name, access]) => `const ${name} = ${access};`);
+  lines.push(`${guard ? `if (${topicOf(guard, VALUE)}) ` : ''}return (${topicOf(body, VALUE)});`);
+  return `if (${tests.length ? tests.join(' && ') : 'true'}) { ${lines.join(' ')} }`;
+}
+
+function matchExpressions (code, offset = 0, runtime = '$$') {
+  if (!/\bmatch\b/.test(code)) return code;
+  const fail = (message, at) => new CompileError(message, { index: at + offset, source: ' '.repeat(offset) + code });
+
+  // the last match first: a match inside the arms of another one comes later in the text
+  for (let round = 0; round < 1000; round++) {
+    const list  = tokens(scannable(code), offset);
+    const found = list.map((token, at) => ({ at, token })).filter(({ at, token }) => {
+      if (token.type !== tt.name || token.value !== 'match') return false;
+      const before = list[at - 1];
+      if (before && (before.type === tt.dot || before.type === tt.questionDot || before.type === tt._function)) return false;
+      const next = list[at + 1];
+      if (next?.type === tt.braceL) return !breaks(code, token, next);
+      if (next?.type !== tt.parenL) return false;
+      const end = closing(list, at + 1);
+      return list[end + 1]?.type === tt.braceL && !breaks(code, list[end], list[end + 1]);
+    }).at(-1);
+    if (!found) return code;
+
+    const { at } = found;
+    const subject = list[at + 1].type === tt.parenL ? closing(list, at + 1) : null;
+    const open    = subject === null ? at + 1 : subject + 1;
+    const close   = closing(list, open);
+    const value   = subject === null ? null : code.slice(list[at + 1].end, list[subject].start).trim();
+    const arms    = armsOf(code, list, open, close, fail).map(arm => armCode(arm, { fail, runtime }));
+    const fn      = `((${VALUE}) => { ${arms.join(' ')} })`;
+
+    code = code.slice(0, list[at].start) + (value === null ? fn : `${fn}(${value})`) + code.slice(list[close].end);
+  }
+  throw new Error('[rat] match rewrite did not settle');
 }
 
 // ::: sugar :: is
@@ -436,12 +582,13 @@ function forOf (code, offset = 0) {
 }
 
 /*
-order matters: cases first (their guards own a #), # must be a name before anything
+order matters: cases first (their guards own a #), match next (its arms own a #), # must be a name before anything
 else tokenizes, ranges before pipes (1..5 |> sum), is before pipes (x |> # is A).
 cases: a map the named cases are collected in, name -> the parts they hand out
 */
 const sugar = (code, offset = 0, cases = new Map) => {
   code = caseDeclarations(code, offset, cases);
+  code = matchExpressions(code, offset);
   code = isOperator(ranges(topics(code, offset), offset), offset);
   return forOf(strayTopic(pipes(code, offset), offset), offset);
 };
