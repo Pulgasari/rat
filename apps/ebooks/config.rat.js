@@ -2,7 +2,7 @@
 
 import config from './../zugriff.config.js';
 
-import { FOLDERS } from '../.shared/folders.js';
+import { FOLDERS } from '@rat/app/folders.js';
 
 export default {
   ...config,
@@ -15,7 +15,7 @@ export default {
     database: {
       schema: {
         books    : null,      // key: '<source id>/<path>'
-        folders  : FOLDERS,   // the granted folders (../.shared/folders.js)
+        folders  : FOLDERS,   // the granted folders (@rat/app/folders.js)
         progress : null,      // key: the book key
       },
     },

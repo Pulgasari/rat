@@ -61,7 +61,7 @@ table.$items;    // the same, one per table, for markup:
 // @for (podcast of RAT.app.database.podcasts.$items) …
 ```
 
-a form of your own: `register(Type, store => …)`. `List`, `$List` and `$items` come from `rat.js`, the one file that knows rat: the rest moves to `@bunker` without it.
+a form of your own: `register(Type, store => …)`. `List`, `$List` and `$items` come from `@rat/app` (`bunker.js`): bunker itself knows nothing of rat.
 
 ## Files
 
@@ -133,22 +133,6 @@ await api.get('collections', () => fetch(…).then(response => response.json()))
 
 `ttl`: how long a value is fresh. `stale`: an old value comes back at once and is loaded anew
 behind it. one load per key at a time. the store holds `{ at, value }`.
-
-## thumbs
-
-```js
-import { createThumbs } from '@rat/bunker';
-
-const thumbs = createThumbs({ proxy: 'https://proxy.example/?url={url}' });
-await thumbs.request(imageUrl);    // an object url of a small webp, null: show the original
-thumbs.peek(imageUrl);             // the same, at once, from memory only
-await thumbs.requestFile(`${path}:${size}:${modified}`, () => entry.read('blob'));
-thumbs.prewarm(urls);  await thumbs.evict(urls);  await thumbs.clear();
-```
-
-made once from the original (fetched directly, through `proxy` when the host blocks cors, or
-from a `resizer` endpoint), kept in opfs under `dir` (`thumbs`), the oldest dropped past
-`maxBytes` (64 mb). in a rat app it is the mod `thumbnails`.
 
 ## in a rat app
 

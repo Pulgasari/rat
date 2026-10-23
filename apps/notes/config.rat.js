@@ -10,12 +10,12 @@
 
 import config from './../zugriff.config.js';
 
-import { FOLDERS } from '../.shared/folders.js';
+import { FOLDERS } from '@rat/app/folders.js';
 
 export default {
   ...config,
   name: 'Notes',
-  // the folders hold markdown, their handles are kept in the database (../.shared/folders.js)
+  // the folders hold markdown, their handles are kept in the database (@rat/app/folders.js)
   folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
   mods: {
     database : { schema: { folders: FOLDERS } },

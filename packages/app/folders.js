@@ -1,12 +1,14 @@
-// apps/.shared/folders.js
+// @rat/app :: folders
 
 /*
 folders the user grants, kept over visits: their handles in a table of the
 app's database, their content as trees through @rat/bunker's Files. the ui
 reads the signals.
 
-  // config.rat.js: mods: { database: { schema: { folders: FOLDERS } } }
-  const folders = createFolders({ accept: 'md, markdown', table: app.database.folders });
+  // config.rat.js, the database first: its table holds the folders
+  mods: { database: { schema: { folders: FOLDERS } }, folders: { accept: 'md, markdown' } }   // RAT.app.folders
+
+  const folders = createFolders({ accept: 'md, markdown', table: app.database.folders });   // without the mod
 
   await folders.load();              // the stored ones, their permission (never asks), the granted ones scanned
   await folders.add();               // the picker, inside a click. null when cancelled
@@ -138,6 +140,13 @@ function createFolders ({ accept, id = 'folders', table }) {
   return folders;
 }
 
+// the mod: RAT.app.folders, over the table of the database (options.table, 'folders')
+function folders ({ accept, id, table = 'folders' }, { app, config }) {
+  if (!app.database?.[table]) throw new Error(`[rat] mod folders: the database needs a table "${table}" (schema: { ${table}: FOLDERS }), before folders`);
+  return createFolders({ accept, id: id ?? config.id ?? 'folders', table: app.database[table] });
+}
+
 // :::::: EXPORT
 
 export { FOLDERS, createFolders };
+export default folders;

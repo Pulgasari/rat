@@ -1,8 +1,8 @@
-// @rat/bunker :: rat
+// @rat/app :: bunker
 
 /*
-what rat adds to the stores, kept out of the rest of the package so it moves
-to @bunker without rat:
+what rat adds to the stores of @rat/bunker (database, store), so bunker itself
+knows nothing of rat:
 
   await store.as(List)    a List of the values, a snapshot
   store.as($List)         a $List that follows the store: every change reads the values anew
@@ -11,8 +11,7 @@ to @bunker without rat:
 
 import { $List, List } from '@rat/types';
 
-import { register } from './cast.js';
-import { Store }    from './store.js';
+import { Store, register } from '@rat/bunker';
 
 register(List, async store => List.from(await store.values()));
 
