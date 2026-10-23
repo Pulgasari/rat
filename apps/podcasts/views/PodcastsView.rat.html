@@ -1,0 +1,36 @@
+<script>
+import Picker        from '/.shared/js/components/Picker.js';
+import PodcastsIndex from './../components/PodcastsIndex.js';
+
+import { sortPodcasts } from './../modules/methods.js';
+
+const app = RAT.app;
+
+$sorting  = RAT.$Enum ('newest', 'alpha');
+$viewmode = RAT.$Enum ('list', 'grid');
+$podcasts = app.database.podcasts.as('values') |> sortPodcasts (#, $sorting);
+  
+if (!podcasts) return null;
+</script>
+
+<>
+  <header>
+    <h1>Podcasts</h1>
+    <div class="view-tools">
+      <Picker signal={$sorting}  look='segments' />
+      <Picker signal={$viewmode} look='segments' />
+      <btn-icon icon|label='add' onClick={() => app.dialog = 'add'} />
+    </div>
+  </header>
+
+  <main>
+    <PodcastsIndex
+      podcasts={$podcasts}
+      empty={{
+        icon  : 'rss',
+        title : 'No subscriptions yet',
+        hint  : "Paste a podcast's RSS feed URL to subscribe."
+      }}
+    />
+  </main>
+</>
