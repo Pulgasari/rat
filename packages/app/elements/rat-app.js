@@ -57,7 +57,7 @@ import { gestalt }        from '@gestalt/core';
 import { createCommands } from '@rat/commands';
 import { Enum }           from '@rat/types';
 
-import { createRouter, fill, join, matchRoute, segmentsOf } from '../router/index.js';
+import { createRouter, fill, join, matchRoute, segmentsOf } from '../router.js';
 
 import { RAT, mount } from '@rat/runtime';
 
@@ -383,7 +383,7 @@ export class RatApp extends DominaElement {
       types  : ['rat-view'],
       update : () => {
         if (from) from.style.viewTransitionName = '';
-        if (to)   to.style.viewTransitionName   = IN;
+        if (to)     to.style.viewTransitionName = IN;
         swap();
       },
     });
