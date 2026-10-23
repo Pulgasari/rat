@@ -20,10 +20,14 @@ the markup comes out as an htx template, rendered by @domina/render.
 becomes
 
   import * as $$ from '@rat/runtime';
-  export default function Counter (props, children) {
+  export default function Counter (props, children) { return $$Counter.call({ props }, props, children); }
+  function $$Counter (props, children) {
     let $count = $$.$(0);
     return $$.html`<button onclick=${() => $count.value++}>${() => $count.value}</button>`;
   }
+
+the body runs with this: this.props is props. in a function of its own inside
+the script this is that function's, an arrow function keeps it.
 */
 
 // :::::: IMPORT
@@ -128,13 +132,16 @@ function compileComponent (source, { base, filename = 'component.rat', inlined, 
   const fragments = [];
   const view      = generate(ast, { cases, filename, fragments, names, runtime: RUNTIME, scope, source });
 
+  // the body runs with this: this.props (the arguments stay as well)
+  const name  = nameOf(filename);
   const lines = [
     `import * as ${RUNTIME} from ${JSON.stringify(runtime)};`,
     ...instance.flatMap(script => script.imports),
     ...modules.map(trimBlock),
     linked.length && `\n${linked.join('\n')}`,
     css && `\nconst ${RUNTIME}style = ${JSON.stringify(scopeStyle(css, scope))};`,
-    `\nexport default function ${nameOf(filename)} (props, children) {`,
+    `\nexport default function ${name} (props, children) { return ${RUNTIME}${name}.call({ props }, props, children); }`,
+    `\nfunction ${RUNTIME}${name} (props, children) {`,
     css && `  ${RUNTIME}.style('${scope}', ${RUNTIME}style);`,
     ...instance.map(script => trimBlock(script.code)),
     ...fragments.map(code => `  ${code}`),
