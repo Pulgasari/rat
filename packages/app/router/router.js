@@ -1,5 +1,26 @@
 // @rat/app :: router
 
+// :::::: IMPORT
+
+import { signal } from '@rat/signals';
+
+// :::::: HELPERS
+
+const isString = (sth) => typeof sth === 'string';
+
+const modeOf     = (mode, options) => typeof mode === 'string' ? MODES[mode]?.(options) ?? null : mode; // a name and options, or a mode object as it is
+const queryOf    = (search)        => Object.fromEntries(new URLSearchParams(search));
+const segmentsOf = (path)          => String(path ?? '').split('/').filter(Boolean);
+const join       = (...paths)      => '/' + paths.flatMap(segmentsOf).join('/'); // '/settings' + 'profile' -> '/settings/profile'
+
+const sameQuery = (a,b) => JSON.stringify(a) === JSON.stringify(b);
+
+// :::::: REFS
+
+const MODES = { hash, memory, path, query };
+
+const compiled = new Map;
+
 // @rat/app :: router :: modes
 
 /*
@@ -18,7 +39,6 @@ where a route lives. a mode is { read, write, listen }:
 a mode of your own is an object of the same shape.
 */
 
-const queryOf = search => Object.fromEntries(new URLSearchParams(search));
 
 const split = full => {
   const at = full.indexOf('?');
@@ -48,11 +68,15 @@ const onWindow = (types, fn) => {
 */
 
 /*
-the history modes number their entries in history.state, so a back or forward a
-guard refuses is undone by going the same number of steps the other way, and
-the entry keeps its place. popstate only: it comes for hash changes as well, a
-hashchange on top would ask the guards twice.
+the history modes number their entries in history.state,
+so a back or forward a guard refuses 
+is undone by going the same number of steps the other way,
+and the entry keeps its place. 
+
+popstate only: it comes for hash changes as well,
+a hashchange on top would ask the guards twice.
 */
+
 function historyOf () {
   let index = history.state?.ratIndex ?? 0;
   if (history.state?.ratIndex === undefined) history.replaceState({ ...history.state, ratIndex: index }, '');
@@ -117,10 +141,69 @@ function memory ({ initial = '/' } = {}) {
   };
 }
 
-const MODES = { hash, memory, path, query };
 
-// a name and options, or a mode object as it is
-const modeOf = (mode, options) => typeof mode === 'string' ? MODES[mode]?.(options) ?? null : mode;
+/*
+route patterns, matched segment by segment:
+
+  /notes/:id       a param, one segment
+  /notes/:id?      an optional one
+  /files/*         the rest, any number of segments (params['*'])
+  /notes           a literal
+
+matchRoute(pattern, path) gives { params, rest } or null. a nested route
+matches the start of the path and hands the rest to its children:
+
+  matchRoute('/settings', '/settings/profile')            { params: {}, rest: '/profile' }
+  matchRoute('/settings', '/settings/profile', { exact })  null
+
+a pattern without a leading slash is relative, the same as with one: the
+caller decides what it is relative to.
+*/
+
+function compile (pattern) {
+  if (!compiled.has(pattern)) {
+    compiled.set(pattern, segmentsOf(pattern).map(segment =>
+        segment === '*'          ? { kind: 'rest' }
+      : segment.startsWith(':')  ? { kind: 'param', name: segment.slice(1).replace(/\?$/, ''), optional: segment.endsWith('?') }
+      :                            { kind: 'literal', value: decodeURIComponent(segment) }));
+  }
+  return compiled.get(pattern);
+}
+
+function matchRoute (pattern, path, { exact = false } = {}) {
+  const parts    = compile(pattern);
+  const segments = segmentsOf(path);
+  const params   = {};
+  let   at       = 0;
+
+  for (const part of parts) {
+    if (part.kind === 'rest') {
+      params['*'] = segments.slice(at).map(decodeURIComponent).join('/');
+      return { params, rest: '' };
+    }
+    const segment = segments[at];
+    if (part.kind === 'literal') {
+      if (segment === undefined || decodeURIComponent(segment) !== part.value) return null;
+      at++;
+    }
+    else if (segment === undefined) {
+      if (!part.optional) return null;
+    }
+    else {
+      params[part.name] = decodeURIComponent(segment);
+      at++;
+    }
+  }
+
+  const rest = at < segments.length ? '/' + segments.slice(at).join('/') : '';
+  return exact && rest ? null : { params, rest };
+}
+
+// '/notes/:id' with { id: 3 } -> '/notes/3'
+const fill = (pattern, params = {}) => '/' + compile(pattern).map(part =>
+    part.kind === 'literal' ? encodeURIComponent(part.value)
+  : part.kind === 'rest'    ? params['*'] ?? ''
+  :                           params[part.name] == null ? '' : encodeURIComponent(params[part.name])).filter(Boolean).join('/');
 
 /*
   const router = createRouter({ mode: 'hash' }).start();
@@ -144,13 +227,8 @@ params belong to whoever knows the routes: match() hands them to its callback,
 an app that matches its views sets router.params itself.
 */
 
-// :::::: IMPORT
 
-import { signal }        from '@rat/signals';
-import { modeOf, split } from './modes.js';
-import { matchRoute }    from './pattern.js';
 
-const sameQuery = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 const toFull = (path, query) => {
   const search = new URLSearchParams(query).toString();
@@ -294,5 +372,6 @@ function createRouter ({ base = '', initial = '/', key = 'route', mode = 'hash',
 
 // :::::: EXPORT
 
-export { MODES, modeOf, split }; // modes.js
+export { MODES, modeOf, split }; // ehem. modes.js
+export { fill, join, matchRoute, segmentsOf }; // ehem. pattern.js
 export { createRouter };
