@@ -153,3 +153,28 @@ export declare function register (Type: unknown, make: (store: Store) => unknown
 
 export declare const codecs  : Record<'json' | 'text' | 'raw' | 'response', Codec>;
 export declare const drivers : Record<DriverName, (options?: Record<string, unknown>) => Driver>;
+
+export interface Thumbs {
+  /** An object url from memory, at once, or null. */
+  peek (url: string): string | null;
+  peekFile (id: string): string | null;
+  /** The thumbnail of an image url, made on a miss. null: show the original. */
+  request (url: string): Promise<string | null>;
+  /** The thumbnail of a file the app holds. getFile is called on a miss only. */
+  requestFile (id: string, getFile: () => Blob | Promise<Blob>): Promise<string | null>;
+  prewarm (urls: string[]): void;
+  evict (urls: string[]): Promise<void>;
+  clear (): Promise<void>;
+}
+
+export declare function createThumbs (options?: {
+  concurrency? : number,
+  dir?         : string,
+  maxBytes?    : number,
+  /** A template with {url}, or a function returning one. */
+  proxy?       : string | (() => string),
+  quality?     : number,
+  /** (url, width) => an endpoint that returns a small image, or null. */
+  resizer?     : ((url: string, width: number) => string | null) | null,
+  width?       : number,
+}): Thumbs;
