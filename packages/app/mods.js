@@ -10,7 +10,8 @@ it wants, each lands on the app (RAT.app.<name>):
       files    : true,                    // the origin private file system
       hotkeys  : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
       offline  : true,                    // a service worker: offline once open, installable (sw.js)
-      store    : { driver: 'local' },     // keys and values
+      store      : { driver: 'local' },   // keys and values
+      thumbnails : { proxy: '…{url}' },   // small copies of images in opfs, RAT.app.thumbnails.request(url)
     },
   };
 
@@ -46,6 +47,12 @@ const MODS = {
     if (!navigator.serviceWorker) return null;
     const url = new URL(options.src ?? 'sw.js', new URL(app.src ?? location.href, app.baseURI));
     return navigator.serviceWorker.register(url).catch(error => { console.warn('[rat] mod offline:', error.message); return null; });
+  },
+
+  // small webp copies of images in opfs (@rat/bunker createThumbs): RAT.app.thumbnails.request(url)
+  async thumbnails (options) {
+    const { createThumbs } = await import('@rat/bunker');
+    return createThumbs(options);
   },
 
   async store (options, { config }) {
