@@ -1,6 +1,6 @@
 <!-- RAT :: Component :: Dock -->
 <script>
-  const $route = rat.app.route;
+  const $route = RAT.app.route;
 
 function DockNavItem ({ icon, label, dialog, panel, route, view, match = [], current, onClick, ...rest }) {
   if (dialog) onClick = () => zugriff.app.toggleDialog(dialog);

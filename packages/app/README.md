@@ -114,7 +114,7 @@ what a part holds until the component mounts stays: a loading screen without cod
 | `density`, `geometry`, `layout`, `look`, `mode`, `palette`, `skin` | handed to `@gestalt/core` |
 | `app.router`, `app.commands` | `@rat/router`, `@rat/commands` listening on the app (`go[settings]`, `back`) |
 | `app.view`, `app.views`, `app.area(name)`, `app.areas` | the deepest active view, every view, the areas |
-| `onclick='rat:toggle[menu]'`, `rat.toggle('menu', force?)` | an area opened or closed by its name: the event (`@rat/commands`) or the function (`import { rat } from '@rat/app'`, `rat.app` is the app). both, to find out which serves better |
+| `onclick='rat:toggle[menu]'`, `RAT.toggle('menu', force?)` | an area opened or closed by its name: the event (`@rat/commands`) or the function (`RAT.toggle`, `RAT.app` is the app). both, to find out which serves better |
 | `rat:ready`, `rat:navigate` | events, `rat:navigate` with `{ from, to, path, params }` |
 
 one per page, a second one warns and stays out of it.
@@ -148,7 +148,6 @@ else the view `name="x"`.
 import { Id } from '@rat/types';
 
 export default {
-  RAT     : true,                     // globalThis.RAT, a string names it otherwise ('APP')
   name    : 'icons',
   mods    : {
     database : { schema: { favs: { name: Id } } },               // RAT.app.database (@rat/bunker)
@@ -161,7 +160,7 @@ export default {
 
 | | |
 |---|---|
-| `RAT` | opt-in. `RAT.app` is the app, `RAT.config` its config, `RAT.toggle(name)`. without the global: `import RAT from '@rat/app'` |
+| `RAT` | always there, from `@rat/runtime`: every export of `@rat/types` (`RAT.Enum` …), `RAT.app` the app, `RAT.config` its config, `RAT.toggle(name)`. as a module: `import RAT from '@rat/app'`, `import { RAT } from '@rat/runtime'`. another name: `globalThis.APP = RAT` |
 | `app.config` | the config, `{}` without one |
 | `mods` | the parts rat provides that not every app needs, each lands on the app under its name. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |

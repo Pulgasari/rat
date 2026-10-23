@@ -28,6 +28,9 @@ export function when    (condition: unknown, then: () => unknown, otherwise?: ((
 export function raw     (html: string | null | undefined): unknown;
 
 export { NONE, any, either, is, match, part, pass, pattern, rest } from '@rat/types';
+
+/** The one global of rat (globalThis.RAT): every export of @rat/types, and app, config, toggle from @rat/app. */
+export declare const RAT: typeof import('@rat/types') & { readonly app: HTMLElement | null; readonly config: Record<string, unknown> | null; toggle (name: string, force?: boolean): boolean | null };
 /** A @match block: a branch gets the parts of its case as a getter. */
 export function cases     (subject: () => unknown, tests: unknown[], views: ((parts: () => object) => unknown)[], otherwise?: (() => unknown) | null): unknown;
 

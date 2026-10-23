@@ -5,7 +5,7 @@
 - entweder default export oder mehrere top-level exports
 - ist dann am globalen `rat` verfügbar: `rat.config`
 
-<rat-app> lädt sie selbst (app.config, mit RAT: true auch RAT.config)
+<rat-app> lädt sie selbst (app.config, RAT.config)
 */
 
 import config from './../zugriff.config.js';

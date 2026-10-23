@@ -104,6 +104,7 @@ what the loader compiled from them is dropped (rat:compiled), so they compile an
     '@rat/runtime'    : at('../runtime/index.js'),
     '@rat/signals'    : at('../signals/index.js'),
     '@rat/types'      : at('../types/index.js'),
+    '@rat/types/'     : at('../types/'),
     //////////// @aufbau ////////////
     '@aufbau/elements'  : at('../../../aufbau/elements/index.js'),
     '@aufbau/elements/' : at('../../../aufbau/elements/'),

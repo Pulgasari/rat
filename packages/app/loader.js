@@ -26,6 +26,16 @@ and a hash of its source: an unchanged file is not compiled again, and as long
 as nothing has to be compiled, the compiler is not even loaded. a file that
 inlines a css file (style inline) is compiled every time, its css may change.
 ?fresh (run.js) drops them all, VERSION does when the compiled output changes.
+
+autoImport (config.rat.js, set by <rat-app>): a component the markup uses
+(<Dock />) that the file neither imports nor declares is looked for in these
+folders, relative to the config, as Name.rat.html, Name.rat, Name.rat.js. the
+first file found is imported, none is an error.
+
+  autoImport : true                                          the folder of the config
+  autoImport : '../.shared/components/'
+  autoImport : ['./components/', '../.shared/components/']   in this order
+  autoImport : { './components/': ['Dock', 'Footer'] }       only these names there
 */
 
 import { isArray, isFn, isString } from './_shared.js';
@@ -39,7 +49,12 @@ const SELF     = import.meta.url;
 const cache = new Map; // url -> Promise<blob url>
 
 const COMPILED = 'rat:compiled';
-const VERSION  = 1;
+const VERSION  = 2;
+
+const EXTENSIONS = ['.rat.html', '.rat', '.rat.js'];
+
+let   folders = [];      // [{ dir, names }]: where autoImport looks, names null for any
+const located = new Map; // name -> Promise<url | null>
 
 // fnv-1a over the source, enough to tell an edit
 function hashOf (text) {
@@ -97,6 +112,42 @@ async function rewrite ({ code, found: all }, url, chain) {
   return code;
 }
 
+// ::: autoImport
+
+// the folders of an autoImport spec, against the url of the config
+function autoImport (spec, base) {
+  const dir     = path => new URL(path.endsWith('/') ? path : `${path}/`, base).href;
+  const entries = spec === true ? [{ dir: new URL('./', base).href, names: null }]
+    : [spec].flat().flatMap(item => isString(item) ? [{ dir: dir(item), names: null }] : Object.entries(item).map(([path, names]) => ({ dir: dir(path), names })));
+  folders = entries;
+  located.clear();
+}
+
+const exists = url => fetch(url, { cache: 'no-cache' }).then(response => response.ok, () => false);
+
+// the first file of a component in the folders, once per name
+function locate (name) {
+  if (!located.has(name)) located.set(name, (async () => {
+    for (const { dir, names } of folders) {
+      if (names && !names.includes(name)) continue;
+      for (const extension of EXTENSIONS) if (await exists(dir + name + extension)) return dir + name + extension;
+    }
+    return null;
+  })());
+  return located.get(name);
+}
+
+// the import statements for the components a file uses without importing them
+async function importsOf (names = [], url, chain) {
+  if (!names.length || !folders.length) return '';
+  const lines = await Promise.all(names.map(async name => {
+    const target = await locate(name);
+    if (!target) throw new Error(`[rat] ${url}: <${name}> is not imported and not found in ${folders.map(({ dir }) => dir).join(', ')}`);
+    return `import ${name} from ${JSON.stringify(await compileFile(target, chain))};`;
+  }));
+  return lines.join('\n');
+}
+
 // ::: compile
 
 async function build (url, chain) {
@@ -107,8 +158,11 @@ async function build (url, chain) {
   const source = await response.text();
   const name   = new URL(url).pathname.split('/').pop();
 
-  const code = await rewrite(await compiledOf(source, url, name), url, chain);
-  return URL.createObjectURL(new Blob([`${code}\n//# sourceURL=${url}.js\n`], { type: 'text/javascript' }));
+  const compiled = await compiledOf(source, url, name);
+  const code     = await rewrite(compiled, url, chain);
+  // at the end, so the lines of the code stay where they were: imports are hoisted anyway
+  const imports  = await importsOf(compiled.unresolved, url, chain);
+  return URL.createObjectURL(new Blob([`${code}\n${imports}\n//# sourceURL=${url}.js\n`], { type: 'text/javascript' }));
 }
 
 // { code, found }: kept from an earlier compile of the same source, or compiled now
@@ -119,8 +173,8 @@ async function compiledOf (source, url, name) {
   if (hit) return hit.json();
 
   document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
-  const { code, inlined } = await compileSource(source, url, name);
-  const result = { code, found: await specifiers(code) };
+  const { code, inlined, unresolved = [] } = await compileSource(source, url, name);
+  const result = { code, found: await specifiers(code), unresolved };
 
   if (store && !inlined) {
     await store.delete(url, { ignoreSearch: true });
@@ -129,7 +183,7 @@ async function compiledOf (source, url, name) {
   return result;
 }
 
-// source -> { code, inlined }: module code by the kind of the file, inlined when it read another file
+// source -> { code, inlined, unresolved }: module code by the kind of the file, inlined when it read another file
 async function compileSource (source, url, name) {
   const kind = kindOf(url);
   if (kind === 'html') return { code: `import { raw } from '@rat/runtime';\nconst source = ${JSON.stringify(source)};\nexport default () => raw(source);\n` };
@@ -144,7 +198,8 @@ async function compileSource (source, url, name) {
       return fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
     };
     const { compileAsync } = await import('@rat/compiler');
-    return { code: (await compileAsync(source, { base: url, filename: name, read })).code, inlined };
+    const { code, unresolved } = await compileAsync(source, { base: url, filename: name, read });
+    return { code, inlined, unresolved };
   }
   catch (error) { error.message = `${url}\n${error.message}`; throw error; }
 }
@@ -171,4 +226,4 @@ const componentOf = module => module.default ?? Object.values(module).find(value
 
 // :::::: EXPORT
 
-export { compileFile, componentOf, load };
+export { autoImport, compileFile, componentOf, load };

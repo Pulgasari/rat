@@ -3,7 +3,6 @@
 import { Id } from '@rat/types';
 
 export default {
-  RAT     : true,
   name    : 'icons',
   mods    : {
     // the icons the user hearted, by name ('mdi:home')

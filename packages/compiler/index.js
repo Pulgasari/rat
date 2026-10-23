@@ -28,18 +28,43 @@ becomes
 
 // :::::: IMPORT
 
+import { parse as parseProgram } from 'acorn';
+
 import { generate }             from './generate.js';
 import { parse }                from './parse.js';
 import { MODES, attrOf, hash, inlineSources, langOfPath, rebase, scopeStyle } from './style.js';
 import { CompileError, nameOf } from './util.js';
 
 import { builtIn, langOf, langsIn, loadStyles, preprocessor }                              from './preprocess.js';
-import { caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
+import { bindings, caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, transformExpression, transformScript, walk } from './script.js';
 
 const RUNTIME = '$$';
 
 // blank lines at the edges go, the indentation of the block stays
 const trimBlock = code => code.replace(/^\s*\n/, '').trimEnd();
+
+// ::: components
+
+/*
+the components the markup uses (<Dock />) that the compiled code neither
+imports nor declares: the loader may find them (autoImport in config.rat.js)
+*/
+function unresolvedOf (asts, code) {
+  const used  = new Set;
+  const seen  = new WeakSet;
+  const visit = node => {
+    if (!node || typeof node !== 'object' || seen.has(node)) return;
+    seen.add(node);
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (node.type === 'Element' && node.component) used.add(node.tag.split('.')[0]);
+    for (const key in node) if (node[key] && typeof node[key] === 'object') visit(node[key]);
+  };
+  visit(asts);
+  if (!used.size) return [];
+
+  const bound = new Set([...bindings(parseProgram(code, { ecmaVersion: 'latest', sourceType: 'module' }))].map(node => node.name));
+  return [...used].filter(name => !bound.has(name)).sort();
+}
 
 // ::: .rat
 
@@ -118,7 +143,8 @@ function compileComponent (source, { base, filename = 'component.rat', inlined, 
     css && `\nexport { ${RUNTIME}style as style };`,
   ];
 
-  return { ast, code: lines.filter(Boolean).join('\n') + '\n', css, names: [...names], scope };
+  const code = lines.filter(Boolean).join('\n') + '\n';
+  return { ast, code, css, names: [...names], scope, unresolved: unresolvedOf(ast, code) };
 }
 
 // ::: .rat.js
@@ -147,11 +173,13 @@ function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/ru
 
   const { code } = transformScript(source, { extraEdits: markup, filename, names, runtime: RUNTIME, source });
   const used     = code.includes(`${RUNTIME}.`);
+  const out      = (used ? `import * as ${RUNTIME} from ${JSON.stringify(runtime)};\n\n` : '') + code.trim() + '\n';
 
   return {
-    ast  : { templates, type: 'Module' },
-    code : (used ? `import * as ${RUNTIME} from ${JSON.stringify(runtime)};\n\n` : '') + code.trim() + '\n',
-    names: [...names],
+    ast        : { templates, type: 'Module' },
+    code       : out,
+    names      : [...names],
+    unresolved : unresolvedOf(templates, out),
   };
 }
 

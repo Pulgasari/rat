@@ -24,14 +24,14 @@ src the app is [loading] by itself until they are mounted.
   app.area(name) a <rat-area>, app.areas all of them
 
 config.rat.js next to src (or config-src) is loaded before the app's code: its
-RAT: true puts rat on globalThis as RAT (a string names it otherwise), its
-mods land on the app (RAT.app.database …, see ../mods.js), the config
-itself is app.config.
+mods land on the app (RAT.app.database …, see ../mods.js), its autoImport
+names the folders components come from without an import (see ../loader.js),
+the config itself is app.config.
 
 areas open and close by their name, two forms to find out which serves better:
 
   onclick='rat:toggle[menu]'       the event rat:toggle (@rat/commands), the app takes it
-  rat.toggle('menu', force?)       import { rat } from '@rat/app': rat.app is the app
+  RAT.toggle('menu', force?)       the global RAT (@rat/runtime): RAT.app is the app
 
 matching: per level the first view whose route matches, exactly, else as the
 start of the path (a view with views in it, or a src not loaded yet), else a
@@ -59,13 +59,13 @@ import { Enum }           from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 
-import { mount } from '@rat/runtime';
+import { RAT, mount } from '@rat/runtime';
 
-import { catchErrors, showError } from '../boundary.js';
-import { componentOf, load }      from '../loader.js';
-import { useMods }                from '../mods.js';
-import { RatArea }                from './rat-area.js';
-import { RatView }                from './rat-view.js';
+import { catchErrors, showError }        from '../boundary.js';
+import { autoImport, componentOf, load } from '../loader.js';
+import { useMods }                       from '../mods.js';
+import { RatArea }                       from './rat-area.js';
+import { RatView }                       from './rat-view.js';
 
 // :::::: CONSTS
 
@@ -255,7 +255,7 @@ export class RatApp extends DominaElement {
 
   // :::::: CONFIG
 
-  // config.rat.js next to src (config-src names another): RAT and the mods, once, before
+  // config.rat.js next to src (config-src names another): the mods, once, before
   // the app's own code runs. without config-src a missing file is no config
   async configure () {
     if (this.#config) return this.#config;
@@ -267,7 +267,7 @@ export class RatApp extends DominaElement {
 
     const module = await load(url);
     const config = module.default ?? { ...module };
-    if (config.RAT) globalThis[config.RAT === true ? 'RAT' : config.RAT] = rat;
+    if (config.autoImport) autoImport(config.autoImport, url);
     await useMods(this, config);
     return this.#config = config;
   }
@@ -451,14 +451,14 @@ export class RatApp extends DominaElement {
 
 RatApp.init('rat-app');
 
-// the app from anywhere: rat.app, rat.toggle('menu')
-const rat = {
-  get app    () { return current; },
-  get config () { return current?.config ?? null; },
-  toggle (name, force) { return current?.toggle(name, force) ?? null; },
-};
+// the app from anywhere, on the global RAT of the runtime: RAT.app, RAT.toggle('menu')
+Object.defineProperties(RAT, {
+  app    : { configurable: true, enumerable: true, get: () => current },
+  config : { configurable: true, enumerable: true, get: () => current?.config ?? null },
+  toggle : { configurable: true, enumerable: true, value: (name, force) => current?.toggle(name, force) ?? null },
+});
 
 // :::::: EXPORT
 
-export { RatArea, RatView, rat };
+export { RAT, RatArea, RatView };
 export default RatApp;

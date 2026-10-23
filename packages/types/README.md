@@ -31,9 +31,9 @@ three things, kept apart:
 
 | | what it is | examples |
 |---|---|---|
-| **data types** | classes whose instances hold data | `Array`, `Map`, `Set` (js), `Color`, `Enum`, `List`, `Record`, `Tuple` |
-| **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
-| **reactive variants** | subclasses of data types whose reads subscribe and whose writes notify | `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set` |
+| **data types** | classes whose instances hold data | `Array`, `Map`, `Set` (js), `Color`, `Enum`, `List`, `Record`, `Table`, `Tuple` |
+| **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Table({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
+| **reactive variants** | data types whose reads subscribe and whose writes notify | `$Array`, `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`, `$Table` |
 
 **one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
@@ -49,15 +49,17 @@ new $Enum('grid', 'list', 'masonry')  // the same value, reactive
 
 | | value (`new`) | schema (call) | reactive |
 |---|---|---|---|
+| `Array` | plain js | – | `$Array` |
 | `Color` | yes | `Color()` | `$Color` |
 | `Enum` | yes | `Enum('a', 'b')` | `$Enum` |
 | `List` | yes | `List(Str)` | `$List` |
 | `Record` | yes | `Record({ … })` | `$Record` |
+| `Table` | yes | `Table({ … })` | `$Table` |
 | `Tuple` | yes, frozen | `Tuple(Str, Num)` | none: a change is a new tuple |
 | `Union` | none | `Union(Num, Str)` | none | 
-| `Bool`, `Num`, `Str` | plain js | the schema itself | none |
+| `Bool`, `Num`, `Str` | plain js | the schema itself | `$Bool`, `$Num`, `$Str` |
 
-`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`),.see below.
+`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`), or for `Bool`, `Num`, `Str` the objects `$Bool`, `$Num`, `$Str` with methods, see below.
 
 # Basic DataTypes
 
@@ -113,6 +115,23 @@ JSON.stringify(settings);                      // '{"view":"list","zoom":80}'
 ```
 
 a field may be called anything but `assign`, `schema` and `toJSON`.
+
+## Table
+
+a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object with exactly the columns (a field the schema does not know is dropped), its position is its key.
+
+```js
+const Todos = Table({ title: Str, done: Bool });       // or Table(Record({ … }))
+
+const todos = new Table(Todos, [{ title: 'milk' }]);   // a missing field gets its initial value
+todos.push({ title: 'eggs', done: 'yes' });            // checked and coerced: done is true
+todos.update(0, { done: true });                       // a row is frozen, a change goes through the table
+todos.column('title');                                 // ['milk', 'eggs']
+todos.where({ done: false });                          // the rows a test of match lets through
+todos.columns;                                         // ['title', 'done']
+```
+
+every `List` method works, the ones that add or replace rows (`push`, `unshift`, `set`, `splice`, `replace`, `update`) check them. `$Table` has one version for the whole table: any write updates whatever read the table.
 
 ## Tuple
 
@@ -218,11 +237,17 @@ $accent.l = 70; // whatever read $accent.hex, .r, .h … updates
 
 const $settings = new $Record(Settings);
 $settings.zoom = 120; // whatever read any field updates
+
+const $todos = new $Array([]);
+$todos.push(todo);   // whatever read $todos, an index or its length updates
+$todos[0] = other;
 ```
+
+- `$Array` is a proxy around a plain array, not a subclass: index access and `length` are no methods. `Array.isArray` is true, every array method works. `$List` stays its own type (a class with `at()`/`set()`, no proxy).
 
 - reading methods and getters subscribe, writing methods and setters notify, a write that changes nothing notifies nobody (`set` with the same value, `pop` on an empty list).
 - `$Record` has one version for all fields: a write to one field updates whatever read any field (d-23 b). a signal per field would be finer, and pays off only for large records.
-- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c), and can be reassigned:
+- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$Array` (d-23 c), and can be reassigned:
 
 ```html
 <script>
@@ -234,6 +259,21 @@ $settings.zoom = 120; // whatever read any field updates
 
 <p>{$todos.length} todos</p>
 @for (todo of $todos): <li>{todo.title}</li>
+```
+
+### `$Bool`, `$Num`, `$Str`
+
+objects with `value`, like `$Enum`: a write is checked by the schema, `toString`/`valueOf` give the value.
+
+```js
+const $open = new $Bool;                          // false
+$open.toggle();  $open.on();  $open.off();
+
+const $zoom = new $Num(100, Num.range(50, 200));  // or new $Num(Num.range(50, 200)): at its initial value
+$zoom.inc(10);  $zoom.dec(10);                    // stop at the bounds of the schema
+
+const $query = new $Str('');
+$query.clear();
 ```
 
 ### typed signal or `$Enum`?

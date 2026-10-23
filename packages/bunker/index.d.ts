@@ -71,7 +71,7 @@ export declare function createStore<V = any> (options?: StoreOptions): Store<V>;
 
 export type Field = { '~standard': unknown } | StringConstructor | NumberConstructor | BooleanConstructor | typeof URL | ObjectConstructor | ArrayConstructor;
 
-export declare class Table<R extends Record<string, any> = Record<string, any>> extends Store<R> {
+export declare class DatabaseTable<R extends Record<string, any> = Record<string, any>> extends Store<R> {
   readonly name : string;
   /** The field that is the key. */
   readonly key  : string;
@@ -95,8 +95,8 @@ export declare class Database {
   readonly name   : string;
   /** The names of the tables. */
   readonly tables : string[];
-  table (name: string): Table;
-  [table: string]: Table | unknown;
+  table (name: string): DatabaseTable;
+  [table: string]: DatabaseTable | unknown;
 }
 
 export declare function createDatabase (options?: DatabaseOptions): Database;

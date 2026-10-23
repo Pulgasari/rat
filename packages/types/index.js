@@ -6,10 +6,13 @@ export {
 } from './schema.js';
 
 // Basic DataTypes + their reactive variant
+export { $Bool, $Num, $Str } from './scalars.js';
+export {         $Array  } from './Array.js';
 export { Enum,   $Enum   } from './Enum.js';
 export { List,   $List   } from './List.js';
 export {         $Map    } from './Map.js';
 export { Record, $Record } from './Record.js';
+export { Table,  $Table  } from './Table.js';
 export {         $Set    } from './Set.js';
 export { Tuple           } from './Tuple.js';
 export { Union           } from './Union.js';

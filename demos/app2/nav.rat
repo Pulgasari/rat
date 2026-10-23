@@ -1,7 +1,3 @@
-<script>
-  import { rat } from '@rat/app';
-</script>
-
 <nav.nav>
   <button onclick='go[/]'>home</button>
   <button onclick='go[/notes/3]'>note 3</button>
@@ -11,7 +7,7 @@
   <button onclick='go[/broken]'>errors</button>
   <button onclick='back'>back</button>
   <button onclick='rat:toggle[sheet]'>sheet (event)</button>
-  <button onclick={() => rat.toggle('sheet')}>sheet (rat.toggle)</button>
+  <button onclick={() => RAT.toggle('sheet')}>sheet (RAT.toggle)</button>
 </nav.nav>
 
 <style>
