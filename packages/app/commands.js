@@ -88,6 +88,17 @@ class Schema {
   }
 }
 
+// camelCase: starts lowercase, subsequent words capitalized (e.g. "camelCase", "myVar123")
+
+// PascalCase: every word starts with an uppercase letter (e.g. "PascalCase", "MyClass123")
+
+// CONSTANT_CASE: all uppercase with underscore delimiters (e.g. "CONSTANT_CASE", "MAX_RETRY_COUNT")
+
+// snake_case: all lowercase with underscore delimiters (e.g. "snake_case", "user_id_123")
+
+// Title Case: capitalized words separated by spaces (e.g. "Title Case", "Hello World 123")
+
+
 
 
 
@@ -104,13 +115,33 @@ const toWords = (value) => String(value ?? '')
   .filter(Boolean);
 
 const CamelCase = {
-  pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
+  pattern   : /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
   transform : value => toWords(value).join('-'),
+}
+
+const ConstantCase = {
+  pattern   : /^[A-Z0-9]+(_[A-Z0-9]+)*$/,
+  transform : ,
 }
 
 const KebabCase = {
   pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
-  transform : value => toWords(value).join('-'),
+  transform : ,
+}
+
+const PascalCase = {
+  pattern   : /^[A-Z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
+  transform : ,
+}
+
+const SnakeCase = {
+  pattern   : /^[a-z0-9]+(_[a-z0-9]+)*$/,
+  transform : ,
+}
+
+const TitleCase = {
+  pattern   : /^[A-Z][a-z0-9]*(\s[A-Z][a-z0-9]*)*$/,
+  transform : ,
 }
 
 
