@@ -1,0 +1,247 @@
+/*
+NOTE FOR CLAUDE: YOU ARE NOT ALLOWED TO EDIT THIS
+BUT YOU ARE ALLOWED TO PUT CSS CODE SUGGESTIONS HERE INSIDE COMMENTS
+*/
+
+/*
+SUGGESTION — the tags of @aufbau/elements 2: the selectors below still name the old ones.
+  aufbau-index -> data-index, aufbau-item -> data-item, aufbau-icon -> svg-icon,
+  aufbau-input -> input-search (the search panel)
+the frame is <app-root> > <app-area name="main"> (views, .player, #app-dock) + <app-area name="config">.
+.view is still the root of every view, inside its <app-view>.
+the root fills #app as in files/app.css:
+  app-root { flex: 1 1 auto; min-block-size: 0; }
+*/
+
+/*
+SUGGESTION — views without the .view wrapper (components/Views.js, ViewHeader.js)
+the <app-view> is the root of a view now: header + main sit directly in it, there is
+no div.view, no #episode / #podcast and no .explore-view / .podcast-view anymore.
+a view is addressed by its name. the two blocks below as they would read:
+
+app-view {
+  display   : flex;
+  flex-flow : column;
+
+  > * { padding: 1rem; }
+  > main:has(> data-index) { padding: 0; }
+
+  .search-panel { background: var(--color-bg); }
+  .search-panel { width: 100%; position: sticky; top: 0; }
+  input-search  { width: stretch; }
+}
+
+app-view:is([name='episode'], [name='podcast']) {
+  > main > .art {
+    max-width: 75%;
+    img { width: stretch; }
+  }
+}
+
+and in the explore suggestion further down:
+  .explore-view          -> app-view[name='explore']
+  .explore-podcast-view  -> app-view[name='explore-podcast']
+*/
+
+.view {
+  display   : flex;
+  flex-flow : column;
+
+  > * { padding: 1rem; }
+  > main:has(> aufbau-index) { padding: 0; }
+
+  .search-panel { background: var(--color-bg); }
+  .search-panel { width: 100%; position: sticky; top: 0; }
+  aufbau-input  { width: stretch; }
+}
+
+#episode,
+#podcast {
+  > main > .art {
+    max-width: 75%;
+    img { width: stretch; }
+  }
+}
+
+
+
+
+aufbau-index[viewmode="list"] { 
+  gap: 0;
+  
+  > *:nth-child(odd) { background-color: #0001; }
+  > * {
+    display : grid;
+    gap     : 0.75rem;
+    grid-template-columns : 100px auto;
+    grid-template-rows    : 1fr;
+    /* grid: 1fr 1fr / 1fr 2fr; */
+    > *             { grid-column: 2; }
+    > *:first-child { grid-column: 1; grid-row: span 4; }
+  }
+}
+
+.art, .artwork {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+aufbau-item {
+  .art, .artwork {
+    /* --gestalt-flow: grid center center; */
+    
+    display         : grid;
+    align-items     : center;
+    justify-content : center;
+  
+    aufbau-icon {
+      font-size: 2rem;
+      opacity: 0.25;
+    }
+  }
+  .meta {
+    opacity: 0.5;
+  }
+  .title {
+    font-size   : 1.25rem;
+    font-weight : bold;
+    line-height : 1.25;
+  }
+}
+
+/*.art, .not-a-button,*/
+.meta > button,
+aufbau-item .title {
+  display: contents!important;
+}
+
+aufbau-item {
+  contain-intrinsic-height : auto 170px;
+  content-visibility       : auto;
+  transition-behavior      : allow-discrete;
+}
+
+aufbau-item {
+  .meta       { display: flex; justify-content: space-between; }
+  .ActionMenu { display: flex; align-items: center; gap: 0.5rem; }
+}
+
+/*
+SUGGESTION — add-podcast dialog (dialogs/AddPodcastDialog.js)
+the markup is: .Modal.add-podcast > main > input, i.note, .results > li > button
+> .art + .meta > .title + .sub
+
+.add-podcast {
+  min-width: min(30rem, 92vw);
+
+  input[type='search'] { width: 100%; }
+
+  .note { color: var(--fg); opacity: 0.6; display: block; margin-block: 0.5rem; }
+
+  .results {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+
+    li + li { border-top: 1px solid var(--line); }
+
+    button {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 3rem auto;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.5rem;
+      background: none;
+      border: 0;
+      border-radius: var(--radius);
+      text-align: left;
+      color: inherit;
+      cursor: pointer;
+
+      &:hover:not(:disabled) { background: var(--hover); }
+      &:disabled             { opacity: 0.5; cursor: default; }
+    }
+
+    .art { width: 3rem; border-radius: calc(var(--radius) / 2); }
+
+    .meta  { display: grid; gap: 0.15rem; min-width: 0; }
+    .title { font-weight: 600; }
+    .title, .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sub   { opacity: 0.6; font-size: 0.85em; }
+  }
+}
+*/
+
+/*
+SUGGESTION — explore (views/ExploreView.js, views/ExplorePodcastView.js)
+a row carrying .subscribed is already in the library — it is a way back to it
+rather than an offer. the tabs are a segments picker, the filters two comboboxes.
+markup:
+  .View#explore > header + main > .picker.tabs + input + .filters + [.Button]
+    + [i.note] + [.loading] + [.section]
+    + aufbau-index > aufbau-item > .art + .meta + .title + .ActionMenu
+  (on the episodes tab: aufbau-index.explore-episodes > aufbau-item
+    > .art + .meta + .title + .teaser + .ActionMenu)
+  .View#explore-podcast > header(.actions) + main > .art + .info + .section
+    + aufbau-index.preview-episodes > aufbau-item > .art + .meta + .title + .teaser + .Link
+
+.explore-view > main,
+.explore-podcast-view > main {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.explore-view {
+  > main > input { position: sticky; top: 0; z-index: 2; }
+
+  .picker.tabs .picker-option { flex: 1; }
+
+  .filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .note { color: var(--fg-50, var(--fg)); font-style: normal; }
+
+  .section {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    opacity: 0.5;
+  }
+
+  aufbau-item .ActionMenu {
+    display: flex;
+    gap: 0.5rem;
+
+    button { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
+  }
+
+  aufbau-item.subscribed .title { opacity: 0.6; }
+
+  .explore-episodes {
+    .meta   { display: flex; gap: 0.5rem; }
+    .teaser { margin: 0; opacity: 0.6; font-size: 0.9rem; }
+  }
+}
+
+.explore-podcast-view {
+  > main > .art { max-width: 160px; }
+
+  .info    { display: grid; gap: 0.35rem; }
+  .stats   { opacity: 0.5; font-size: 0.85rem; }
+  .author  { opacity: 0.75; }
+  .about   { margin: 0; }
+
+  header .actions { display: flex; gap: 0.5rem; }
+
+  .preview-episodes {
+    .meta   { display: flex; gap: 0.5rem; }
+    .teaser { margin: 0; opacity: 0.6; font-size: 0.9rem; }
+  }
+}
+*/
