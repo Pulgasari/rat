@@ -16,9 +16,9 @@ app-wide shortcuts, declared as a map of combo -> what it does:
   hotkeys['ctrl+s'] = 'save';        // the same, property form (hotkeys['ctrl+s'] reads it back)
   delete hotkeys['ctrl+s'];          // remove('ctrl+s')
 
-a name runs through the commands given, else through fire (name => event => …)
-given, else it fires 'rat:command' from the focused element, so a registry
-listening above it runs it. define is assign under its older name. plain
+a name runs through the commands given, without them it fires 'rat:command'
+from the focused element, so a registry listening above it runs it. define is
+assign under its older name. plain
 typing in an input, textarea, select or contenteditable is left alone, unless
 the combo holds ctrl, alt or meta or the binding says global. preventDefault
 is on unless the binding sets it to false. when gates a binding.
@@ -34,13 +34,13 @@ const fire = name => event => (event.composedPath?.()[0] ?? document.activeEleme
 
 const RESERVED = new Set(['assign', 'define', 'destroy', 'get', 'list', 'remove', 'set']);
 
-function createHotkeys ({ commands = null, fire: fireAs = fire, target = globalThis } = {}) {
+function createHotkeys ({ commands = null, target = globalThis } = {}) {
   const byKey = new Map; // the last key of a combo -> [{ combo, keys, spec }]
 
   const runnerOf = command => typeof command === 'function' ? command
     : typeof command !== 'string' ? null
     : commands ? event => commands.run(command, event)
-    : fireAs(command);
+    : fire(command);
 
   // a key someone else used up (an overlay that closed on escape) is no shortcut
   const onKeydown = event => {

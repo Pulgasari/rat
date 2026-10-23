@@ -27,8 +27,8 @@ export interface Hotkeys {
   [keys: string]: any;
 }
 
-/** Names run through commands, else through fire, else they fire 'rat:command' from the focused element. */
-export function createHotkeys (options?: { commands?: { run (name: string, ...args: unknown[]): unknown } | null, fire?: (name: string) => Handler, target?: EventTarget }): Hotkeys;
+/** Names run through commands; without them they fire 'rat:command' from the focused element. */
+export function createHotkeys (options?: { commands?: { run (name: string, ...args: unknown[]): unknown } | null, target?: EventTarget }): Hotkeys;
 
 export const MODIFIERS: { alt: 'altKey', ctrl: 'ctrlKey', meta: 'metaKey', shift: 'shiftKey' };
 /** 'ArrowLeft', 'arrow-left' -> 'left'; ' ' -> 'space'; 'Control' -> 'ctrl'. */

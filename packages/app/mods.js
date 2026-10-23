@@ -36,9 +36,9 @@ const MODS = {
     return createFiles(options);
   },
 
-  // a command name fires from the app, also for what assign / set / [combo] = adds later
+  // a command name goes to the app: the focused element can be outside of it (the body)
   hotkeys (map, { app }) {
-    return createHotkeys({ fire: text => event => command(app, text, event) }).assign(map === true ? {} : map);
+    return createHotkeys({ commands: { run: (text, event) => command(app, text, event) } }).assign(map === true ? {} : map);
   },
 
   // the app's sw.js next to its src (options.src names another), see sw.js
