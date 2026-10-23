@@ -1,4 +1,4 @@
-// apps/icons/modules/iconify.js
+// apps/icons/iconify.js
 //
 // the Iconify HTTP API: collections, one collection's icons, and search.
 // api.iconify.design allows cross-origin requests, so these are plain fetches.

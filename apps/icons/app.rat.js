@@ -3,7 +3,7 @@
 // an Iconify browser: every set, every icon, search, favourites.
 // the grid renders through the <iconify-icon> webcomponent, so a page of hundreds
 // of icons is a couple of batched requests; the app's own chrome uses <svg-icon>.
-// data comes from api.iconify.design (modules/iconify.js), favourites from the
+// data comes from api.iconify.design (iconify.js), favourites from the
 // database of config.rat.js (RAT.app.database.favs, @rat/bunker).
 
 import { autoloader } from '@aufbau/elements';
@@ -21,7 +21,7 @@ import { hint }        from '../.shared/install.js';
 import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
 
-import * as api from './modules/iconify.js';
+import * as api from './iconify.js';
 
 // the <iconify-icon> element, not awaited: the app runs without it, the grid fills in once it is there
 import('https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js').catch(() => {});
