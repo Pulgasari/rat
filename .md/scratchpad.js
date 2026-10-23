@@ -1,10 +1,17 @@
-
+// commands | hotkeys
 
 RAT.Command.create('do-sth', () => {...});
 RAT.Command.create({ name: 'do-sth', exec: () => {...} });
 
 RAT.Hotkey.create('ctrl + d', 'do-sth');
 
+//
+
+schema {
+  artist : { type: String },
+}
+
+// match
 
 case Loading = ...;
 
