@@ -1,0 +1,144 @@
+<script>
+  // <ReaderView />: the book of state.bookKey. the reader is in the dom while it is on screen
+  // only, leaving it closes the book
+
+  import { effect, untrack } from '@rat/runtime';
+
+  import { closeReader }                                  from './../actions.js';
+  import { bookByKey, openFile, progressOf, saveProgress } from './../lib.js';
+  import { createEpubReader, createPdfReader }            from './../reader.js';
+  import { state }                                        from './../state.js';
+
+  let { $bookKey, $readerFlow, $readerFont, $readerUi: $ui } = state;
+
+  let $stage  = null;   // the element the engine renders into
+  let $engine = null;
+
+  const $book = bookByKey($bookKey);
+
+  // per book: a book updated by its metadata stays open
+  effect(() => {
+    const key = $bookKey, stage = $stage;
+    const book = untrack(() => bookByKey(key));
+    if (!book || !stage) return;
+
+    let alive  = true;
+    let timer  = 0;
+    let latest = null;
+    $ui = { error: null, kind: book.kind, ready: false, toc: null, tocOpen: false };
+
+    const flush   = () => { if (latest) { saveProgress(key, latest); latest = null; } };
+    // the live state into the ui, the persisted write debounced
+    const onState = live => {
+      $ui    = { ...$ui, ...live };
+      latest = book.kind === 'pdf' ? { page: live.page, pages: live.pages, percent: live.percent } : { location: live.cfi, percent: live.percent };
+      clearTimeout(timer);
+      timer = setTimeout(flush, 800);
+    };
+
+    (async () => {
+      try {
+        const file   = await openFile(book);
+        if (!alive) return;
+        const saved  = progressOf(key);
+        const engine = book.kind === 'pdf'
+          ? await createPdfReader(stage, file, { initialPage: saved?.page || 1, onState })
+          : await createEpubReader(stage, file, { flow: $readerFlow, fontSize: $readerFont, initialCfi: saved?.location || null, onState });
+        if (!alive) { engine.destroy(); return; }
+        $engine = engine;
+        $ui = { ...$ui, flow: engine.flow, fontSize: engine.fontSize, kind: engine.kind, ready: true };
+      }
+      catch (error) { if (alive) $ui = { ...$ui, error: error.message, ready: true }; }
+    })();
+
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+      flush();
+      $engine?.destroy();
+      $engine = null;
+    };
+  });
+
+  async function toggleToc () {
+    if (!$ui.tocOpen && $ui.toc == null) {
+      $ui = { ...$ui, toc: [], tocOpen: true };
+      $ui = { ...$ui, toc: await $engine?.outline?.() ?? [] };
+    }
+    else $ui = { ...$ui, tocOpen: !$ui.tocOpen };
+  }
+
+  async function toggleFlow () {
+    if (!$engine) return;
+    const flow = $ui.flow === 'scrolled' ? 'paginated' : 'scrolled';
+    $readerFlow = flow;
+    await $engine.setFlow(flow);
+    $ui = { ...$ui, flow };
+  }
+
+  const font = step => { if (!$engine) return; step > 0 ? $engine.fontUp() : $engine.fontDown(); $readerFont = $engine.fontSize; };
+
+  function pick (target) {
+    $ui.kind === 'pdf' ? $engine?.gotoDest(target) : $engine?.gotoHref(target);
+    $ui = { ...$ui, tocOpen: false };
+  }
+
+  // keys: page / chapter turn, escape back to the library
+  function key (event) {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName) || !$engine) return;
+    if (event.key === 'ArrowLeft')  $engine.prev();
+    if (event.key === 'ArrowRight') $engine.next();
+    if (event.key === 'Escape')     closeReader();
+  }
+
+  effect(() => {
+    addEventListener('keydown', key);
+    return () => removeEventListener('keydown', key);
+  });
+</script>
+
+<header.reader-bar>
+  <btn-icon icon='arrow-left' label='Back' title='Back to library' onclick={closeReader} />
+  <div.reader-id>
+    <span.reader-title>{$book?.title ?? 'Book'}</span>
+    @if ($book?.author): <span.reader-author>{$book.author}</span>
+  </div.reader-id>
+
+  <div.reader-controls>
+    @if ($ui.kind === 'pdf')
+      <btn-icon icon='mdi:minus' label='Zoom out' onclick={() => $engine?.zoomOut()} />
+      <btn-icon icon='mdi:plus'  label='Zoom in'  onclick={() => $engine?.zoomIn()} />
+    @if ($ui.kind === 'epub')
+      <btn-icon icon='mdi:format-font-size-decrease' label='Smaller text' disabled={!$engine} onclick={() => font(-1)} />
+      <btn-icon icon='mdi:format-font-size-increase' label='Larger text'  disabled={!$engine} onclick={() => font(1)} />
+      <btn-icon
+        icon={$ui.flow === 'scrolled' ? 'mdi:book-open-page-variant-outline' : 'mdi:page-layout-body'}
+        label={$ui.flow === 'scrolled' ? 'Paginated' : 'Scrolled'}
+        disabled={!$engine}
+        onclick={toggleFlow}
+      />
+    <btn-icon icon='mdi:table-of-contents' label='Contents' aria-pressed={$ui.tocOpen} onclick={toggleToc} />
+  </div.reader-controls>
+</header.reader-bar>
+
+<div.reader-main>
+  <div.reader-stage ref={$stage}></div>
+
+  @if ($ui.tocOpen): <TocPanel items={$ui.toc} kind={$ui.kind} onpick={pick} />
+  @if (!$ui.ready && !$ui.error): <div.reader-loading><svg-icon icon='svg-spinners:bars-scale-middle' /></div>
+  @if ($ui.error): <div.reader-error><Empty icon='mdi:book-alert-outline' title='Couldn’t open this book' hint={$ui.error} /></div>
+
+  @if ($ui.kind === 'epub' && $ui.ready && !$ui.error)
+    <button.page-edge.left  aria-label='Previous' onclick={() => $engine?.prev()}><svg-icon icon='mdi:chevron-left' /></button>
+    <button.page-edge.right aria-label='Next'     onclick={() => $engine?.next()}><svg-icon icon='mdi:chevron-right' /></button>
+</div.reader-main>
+
+<footer.reader-foot>
+  @if ($ui.kind === 'pdf' && $ui.pages)
+    <button.ibtn aria-label='Previous page' onclick={() => $engine?.prev()}><svg-icon icon='mdi:chevron-up' /></button>
+    <span.foot-label>Page {$ui.page ?? 1} / {$ui.pages}</span>
+    <button.ibtn aria-label='Next page' onclick={() => $engine?.next()}><svg-icon icon='mdi:chevron-down' /></button>
+  @else
+    <span.foot-label>{$ui.percent != null ? Math.round(($ui.percent || 0) * 100) + '%' : ''}</span>
+  <aufbau-progress.foot-bar value={Math.round(($ui.percent || 0) * 100)} />
+</footer.reader-foot>

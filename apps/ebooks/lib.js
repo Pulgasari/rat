@@ -1,163 +1,175 @@
-// 
+// apps/ebooks/lib.js
+//
+// the library: the folders the user grants (../.shared/folders.js), the books found
+// in them (table books) and where each one was left (table progress).
+//
+// scanning is two-phase: a scan lists the files and shows the shelf at once with
+// filename titles, then a few books at a time are opened to pull real metadata and
+// a cover (library.js), the grid updating as each one lands. a book is opened again
+// only when its size or date changed.
 
-/*
-wurde aus zugriff/apps/ebooks/db.js übernommen.
-ist aber actually totaler boilerplate-schrott,
-der mal ganz am anfang von zugriff enstand,
-als nicht funktionierte nach und nach apps zu bauen,
-deren geschaffene logik dann vernünftig zu abstrahieren.
+import { effect, signal } from '@rat/signals';
 
-actually sollte es hier wohl rat-packages geben ...
+import { createFolders } from '../.shared/folders.js';
 
-- @rat/database (@bunker/db) - datenbank für die meta-data
-- @rat/folders  - file access handling
-- @bunker/opfs  - zum speichern der thunmbnails 
-                  (wie teilweise in zugriff/shared schon am start, 
-                  aber lässt sich bestitmmt sauber umsetzen)
-                  
-... auf denen hier dann aufgebaut werden kann.
-*/
+import { extractMeta, kindOf, prettyName } from './library.js';
 
-// book to pull real metadata and a cover, updating the grid as each one lands.
+const QUEUE = 3;   // books opened at once for their metadata
 
+const db    = () => RAT.app.database;
+const keyOf = (sourceId, path) => `${sourceId}/${path}`;
 
-import { accept, kindOf, prettyName, extractMeta } from './library.js';
-import FolderLibrary, { MetaQueue, syncSource } from '/.shared/js/modules/folders.js';
+// :::::: STATE
 
-const fs     = zugriff.fs;
-const SEP   = '/';   
-const keyOf = (sourceId, path) => sourceId + SEP + path;
+export const books    = signal([]);   // [{ key, sourceId, path, name, kind, title, author, cover, sig, metaDone, pages, addedAt }]
+export const progress = signal({});   // key -> { location, page, pages, percent, updatedAt, lastOpenedAt }
+export const pending  = signal(0);    // books still waiting for their metadata
 
-let $books    = [];        // [{ key, sourceId, path, name, kind, title, author, cover, sig, metaDone, pages, addedAt }]
-let $progress = {};        // key -> { location, page, pages, percent, updatedAt, lastOpenedAt }
+export const folders = createFolders({ accept: 'epub, pdf', id: 'ebooks', table: RAT.app.database.folders });
 
-// extraction (unzip / pdf-parse / cover render) is the slow part of a scan, so a
-// few books go at once through a bounded gate while the fast listing is already
-// on screen. see shared/js/modules/folders.js.
-const meta = new MetaQueue(3);
-export const pending = meta.pending;   // books still queued for metadata extraction
-
-export const bookByKey  = key => books.value.find(b => b.key === key) ?? null;
-export const booksBySource = computed(() => {
-  const map = {};
-  for (const b of books.value) (map[b.sourceId] ??= []).push(b);
-  return map;
-});
-
-// ── the library ──────────────────────────────────────────────────────────
-
-const lib = new FolderLibrary({
-  db:       'zugriff-ebooks',
-  pickerId: 'zugriff-ebooks',
-  stores:   { sources: {}, books: {}, progress: {} },
-
-  onLoad: async (db) => {
-    const [bookRows, progRows] = await Promise.all([db.getAll('books'), db.getAll('progress')]);
-    books.value    = Object.values(bookRows);
-    progress.value = progRows;
-  },
-
-  scan: async (s, { db }) => {
-    const files = fs.flatten(await fs.scanTree(s.handle, { accept }));
-    const next  = await syncSource({
-      db, store: 'books', sourceId: s.id, files, rows: books.value, keyOf,
-      makeRecord: (f, { key, sourceId, sig, prev }) => ({
-        key, sourceId, path: f.path, name: f.name, kind: kindOf(f.name),
-        title: prettyName(f.name), author: '', cover: prev?.cover ?? null,
-        sig, metaDone: false, pages: null, addedAt: prev?.addedAt ?? Date.now(),
-      }),
-    });
-    books.value = next;
-    meta.enqueue(next.filter(b => b.sourceId === s.id && !b.metaDone), extractOne);
-  },
-
-  cascade: async (id, db) => {
-    const doomed = books.value.filter(b => b.sourceId === id).map(b => b.key);
-    await db.task('books',    'readwrite', store => { for (const k of doomed) store.delete(k); });
-    await db.task('progress', 'readwrite', store => { for (const k of doomed) store.delete(k); });
-    books.value = books.value.filter(b => b.sourceId !== id);
-    const p = { ...progress.value }; for (const k of doomed) delete p[k]; progress.value = p;
-  },
-});
-
-export const { sources, perms, scanning, ready } = lib;
-export const sourceById = lib.sourceById;
-
-export const load         = lib.load;
-export const addFolder    = lib.addFolder;
-export const reconnect    = lib.reconnect;
-export const repick       = lib.repick;
-export const removeFolder = lib.removeFolder;
-export const scan         = lib.scan;
-export const rescanAll    = lib.rescanAll;
-
-// ── background metadata ──────────────────────────────────────────────────────
-
-async function extractOne (b) {
-  const cur = bookByKey(b.key);
-  if (!cur || cur.metaDone || cur.sig !== b.sig) return;   // superseded by a rescan
-
-  const source = lib.sourceById(b.sourceId);
-  if (!source) return;
-
-  try {
-    const handle = await lib.fileHandle(source, b.path);
-    const info   = await extractMeta(b.kind, handle);
-    const merged = {
-      ...cur,
-      title  : info.title  || cur.title,
-      author : info.author || cur.author,
-      cover  : info.cover  ?? cur.cover,
-      pages  : info.pages  ?? cur.pages,
-      metaDone: true,
-    };
-    await lib.db.set('books', merged.key, merged);
-    books.value = books.value.map(x => x.key === merged.key ? merged : x);
-  } catch {
-    const merged = { ...cur, metaDone: true };   // don't retry a broken file every load
-    await lib.db.set('books', merged.key, merged);
-    books.value = books.value.map(x => x.key === merged.key ? merged : x);
-  }
-}
-
-// ── file access ────────────────────────────────────────────────────────────
-
-/** walk a stored path to its file handle, live from a granted folder root */
-export async function fileHandleFor (rootHandle, path) {
-  const segs = path.split('/');
-  let dir = rootHandle;
-  for (const seg of segs.slice(0, -1)) dir = await dir.getDirectoryHandle(seg);
-  return dir.getFileHandle(segs.at(-1));
-}
-
-/** the live File for a book, opened fresh from disk */
-export async function openFile (book) {
-  const source = lib.sourceById(book.sourceId);
-  if (!source) throw new Error('This book’s folder is no longer open.');
-  // opening happens after the click (in an effect), so there's no user gesture
-  // to prompt with — if the folder isn't already granted, send them back to
-  // reconnect it in the library rather than silently failing to prompt
-  if (await fs.queryPermission(source.handle, 'read') !== 'granted') {
-    lib.perms.value = { ...lib.perms.value, [source.id]: 'prompt' };
-    throw new Error('Reconnect this book’s folder in the library first.');
-  }
-  return lib.fileAt(source, book.path);
-}
-
-// ── progress ─────────────────────────────────────────────────────────────────
-
+export const bookByKey  = key => books.value.find(book => book.key === key) ?? null;
 export const progressOf = key => progress.value[key] ?? null;
+
+// :::::: LOAD
+
+export async function load () {
+  books.value    = await db().books.values();
+  progress.value = await db().progress.as(Object);
+  await folders.load();
+}
+
+// a folder whose tree changed is synced into the books, once per tree
+const synced = new Map;   // source id -> the tree last synced
+
+effect(() => {
+  for (const [id, tree] of Object.entries(folders.trees.value)) {
+    if (synced.get(id) === tree) continue;
+    synced.set(id, tree);
+    sync(id, tree);
+  }
+});
+
+const filesOf = node => !node ? [] : node.kind === 'file' ? [node] : (node.children ?? []).flatMap(filesOf);
+
+async function sync (sourceId, tree) {
+  const known = new Map(books.value.filter(book => book.sourceId === sourceId).map(book => [book.key, book]));
+
+  const next = await Promise.all(filesOf(tree).map(async node => {
+    const key  = keyOf(sourceId, node.path);
+    const info = await node.entry.info();
+    const sig  = `${info?.size}:${info?.modified}`;
+    const prev = known.get(key);
+    if (prev?.sig === sig) return prev;
+    return {
+      addedAt  : prev?.addedAt ?? Date.now(),
+      author   : '',
+      cover    : prev?.cover ?? null,
+      key,
+      kind     : kindOf(node.name),
+      metaDone : false,
+      name     : node.name,
+      pages    : null,
+      path     : node.path,
+      sig,
+      sourceId,
+      title    : prettyName(node.name),
+    };
+  }));
+
+  const gone    = [...known.keys()].filter(key => !next.some(book => book.key === key));
+  const changed = next.filter(book => known.get(book.key) !== book);
+  await Promise.all([...gone.map(key => db().books.delete(key)), ...changed.map(book => db().books.set(book.key, book))]);
+
+  books.value = [...books.value.filter(book => book.sourceId !== sourceId), ...next];
+  enqueue(next.filter(book => !book.metaDone));
+}
+
+// :::::: METADATA, a few books at a time
+
+const waiting = [];
+let   running = 0;
+
+function enqueue (list) {
+  waiting.push(...list);
+  pump();
+}
+
+function pump () {
+  pending.value = waiting.length + running;
+  while (running < QUEUE && waiting.length) {
+    const book = waiting.shift();
+    running++;
+    extract(book).finally(() => { running--; pump(); });
+  }
+}
+
+async function extract (book) {
+  const current = bookByKey(book.key);
+  if (!current || current.metaDone || current.sig !== book.sig) return;   // a rescan came first
+
+  let merged = { ...current, metaDone: true };   // a broken file is not retried on every load
+  try {
+    const info = await extractMeta(current.kind, await fileOf(current));
+    merged = {
+      ...merged,
+      author : info.author || current.author,
+      cover  : info.cover  ?? current.cover,
+      pages  : info.pages  ?? current.pages,
+      title  : info.title  || current.title,
+    };
+  }
+  catch {}
+
+  await db().books.set(merged.key, merged);
+  books.value = books.value.map(other => other.key === merged.key ? merged : other);
+}
+
+// :::::: FOLDERS
+
+export const addFolder = () => folders.add();
+export const rescanAll = () => Promise.all(folders.sources.value.map(source => folders.scan(source.id)));
+export const reconnect = id => folders.reconnect(id);
+export const repick    = id => folders.repick(id);
+
+// the folder goes, and with it its books and their progress
+export async function removeFolder (id) {
+  const doomed = books.value.filter(book => book.sourceId === id).map(book => book.key);
+  await folders.remove(id);
+  await Promise.all(doomed.flatMap(key => [db().books.delete(key), db().progress.delete(key)]));
+  books.value = books.value.filter(book => book.sourceId !== id);
+  const rest = { ...progress.value };
+  for (const key of doomed) delete rest[key];
+  progress.value = rest;
+  synced.delete(id);
+}
+
+// :::::: FILES
+
+const fileOf = book => folders.nodeAt(book.sourceId, book.path)?.entry.read('blob') ?? Promise.reject(new Error('This book is no longer in its folder.'));
+
+// the file of a book, fresh off disk. opening happens after the click (in an effect),
+// so there is no user gesture to prompt with: a folder that is not granted goes back
+// to the library to be reconnected
+export function openFile (book) {
+  if (!folders.sources.value.some(source => source.id === book.sourceId)) return Promise.reject(new Error('This book’s folder is no longer open.'));
+  if (folders.perms.value[book.sourceId] !== 'granted') return Promise.reject(new Error('Reconnect this book’s folder in the library first.'));
+  return fileOf(book);
+}
+
+// :::::: PROGRESS
 
 export async function saveProgress (key, patch) {
   const next = { ...progress.value[key], ...patch, updatedAt: Date.now() };
   progress.value = { ...progress.value, [key]: next };
-  await lib.db.set('progress', key, next);
+  await db().progress.set(key, next);
   return next;
 }
 
 export const markOpened = key => saveProgress(key, { lastOpenedAt: Date.now() });
 
 export async function clearProgress (key) {
-  const p = { ...progress.value }; delete p[key]; progress.value = p;
-  await lib.db.delete('progress', key);
-  }
+  const rest = { ...progress.value };
+  delete rest[key];
+  progress.value = rest;
+  await db().progress.delete(key);
+}

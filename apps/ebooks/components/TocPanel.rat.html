@@ -1,0 +1,22 @@
+<script>
+  // <TocPanel items={list | null} kind='pdf' | 'epub' onpick={target => …} />: the contents of a book, nested
+</script>
+
+@fragment list (items)
+  <ul.toc-list>
+    @for (item of items ?? [])
+      <li>
+        <button.toc-link onclick={() => props.onpick(props.kind === 'pdf' ? item.dest : item.href)}>{item.label || 'Untitled'}</button>
+        @if (item.children?.length): {list(item.children)}
+      </li>
+  </ul.toc-list>
+
+<aside.toc-panel>
+  <div.toc-head>Contents</div.toc-head>
+  @if (props.items == null)
+    <div.toc-loading><svg-icon icon='svg-spinners:bars-scale-middle' /></div>
+  @else if (props.items.length)
+    {list(props.items)}
+  @else
+    <div.toc-empty>No contents in this book.</div>
+</aside.toc-panel>

@@ -1,0 +1,54 @@
+<script>
+  // <LibraryView />: the shelf, its folders, search and sorting
+
+  import { addFolder, toggleConfig }   from './../actions.js';
+  import { folders, pending, rescanAll } from './../lib.js';
+  import { visibleBooks }              from './../shelf.js';
+  import { state }                     from './../state.js';
+
+  let { $folder, $search } = state;
+
+  const $visible = visibleBooks.value;
+  const $pending = pending.value;
+  const $sources = folders.sources.value;
+</script>
+
+<ViewHeader title='Library'>
+  @if ($pending > 0): <span.scan-note><svg-icon icon='loading' /> {$pending} left</span>
+  <btn-icon icon='refresh'    label='Rescan folders' onclick={rescanAll} />
+  <btn-icon icon='folder-add' label='Add folder'     onclick={addFolder} />
+  <btn-icon icon='settings'   label='Settings'       onclick={toggleConfig} />
+</ViewHeader>
+
+<main>
+  <SourceStatus />
+  <InstallTip />
+
+  @if (!$sources.length)
+    <Empty icon='books' title='Your library is empty' hint='Add a folder of EPUB and PDF files. It stays on your device — only the folder permission is remembered.'>
+      <btn-push icon='folder-add' label='Add a folder' onclick={addFolder} />
+    </Empty>
+  @else
+    <div.lib-controls>
+      <SearchPanel placeholder='Search title or author…' bind:value={$search} />
+      <Picker signal={state.sort} />
+    </div.lib-controls>
+
+    @if ($sources.length > 1)
+      <div.folder-bar>
+        <button.chip class:active={$folder === ''} onclick={() => $folder = ''}>All</button>
+        @for (source of $sources): <button.chip class:active={$folder === source.id} onclick={() => $folder = source.id}>{source.name}</button>
+      </div.folder-bar>
+
+    <section.shelf>
+      <h2>All books <span>{$visible.length}</span></h2>
+      @if ($visible.length)
+        <data-index viewmode='grid' item-size='150px' gap='1rem'>
+          @for (book of $visible): <aufbau-item><BookItem book={book} /></aufbau-item>
+        </data-index>
+      @else if ($search)
+        <Empty icon='mdi:magnify-close' title='Nothing matches your search' />
+      @else
+        <Empty icon='mdi:book-outline' title='No books here yet' hint='Scanning may still be running, or this folder has no EPUB/PDF files.' />
+    </section.shelf>
+</main>
