@@ -181,6 +181,73 @@ const UpperCase = {
 
 
 
+const KebabCase = Str.case({
+  pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
+  transform : value => toWords(value).join('-'),
+});
+
+class StrSchema extends Schema {
+  // … min, max, pattern, email, uuid as now
+
+  // a case of writing: any string goes in, transform makes the case of it, pattern checks the result
+  case ({ pattern, transform }) {
+    return this.derive({
+      run: (value, path) => {
+        const result = this.run(value, path);                   // Str first: is it a string?
+        if (result.issues) return result;
+
+        const changed = transform(result.value);                // 'togglePlay' -> 'toggle-play'
+        if (value !== changed) return { issues: [{ message: `not ${pattern}`, path }] };
+        return { value: changed };
+      },
+    });
+  }
+}
+
+const CamelCase = Str.case({
+  pattern   : /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
+  transform : value => toWords(value).map((word, index) => index ? upperFirst(word) : word).join(''),
+});
+
+const ConstantCase = Str.case({
+  pattern   : /^[A-Z0-9]+(_[A-Z0-9]+)*$/,
+  transform : value => toWords(value).join('_').toUpperCase(),
+});
+
+const KebabCase = Str.case({
+  pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
+  transform : value => toWords(value).join('-'),
+});
+
+const LowerCase = Str.case({
+  pattern   : /^[a-z0-9]+$/,
+  transform : value => String(value ?? '').toLowerCase(),q
+});
+
+const MockingCase = Str.case({
+  pattern   : /^(?:(?:[a-z][A-Z])*[a-z]?|(?:[A-Z][a-z])*[A-Z]?)$/,
+  transform : value => [...String(value ?? '')].map((char, index) => index % 2 ? char.toUpperCase() : char.toLowerCase()).join(''),     
+});
+
+const PascalCase = Str.case({
+  pattern   : /^[A-Z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
+  transform : value => toWords(value).map(upperFirst).join(''),
+});
+
+const SnakeCase = Str.case({
+  pattern   : /^[a-z0-9]+(_[a-z0-9]+)*$/,
+  transform : value => toWords(value).join('_'),
+});
+
+const TitleCase = Str.case({
+  pattern   : /^[A-Z][a-z0-9]*(\s[A-Z][a-z0-9]*)*$/,
+  transform : value => toWords(value).map(upperFirst).join(' '),
+});
+
+const UpperCase = Str.case({
+  pattern   : /^[A-Z0-9]+$/,
+  transform : value => String(value ?? '').toUpperCase(),
+});
 
 /*
 commands are the vocabulary of an app, the things it can do: save, openSettings,
