@@ -100,8 +100,8 @@ class Schema {
 
 
 capitalize     = value => { const s = String(value ?? ''); return s.charAt(0).toUpperCase() + s.slice(1); },
-toLowerCase    = value => String(value ?? '').toLowerCase(),
-toUpperCase    = value => String(value ?? '').toUpperCase(),
+toLowerCase    = 
+toUpperCase    = 
 toCamelCase    = value => 
 toConstantCase = 
 toKebabCase    = 
@@ -110,9 +110,16 @@ toSlugCase     = value => slugify(value),
 toSnakeCase    = 
 toTitleCase    = 
 
+// lowercase: all lowercase letters and numbers (e.g. "lowercase", "hello123")
+
+// UPPERCASE: all uppercase letters and numbers (e.g. "UPPERCASE", "HELLO123")
+
+// Mocking Case (strict alternating): starts with lowercase or uppercase, then alternates (e.g. "mOcKiNgCaSe", "MoCkInG")
 
 
 
+
+// ::: Helpers
 
 const toWords = (value) => String(value ?? '')
   .replace(/([a-z\d])([A-Z])/g, '$1 $2')
@@ -124,6 +131,8 @@ const toWords = (value) => String(value ?? '')
   .filter(Boolean);
 
 const upperFirst = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+
+// ::: Case Schemas/Codecs
 
 const CamelCase = {
   pattern   : /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
@@ -138,6 +147,16 @@ const ConstantCase = {
 const KebabCase = {
   pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
   transform : value => toWords(value).join('-'),
+}
+
+const LowerCase = {
+  pattern   : /^[a-z0-9]+$/,
+  transform : value => String(value ?? '').toLowerCase(),q
+}
+
+const MockingCase = {
+  pattern   : /^(?:(?:[a-z][A-Z])*[a-z]?|(?:[A-Z][a-z])*[A-Z]?)$/,
+  transform : value => value, // ???
 }
 
 const PascalCase = {
@@ -155,6 +174,10 @@ const TitleCase = {
   transform : value => toWords(value).map(upperFirst).join(' '),
 }
 
+const UpperCase = {
+  pattern   : /^[A-Z0-9]+$/,
+  transform : value => String(value ?? '').toUpperCase(),
+}
 
 
 
