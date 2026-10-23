@@ -13,15 +13,22 @@ export interface Binding {
 }
 
 export interface Hotkeys {
-  /** { 'ctrl+s': 'save' | fn | Binding }. A combo defined again replaces the old one. */
+  /** { 'ctrl+s': 'save' | fn | Binding }. A combo bound again replaces the old one. */
+  assign (map: Record<string, string | Handler | Binding>): Hotkeys;
+  /** The same as assign. */
   define (map: Record<string, string | Handler | Binding>): Hotkeys;
   destroy (): void;
+  /** The binding of a combo as it was given. */
+  get (keys: string): string | Handler | Binding | undefined;
   list (): string[];
   remove (...keys: (string | string[])[]): Hotkeys;
+  set (keys: string, value: string | Handler | Binding): Hotkeys;
+  /** Any other key is a combo: hotkeys['ctrl+s'] = 'save', delete hotkeys['ctrl+s']. */
+  [keys: string]: any;
 }
 
-/** Names run through commands; without them they fire 'rat:command' from the focused element. */
-export function createHotkeys (options?: { commands?: { run (name: string, ...args: unknown[]): unknown } | null, target?: EventTarget }): Hotkeys;
+/** Names run through commands, else through fire, else they fire 'rat:command' from the focused element. */
+export function createHotkeys (options?: { commands?: { run (name: string, ...args: unknown[]): unknown } | null, fire?: (name: string) => Handler, target?: EventTarget }): Hotkeys;
 
 export const MODIFIERS: { alt: 'altKey', ctrl: 'ctrlKey', meta: 'metaKey', shift: 'shiftKey' };
 /** 'ArrowLeft', 'arrow-left' -> 'left'; ' ' -> 'space'; 'Control' -> 'ctrl'. */

@@ -36,11 +36,9 @@ const MODS = {
     return createFiles(options);
   },
 
+  // a command name fires from the app, also for what assign / set / [combo] = adds later
   hotkeys (map, { app }) {
-    const run   = text => event => command(app, text, event);
-    const specs = Object.fromEntries(Object.entries(map).map(([keys, value]) =>
-      [keys, typeof value === 'string' ? run(value) : typeof value?.command === 'string' ? { ...value, command: run(value.command) } : value]));
-    return createHotkeys().define(specs);
+    return createHotkeys({ fire: text => event => command(app, text, event) }).assign(map === true ? {} : map);
   },
 
   // the app's sw.js next to its src (options.src names another), see sw.js
