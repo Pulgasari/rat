@@ -1,0 +1,16 @@
+<script>
+  // <ViewHeader back='podcasts' title='Podcasts'>the tools</ViewHeader>
+  // <ViewHeader back={{ label: 'Back', onclick }} />
+  // the head of a view: back, title, tools. back is a view to go to (its route or its name), or the props of the button
+
+  const back = () => RAT.app.router.go(RAT.app.resolve(props.back));
+</script>
+
+<header.view-header>
+  @if (typeof props.back === 'string')
+    <btn-icon.view-back icon='arrow-left' label='back' onclick={back} />
+  @else if (props.back)
+    <btn-icon.view-back icon='arrow-left' label='back' {...props.back} />
+  @if (props.title): <h1>{props.title}</h1>
+  <div.view-tools><slot /></div.view-tools>
+</header.view-header>

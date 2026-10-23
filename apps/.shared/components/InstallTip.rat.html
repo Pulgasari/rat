@@ -1,0 +1,18 @@
+<script>
+  // <InstallTip />, <InstallTip message='Install to keep your book folders connected.' />
+  // a hint to install the app, gone once it runs installed
+
+  import { available, install, ios, standalone } from '../install.js';
+</script>
+
+@if (!standalone)
+  <div.install-tip>
+    <svg-icon icon='info' />
+    <span.text>{props.message ?? 'Install the app so your folders stay connected between visits — no reconnecting.'}</span>
+    @if (available.value)
+      <btn-push icon='download' label='Install app' onclick={install} />
+    @else if (ios)
+      <span.hint>Share, then <b>Add to Home Screen</b>.</span>
+    @else
+      <span.hint>Use your browser’s <b>Install</b> / <b>Add to Home screen</b> menu.</span>
+  </div.install-tip>

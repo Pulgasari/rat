@@ -1,0 +1,9 @@
+<script>
+  // <Link href={url} icon='mdi:web' label='Website' />, <Link href={url}>text</Link>: an outbound link
+</script>
+
+<a.link class={props.class} href={props.href} title={props.title} target='_blank' rel='noopener'>
+  @if (props.icon): <svg-icon icon={props.icon} />
+  {props.label ?? props.text ?? ''}
+  <slot />
+</a.link>

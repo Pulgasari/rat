@@ -1,0 +1,13 @@
+<script>
+  // <ActionMenu items={[{ icon, label, onclick }, { icon, href, title }]}>more, as markup</ActionMenu>
+  // a bar of actions: an item is a button, or an outbound link when it carries an href
+</script>
+
+<div.action-menu>
+  <slot />
+  @for (item of props.items ?? [])
+    @if (item.href)
+      <Link {...item} />
+    @else
+      <btn-push {...item} />
+</div.action-menu>
