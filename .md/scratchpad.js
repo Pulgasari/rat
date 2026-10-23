@@ -1,3 +1,11 @@
+
+
+RAT.Command.create('do-sth', () => {...});
+RAT.Command.create({ name: 'do-sth', exec: () => {...} });
+
+RAT.Hotkey.create('ctrl + d', 'do-sth');
+
+
 case Loading = ...;
 
 const label = match (event) {
