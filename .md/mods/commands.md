@@ -1,5 +1,20 @@
 # @rat/commands
 
+## usage
+
+```js
+const { commands } = RAT.app;
+```
+
+```js
+import { createCommands } from '@rat/commands';
+const commands = createCommands();
+```
+
+## define
+
+### define a single command
+
 ```js
 RAT.app.commands.set({ name: 'refresh-all', exec: refreshAll });
 ```
@@ -12,7 +27,7 @@ RAT.app.commands.set('refresh-all', refreshAll);
 RAT.app.commands['refresh-all'] = refreshAll;
 ```
 
-### define multiple commands at once.
+### define multiple commands at once
 
 ```js
 RAT.app.commands.assign ([
