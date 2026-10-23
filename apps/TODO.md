@@ -22,7 +22,6 @@
 - signals von außen (`lib.sources.value`) kommen per `const $sources = lib.sources.value` in die reaktivität. geht, ist aber eine brücke pro wert
 - schema mit ui-hinweisen
 - props als signals (`let { $filter } = props`, d-13 b)
-- auto-import der komponenten (per config)
 - 
 ---
 

@@ -25,8 +25,9 @@ src the app is [loading] by itself until they are mounted.
 
 config.rat.js next to src (or config-src) is loaded before the app's code: its
 RAT: true puts rat on globalThis as RAT (a string names it otherwise), its
-mods land on the app (RAT.app.database …, see ../mods.js), the config
-itself is app.config.
+mods land on the app (RAT.app.database …, see ../mods.js), its autoImport
+names the folders components come from without an import (see ../loader.js),
+the config itself is app.config.
 
 areas open and close by their name, two forms to find out which serves better:
 
@@ -61,11 +62,11 @@ import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 
 import { mount } from '@rat/runtime';
 
-import { catchErrors, showError } from '../boundary.js';
-import { componentOf, load }      from '../loader.js';
-import { useMods }                from '../mods.js';
-import { RatArea }                from './rat-area.js';
-import { RatView }                from './rat-view.js';
+import { catchErrors, showError }        from '../boundary.js';
+import { autoImport, componentOf, load } from '../loader.js';
+import { useMods }                       from '../mods.js';
+import { RatArea }                       from './rat-area.js';
+import { RatView }                       from './rat-view.js';
 
 // :::::: CONSTS
 
@@ -268,6 +269,7 @@ export class RatApp extends DominaElement {
     const module = await load(url);
     const config = module.default ?? { ...module };
     if (config.RAT) globalThis[config.RAT === true ? 'RAT' : config.RAT] = rat;
+    if (config.autoImport) autoImport(config.autoImport, url);
     await useMods(this, config);
     return this.#config = config;
   }

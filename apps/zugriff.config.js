@@ -14,12 +14,10 @@ export default {
     fit          : 'cover',
   },
   
-  // mods
-  mods: {
-    'auto-import': [ 
-      './.shared/components/'
-    ],
-  },
+  // components without an import, relative to the config.rat.js of each app
+  autoImport: [
+    '../.shared/components/',
+  ],
 
   // the gang
   aufbau: {

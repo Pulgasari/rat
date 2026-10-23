@@ -832,7 +832,7 @@ function transformExpression ({ code, start }, { filename, names, source }) {
 
 export { 
   TOPIC, 
-  caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, walk,
+  bindings, caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, walk,
   transformExpression, transformScript,
 };
 
