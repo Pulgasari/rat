@@ -1,4 +1,4 @@
-# @rat/mods/auto-import
+# mods :: @rat/auto-import
 
 ```js
 // config.rat.js
