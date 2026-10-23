@@ -45,6 +45,12 @@ class Commands {
 
 const createCommands = entries => new Commands().assign(entries);
 
+
+const Commands = $MapDing ({ 
+  key   : Union (CamelCase, KebabCase, SnakeCase),
+  entry : Record({ exec: Fn, '?title': Str, '?description': Str })
+});
+
 /*
 commands are the vocabulary of an app, the things it can do: save, openSettings,
 togglePlay. ui, hotkeys and code fire them by name instead of importing each
