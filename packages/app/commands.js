@@ -51,6 +51,72 @@ const Commands = $MapDing ({
   entry : Record({ exec: Fn, '?title': Str, '?description': Str })
 });
 
+KebabCase.is('toggle-play');              // true
+KebabCase.is('togglePlay');               // false: alone it only checks
+KebabCase.parse('togglePlay');            // TypeError: kebab-case
+KebabCase.from('togglePlay');             // 'toggle-play'
+
+Str.to(KebabCase).parse('togglePlay');    // 'toggle-play': made with from(), then checked
+Str.to(KebabCase).parse(42);              // TypeError: a string. Str checks first
+
+// KebabCase checks: only kebab passes. its from(…) makes it out of any spelling
+const KebabCase = Str.pattern(/^[a-z0-9]+(-[a-z0-9]+)*$/).from(text => …);
+
+KebabCase.from('togglePlay');   // 'toggle-play'
+KebabCase.is('togglePlay');     // false: on its own it only checks
+
+Str.to(KebabCase)               // a Str turned into KebabCase: from(), then checked by KebabCase
+
+
+class Schema {
+  // … what is there: check, default, optional, validate, parse, is …
+
+  // how this schema is made out of another value: KebabCase.from(text) -> 'toggle-play'.
+  // set with a function, called with a value
+  from (value) {
+    if (typeof value === 'function') return this.derive({ make: value });
+    if (!this.make) throw new TypeError(`[rat] ${this.kind} can not be made from a value`);
+    return this.make(value);
+  }
+
+  // this schema's check first, then target made from what passed, then target's checks
+  to (target) {
+    return this.derive({ run: (value, path) => {
+      const result = this.validate(value, path);
+      return result.issues ? result : target.validate(target.from(result.value), path);
+    } });
+  }
+}
+
+
+
+
+
+
+
+const toWords = (value) => String(value ?? '')
+  .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+  .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+  .replace(/[\s\-_.]+/g, ' ')
+  .trim()
+  .toLowerCase()
+  .split(' ')
+  .filter(Boolean);
+
+const CamelCase = {
+  pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
+  transform : value => toWords(value).join('-'),
+}
+
+const KebabCase = {
+  pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
+  transform : value => toWords(value).join('-'),
+}
+
+
+
+
+
 /*
 commands are the vocabulary of an app, the things it can do: save, openSettings,
 togglePlay. ui, hotkeys and code fire them by name instead of importing each
