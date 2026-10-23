@@ -33,7 +33,7 @@ three things, kept apart:
 |---|---|---|
 | **data types** | classes whose instances hold data | `Array`, `Map`, `Set` (js), `Color`, `Enum`, `List`, `Record`, `Tuple` |
 | **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
-| **reactive variants** | subclasses of data types whose reads subscribe and whose writes notify | `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set` |
+| **reactive variants** | data types whose reads subscribe and whose writes notify | `$Array`, `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set` |
 
 **one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
@@ -49,6 +49,7 @@ new $Enum('grid', 'list', 'masonry')  // the same value, reactive
 
 | | value (`new`) | schema (call) | reactive |
 |---|---|---|---|
+| `Array` | plain js | – | `$Array` |
 | `Color` | yes | `Color()` | `$Color` |
 | `Enum` | yes | `Enum('a', 'b')` | `$Enum` |
 | `List` | yes | `List(Str)` | `$List` |
@@ -218,11 +219,17 @@ $accent.l = 70; // whatever read $accent.hex, .r, .h … updates
 
 const $settings = new $Record(Settings);
 $settings.zoom = 120; // whatever read any field updates
+
+const $todos = new $Array([]);
+$todos.push(todo);   // whatever read $todos, an index or its length updates
+$todos[0] = other;
 ```
+
+- `$Array` is a proxy around a plain array, not a subclass: index access and `length` are no methods. `Array.isArray` is true, every array method works. `$List` stays its own type (a class with `at()`/`set()`, no proxy).
 
 - reading methods and getters subscribe, writing methods and setters notify, a write that changes nothing notifies nobody (`set` with the same value, `pop` on an empty list).
 - `$Record` has one version for all fields: a write to one field updates whatever read any field (d-23 b). a signal per field would be finer, and pays off only for large records.
-- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c), and can be reassigned:
+- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$Array` (d-23 c), and can be reassigned:
 
 ```html
 <script>

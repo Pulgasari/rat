@@ -1,6 +1,6 @@
 // @rat/app
 
-// the registry of reactive variants: let $todos = [] in a .rat file is a $List from here on
+// the registry of reactive variants: let $todos = [] in a .rat file is a $Array from here on
 import '@rat/types';
 
 export * from './elements/index.js';
