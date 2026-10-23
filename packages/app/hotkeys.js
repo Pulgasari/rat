@@ -6,7 +6,11 @@
 import { command }       from '@rat/commands';
 import { createHotkeys } from '@rat/hotkeys';
 
-const hotkeys = (map, { app }) => createHotkeys({ commands: { run: (text, event) => command(app, text, event) } }).assign(map);
+const hotkeys = (map, { app }) => createHotkeys({ 
+  commands: { 
+    run: (text, event) => command(app, text, event) 
+  }
+}).assign(map);
 
 // :::::: EXPORT
 
