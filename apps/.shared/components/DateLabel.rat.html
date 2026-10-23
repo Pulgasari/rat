@@ -1,0 +1,8 @@
+<script>
+  // <DateLabel value={ms} />, <DateLabel value={ms} relative />: a date as the apps show it (../fmt.js).
+  // not Date: that name would hide the global Date in the file that uses it
+
+  import fmt from '../fmt.js';
+</script>
+
+<span.date>{props.relative ? fmt.ago(props.value) : fmt.date(props.value)}</span>

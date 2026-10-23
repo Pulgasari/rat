@@ -48,7 +48,7 @@ a literal `{` in text: `{'{'}`.
 | `onclick='save'` | **command**: fires `rat:command` with `{ name: 'save', event }` |
 | `on:keydown[enter]={fn}`, `on:submit!={fn}`, `on:click:once={fn}` | event with modifiers, see [event modifiers](#event-modifiers) |
 | `@tooltip={text}`, `@flash:click="#ff0"`, `use:tooltip={text}` | a behavior, see [behaviors](#behaviors) |
-| `bind:value={$x}` | two-way binding to a signal (`value`, `checked`, `open` …) |
+| `bind:value={$x}` | two-way binding to a signal (`value`, `checked`, `open` …). on a component the signal itself is the prop `value`: `let { $value } = this.props` writes back |
 | `ref={fn}` / `ref={$el}` | the element, to a function or a signal |
 | `{...obj}` | spread (at creation). on an element `class` and `style` add up, everything else: later wins |
 | `{name}` | short for `name={name}` |

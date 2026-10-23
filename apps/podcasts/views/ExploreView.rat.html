@@ -101,7 +101,7 @@
   <data-item class:subscribed={$subscribed.has(entry.podcastId)}>
     <Artwork aria-label='open podcast' src={entry.image} onclick={() => open(entry.url)} />
     <div.meta>
-      <Date value={entry.date} />
+      <DateLabel value={entry.date} />
       <span.dur>{fmt.duration(entry.duration)}</span>
     </div.meta>
     <btn-push.title label={entry.title} onclick={() => open(entry.url)} />

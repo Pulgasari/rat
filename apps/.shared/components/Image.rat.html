@@ -1,0 +1,8 @@
+<script>
+  // <Image src={url} />, <Image src={url} onclick={fn} />: an img, lazy, in a button when it does something
+</script>
+
+@if (props.onclick)
+  <button.naked onclick={props.onclick}><img src={props.src} alt={props.alt ?? ''} loading={props.loading ?? 'lazy'} /></button>
+@else
+  <img src={props.src} alt={props.alt ?? ''} loading={props.loading ?? 'lazy'} />

@@ -4,6 +4,8 @@ export type Command = (...args: any[]) => unknown;
 
 export interface Commands {
   add (id: string, fn: Command): Commands;
+  /** Several at once: { save, 'toggle-play': fn }. */
+  assign (entries: Record<string, Command>): Commands;
   get (id: string): Command | undefined;
   has (id: string): boolean;
   list (): string[];
@@ -12,7 +14,9 @@ export interface Commands {
   remove (id: string): Commands;
   /** run('go', 'settings') or run('go[settings]'). */
   run (id: string, ...args: unknown[]): unknown;
-  /** Any other key is a command: commands.save(), commands.save = fn. */
+  /** The same as add. */
+  set (id: string, fn: Command): Commands;
+  /** Any other key is a command: commands.save(), commands['toggle-play'] = fn. */
   [name: string]: any;
 }
 

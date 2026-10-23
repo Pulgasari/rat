@@ -13,11 +13,18 @@ export interface Binding {
 }
 
 export interface Hotkeys {
-  /** { 'ctrl+s': 'save' | fn | Binding }. A combo defined again replaces the old one. */
+  /** { 'ctrl+s': 'save' | fn | Binding }. A combo bound again replaces the old one. */
+  assign (map: Record<string, string | Handler | Binding>): Hotkeys;
+  /** The same as assign. */
   define (map: Record<string, string | Handler | Binding>): Hotkeys;
   destroy (): void;
+  /** The binding of a combo as it was given. */
+  get (keys: string): string | Handler | Binding | undefined;
   list (): string[];
   remove (...keys: (string | string[])[]): Hotkeys;
+  set (keys: string, value: string | Handler | Binding): Hotkeys;
+  /** Any other key is a combo: hotkeys['ctrl+s'] = 'save', delete hotkeys['ctrl+s']. */
+  [keys: string]: any;
 }
 
 /** Names run through commands; without them they fire 'rat:command' from the focused element. */

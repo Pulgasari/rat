@@ -8,7 +8,9 @@ handler, so a button and a shortcut share one behaviour.
   const commands = createCommands({ save, openSettings });
 
   commands.add('toggle-play', () => …);   // register
-  commands.togglePlay = () => …;          // the same, property form
+  commands.set('toggle-play', () => …);   // the same
+  commands['toggle-play'] = () => …;      // the same, property form
+  commands.assign({ save, 'toggle-play': () => … });   // several at once
   commands.run('toggle-play', event);     // fire
   commands.togglePlay(event);             // the same, property form
   const stop = commands.listen(root);     // runs the 'rat:command' events that reach root
@@ -37,7 +39,7 @@ boundary as 'rat:error' from the element the command came from.
 */
 
 const COMMAND  = 'rat:command';
-const RESERVED = new Set(['add', 'get', 'has', 'list', 'listen', 'remove', 'run']);
+const RESERVED = new Set(['add', 'assign', 'get', 'has', 'list', 'listen', 'remove', 'run', 'set']);
 const LITERALS = { false: false, null: null, true: true }; // 'move[up, 3]' -> { name: 'move', args: ['up', 3] }
 
 const argumentOf = text => text in LITERALS ? LITERALS[text] : /^-?\d+(\.\d+)?$/.test(text) ? Number(text) : text;
@@ -81,8 +83,9 @@ function createCommands (source = {}) {
   const map = new Map;
 
   const api = {
-    add (id, fn) { map.set(nameOf(id), fn); return proxy; },
-    get (id)     { return map.get(nameOf(id)); },
+    add    (id, fn)  { map.set(nameOf(id), fn); return proxy; },
+    assign (entries) { for (const [id, fn] of Object.entries(entries)) map.set(nameOf(id), fn); return proxy; },
+    get    (id)      { return map.get(nameOf(id)); },
     has (id)     { return map.has(nameOf(id)); },
     list ()      { return [...map.keys()]; },
 
@@ -106,6 +109,7 @@ function createCommands (source = {}) {
     },
 
     remove (id)       { map.delete(nameOf(id)); return proxy; },
+    set    (id, fn)   { map.set(nameOf(id), fn); return proxy; },
     // run('save'), run('go', 'settings'), run('go[settings]')
     run (id, ...args) {
       const { args: written, name } = parseCommand(id);
@@ -123,8 +127,7 @@ function createCommands (source = {}) {
     set                      (target, key, value) { if (RESERVED.has(key)) return false; map.set(nameOf(key), value); return true; },
   });
 
-  for (const [id, fn] of Object.entries(source)) map.set(nameOf(id), fn);
-  return proxy;
+  return api.assign(source);
 }
 
 // :::::: EXPORT

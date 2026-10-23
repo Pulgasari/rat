@@ -298,7 +298,8 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
 
   // live values become getters; handlers, refs, bound signals and behaviors go as they are
   function componentProp (name, value) {
-    if (name.startsWith('bind:')) return `${key(name)}: ${value.code.trim()}`;
+    // bind:value={$x} on a component: the signal itself as the prop value, let { $value } = this.props takes it
+    if (name.startsWith('bind:')) return `${key(name.slice(5))}: ${value.code.trim()}`;
     if (name === 'ref')           return `${key(name)}: ${reference(value)}`;
     if (isBehavior(name)) {
       const [, base] = BEHAVIOR.exec(name) ?? [];

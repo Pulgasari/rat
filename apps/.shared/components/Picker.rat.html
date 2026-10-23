@@ -1,0 +1,30 @@
+<script>
+  // <Picker options={['a', 'b']} bind:value={$x} />, <Picker signal={$enum} look='segments' />,
+  // <Picker value={x} options={list} onchange={value => …} />
+  // one of several, through <input-value>. an option is a value, [value, label] or { value, label, icon, title };
+  // a $Enum as signal brings its values as the options. src: a file of more options the element loads itself
+
+  import { isSignal } from '@rat/runtime';
+
+  const isObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
+
+  // the signal the picker writes: signal={…} or bind:value={…}
+  const target = props.signal ?? (isSignal(props.value) ? props.value : null);
+
+  const normalize = option => Array.isArray(option) ? { label: String(option[1] ?? option[0]), title: String(option[1] ?? option[0]), value: option[0] }
+    : isObject(option) ? { icon: option.icon, label: option.label ?? (option.icon ? '' : String(option.value)), title: option.title ?? option.label ?? String(option.value), value: option.value }
+    : { label: String(option), title: String(option), value: option };
+
+  const $current = target ? target.value : props.value;
+  const $options = (props.options ?? target?.values ?? []).map(normalize);
+
+  function change (event) {
+    const next = event.detail?.value ?? event.target?.value;
+    if (target) target.value = next;
+    props.onchange?.(next);
+  }
+</script>
+
+<input-value class={props.class} look={props.look} placeholder={props.placeholder} searchable={props.searchable || null} src={props.src} value={$current} onchange={change}>
+  @for (option of $options): <input-option icon={option.icon} label={option.label} title={option.title} value={option.value}></input-option>
+</input-value>

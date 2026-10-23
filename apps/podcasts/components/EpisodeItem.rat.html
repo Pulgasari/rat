@@ -39,7 +39,7 @@
 
   <div.meta>
     @if (podcast): <btn-push label={podcast.title} onclick={() => go('podcast', podcast.id)} />
-    <Date value={episode.pubDate} />
+    <DateLabel value={episode.pubDate} />
     <span.dur>{fmt.duration(episode.duration)}</span>
   </div.meta>
 

@@ -1,0 +1,21 @@
+<script>
+  // <Modal headline='Add' info='…' actions={[{ label, onclick }]} onclose={fn}>the content</Modal>
+  // only the backdrop itself closes it: clicks inside the dialog bubble up too
+
+  const backdrop = event => { if (event.target === event.currentTarget) props.onclose?.(); };
+</script>
+
+<div.modal-backdrop onclick={backdrop}>
+  <div.modal class={props.class}>
+    @if (props.headline || props.info)
+      <header>
+        @if (props.headline): <h2>{props.headline}</h2>
+        @if (props.info): <i>{props.info}</i>
+      </header>
+    <main><slot /></main>
+    @if (props.actions?.length)
+      <footer>
+        @for (action of props.actions): <btn-push {...action} />
+      </footer>
+  </div.modal>
+</div.modal-backdrop>

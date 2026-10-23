@@ -1,0 +1,10 @@
+<script>
+  // <SearchPanel placeholder='filter …' bind:value={$search} />: a search field and its clear button
+
+  let { $value } = this.props;
+</script>
+
+<div.search-panel>
+  <input-search placeholder={props.placeholder} value={$value} oninput={event => $value = event.currentTarget.value ?? ''}></input-search>
+  @if ($value): <btn-icon icon='close' label='clear filter' onclick={() => $value = ''} />
+</div.search-panel>
