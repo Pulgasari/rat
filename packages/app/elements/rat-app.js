@@ -24,7 +24,8 @@ src the app is [loading] by itself until they are mounted.
   app.area(name) a <rat-area>, app.areas all of them
 
 config.rat.js next to src (or config-src) is loaded before the app's code: its
-RAT: true puts rat on globalThis as RAT (a string names it otherwise), its
+RAT: true puts rat on globalThis as RAT (a string names it otherwise): the app
+(RAT.app, RAT.config, RAT.toggle) and every export of @rat/types (RAT.Enum …), its
 mods land on the app (RAT.app.database …, see ../mods.js), its autoImport
 names the folders components come from without an import (see ../loader.js),
 the config itself is app.config.
@@ -56,7 +57,7 @@ events: rat:ready, rat:navigate ({ from, to, path, params }), rat:error.
 import { DominaElement }  from '@domina/element';
 import { gestalt }        from '@gestalt/core';
 import { createCommands } from '@rat/commands';
-import { Enum }           from '@rat/types';
+import * as types        from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '@rat/router';
 
@@ -97,7 +98,7 @@ export class RatApp extends DominaElement {
     base       : String,
     configSrc  : String,
     loading    : Boolean,
-    routing    : Enum('hash', 'path', 'query', 'memory', 'none'),
+    routing    : types.Enum('hash', 'path', 'query', 'memory', 'none'),
     src        : String,
     transition : { default: 'fade', type: String },
 
@@ -453,8 +454,9 @@ export class RatApp extends DominaElement {
 
 RatApp.init('rat-app');
 
-// the app from anywhere: rat.app, rat.toggle('menu')
+// the app from anywhere: rat.app, rat.toggle('menu'). the types too, without an import: rat.Enum, rat.$List …
 const rat = {
+  ...types,
   get app    () { return current; },
   get config () { return current?.config ?? null; },
   toggle (name, force) { return current?.toggle(name, force) ?? null; },
