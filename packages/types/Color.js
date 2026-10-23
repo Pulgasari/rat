@@ -15,7 +15,7 @@ Color is a data type and, called, its schema:
 one color, many notations: it holds rgba, hex and hsl are read and written
 through it (codecs, see pulgasari.github.io md/webdev/codecs.md). a gray has no
 hue, so h read back after s = 0 is 0. named css colors are not read (yet).
-$Color, its reactive variant, is in reactive.js.
+$Color, its reactive variant, is below.
 */
 
 // :::::: IMPORT

@@ -9,7 +9,7 @@ List is a data type and, called, its schema, like every type here:
 List is a plain class, not an Array subclass: an array's length and index
 access are no methods and could only be caught with a proxy. a List has length
 as a getter and at(index) / set(index, value) instead of [index]. $List, its
-reactive variant, is in reactive.js.
+reactive variant, is below.
 */
 
 import { reactive, register } from '@rat/signals';
@@ -97,27 +97,26 @@ const listOf = item => new ListSchema({
 
 const LIST_READS = ['length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator];
 
+const LIST_WRITES = {
+  clear   : list => list.length > 0,
+  pop     : list => list.length > 0,
+  push    : (list, ...items) => items.length > 0,
+  remove  : (list, value) => list.includes(value),
+  replace : true,
+  reverse : list => list.length > 1,
+  set     : (list, index, value) => !Object.is(list.at(index), value),
+  shift   : list => list.length > 0,
+  sort    : list => list.length > 1,
+  splice  : true,
+  unshift : (list, ...items) => items.length > 0,
+};
+
 const List = typed(ListType, listOf);
 
-const $List = reactive(List, {
-  reads  : LIST_READS,
-  writes : {
-    clear   : list => list.length > 0,
-    pop     : list => list.length > 0,
-    push    : (list, ...items) => items.length > 0,
-    remove  : (list, value) => list.includes(value),
-    replace : true,
-    reverse : list => list.length > 1,
-    set     : (list, index, value) => !Object.is(list.at(index), value),
-    shift   : list => list.length > 0,
-    sort    : list => list.length > 1,
-    splice  : true,
-    unshift : (list, ...items) => items.length > 0,
-  },
-});
+const $List = reactive(List, { reads: LIST_READS, writes: LIST_WRITES });
 
 register (List, $List);
 
 // :::::: EXPORT
 
-export { List, $List, ListSchema };
+export { LIST_READS, LIST_WRITES, List, $List, ListSchema };

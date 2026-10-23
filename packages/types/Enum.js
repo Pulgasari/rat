@@ -12,7 +12,7 @@ Enum is a data type and, called, its schema:
   viewmode.cycle();   // 'list', then 'masonry', then 'grid' again
   viewmode.value = 'table';   // TypeError: one of grid, list, masonry
 
-$Enum, its reactive variant, is in reactive.js.
+$Enum, its reactive variant, is below.
 */
 
 import { reactive, register } from '@rat/signals';

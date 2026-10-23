@@ -31,9 +31,9 @@ three things, kept apart:
 
 | | what it is | examples |
 |---|---|---|
-| **data types** | classes whose instances hold data | `Array`, `Map`, `Set` (js), `Color`, `Enum`, `List`, `Record`, `Tuple` |
-| **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
-| **reactive variants** | data types whose reads subscribe and whose writes notify | `$Array`, `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set` |
+| **data types** | classes whose instances hold data | `Array`, `Map`, `Set` (js), `Color`, `Enum`, `List`, `Record`, `Table`, `Tuple` |
+| **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Table({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
+| **reactive variants** | data types whose reads subscribe and whose writes notify | `$Array`, `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`, `$Table` |
 
 **one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
@@ -54,6 +54,7 @@ new $Enum('grid', 'list', 'masonry')  // the same value, reactive
 | `Enum` | yes | `Enum('a', 'b')` | `$Enum` |
 | `List` | yes | `List(Str)` | `$List` |
 | `Record` | yes | `Record({ … })` | `$Record` |
+| `Table` | yes | `Table({ … })` | `$Table` |
 | `Tuple` | yes, frozen | `Tuple(Str, Num)` | none: a change is a new tuple |
 | `Union` | none | `Union(Num, Str)` | none | 
 | `Bool`, `Num`, `Str` | plain js | the schema itself | none |
@@ -114,6 +115,23 @@ JSON.stringify(settings);                      // '{"view":"list","zoom":80}'
 ```
 
 a field may be called anything but `assign`, `schema` and `toJSON`.
+
+## Table
+
+a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object, its position is its key.
+
+```js
+const Todos = Table({ title: Str, done: Bool });       // or Table(Record({ … }))
+
+const todos = new Table(Todos, [{ title: 'milk' }]);   // a missing field gets its initial value
+todos.push({ title: 'eggs', done: 'yes' });            // checked and coerced: done is true
+todos.update(0, { done: true });                       // a row is frozen, a change goes through the table
+todos.column('title');                                 // ['milk', 'eggs']
+todos.where({ done: false });                          // the rows a test of match lets through
+todos.columns;                                         // ['title', 'done']
+```
+
+every `List` method works, the ones that add or replace rows (`push`, `unshift`, `set`, `splice`, `replace`, `update`) check them. `$Table` has one version for the whole table: any write updates whatever read the table.
 
 ## Tuple
 

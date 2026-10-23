@@ -159,6 +159,33 @@ export const Record: RecordConstructor;
 /** A Record whose field reads subscribe and whose field writes notify, one version for all fields. */
 export const $Record: { new <T extends object>(schema: Schema<T>, values?: Partial<T>): Record<T>; new <T extends object>(values: T | Record<T>): Record<T> };
 
+/** A List of rows that follow one record schema. A row is frozen, its position is its key. */
+export interface Table<T extends object> extends List<Readonly<T>> {
+  readonly schema  : Schema<T[]>;
+  readonly columns : (keyof T)[];
+  column<K extends keyof T> (key: K): T[K][];
+  /** The rows a test of match lets through. */
+  where (test: unknown): Readonly<T>[];
+  /** The row at index with patch over it, checked. */
+  update (index: number, patch: Partial<T>): Table<T>;
+}
+
+export interface TableConstructor {
+  /** Rows parsed by the row schema, a missing field at its initial value. */
+  new <T extends object>(schema: Schema<T[]> | Schema<T>, rows?: Iterable<Partial<T>>): Table<T>;
+  /** A copy of another Table. */
+  new <T extends object>(other: Table<T>): Table<T>;
+  /** The schema: rows of these fields, or of a Record schema. */
+  <S extends Shape>(shape: S | Schema<{ [K in keyof S]: Infer<S[K]> }>): Schema<{ [K in keyof S]: Infer<S[K]> }[]>;
+}
+
+export const Table: TableConstructor;
+/** A Table whose reads subscribe and whose writes notify, one version for the whole table. */
+export const $Table: { new <T extends object>(schema: Schema<T[]> | Schema<T>, rows?: Iterable<Partial<T>>): Table<T>; new <T extends object>(other: Table<T>): Table<T> };
+
+/** A plain array whose reads (index, length, methods) subscribe and whose writes notify. Array.isArray stays true. */
+export declare const $Array: { <T>(items?: Iterable<T>): T[]; new <T>(items?: Iterable<T>): T[] };
+
 /** Frozen: fixed length, fixed values. */
 export interface Tuple<T extends readonly unknown[]> extends Iterable<T[number]> {
   readonly [index: number]: T[number];

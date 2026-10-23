@@ -17,7 +17,7 @@ Record is a data type and, called, its schema:
 fields are accessors on the instance, the values sit behind GET / SET, 
 so a field may be called anything but assign, schema and toJSON. 
 
-$Record, its reactive variant, is in reactive.js.
+$Record, its reactive variant, is below.
 */
 
 import { reactive, register } from '@rat/signals';
