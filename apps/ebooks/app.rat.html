@@ -1,34 +1,13 @@
-// apps/ebooks/app.js
+<script>
 
-// the ebook library + reader on the shared handle. the runtime binds zugriff (+ zugriff.app,
-// html) to window before this runs, so nothing here imports the runtime. the library lives
-// in the db module (app.db); ephemeral ui state on app.state; reading prefs are persisted
-// signals. the views read all of it off the handle.
-
-const app = zugriff.app;
-
-// :::::: IMPORT :::::::::::::::::::::::::::::::::::::::::::::
-
-import { computed, signal } from '@aufbau/signals';
-import { useEffect }                     from '/.shared/js/vendors.js';
-
-// :::::: HANDLE ::::::::::::::::::::::::::::::::::::::::::::
-// before the views are imported: a component captured at module scope sees whatever
-// was on the handle at import time
-
-app.db = await app.module('db');
-app.fs = zugriff.fs;
-
+const { app } = RAT;
 // :::::: STATE ::::::::::::::::::::::::::::::::::::::::::::::
 
-// the view on screen is #app's business (app-view, the hash)
-app.state.$extend({
-  bookKey : { type: 'scalar', value: null, persist: true },   // the book in the reader
-  search  : { type: 'scalar', value: ''                  },
-  folder  : { type: 'scalar', value: ''                  },   // '' = all folders, else sourceId
-});
+$bookKey = '';   // the book in the reader
+$search  = '';
+$folder  = '';   // '' = all folders, else sourceId
 
-app.sort = app.persisted('sort', 'recent', { values: ['recent', 'title', 'author', 'added'] });
+$sorting = RAT.Enum ('recent', 'title', 'author', 'added');
 
 // epub reading prefs, remembered across books
 app.readerFlow = app.persisted('readerFlow', 'paginated');
@@ -62,7 +41,7 @@ app.percentOf = key => app.db.progressOf(key)?.percent ?? 0;
 
 // the reader is in the dom while it is on screen only, leaving it closes the book
 const Reader = () => {
-  const key = app.state.$bookKey;
+  const key = gg;
   return key ? html`<${ReaderView} bookKey=${key} key=${key} />` : null;
 };
 
@@ -76,7 +55,7 @@ app.toggleConfig = () => app.area('config')?.toggle();
 // :::::: ACTIONS :::::::::::::::::::::::::::::::::::::::::::
 
 app.openReader = key => {
-  app.state.bookKey = key;
+  $bookKey = key;
   app.db.markOpened(key);
   app.go('reader');
 };
@@ -92,26 +71,12 @@ app.addFolder = async () => {
   catch (error) { app.toast.error(error); }
 };
 
-// :::::: VIEWS :::::::::::::::::::::::::::::::::::::::::::::
+</script>
 
-const [ReaderView, { Config, Views }] = await Promise.all([
-  app.view('ReaderView'),
-  zugriff.components('Config', 'Views'),
-]);
-
-// :::::: APP :::::::::::::::::::::::::::::::::::::::::::::::
-
-function App () {
-  useEffect(() => { app.db.load().catch(error => app.toast.error(error)); }, []);
-
-  if (!app.db.ready.value) return html`<div class="booting"><svg-icon icon="svg-spinners:bars-scale-middle" /></div>`;
-
-  return html`
-    <app-area name='main'><${Views} transition-on='glide' /></app-area>
-    <app-area name='config' dock='end'><${Config} /></app-area>
-  `;
-}
-
-// :::::: BOOT ::::::::::::::::::::::::::::::::::::::::::::::
-
-app.init({ App });
+@if (RAT.app.database.ready)
+  <app-area name='main'>
+    <rat-view id|name='reader' src='ReaderView.rat' />
+  </app-area>
+  <app-area name='config' dock='end'><Config /></app-area>
+@else
+    <div class="booting"><svg-icon icon="svg-spinners:bars-scale-middle" /></div>

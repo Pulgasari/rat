@@ -196,30 +196,7 @@ const SizeControl = () => html`
 
 // :::::: VIEWS
 
-/* --- beobachtung -----------
-<btn-push icon='search' label='search' onclick='go[search]' />
-<btn-push icon|label='search' onclick='go[search]' />
 
-angesichts dessen dass man bei konsistentem benennen 
-häufiger die gelegenheit haben müsste, ist es sicherlich suboptimal,
-dass hier auf den value des commands nich gleichartig verwiesen werden kann.
-
-<btn-push icon|label|cmd:go='search' />
-<btn-push icon|label|cmd.go='search' />
-<btn-push icon|label|cmd[go]='search' />
-
-bzgl. `cmd` dachte ich generell schonmal an command-namespace-attr
-für die das commands-modul sowie als kurzschreibweise für `command='skip' commandfor='player'`
-
-<button command='skip' commandfor='player' />
-<button cmd[player]='skip' />
-<button cmd:skip[player] />
-
-https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/commandForElement
-https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#commandfor
-
-das soll nix suggerieren oder festlegen, ist nur notiz/gedanke
------------ */
 
 const HomeView = () => html`
   <div.home>
@@ -370,3 +347,28 @@ export default props => {
     </rat-area>
   `;
 };
+
+/* --- beobachtung -----------
+<btn-push icon='search' label='search' onclick='go[search]' />
+<btn-push icon|label='search' onclick='go[search]' />
+
+angesichts dessen dass man bei konsistentem benennen 
+häufiger die gelegenheit haben müsste, ist es sicherlich suboptimal,
+dass hier auf den value des commands nich gleichartig verwiesen werden kann.
+
+<btn-push icon|label|cmd:go='search' />
+<btn-push icon|label|cmd.go='search' />
+<btn-push icon|label|cmd[go]='search' />
+
+bzgl. `cmd` dachte ich generell schonmal an command-namespace-attr
+für die das commands-modul sowie als kurzschreibweise für `command='skip' commandfor='player'`
+
+<button command='skip' commandfor='player' />
+<button cmd[player]='skip' />
+<button cmd:skip[player] />
+
+https://developer.mozilla.org/en-US/docs/Web/API/HTMLButtonElement/commandForElement
+https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/button#commandfor
+
+das soll nix suggerieren oder festlegen, ist nur notiz/gedanke
+----------- */
