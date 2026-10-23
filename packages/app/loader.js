@@ -49,7 +49,7 @@ const SELF     = import.meta.url;
 const cache = new Map; // url -> Promise<blob url>
 
 const COMPILED = 'rat:compiled';
-const VERSION  = 3;
+const VERSION  = 4;
 
 const EXTENSIONS = ['.rat.html', '.rat', '.rat.js'];
 

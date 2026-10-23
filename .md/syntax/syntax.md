@@ -209,6 +209,19 @@ a `$name` made with `new $Variant(…)` ([reactivity](ideas/reactivity.md)) is u
 like in plain js: the object reports its own reads and writes. it changes through its
 methods, reassigning it is a compile error.
 
+a `$name` destructured out of an object is a signal as well ([d-13](ideas/props.md#d-13)):
+
+```js
+let { $filter, $size = 'm', title } = this.props;   // $filter follows the prop, title is its value now
+let { $sources } = lib;                              // lib.sources is a signal: that very signal
+```
+
+- the property is a signal: that signal, so writing `$sources` writes `lib.sources`.
+- anything else (a prop): a computed that follows it, read only. a default applies while it is
+  `undefined`.
+- compiles to `let { "filter": $filter, … } = $$.signalsOf(this.props, { filter: null, … })`.
+  names without `$` read the object as it is.
+
 ### typed signals
 
 a schema as the initial value ([d-14 a](ideas/types.md#d-14), [`@rat/types`](../packages/types)):
