@@ -1,0 +1,33 @@
+<script>
+  // <SavedView />: the episodes saved for later, newest saved first
+
+  import library            from './../library.js';
+  import { state }          from './../state.js';
+  import { filterEpisodes } from './../methods.js';
+
+  const db = RAT.app.database;
+
+  const podcasts = db.podcasts.$items;
+  const episodes = db.episodes.$items;
+
+  let { $search } = state;
+
+  const $byId     = Object.fromEntries(episodes.map(episode => [episode.id, episode]));
+  const $showById = Object.fromEntries(podcasts.map(podcast => [podcast.id, podcast]));
+
+  // the saved ids carry the order; the episodes come from the db
+  const $list = filterEpisodes(
+    library.savedIds().map(id => $byId[id]).filter(Boolean).map(episode => ({ ...episode, podcast: $showById[episode.podcastId] })),
+    $search,
+    true,
+  );
+
+  const empty = { icon: 'bookmarks', title: 'Your list is empty', hint: 'Tap the bookmark on any episode to keep it here.' };
+</script>
+
+<ViewHeader title='listen later' />
+
+<main>
+  <SearchPanel bind:value={$search} />
+  <EpisodesIndex episodes={$list} empty={empty} />
+</main>

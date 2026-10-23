@@ -1,83 +1,57 @@
 <script>
-// podcasts :: panels/PlayerPanel.js
-// the docked player bar — artwork/meta, transport, scrubber and speed/done/close.
+  // <Player />: the docked player bar — artwork/meta, transport, scrubber and speed/done/close
 
-import Artwork         from './Artwork.js';
-import { fmtDuration } from './methods.js';
+  import fmt     from './../../.shared/fmt.js';
+  import library from './../library.js';
+  import player  from './../player.js';
 
-const app = RAT.app;
-const RATES = [0.8, 1, 1.2, 1.5, 1.75, 2];
+  const podcasts = RAT.app.database.podcasts.$items;
 
-
-const episode  = app.player.episode;
-const podcasts = useTable('podcasts', () => app.db.podcasts.toValues(), ['all']);
-if (!episode) return null;
-
-const podcast = podcasts?.find(p => p.id === episode.podcastId);
-const dur     = app.player.duration || episode.duration || 0;
-const time    = app.player.time;
-
-const cycleRate = () => {
-  const i = RATES.indexOf(app.player.rate);
-  app.player.setRate(RATES[(i + 1) % RATES.length] ?? 1);
-};
+  const $episode  = player.episode.value;
+  const $podcast  = $episode && podcasts.find(podcast => podcast.id === $episode.podcastId);
+  const $duration = player.duration.value || $episode?.duration || 0;
+  const $time     = player.time.value;
+  const $done     = $episode && library.stateOf($episode.id).done;
 </script>
 
-<div.player>
-  <div.meta>
-    <Artwork src={episode.image || podcast?.image} size={52} />
-    <div.info>
-      <div.title title={episode.title}>{episode.title}</div>
-      <div.podcast>{podcast?.title || ''}</div>
-    </div.info>
-  </div.metq>
+@if ($episode)
+  <div.player>
+    <div.meta>
+      <Artwork src={$episode.image || $podcast?.image} />
+      <div.info>
+        <div.title title={$episode.title}>{$episode.title}</div.title>
+        <div.podcast>{$podcast?.title || ''}</div.podcast>
+      </div.info>
+    </div.meta>
 
-      <div class="controls">
-        <btn-icon
-          icon="mdi:rewind-15"
-          label="Back 15s"
-          onClick=${() => app.player.skip(-15)} 
-          />
-          
-        <btn-icon 
-          class="play" 
-          title=${app.player.isPlaying ? 'Pause' : 'Play'} 
-          onClick=${app.player.toggle}
-          icon=${app.player.isWaiting ? 'loading' : app.player.isPlaying ? 'mdi:pause' : 'mdi:play'}
-          />
-          
-        <btn-icon
-          icon="mdi:fast-forward-30"
-          label="Forward 30s"
-          onClick=${() => app.player.skip(30)}
-          />
-      </div>
+    <div.controls>
+      <btn-icon icon='mdi:rewind-15' label='Back 15s' onclick={() => player.skip(-15)} />
+      <btn-icon.play
+        icon={player.waiting.value ? 'loading' : player.playing.value ? 'mdi:pause' : 'mdi:play'}
+        title={player.playing.value ? 'Pause' : 'Play'}
+        onclick={player.toggle}
+      />
+      <btn-icon icon='mdi:fast-forward-30' label='Forward 30s' onclick={() => player.skip(30)} />
+    </div.controls>
 
-      <div class="scrub">
-        <span class="time">${fmtDuration(time)}</span>
-        <input class="range"
-          type="range" 
-          min="0"
-          max=${Math.max(dur, 1)} 
-          step="1" 
-          value=${Math.min(time, dur || time)}
-          onInput=${e => app.player.seek(Number(e.target.value))}
-          />
-        <span class="pl-time">${dur ? '-' + fmtDuration(dur - time) : ''}</span>
-      </div>
+    <div.scrub>
+      <span.time>{fmt.duration($time)}</span>
+      <input.range type='range' min='0' step='1'
+        max={Math.max($duration, 1)}
+        value={Math.min($time, $duration || $time)}
+        oninput={event => player.seek(Number(event.target.value))}
+      />
+      <span.time>{$duration ? '-' + fmt.duration($duration - $time) : ''}</span>
+    </div.scrub>
 
-<div class="pl-right">
-  <button.rate title="Playback speed" onClick=${cycleRate}>
-    {app.player.rate}
-  </button.rate>
-        
-  <btn-icon 
-    icon={app.library.stateOf(episode.id).done ? 'mdi:check-circle' : 'mdi:check-circle-outline'}
-    label="Mark as done"
-    aria-pressed=${app.library.stateOf(episode.id).done}
-    onClick=${() => app.library.toggleDone(episode.id)} 
-  />
-          
-    <btn-icon icon='close' label='close player' onClick={app.player.close} />
-  </div>
-</div>
+    <div.right>
+      <button.rate title='Playback speed' onclick={player.cycleRate}>{player.rate.value}</button.rate>
+      <btn-icon
+        icon={$done ? 'mdi:check-circle' : 'mdi:check-circle-outline'}
+        label='Mark as done'
+        aria-pressed={$done}
+        onclick={() => library.toggleDone($episode.id)}
+      />
+      <btn-icon icon='close' label='close player' onclick={player.close} />
+    </div.right>
+  </div.player>

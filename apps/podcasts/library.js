@@ -1,4 +1,4 @@
-// podcasts :: modules/library.js
+// podcasts :: library.js
 //
 // the library: subscriptions, their episodes and what you have listened to.
 // database.js stores it, feed.js fetches and parses it, this is what turns one
@@ -9,47 +9,50 @@
 // is copied field by field, so whatever feed.js learns to parse lands in the db
 // without a second round of mapping here.
 //
-// the db is the one copy of the library. views read the tables they need through
-// useTable (modules/hooks.js) and reload on @bunker/db's change feed, so subscribing
-// or refreshing here is a plain write — nothing to keep in step by hand.
+// the db is the one copy of the library (RAT.app.database, the tables in
+// config.rat.js). views read a table as table.$items, which follows its changes,
+// so subscribing or refreshing here is a plain write — nothing to keep in step by hand.
 //
-// progress is the exception and lives on app.state: it is read per row and written
-// while an episode plays, which is no way to treat a table.
+// progress is the exception and lives in state.progress: it is read per row and
+// written while an episode plays, which is no way to treat a table.
 
 // :::::: IMPORTS
 
 import { fetchFeed, parseFeed } from './feed.js';
 import { hash }                 from './methods.js';
+import { state }                from './state.js';
 
 const podcastIdByHash = (url)       => 'p' + hash(url);
 const episodeIdByHash = (pid, guid) => `${pid}:${hash(guid)}`;
 
 // :::::: CONSTANTS
 
-const app = zugriff.app;
+const db = () => RAT.app.database;
+
+// the keys of a table that start with prefix (the episodes of a podcast: 'p…:')
+const keysOf = async (table, prefix) => (await table.keys()).filter(key => String(key).startsWith(prefix));
 
 const EMPTY_PROGRESS = { position: 0, duration: 0, done: false, doneAt: 0, saved: false, savedAt: 0, updatedAt: 0 };
 
 // :::::: LOAD
-// every table in one upgrade, then the progress table into app.state. podcasts and
-// episodes are not read here — the views do that for themselves. `shortlist` belongs
-// to views/ExploreView.js, but the schema is declared once, at boot, in one place.
+// the progress table into state.progress. podcasts and episodes are not read here —
+// the views do that for themselves. the tables are declared in config.rat.js.
 
 async function load () {
-  await app.db.setup({ podcasts: {}, episodes: {}, progress: {}, shortlist: {} });
-  app.state.progress.replace(await app.db.progress.toMap());
+  state.progress.clear();
+  for (const [id, row] of await db().progress.entries()) state.progress.set(id, row);
 }
 
 // :::::: READ
 
-// a RecordSignal read: one signal for the whole table, so any progress write wakes
-// every reader. that is affordable because the player throttles its writes (player.js)
+// a $Map read: one version for the whole map, so any progress write wakes every
+// reader. that is affordable because the player throttles its writes (player.js)
 // rather than storing a position on every timeupdate.
-const stateOf = (id) => app.state.progress.get(id) ?? EMPTY_PROGRESS;
+const stateOf = (id) => state.progress.get(id) ?? EMPTY_PROGRESS;
 
 // the ids of every saved episode, newest-saved first. the view joins them to the
 // episodes it has already loaded.
-const savedIds = () => Object.entries(app.state.progress.value)
+const savedIds = () => [...state.progress.entries()]
   .filter(([, progress]) => progress.saved)
   .sort(([, a], [, b]) => b.savedAt - a.savedAt)
   .map(([id]) => id);
@@ -57,9 +60,9 @@ const savedIds = () => Object.entries(app.state.progress.value)
 // :::::: PROGRESS (position / done / saved)
 
 async function patchProgress (id, patch) {
-  const next = { ...EMPTY_PROGRESS, ...app.state.progress.get(id), ...patch, updatedAt: Date.now() };
-  app.state.progress.set(id, next);
-  await app.db.progress.set(id, next);
+  const next = { ...EMPTY_PROGRESS, ...state.progress.get(id), ...patch, updatedAt: Date.now() };
+  state.progress.set(id, next);
+  await db().progress.set(id, next);
   return next;
 }
 
@@ -99,11 +102,9 @@ function toRecords (url, { episodes: entries, ...feed }) {
   return { podcast, episodes: eps };
 }
 
-// store a feed, then swap it into app.state in one assignment per collection —
-// a per-record write would publish that many times.
 async function store (podcast, eps) {
-  await app.db.podcasts.set(podcast.id, podcast);
-  await app.db.episodes.setMany(eps.map(ep => [ep.id, ep]));
+  await db().podcasts.set(podcast.id, podcast);
+  await Promise.all(eps.map(ep => db().episodes.set(ep.id, ep)));
 }
 
 /**
@@ -117,7 +118,7 @@ async function store (podcast, eps) {
 async function subscribe (rawUrl, feed, { onStep } = {}) {
   const url = normalizeUrl(rawUrl);
   const pid = podcastIdByHash(url);
-  if (await app.db.podcasts.get(pid)) throw new Error('already subscribed to this feed');
+  if (await db().podcasts.get(pid)) throw new Error('already subscribed to this feed');
 
   if (!feed) onStep?.('reading');
   const parsed = feed ?? parseFeed(await fetchFeed(url));
@@ -136,15 +137,15 @@ async function subscribe (rawUrl, feed, { onStep } = {}) {
  * so a truncated feed does not take their progress with it.
  */
 async function refresh (pid) {
-  const known = await app.db.podcasts.get(pid);
+  const known = await db().podcasts.get(pid);
   if (!known) return { added: 0 };
 
   const parsed = parseFeed(await fetchFeed(known.url));
   const { podcast, episodes: eps } = toRecords(known.url, parsed);
 
-  // the episode keys of this podcast are one prefix scan, which is what the key
-  // layout is for — no need to read the records themselves to count what is new
-  const have  = new Set(await app.db.episodes.toKeys(pid + ':'));
+  // the episode keys of this podcast start with its id — no need to read the
+  // records themselves to count what is new
+  const have  = new Set(await keysOf(db().episodes, pid + ':'));
   const added = eps.filter(ep => !have.has(ep.id)).length;
 
   await store({ ...podcast, addedAt: known.addedAt }, eps);
@@ -152,7 +153,7 @@ async function refresh (pid) {
 }
 
 async function refreshAll (onProgress) {
-  const all     = await app.db.podcasts.toValues();
+  const all     = await db().podcasts.values();
   const results = [];
   let   done    = 0;
 
@@ -166,13 +167,12 @@ async function refreshAll (onProgress) {
 
 /** drop a subscription along with its episodes and their progress */
 async function unsubscribe (pid) {
-  const keys = await app.db.episodes.toKeys(pid + ':');
+  const keys = await keysOf(db().episodes, pid + ':');
 
-  await app.db.podcasts.delete(pid);
-  await app.db.episodes.deleteMany(keys);
-  await app.db.progress.deleteMany(keys);
+  await db().podcasts.delete(pid);
+  await Promise.all(keys.flatMap(key => [db().episodes.delete(key), db().progress.delete(key)]));
 
-  for (const key of keys) app.state.progress.delete(key);
+  for (const key of keys) state.progress.delete(key);
 }
 
 // :::::: IMPORT / EXPORT
@@ -183,14 +183,14 @@ async function unsubscribe (pid) {
 const stateKey = (url, guid) => `${url}\n${guid}`;
 
 async function exportData () {
-  const podcasts = await app.db.podcasts.toMap();
-  const state    = {};
+  const podcasts = await db().podcasts.as(Object);
+  const kept     = {};
 
-  for (const [id, { updatedAt, ...rest }] of Object.entries(app.state.progress.value)) {
+  for (const [id, { updatedAt, ...rest }] of state.progress.entries()) {
     if (!rest.saved && !rest.done && !rest.position) continue;   // nothing worth keeping
-    const episode = await app.db.episodes.get(id);
+    const episode = await db().episodes.get(id);
     const podcast = episode && podcasts[episode.podcastId];
-    if (podcast) state[stateKey(podcast.url, episode.guid)] = rest;
+    if (podcast) kept[stateKey(podcast.url, episode.guid)] = rest;
   }
 
   return {
@@ -198,7 +198,7 @@ async function exportData () {
     version    : 1,
     exportedAt : new Date().toISOString(),
     feeds      : Object.values(podcasts).map(({ url, title }) => ({ url, title })),
-    state,
+    state      : kept,
   };
 }
 
@@ -211,7 +211,7 @@ async function importData (data, onProgress) {
   for (const feed of data.feeds) {
     const url = normalizeUrl(feed.url || '');
     if      (!url)                          results.push({ url: feed.url, skipped: 'no url' });
-    else if (await app.db.podcasts.get(podcastIdByHash(url))) results.push({ url, skipped: 'already subscribed' });
+    else if (await db().podcasts.get(podcastIdByHash(url))) results.push({ url, skipped: 'already subscribed' });
     else {
       try           { await subscribe(url); results.push({ url, added: true }); }
       catch (error) { results.push({ url, error: error?.message || String(error) }); }
@@ -220,19 +220,17 @@ async function importData (data, onProgress) {
   }
 
   // re-apply the saved progress now that the episodes exist
-  const podcasts = await app.db.podcasts.toMap();
+  const podcasts = await db().podcasts.as(Object);
   const rows     = [];
 
-  for (const episode of await app.db.episodes.toValues()) {
+  for (const episode of await db().episodes.values()) {
     const podcast = podcasts[episode.podcastId];
     const saved   = podcast && data.state?.[stateKey(podcast.url, episode.guid)];
     if (saved) rows.push([episode.id, { ...EMPTY_PROGRESS, ...saved, updatedAt: Date.now() }]);
   }
 
-  if (rows.length) {
-    await app.db.progress.setMany(rows);
-    for (const [id, row] of rows) app.state.progress.set(id, row);
-  }
+  await Promise.all(rows.map(([id, row]) => db().progress.set(id, row)));
+  for (const [id, row] of rows) state.progress.set(id, row);
 
   return results;
 }
@@ -250,11 +248,11 @@ function normalizeUrl (raw) {
 
 // :::::: EXPORT
 
-// named exports for direct importers — player.js writes progress, ExploreView.js keys a
+// named exports for direct importers — player.js writes progress, ExploreView keys a
 // preview the way a subscription would be keyed
 export { load, stateOf, setProgress, markDone, normalizeUrl, podcastIdByHash, toRecords };
 
-// the default is app.library
+// the default is RAT.app.library
 export default {
   load,
 

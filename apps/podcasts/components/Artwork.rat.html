@@ -1,0 +1,39 @@
+<script>
+  // <Artwork src={url} />, <Artwork src={url} onclick={fn} />: the cover from the thumb cache,
+  // the source itself when there is no thumb, an icon without either
+
+  import { effect } from '@rat/runtime';
+
+  let { $src } = this.props;
+
+  let $url    = null;
+  let $broken = false;   // only the loading of this one url failed
+
+  effect(() => {
+    const src = $src;
+    $broken = false;
+    if (!src) { $url = null; return; }
+
+    const thumbs = RAT.app.thumbs;
+    if (!thumbs) { $url = src; return; }
+
+    const cached = thumbs.peek(src);
+    if (cached) { $url = cached; return; }
+
+    $url = null;
+    let alive = true;
+    thumbs.request(src).then(url => { if (alive) $url = url || src; });
+    return () => { alive = false; };
+  });
+</script>
+
+@fragment picture ()
+  @if ($url && !$broken)
+    <img loading='lazy' src={$url} onerror={() => $broken = true} />
+  @else
+    <svg-icon icon='mdi:podcast' />
+
+@if (props.onclick)
+  <button.art.not-a-button class={props.class} aria-label={props['aria-label']} onclick={props.onclick}>{picture()}</button>
+@else
+  <div.art class={props.class}>{picture()}</div>

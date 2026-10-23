@@ -1,16 +1,16 @@
-// podcasts :: modules/search.js
+// podcasts :: search.js
 //
 // finding a podcast — or a single episode — through Apple's iTunes Search API. no
 // key, no account, and every podcast in their directory carries the feed url we
 // actually subscribe to, which is the only field here we truly need.
 //
 // whether apple sends CORS headers has a habit of changing, so this takes the same
-// route feed.js does, through modules/http.js: natively inside capacitor, in a
+// route feed.js does, through ../.shared/http.js: natively inside capacitor, in a
 // browser direct first and then through the CORS proxy.
 
 // :::::: IMPORTS
 
-import { getJson } from '/.shared/js/modules/http.js';
+import { getJson } from '../.shared/http.js';
 
 // :::::: CONSTANTS
 

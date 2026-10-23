@@ -5,19 +5,12 @@
 
 import { createThumbCache } from '/.shared/js/thumbs.js';
 
-// ::: shared components
-import Config from './../.shared/components/Config.rat';
-import Dock   from './../.shared/components/Dock.rat';
-import Slot   from './../.shared/components/Slot.rat';
-import Views  from './../.shared/components/Views.rat';
-
-// ::: local components
-import Export from 'Export.rat';
-import Player from 'Player.rat';
+// ::: components: through autoImport (config.rat.js), ./components/ and ../.shared/components/
 
 // ::: modules
-import library from 'modules/library.js';
-import player  from 'modules/player.js';
+import library   from './library.js';
+import player    from './player.js';
+import { state } from './state.js';
 
 // :::::: APP ::::::::::::::::::::::::::::::::::::::::::::::::::
 

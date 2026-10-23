@@ -1,0 +1,11 @@
+<script>
+  // <EpisodesIndex episodes={list} empty={{ icon, title, hint }} />
+  // episode.podcast is joined on by the view that loaded the list: a lookup per row would be a read per row
+</script>
+
+@if (props.episodes.length)
+  <data-index viewmode='list'>
+    @for (episode of props.episodes): <EpisodeItem episode={episode} />
+  </data-index>
+@else
+  <Empty {...props.empty} />

@@ -1,0 +1,77 @@
+<script>
+  // <EpisodeDetailView id={episode id} />
+
+  import fmt     from './../../.shared/fmt.js';
+  import library from './../library.js';
+  import player  from './../player.js';
+
+  import { go, paragraphs } from './../methods.js';
+
+  const db = RAT.app.database;
+
+  const podcasts = db.podcasts.$items;
+  const episodes = db.episodes.$items;
+
+  let { $id } = this.props;
+
+  const $episode   = episodes.find(episode => episode.id === $id) ?? null;
+  const $podcast   = $episode && podcasts.find(podcast => podcast.id === $episode.podcastId);
+  const $state     = library.stateOf($id);
+  const $duration  = $state.duration || $episode?.duration || 0;
+  const $percent   = $state.done ? 100 : $duration && $state.position ? Math.min(100, $state.position / $duration * 100) : 0;
+  const $isPlaying = player.episode.value?.id === $id && player.playing.value;
+
+  const $actions = [
+    {
+      icon    : $isPlaying ? 'mdi:pause' : 'mdi:play',
+      label   : $isPlaying ? 'Pause' : $state.position && !$state.done ? 'Resume' : 'Play',
+      onclick : () => player.play($episode),
+    },
+    {
+      icon    : 'bookmark',
+      label   : $state.saved ? 'Remove from list' : 'Save for later',
+      onclick : () => library.toggleSaved($id),
+    },
+    {
+      icon    : $state.done ? 'mdi:check-circle' : 'mdi:check-circle-outline',
+      label   : $state.done ? 'Mark unplayed' : 'Mark as done',
+      onclick : () => library.toggleDone($id),
+    },
+    $episode?.link && { icon: 'mdi:open-in-new', label: 'Episode page', href: $episode.link },
+  ].filter(Boolean);
+
+  const $back = {
+    label   : $podcast ? $podcast.title : 'Back',
+    onclick : () => $podcast ? go('podcast', $podcast.id) : go('latest'),
+  };
+</script>
+
+@if (!$episode)
+  <ViewHeader back='latest' />
+  <Empty icon='alert' title='episode not found' />
+@else
+  <ViewHeader back={$back} />
+
+  <main>
+    <Artwork src={$episode.image || $podcast?.image} />
+
+    <div.info>
+      @if ($podcast): <button onclick={() => go('podcast', $podcast.id)}>{$podcast.title}</button>
+      <h1>{$episode.title}</h1>
+      <div.meta>
+        <span>{fmt.ago($episode.pubDate)}</span>
+        @if ($episode.duration): <span> {fmt.duration($episode.duration)}</span>
+        @if ($state.done): <span>· <svg-icon icon='mdi:check-circle' /> done</span>
+      </div.meta>
+
+      <ActionMenu items={$actions} />
+      <aufbau-progress value={$percent} />
+    </div.info>
+
+    @if (paragraphs($episode.description).length)
+      <div>
+        @for (paragraph of paragraphs($episode.description)): <p>{paragraph}</p>
+      </div>
+    @else
+      <i>No description.</i>
+  </main>

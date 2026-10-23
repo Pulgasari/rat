@@ -1,0 +1,88 @@
+<script>
+  // <ExplorePodcastView id={feed url} />
+  //
+  // one podcast, read straight from its feed and stored nowhere: what it is, who makes
+  // it, and every episode it publishes — enough to decide whether it is worth a
+  // subscription, which is the decision the explore view exists for.
+  //
+  // the route carries the feed url, not an id. a preview has no record to point at, and
+  // the url is the one thing that still means something after a reload.
+
+  import { effect } from '@rat/runtime';
+
+  import { paragraphs, sortEpisodes }                  from './../methods.js';
+  import { preview, subscribeAction, toggleRemembered } from './../explore.js';
+
+  const db = RAT.app.database;
+
+  const podcasts  = db.podcasts.$items;
+  const shortlist = db.shortlist.$items;
+
+  let { $id: $url } = this.props;
+
+  let $data  = null;   // { id, feed, podcast, episodes }
+  let $error = '';
+
+  effect(() => {
+    const url = $url;
+    let alive = true;
+    $data  = null;
+    $error = '';
+    preview(url)
+      .then (result => { if (alive) $data  = result; })
+      .catch(error  => { if (alive) $error = error?.message || String(error); });
+    return () => { alive = false; };
+  });
+
+  const $podcast    = $data?.podcast;
+  const $subscribed = !!$podcast && podcasts.some(podcast => podcast.id === $podcast.id);
+  const $remembered = !!$podcast && shortlist.some(row => row.id === $podcast.id);
+
+  // the shortlist row is written from the feed, so it survives a directory that has
+  // never heard of this podcast — pasting a feed url is a way in here too
+  const remember = () => toggleRemembered({
+    author : $podcast.author,
+    count  : $podcast.episodeCount,
+    id     : $podcast.id,
+    image  : $podcast.image,
+    title  : $podcast.title,
+    url    : $url,
+  });
+</script>
+
+@if ($error)
+  <ViewHeader back='explore' title='Explore' />
+  <Empty icon='alert' title='could not read that feed' hint={$error} />
+@else if (!$data)
+  <ViewHeader back='explore' title='Explore' />
+  <Loading text='reading the feed …' />
+@else
+  <ViewHeader back='explore' title={$podcast.title}>
+    <div.actions>
+      <btn-push
+        icon={$remembered ? 'bookmark' : 'bookmark-unfilled'}
+        title={$remembered ? 'Remove from the shortlist' : 'Keep for a closer look later'}
+        onclick={remember}
+      />
+      <btn-push {...subscribeAction({ id: $podcast.id, url: $url }, $subscribed)} />
+    </div.actions>
+  </ViewHeader>
+
+  <main>
+    <Artwork src={$podcast.image} />
+
+    <div.info>
+      <div.stats>{$data.episodes.length} episode(s)</div.stats>
+      @if ($podcast.author): <div.author>{$podcast.author}</div>
+      @for (paragraph of paragraphs($podcast.description)): <p.about>{paragraph}</p>
+      @if ($podcast.link): <Link href={$podcast.link} icon='mdi:web' label='Website' />
+      <Link href={$url} icon='rss' label='Feed' />
+    </div.info>
+
+    <div.section><span>Episodes</span></div.section>
+
+    <PreviewEpisodes
+      episodes={sortEpisodes($data.episodes, 'newest')}
+      empty={{ icon: 'mdi:playlist-remove', title: 'This feed has no playable episodes' }}
+    />
+  </main>

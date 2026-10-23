@@ -3,10 +3,10 @@
 // fetching and parsing podcast feeds, entirely in the browser.
 //
 // the catch with a client-side-only podcast app: almost no podcast feed sends
-// CORS headers. modules/http.js goes around it: natively inside capacitor, in a
+// CORS headers. ../.shared/http.js goes around it: natively inside capacitor, in a
 // browser direct first and then through the CORS proxy.
 
-import { getText } from '/.shared/js/modules/http.js';
+import { getText } from '../.shared/http.js';
 
 const fetchFeed = url => getText(url, { accept: 'application/rss+xml, application/xml, text/xml, */*' });
 

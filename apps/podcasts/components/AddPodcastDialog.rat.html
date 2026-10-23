@@ -1,100 +1,85 @@
 <script>
-import Artwork from './Artwork.js';
-//import Loading from '/.shared/js/components/Loading.js';
-//import Modal   from '/.shared/js/components/Modal.js';
+  // <AddPodcastDialog />: search by name, or paste an RSS feed URL
 
-import { searchPodcasts } from './modules/search.js';
-import { looksLikeUrl }   from './methods.js';
+  import { effect } from '@rat/runtime';
 
-const app      = zugriff.app;
-const DEBOUNCE = 300;
+  import toast              from './../../.shared/toast.js';
+  import library            from './../library.js';
+  import { state }          from './../state.js';
+  import { go, looksLikeUrl } from './../methods.js';
+  import { searchPodcasts } from './../search.js';
 
+  const DEBOUNCE = 300;
 
-  const query   = useSignal('');
-  const results = useSignal([]);
-  const busy    = useSignal(false);
-  const note    = useSignal('');
-  const close = () => app.state.dialog = null;
+  let { $dialog } = state;
+
+  let $query   = '';
+  let $results = [];
+  let $busy    = false;
+  let $note    = '';
+
+  const close = () => $dialog = null;
 
   // search-as-you-type: the timer waits out the typing, the controller drops a
   // request whose query has already moved on
-  useEffect(() => {
-    const text = query.value.trim();
-    note.value = '';
+  effect(() => {
+    const text = $query.trim();
+    $note = '';
+    if (!text || looksLikeUrl(text)) { $results = []; return; }
 
-    if (!text || looksLikeUrl(text)) { results.value = []; return; }
-
-    const controller = new AbortController();
-    const timer = setTimeout(async () => {
-      busy.value = true;
+    const controller = new AbortController;
+    const timer      = setTimeout(async () => {
+      $busy = true;
       try {
-        results.value = await searchPodcasts(text, { signal: controller.signal });
-        if (!results.value.length) note.value = 'nothing found for that name';
+        $results = await searchPodcasts(text, { signal: controller.signal });
+        if (!$results.length) $note = 'nothing found for that name';
       }
-      catch (error) { if (error.name !== 'AbortError') note.value = error.message; }
-      finally       { if (!controller.signal.aborted) busy.value = false; }
+      catch (error) { if (error.name !== 'AbortError') $note = error.message; }
+      finally       { if (!controller.signal.aborted) $busy = false; }
     }, DEBOUNCE);
 
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [query.value]);
+  });
 
-  const add = async (url) => {
-    if (!url || busy.value) return;
-    busy.value = true;
+  async function add (url) {
+    if (!url || $busy) return;
+    $busy = true;
     try {
-      const podcast = await app.library.subscribe(url);
-      app.toast.success(`Subscribed to ${podcast.title}`);
+      const podcast = await library.subscribe(url);
+      toast.success(`Subscribed to ${podcast.title}`);
       close();
-      app.go('podcast', podcast.id);
+      go('podcast', podcast.id);
     }
-    catch (error) { app.toast.error(error); note.value = error?.message || String(error); }
-    finally       { busy.value = false; }
-  };
+    catch (error) { toast.error(error); $note = error?.message || String(error); }
+    finally       { $busy = false; }
+  }
 
-  const submit = () => {
-    const text = query.value.trim();
-    if (looksLikeUrl(text)) add(text);
-  };
+  const submit = () => { if (looksLikeUrl($query.trim())) add($query.trim()); };
 
-  const actions = [
-    { label: 'cancel', onClick: close },
-  ];
+  const actions = [{ label: 'cancel', onclick: close }];
 </script>
 
-    <Modal
-      headline='Add a podcast'
-      info='Search by name, or paste an RSS feed URL.'
-      actions=${actions}
-      onClose=${close}
-      class='add-podcast'
-      >
-      <input
-        type='search'
-        autofocus
-        placeholder='darknet diaries — or https://example.com/feed.xml'
-        value=${query.value}
-        onInput=${e => query.value = e.target.value}
-        onKeyDown=${e => { if (e.key === 'Enter') submit(); }}
-        />
+<Modal class='add-podcast' headline='Add a podcast' info='Search by name, or paste an RSS feed URL.' actions={actions} onclose={close}>
+  <input type='search' autofocus
+    placeholder='darknet diaries — or https://example.com/feed.xml'
+    bind:value={$query}
+    on:keydown[enter]={submit}
+  />
 
-      ${note.value && html`<i class='note'>${note.value}</i>`}
-      ${busy.value && html`<${Loading} text='searching …' />`}
+  @if ($note): <i.note>{$note}</i>
+  @if ($busy): <Loading text='searching …' />
 
-      ${results.value.length > 0 && html`
-        <ul class='results'>
-          ${results.value.map(result => html`
-            <li key=${result.id}>
-              <button onClick=${() => add(result.feedUrl)} disabled=${busy.value}>
-                <${Artwork} src=${result.image} />
-                <span class='meta'>
-                  <span class='title'>${result.title}</span>
-                  <span class='sub'>${result.author}${result.count ? ` · ${result.count} episodes` : ''}</span>
-                </span>
-              </button>
-            </li>
-          `)}
-        </ul>
-     `}
-    <//>
-  
-
+  @if ($results.length)
+    <ul.results>
+      @for (result of $results)
+        <li>
+          <button onclick={() => add(result.feedUrl)} disabled={$busy}>
+            <Artwork src={result.image} />
+            <span.meta>
+              <span.title>{result.title}</span>
+              <span.sub>{result.author}{result.count ? ` · ${result.count} episodes` : ''}</span>
+            </span.meta>
+          </button>
+        </li>
+    </ul.results>
+</Modal>
