@@ -4,8 +4,8 @@ what the prototype compiler understands. anything marked *(planned)* is not buil
 open choices are linked to [ideas/](ideas/README.md).
 
 - [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes) · [behaviors](#behaviors) · [event modifiers](#event-modifiers)
-- [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@switch`](#switch), [`@fragment`](#fragment)
-- [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
+- [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@match`](#match), [`@fragment`](#fragment)
+- [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [match](#match-1), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
 
 
@@ -55,7 +55,7 @@ a literal `{` in text: `{'{'}`.
 
 ## control flow
 
-`@if`, `@for` and `@switch` are blocks around markup. they are no attributes: an `@`
+`@if`, `@for` and `@match` are blocks around markup. they are no attributes: an `@`
 on an element is a [behavior](#behaviors).
 
 ### three body forms
@@ -128,30 +128,30 @@ rules (v0):
 - elements are reused by item identity (keyed by identity).
 - *(planned)* an explicit key: `@for (todo of $todos; key todo.id)`.
 
-### `@switch`
+### `@match`
 
 ```html
-@switch ($view) {
+@match ($view) {
   @case 'grid' { <grid-view /> }
   @case 'list': <list-view />
   @default     { <p>unknown</p> }
 }
 
-@switch ($view)
+@match ($view)
   @case 'grid'
     <grid-view />
   @default
     <p>unknown</p>
 ```
 
-- without braces, the `@case` / `@default` lines are the ones indented deeper than `@switch`.
+- without braces, the `@case` / `@default` lines are the ones indented deeper than `@match`.
 - a `@case` value ends at `{`, `:` or the end of its line. a value with a top level `:`
   (a ternary) goes in parens.
-- a `@case` with a [named case](#named-cases) matches by pattern, anything else with
-  `Object.is`. a case declared in the same file hands out its parts to the branch, live:
+- a `@case` is a test like an arm of [match](#match-1) (a case, a schema, a class, a literal …).
+  a case declared in the same file hands out its parts to the branch, live:
 
 ```html
-@switch ($state)
+@match ($state)
   @case Loading: <p>loading …</p>
   @case Failed:  <p.alert>{message}</p>     <!-- message comes from the case -->
   @case 'idle':  <p>…</p>
@@ -186,7 +186,7 @@ markup with parameters, declared once and used as a function ([d-27](ideas/fragm
 
 ### recognition
 
-`@if`, `@for`, `@switch`, `@fragment` are recognized only at the start of a line, after whitespace,
+`@if`, `@for`, `@match`, `@fragment` are recognized only at the start of a line, after whitespace,
 after a tag or after `}`. `mail@for.example` stays text. a `}` closes only while a
 block is open; otherwise it is text.
 
@@ -229,7 +229,7 @@ so a zod or valibot schema works as well (its initial value is `undefined`).
 
 ### named cases
 
-a `case` as a declaration: a pattern with a name, reusable in `@switch`, `@if` and
+a `case` as a declaration: a pattern with a name, reusable in `@match`, `@if` and
 scripts ([d-30](ideas/pattern-matching.md#d-30), [pattern matching](ideas/pattern-matching.md#named-cases)).
 
 ```js
@@ -253,17 +253,67 @@ const adults = $users.filter(user => user is Adult);
 |---|---|
 | `{ key: pattern, name }` | an object; a shorthand or a lowercase name hands out that part |
 | `[a, b, ...rest]` | an array, exactly that long (at least, with `...rest`) |
-| `'x'`, `1`, `true`, `null`, `undefined` | equal (`===`) |
+| `'x'`, `1`, `true`, `null`, `undefined` | equal (`Object.is`) |
 | `string`, `number`, `boolean`, `object` … | `typeof` |
-| `Other`, `states.Other` | another case |
-| anything else | an expression, compared with `===` |
+| `Other`, `states.Other` | another case, a schema, a class |
+| anything else | an expression, its value is the test |
 
 - the name must start with a capital: `case Name = …`. `case` as a statement is a syntax
   error in plain js, so nothing valid changes meaning.
 - `is` reads the postfix chain on its left: `!a is B && c` is `!(a is B) && c`. a plain
   `is` elsewhere stays a name (`obj.is(x)`, `const is = …`).
-- a case compiles to `$$.pattern(value => parts | null)`; `x is Case` to `$$.is(x, Case)`.
-  anything that is not a pattern compares with `Object.is`, so `x is 'idle'` works too.
+- a case compiles to `$$.pattern(test, guard)`, the pattern as data for `match.js` of
+  `@rat/types`: `{ status: 'error', message: $$.part('message') }`. `x is Case` compiles to
+  `$$.is(x, Case)`, which takes any test, so `x is 'idle'` works too.
+
+### match
+
+rat's switch, as an expression: arms `pattern => result`, tried from the top, the first match
+gives the result. the patterns are those of named cases.
+
+```js
+const label = match (event) {
+  { type: 'user', name }     => `user ${name}`,      // parts of the pattern are names in the result
+  { age } if age >= 18       => 'adult',             // a guard after the pattern
+  Num.range(0, 255)          => `byte ${#}`,         // a schema, class, predicate, regexp: # is the value it let through
+  Loading                    => 'loading …',         // a named case
+  'idle' | 'paused'          => 'waiting',           // either
+  _                          => 'unknown',           // anything
+};
+
+// without a value: a function of one value
+const toElements = match {
+  null    => [document.documentElement],
+  string  => [...document.querySelectorAll(#)],
+  Element => [#],
+  _       => [],
+};
+```
+
+- `#` in an arm is the value: the one matched, or for a schema the value it made (`Num` turns
+  `'120'` into `120`). a pipe inside an arm can not use `#` for its own value.
+- no arm matches: `undefined`. `_` is anything, also inside a pattern (`[_, y]`).
+- `match (x) {` and `match {` are syntax errors in plain js, so nothing valid changes meaning.
+  the `{` stays on the line of `match` or its `)`. `str.match(…)` is untouched.
+- a match compiles to `match(value, [[test, result], …])` of `@rat/types`, the same function
+  plain js uses (see its README); without a value to an arrow function around it. no `await`
+  in its arms.
+- in `.rat` scripts, holes and `.rat.js`.
+
+the tests a pattern can hold, here as in `case`, `is` and `@case` (all of them `match.js` in `@rat/types`):
+
+| | |
+|---|---|
+| `{ key: pattern, name }`, `[a, b, ...rest]` | an object, an array (see [named cases](#named-cases)) |
+| `'x'`, `1`, `true`, `null` | equal |
+| `string`, `number` … | `typeof` |
+| `String`, `Number`, `Boolean` … | `typeof` as well |
+| `Element`, `Date` (a capital) | `instanceof`, or another case |
+| `Num.range(0, 255)`, `Enum('a', 'b')` | a schema: validated |
+| `isIterable` (a function in a variable) | a predicate: what it returns. a plain function compared by `is` is called, not compared |
+| `/^#/` | a string it matches |
+| `a \| b` | either, binding no parts |
+| `_` | anything |
 
 ### pipe
 

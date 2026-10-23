@@ -29,7 +29,7 @@
   </p>
 
   <h3>switch, indented</h3>
-  @switch ($count % 3)
+  @match ($count % 3)
     @case 0
       <p>durch drei teilbar</p>
     @case 1: <p>rest eins</p>

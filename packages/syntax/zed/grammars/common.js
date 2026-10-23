@@ -95,11 +95,11 @@ export default function define (name, root) {
       /*
       @if (…) {   @if (…):   @if (…)⏎   the head ends with { or :, or just stops (indented body).
       the lexer takes the longest valid token, and text is valid wherever a head may end, so
-      every head must be complete before it can end: ( … ) after @if/@for/@switch, one value
+      every head must be complete before it can end: ( … ) after @if/@for/@match, one value
       after @case. a : never starts text, so `@if (…): …` reads the : as part of the head
       */
       block_head : $ => prec.right(choice(
-        seq(alias(token(/@(if|for|switch|else[ \t]+if)/), $.block_keyword), $.parens, optional($._body_open)),
+        seq(alias(token(/@(if|for|match|else[ \t]+if)/), $.block_keyword), $.parens, optional($._body_open)),
         seq(alias(token('@case'), $.block_keyword), $._case_value, optional($._body_open)),
         seq(alias(token(/@(else|default)/), $.block_keyword), optional($._body_open)),
       )),

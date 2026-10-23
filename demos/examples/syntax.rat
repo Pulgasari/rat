@@ -15,7 +15,7 @@
     }
   </nav>
 
-  @switch ($view) {
+  @match ($view) {
     @case 'grid' { <.grid>@for (item of items) { <.cell>{item}</.cell> }</.grid> }
     @case 'list' { <ul>@for (item of items): <li>{item}</li></ul> }
     @default     { <p>"{$view}" gibt es noch nicht</p> }

@@ -190,7 +190,7 @@
           ]
         },
         {
-          "begin": "@(?:else\\s+if|fragment|default|switch|case|else|for|if)(?![\\w$])",
+          "begin": "@(?:else\\s+if|fragment|default|match|case|else|for|if)(?![\\w$])",
           "beginCaptures": {
             "0": {
               "name": "keyword.control.block"
@@ -2109,7 +2109,7 @@
           ]
         },
         {
-          "begin": "@(?:else\\s+if|fragment|default|switch|case|else|for|if)(?![\\w$])",
+          "begin": "@(?:else\\s+if|fragment|default|match|case|else|for|if)(?![\\w$])",
           "beginCaptures": {
             "0": {
               "name": "keyword.control.block"

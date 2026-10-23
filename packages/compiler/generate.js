@@ -8,7 +8,7 @@ the markup stays markup, every binding is a visible closure in a hole.
   $$.html`<p class:on=${() => $x.value}>${() => $count.value}</p>`
 
 blocks become helpers with a function as source, which the renderer follows
-live: @if -> when, @switch -> match (cases with patterns), @for -> each.
+live: @if -> when, @match -> cases, @for -> each.
 component props travel in a spread with getters, so a child reads props.x and
 tracks it without knowing it came from a signal.
 
@@ -53,9 +53,6 @@ const isEvent    = name => /^on[:a-z]/i.test(name) || ONCE.test(name);
 const isBehavior = name => name[0] === '@' || name.startsWith('use:');
 
 // ::: generator
-
-// a @case value compared as it is, without a pattern check
-const LITERAL = /^(?:'[^']*'|"[^"]*"|`[^`$]*`|-?\d[\d_.e]*|true|false|null|undefined)$/;
 
 function generate (ast, { cases = new Map, filename, fragments = null, names, runtime = '$$', scope = null, source }) {
   const $ = name => `${runtime}.${name}`;
@@ -115,7 +112,7 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
       case 'Element'    : return element(child, depth, root);
       case 'If'         : return hole(ifBlock(child, depth, root));
       case 'For'        : return hole(forBlock(child, depth, root));
-      case 'Switch'     : return hole(switchBlock(child, depth, root));
+      case 'Match'      : return hole(matchBlock(child, depth, root));
       case 'FragmentDef': throw fail('@fragment is only allowed at the top level of a .rat file, in a .rat.js file write a function', child.start);
     }
     throw new Error(`[rat] unknown node ${child.type}`);
@@ -142,27 +139,14 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     return call($('each'), args, depth);
   }
 
-  function switchBlock (node, depth, root) {
-    const { cases, fallback, subject } = node;
-    if (cases.some(({ test }) => !LITERAL.test(test.code))) return patternSwitch(node, depth, root);
-    const items = cases.map(({ children, test }) => `[${expression(test)}, () => ${view(children, depth + 2, root)}]`);
-    const list  = items.some(multiline) || items.join(', ').length > INLINE
-      ? `[\n${items.map(item => pad(depth + 2) + item).join(',\n')},\n${pad(depth + 1)}]`
-      : `[${items.join(', ')}]`;
-    const args  = [live(expression(subject)), list];
-    if (fallback) args.push(`() => ${view(fallback, depth + 1, root)}`);
-    return call($('match'), args, depth);
-  }
-
   /*
-  a @switch with a named case (or any non-literal @case): $$.cases tests each
-  value in order, a pattern decides, anything else is Object.is. a case declared
-  in this file hands out its parts, each one a computed in the branch:
+  @match: $$.cases tests each @case in order with match.js of @rat/types. a case
+  declared in this file hands out its parts, each one a computed in the branch:
 
     @case Failed: <p>{message}</p>
     ($$parts) => { const message = $$.computed(() => $$parts().message); return $$.html`<p>${() => message.value}</p>`; }
   */
-  function patternSwitch ({ cases: list, fallback, subject }, depth, root) {
+  function matchBlock ({ cases: list, fallback, subject }, depth, root) {
     const tests = list.map(({ test }) => expression(test));
     const views = list.map(({ children, test }) => {
       const parts = cases.get(test.code) ?? [];
