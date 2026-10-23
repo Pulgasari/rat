@@ -1,0 +1,33 @@
+<script>
+  // <FeedItem feed={feed} />: one feed in the sidebar, its unread count, unfollow
+
+  import * as db from './../db.js';
+
+  import { current, open, removeFeed } from './../actions.js';
+  import { state }                     from './../state.js';
+
+  const feed = this.props.feed;
+
+  const $unread = db.unreadIn(db.itemsByFeed.value[feed.id] || []);
+  const $active = current.value === 'feed' && state.feedId.value === feed.id;
+  const $spin   = db.refreshing.value[feed.id];
+</script>
+
+<div.feed-row class:active={$active}>
+  <button.feed-open title={feed.title} onclick={() => open('feed', feed.id)}>
+    <span.feed-ic>
+      @if ($spin)
+        <svg-icon icon='loading' />
+      @else if (feed.image)
+        <img src={feed.image} alt='' loading='lazy' onerror={event => event.target.style.display = 'none'} />
+      @else
+        <svg-icon icon={feed.kind === 'youtube' ? 'youtube' : 'rss'} />
+    </span.feed-ic>
+    <span.feed-name>{feed.title}</span>
+    @if (feed.error)
+      <svg-icon.feed-err icon='alert' />
+    @else if ($unread > 0)
+      <span.nav-count>{$unread}</span>
+  </button.feed-open>
+  <button.feed-x title='Unfollow' onclick={() => removeFeed(feed)}><svg-icon icon='close' /></button>
+</div.feed-row>

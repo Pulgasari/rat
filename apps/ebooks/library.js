@@ -1,4 +1,10 @@
 // apps/ebooks/library.js
+//
+// pulling title / author / cover out of a book file. epub is a zip of xhtml —
+// epub.js unzips it, reads the OPF package and hands us the cover; pdf metadata
+// and a first-page render come from pdf.js. extraction is the slow part of a
+// library scan, so lib.js runs it a few books at a time and keeps the result
+// (cover included, as a Blob) keyed by the file's size+mtime signature.
 
 import ePub          from 'epubjs';
 import * as pdfjs    from 'pdfjs';
@@ -97,20 +103,16 @@ async function fromPdf (arrayBuffer) {
 
 // ── public ───────────────────────────────────────────────────────────────────
 
-/**
- * read title / author / cover (and pdf page count) from a book file handle.
- * never throws — a book we can't parse still shows up in the library with its
- * filename as the title and a placeholder cover.
- */
-export async function extractMeta (kind, fileHandle) {
+// title / author / cover (and pdf page count) of a book file. never throws: a book
+// that can not be parsed still shows up in the library with its filename as the
+// title and a placeholder cover
+export async function extractMeta (kind, file) {
   try {
-    const file   = await fileHandle.getFile();
     const buffer = await file.arrayBuffer();
-    return kind === 'pdf' 
-      ? await fromPdf  (buffer) 
-      : await fromEpub (buffer);
-  } catch (err) {
-    console.warn('[ebooks] metadata extraction failed:', err);
-    return { title: '', author: '', cover: null };
+    return kind === 'pdf' ? await fromPdf(buffer) : await fromEpub(buffer);
+  }
+  catch (error) {
+    console.warn('[ebooks] metadata extraction failed:', error);
+    return { author: '', cover: null, title: '' };
   }
 }

@@ -1,82 +1,17 @@
 <script>
+  // ebooks: a library of the epub and pdf files in folders the user grants, and a reader.
+  // the library is lib.js, what the views share is state.js, what they do actions.js
 
-const { app } = RAT;
-// :::::: STATE ::::::::::::::::::::::::::::::::::::::::::::::
+  import toast from './../.shared/toast.js';
 
-$bookKey = '';   // the book in the reader
-$search  = '';
-$folder  = '';   // '' = all folders, else sourceId
+  import { load } from './lib.js';
 
-$sorting = RAT.Enum ('recent', 'title', 'author', 'added');
-
-// epub reading prefs, remembered across books
-app.readerFlow = app.persisted('readerFlow', 'paginated');
-app.readerFont = app.persisted('readerFont', 100);
-app.readerUi   = signal({ ready: false });
-
-// :::::: LIBRARY :::::::::::::::::::::::::::::::::::::::::::
-
-const authorOf     = book => book.author || '';
-const lastOpenedOf = book => app.db.progressOf(book.key)?.lastOpenedAt || 0;
-const compare      = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' });
-
-const sortBooks = (list, mode) => [...list].sort((a, b) =>
-    mode === 'title'  ? compare(a.title, b.title)
-  : mode === 'author' ? compare(authorOf(a), authorOf(b)) || compare(a.title, b.title)
-  : mode === 'added'  ? (b.addedAt || 0) - (a.addedAt || 0)
-  : /* recent */        lastOpenedOf(b) - lastOpenedOf(a) || (b.addedAt || 0) - (a.addedAt || 0));
-
-app.visibleBooks = computed(() => {
-  const query = app.state.$search.trim().toLowerCase();
-  let list = app.db.books.value;
-  if (app.state.$folder) list = list.filter(book => book.sourceId === app.state.$folder);
-  if (query) list = list.filter(book => [book.title, authorOf(book), book.name].some(text => text.toLowerCase().includes(query)));
-  return sortBooks(list, app.sort.value);
-});
-
-app.percentOf = key => app.db.progressOf(key)?.percent ?? 0;
-
-// :::::: FRAME :::::::::::::::::::::::::::::::::::::::::::::
-// #app is the <app-root>: library and reader in the main area, the settings in the config area
-
-// the reader is in the dom while it is on screen only, leaving it closes the book
-const Reader = () => {
-  const key = gg;
-  return key ? html`<${ReaderView} bookKey=${key} key=${key} />` : null;
-};
-
-app.views = {
-  library : { route: '/',       view: 'LibraryView' },
-  reader  : { route: '/reader', view: Reader, transient: true },
-};
-
-app.toggleConfig = () => app.area('config')?.toggle();
-
-// :::::: ACTIONS :::::::::::::::::::::::::::::::::::::::::::
-
-app.openReader = key => {
-  $bookKey = key;
-  app.db.markOpened(key);
-  app.go('reader');
-};
-
-app.closeReader = () => app.go('library');
-
-app.addFolder = async () => {
-  if (!app.fs.supported()) return app.toast.error('This browser can’t open folders — try Chrome, Edge or another Chromium browser.');
-  try {
-    const source = await app.db.addFolder();
-    if (source) app.toast.success(`Added ${source.name}`);
-  }
-  catch (error) { app.toast.error(error); }
-};
-
+  RAT.app.hold(load().catch(error => toast.error(error)));
 </script>
 
-@if (RAT.app.database.ready)
-  <app-area name='main'>
-    <rat-view id|name='reader' src='ReaderView.rat' />
-  </app-area>
-  <app-area name='config' dock='end'><Config /></app-area>
-@else
-    <div class="booting"><svg-icon icon="svg-spinners:bars-scale-middle" /></div>
+<rat-area name='main'>
+  <rat-view route='/' name='library' src='views/LibraryView.rat.html' />
+  <rat-view route='/reader' name='reader' src='views/ReaderView.rat.html' transition='slide' />
+</rat-area>
+
+<rat-area name='config' dock='end'><Config /></rat-area>

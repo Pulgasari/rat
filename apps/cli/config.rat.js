@@ -1,10 +1,17 @@
-// cli/app.config.js
-
-export default {
-  id: 'cli',
-};
+// cli/config.rat.js
 
 import { gestalt } from '@gestalt/core';
+
+import config from './../zugriff.config.js';
+
+export default {
+  ...config,
+  id   : 'cli',
+  name : 'cli',
+
+  // the components of this app first, then the shared ones
+  autoImport : ['./components/', '../.shared/components/'],
+};
 
 // xterm needs concrete colours, so they are read back from the resolved theme
 // once the app has booted, instead of being written down a second time

@@ -2,10 +2,10 @@
 //
 // fetching and parsing feeds in the browser — the article-flavoured cousin of
 // apps/podcasts/feed.js. same CORS reality: almost no feed sends CORS headers.
-// modules/http.js goes around it: natively inside capacitor, in a browser direct
+// ../.shared/http.js goes around it: natively inside capacitor, in a browser direct
 // first and then through its proxy.
 
-import { getText } from '/.shared/js/modules/http.js';
+import { getText } from '../.shared/http.js';
 
 export const fetchText = (url, accept) => getText(url, { accept });
 export const fetchFeed = (url) =>

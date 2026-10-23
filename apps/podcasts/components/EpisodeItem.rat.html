@@ -1,0 +1,51 @@
+<script>
+  // <EpisodeItem episode={episode} />: one row of EpisodesIndex
+
+  import { gestures } from '@aufbau/gestures';
+
+  import fmt     from './../../.shared/fmt.js';
+  import library from './../library.js';
+  import player  from './../player.js';
+
+  import { go } from './../methods.js';
+
+  const episode = this.props.episode;
+  const podcast = episode.podcast;
+
+  const $state   = library.stateOf(episode.id);
+  const $percent = $state.done ? 100 : $state.duration ? Math.min(100, $state.position / $state.duration * 100) : 0;
+
+  const $actions = [
+    {
+      icon    : $state.saved ? 'bookmark'         : 'bookmark-outline',
+      label   : $state.saved ? 'Remove from list' : 'Save for later',
+      onclick : () => library.toggleSaved(episode.id),
+    },
+    {
+      icon    : $state.done ? 'mdi:check-circle' : 'mdi:check-circle-outline',
+      label   : $state.done ? 'Mark unplayed'    : 'Mark as done',
+      onclick : () => library.toggleDone(episode.id),
+    },
+    { icon: 'mdi:open-in-new', href: episode.link, title: 'open episode page' },
+  ];
+</script>
+
+<data-item
+  class:done={$state.done}
+  class:playing={player.episode.value?.id === episode.id}
+  @gestures={{ onSwipeLeft: () => alert('swipe left') }}
+  >
+  <Artwork aria-label='open episode' src={episode.image || podcast?.image} onclick={() => go('episode', episode.id)} />
+
+  <div.meta>
+    @if (podcast): <btn-push label={podcast.title} onclick={() => go('podcast', podcast.id)} />
+    <Date value={episode.pubDate} />
+    <span.dur>{fmt.duration(episode.duration)}</span>
+  </div.meta>
+
+  <btn-push.title label={episode.title} onclick={() => go('episode', episode.id)} />
+
+  @if ($state.position || $state.done): <aufbau-progress value={$percent} />
+
+  <ActionMenu items={$actions}><PlayToggle episode={episode} /></ActionMenu>
+</data-item>

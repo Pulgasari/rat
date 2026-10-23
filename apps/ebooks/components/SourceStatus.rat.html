@@ -1,0 +1,31 @@
+<script>
+  // <SourceStatus />: the folders that need reconnecting after a reload
+
+  import toast from './../../.shared/toast.js';
+
+  import { folders, reconnect, repick } from './../lib.js';
+
+  const $stale = folders.sources.value.filter(source => folders.perms.value[source.id] && folders.perms.value[source.id] !== 'granted');
+
+  function retry (source) {
+    reconnect(source.id).then(result => {
+      if (result.granted) return;
+      console.warn('[ebooks] reconnect failed', { source, ...result });
+      toast.error(`Reconnect failed — browser said “${result.state}”. Try “Choose folder”.`);
+    });
+  }
+
+  const choose = source => repick(source.id).then(ok => ok || toast.error(`Could not open ${source.name}`));
+</script>
+
+@if ($stale.length)
+  <div.reconnect-bar>
+    <svg-icon icon='mdi:folder-alert-outline' />
+    <span>{$stale.length} folder{$stale.length === 1 ? '' : 's'} need reconnecting to read on this device.</span>
+    @for (source of $stale)
+      <div.reconnect-item>
+        <span.reconnect-name>{source.name}</span>
+        <button.btn.small.primary onclick={() => retry(source)}><svg-icon icon='mdi:folder-key-outline' /> Reconnect</button>
+        <button.btn.small.ghost title='Re-select the folder — always works' onclick={() => choose(source)}><svg-icon icon='mdi:folder-search-outline' /> Choose folder</button>
+      </div.reconnect-item>
+  </div.reconnect-bar>

@@ -1,0 +1,18 @@
+<script>
+  // <PodcastsIndex podcasts={list} empty={{ icon, title, hint }} viewmode='list' | 'grid' />
+
+  import fmt    from './../../.shared/fmt.js';
+  import { go } from './../methods.js';
+</script>
+
+@if (props.podcasts.length)
+  <data-index viewmode={props.viewmode ?? 'list'} item-size='150px'>
+    @for (podcast of props.podcasts)
+      <data-item onclick={() => go('podcast', podcast.id)}>
+        <Artwork src={podcast.image} />
+        <div.title>{podcast.title}</div>
+        <div.sub>{podcast.episodeCount} episode(s) · {fmt.date(podcast.lastEpisodeAt)}</div>
+      </data-item>
+  </data-index>
+@else
+  <Empty {...props.empty} />

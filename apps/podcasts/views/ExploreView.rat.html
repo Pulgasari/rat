@@ -1,0 +1,140 @@
+<script module>
+  // the search survives leaving the view and coming back: module scope.
+  // country and attribute are preferences and should persist (open: how signals persist)
+
+  import { signal }                   from '@rat/signals';
+  import { ANY, localCountry }        from './../search.js';
+
+  const TABS = [
+    { value: 'podcasts', label: 'podcasts', icon: 'mdi:podcast'       },
+    { value: 'episodes', label: 'episodes', icon: 'mdi:playlist-play' },
+  ];
+
+  const search = {
+    attribute : signal(ANY),
+    country   : signal(localCountry()),
+    query     : signal(''),
+    tab       : signal('podcasts'),
+  };
+</script>
+
+<script>
+  // <ExploreView />: the directory, searched by podcast or by episode, and the shortlist
+
+  import { effect } from '@rat/runtime';
+
+  import fmt from './../../.shared/fmt.js';
+
+  import { looksLikeUrl, plain }                                            from './../methods.js';
+  import { ATTRIBUTES, searchEpisodes, searchPodcasts }                     from './../search.js';
+  import { keyed, open, podcastOf, rememberAction, subscribeAction }       from './../explore.js';
+  import { state }                                                          from './../state.js';
+
+  const COUNTRIES = '../.shared/json/countries.json';
+  const DEBOUNCE  = 300;
+  const TEASER    = 200;
+
+  const EMPTY = {
+    episodes : { icon: 'mdi:playlist-play', title: 'Search for an episode',    hint: 'Episodes are found by title, author or description across the whole directory.' },
+    podcasts : { icon: 'bookmark-unfilled', title: 'Nothing on the shortlist', hint: 'Search for a podcast, open it, and remember it to come back to it later.' },
+    search   : { icon: 'mdi:magnify-close', title: 'Nothing found',            hint: 'Try another name, another storefront, or paste a feed URL.' },
+  };
+
+  const db = RAT.app.database;
+
+  const podcasts  = db.podcasts.$items;
+  const shortlist = db.shortlist.$items;
+
+  let { $attribute, $country, $query, $tab } = search;
+  let { $dialog } = state;
+
+  let $results = [];
+  let $busy    = false;
+  let $note    = '';
+
+  const $text       = $query.trim();
+  const $isUrl      = looksLikeUrl($text);
+  const $subscribed = new Set(podcasts.map(podcast => podcast.id));
+  const $remembered = new Set(shortlist.map(row => row.id));
+
+  // with no query: podcasts fall back to the shortlist, episodes have nothing to show
+  const $entries = $text ? $results : $tab === 'podcasts' ? shortlist.toArray() : [];
+  const $empty   = $text ? EMPTY.search : EMPTY[$tab];
+
+  // search-as-you-type. the timer waits out the typing, the controller drops a request
+  // whose query has moved on. a url is not searched — it is the feed itself.
+  // a new tab clears the rows at once: podcast hits and episode hits are different shapes
+  effect(() => {
+    const text = $text, tab = $tab, country = $country, attribute = $attribute;
+    $results = [];
+    $note    = '';
+    if (!text || looksLikeUrl(text)) { $busy = false; return; }
+
+    const controller = new AbortController;
+    const find       = tab === 'episodes' ? searchEpisodes : searchPodcasts;
+
+    const timer = setTimeout(async () => {
+      $busy = true;
+      try {
+        $results = (await find(text, { attribute, country, signal: controller.signal })).map(keyed);
+        if (!$results.length) $note = 'nothing found for that';
+      }
+      catch (error) { if (error.name !== 'AbortError') $note = error.message; }
+      finally       { if (!controller.signal.aborted) $busy = false; }
+    }, DEBOUNCE);
+
+    return () => { clearTimeout(timer); controller.abort(); };
+  });
+
+  const podcastMeta = entry => [entry.author, entry.genre, entry.count ? `${entry.count} episode(s)` : ''].filter(Boolean).join(' · ');
+</script>
+
+@fragment podcastItem (entry)
+  <data-item class:subscribed={$subscribed.has(entry.id)}>
+    <Artwork aria-label='open podcast' src={entry.image} onclick={() => open(entry.url)} />
+    <div.meta>{podcastMeta(entry)}</div.meta>
+    <btn-push.title label={entry.title} onclick={() => open(entry.url)} />
+    <ActionMenu items={[rememberAction(entry, $remembered.has(entry.id)), subscribeAction(entry, $subscribed.has(entry.id))]} />
+  </data-item>
+
+@fragment episodeItem (entry)
+  <data-item class:subscribed={$subscribed.has(entry.podcastId)}>
+    <Artwork aria-label='open podcast' src={entry.image} onclick={() => open(entry.url)} />
+    <div.meta>
+      <Date value={entry.date} />
+      <span.dur>{fmt.duration(entry.duration)}</span>
+    </div.meta>
+    <btn-push.title label={entry.title} onclick={() => open(entry.url)} />
+    @if (plain(entry.description)): <p.teaser>{plain(entry.description).slice(0, TEASER)}</p>
+    <ActionMenu items={[
+      rememberAction(podcastOf(entry), $remembered.has(entry.podcastId)),
+      subscribeAction(podcastOf(entry), $subscribed.has(entry.podcastId)),
+      entry.link && { icon: 'mdi:open-in-new', href: entry.link, title: 'open the episode in the store' },
+    ].filter(Boolean)} />
+  </data-item>
+
+<ViewHeader title='explore'>
+  <btn-icon icon='add' label='Add by URL' onclick={() => $dialog = 'add'} />
+</ViewHeader>
+
+<main>
+  <Picker class='tabs' look='segments' options={TABS} bind:value={$tab} />
+  <SearchPanel placeholder='darknet diaries — or https://example.com/feed.xml' bind:value={$query} />
+
+  <div.filters>
+    <Picker class|placeholder='country'   look='combobox' src={COUNTRIES} searchable bind:value={$country} />
+    <Picker class|placeholder='attribute' look='combobox' options={ATTRIBUTES} bind:value={$attribute} />
+  </div.filters>
+
+  @if ($isUrl): <btn-push icon='rss' label='Open this feed' onclick={() => open($text)} />
+  @if ($note): <i.note>{$note}</i>
+  @if ($busy): <Loading text='searching …' />
+
+  @if (!$isUrl)
+    @if (!$entries.length)
+      <Empty {...$empty} />
+    @else
+      <data-index class={$tab === 'episodes' ? 'explore-episodes' : null} viewmode='list'>
+        @for (entry of $entries): {$tab === 'episodes' ? episodeItem(entry) : podcastItem(entry)}
+      </data-index>
+</main>

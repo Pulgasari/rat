@@ -1,0 +1,34 @@
+<script>
+  // <LatestView />: the newest episodes of every subscription
+
+  import { state }                        from './../state.js';
+  import { filterEpisodes, sortEpisodes } from './../methods.js';
+
+  const db = RAT.app.database;
+
+  const podcasts = db.podcasts.$items;
+  const episodes = db.episodes.$items;
+
+  let { $busy, $dialog, $search } = state;
+
+  const $hasSubs = podcasts.length > 0;
+  const $byId    = Object.fromEntries(podcasts.map(podcast => [podcast.id, podcast]));
+  const $joined  = episodes.map(episode => ({ ...episode, podcast: $byId[episode.podcastId] }));
+  const $shown   = filterEpisodes(sortEpisodes($joined, 'newest'), $search, true).slice(0, 200);
+
+  const $empty = !$hasSubs
+    ? { icon: 'mdi:rss', title: 'No subscriptions yet', hint: 'Add a podcast by its RSS feed URL to see its latest episodes here.' }
+    : $search
+      ? { icon: 'mdi:magnify-close',   title: 'Nothing matches your filter' }
+      : { icon: 'mdi:playlist-remove', title: 'No episodes found', hint: 'Try refreshing your feeds.' };
+</script>
+
+<ViewHeader title='latest episodes'>
+  <btn-icon icon='refresh' onclick='refresh-all' disabled={!!$busy} />
+</ViewHeader>
+
+<main>
+  @if ($hasSubs): <SearchPanel bind:value={$search} />
+  <EpisodesIndex episodes={$shown} empty={$empty} />
+  @if (!$hasSubs): <btn-push icon='add' label='Add a podcast' onclick={() => $dialog = 'add'} />
+</main>

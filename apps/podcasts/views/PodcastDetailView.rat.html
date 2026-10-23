@@ -1,0 +1,77 @@
+<script>
+  // <PodcastDetailView id={podcast id} />
+
+  import { $Enum } from '@rat/types';
+
+  import toast     from './../../.shared/toast.js';
+  import library   from './../library.js';
+  import { state } from './../state.js';
+
+  import { filterEpisodes, go, plain, sortEpisodes } from './../methods.js';
+
+  const db = RAT.app.database;
+
+  const podcasts = db.podcasts.$items;
+  const episodes = db.episodes.$items;
+
+  let { $id } = this.props;
+  let { $busy, $search } = state;
+
+  const $sorting = new $Enum('newest', 'oldest', 'alpha');
+
+  const $podcast   = podcasts.find(podcast => podcast.id === $id) ?? null;
+  const $all       = sortEpisodes(episodes.filter(episode => episode.podcastId === $id).map(episode => ({ ...episode, podcast: $podcast })), $sorting.value);
+  const $shown     = filterEpisodes($all, $search);
+  const $doneCount = $all.filter(episode => library.stateOf(episode.id).done).length;
+
+  async function remove () {
+    if (!confirm(`Unsubscribe from “${$podcast.title}”? This removes its episodes and their progress.`)) return;
+    const artwork = [$podcast.image, ...$all.map(episode => episode.image)].filter(Boolean);
+    await library.unsubscribe($id);
+    RAT.app.thumbs?.evict(artwork).catch(() => {});
+    toast.success('unsubscribed');
+    go('podcasts');
+  }
+
+  async function refresh () {
+    $busy = 'refreshing…';
+    try {
+      const { added } = await library.refresh($id);
+      toast.success(added ? `${added} new episode(s)` : 'Up to date');
+    }
+    catch (error) { toast.error(error); }
+    finally       { $busy = ''; }
+  }
+</script>
+
+@if (!$podcast)
+  <ViewHeader back='podcasts' />
+  <Empty icon='alert' title='Podcast not found' />
+@else
+  <ViewHeader back='podcasts' title={$podcast.title}>
+    <div.actions>
+      <btn-icon icon='refresh' label='refresh' onclick={refresh} disabled={!!$busy} />
+      <btn-icon.danger icon='trash' label='delete' onclick={remove} />
+    </div.actions>
+  </ViewHeader>
+
+  <main>
+    <Artwork src={$podcast.image} />
+
+    <div.info>
+      <div.stats>{$shown.length} episodes · {$doneCount} done</div.stats>
+      @if ($podcast.title): <div.title>{$podcast.title}</div>
+      @if ($podcast.author): <div.author>{$podcast.author}</div>
+      @if ($podcast.description): <p.about>{plain($podcast.description).slice(0, 400)}</p>
+      @if ($podcast.link): <Link href={$podcast.link} icon='mdi:web' label='Website' />
+    </div.info>
+
+    <div>
+      <span>Episodes</span>
+      <Picker signal={$sorting} look='segments' />
+    </div>
+
+    <EpisodesIndex episodes={$shown} empty={{ icon: 'mdi:magnify-close', title: 'Nothing matches your filter' }} />
+  </main>
+
+  @if ($all.length): <SearchPanel placeholder='filter episodes …' bind:value={$search} />

@@ -1,0 +1,29 @@
+<script>
+  // <ArticleRow item={item} />: one entry of an article feed
+
+  import * as db from './../db.js';
+
+  import fmt          from './../../.shared/fmt.js';
+  import { feedName } from './../actions.js';
+
+  const item    = this.props.item;
+  const $unread = !db.isRead(item.key);
+  const read    = () => db.markRead(item.key);
+</script>
+
+<article.post class:read={!$unread}>
+  <span.post-dot class:on={$unread} aria-hidden='true'></span>
+  <div.post-body>
+    <a.post-title href={item.link} target='_blank' rel='noopener noreferrer' onclick={read}>{item.title}</a>
+    <div.post-meta>
+      <span.post-src>{feedName(item)}</span>
+      <span.dot>·</span>
+      <time>{fmt.since(item.pubDate)}</time>
+    </div.post-meta>
+    @if (item.summary): <p.post-sum>{item.summary}</p>
+  </div.post-body>
+  @if (item.image)
+    <a.post-thumb href={item.link} target='_blank' rel='noopener noreferrer' onclick={read}>
+      <img src={item.image} alt='' loading='lazy' onerror={event => event.target.parentElement.style.display = 'none'} />
+    </a.post-thumb>
+</article.post>

@@ -1,0 +1,73 @@
+<script>
+  // <SettingsPanel />: menu/player placement, the CORS proxy + artwork resizer, and
+  // import/export of the subscription library
+
+  import toast                      from './../../.shared/toast.js';
+  import { PROXY }                  from './../../.shared/http.js';
+  import { state }                  from './../state.js';
+  import { exportFeeds, importFeeds } from './Export.rat.html';
+
+  const DEFAULT_IMG_RESIZER = 'https://img.pulgasari.dev/?url={url}&w={w}';
+
+  const settings = RAT.app.settings;
+
+  let $proxy   = settings.proxy;
+  let $resizer = settings.imgResizer;
+  let $file    = null;
+
+  const done = () => {
+    settings.proxy      = $proxy.trim();
+    settings.imgResizer = $resizer.trim();
+    state.dialog.value  = null;
+    toast.success('Settings saved');
+  };
+</script>
+
+<Modal>
+  <h2>Settings</h2>
+
+  <div.field>
+    <span.field-label>Menu position</span>
+    <Picker value={settings.menuPos} options={['top', 'bottom', 'left', 'right']} onchange={value => settings.menuPos = value} />
+  </div.field>
+
+  <div.field>
+    <span.field-label>Player position</span>
+    <Picker value={settings.playerPos} options={['top', 'bottom']} onchange={value => settings.playerPos = value} />
+  </div.field>
+
+  <label.field>
+    <span.field-label>CORS proxy</span>
+    <span.field-hint>Most podcast feeds block direct browser requests. Feeds are fetched directly first, then through this proxy. <code>{'{url}'}</code> is replaced with the feed URL. Clear it to use direct requests only.</span>
+    <input.modal-input type='text' placeholder={PROXY} bind:value={$proxy} />
+    <span.field-row>
+      <button.ghost.small onclick={() => $proxy = PROXY}>Reset to default</button>
+      <button.ghost.small onclick={() => $proxy = ''}>Direct only</button>
+    </span.field-row>
+  </label.field>
+
+  <label.field>
+    <span.field-label>Artwork resizer</span>
+    <span.field-hint>A self-hosted endpoint that shrinks cover art server-side, so no third party is involved. <code>{'{url}'}</code> is the image, <code>{'{w}'}</code> the width. Clear it to resize in the browser instead (only works for images whose host allows it).</span>
+    <input.modal-input type='text' placeholder={DEFAULT_IMG_RESIZER} bind:value={$resizer} />
+    <span.field-row>
+      <button.ghost.small onclick={() => $resizer = DEFAULT_IMG_RESIZER}>Reset to default</button>
+      <button.ghost.small onclick={() => $resizer = ''}>In-browser</button>
+    </span.field-row>
+  </label.field>
+
+  <div.field>
+    <span.field-label>Subscriptions</span>
+    <span.field-hint>Back up your subscriptions and listening progress as JSON, or restore from a file.</span>
+    <span.field-row>
+      <button onclick={exportFeeds}><svg-icon icon='download' /> Export JSON</button>
+      <button onclick={() => $file?.click()}><svg-icon icon='mdi:upload' /> Import JSON</button>
+      <input hidden type='file' accept='application/json,.json' ref={$file}
+        onchange={event => { importFeeds(event.target.files[0]); event.target.value = ''; }} />
+    </span.field-row>
+  </div.field>
+
+  <div.modal-actions>
+    <button onclick={done}>Done</button>
+  </div.modal-actions>
+</Modal>

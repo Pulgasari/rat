@@ -1,0 +1,82 @@
+<script>
+  // <Terminal />: xterm over the commands, the worker next to the app
+
+  import * as fit   from '@xterm/addon-fit';
+  import * as xterm from '@xterm/xterm';
+
+  import { effect } from '@rat/runtime';
+
+  import { VERSION, run }    from './../commands.js';
+  import { terminalOptions } from './../config.rat.js';
+
+  // esm.sh hands these umd builds out with named exports, a vendored copy as one default object
+  const { FitAddon } = fit.FitAddon   ? fit   : fit.default;
+  const { Terminal } = xterm.Terminal ? xterm : xterm.default;
+
+  const PROMPT = 'zugriff> ';
+
+  let $host = null;
+
+  effect(() => {
+    const host = $host;
+    if (!host) return;
+
+    const term  = new Terminal(terminalOptions());
+    const sized = new FitAddon;
+    term.loadAddon(sized);
+    term.open(host);
+    sized.fit();
+
+    // a compiled module is a blob, the worker is found from the page (index.html next to it)
+    const worker = new Worker(new URL('worker.js', document.baseURI), { type: 'module' });
+
+    let line    = '';
+    let running = false;
+
+    const done = () => { running = false; term.write(`\r\n\x1b[32m${PROMPT}\x1b[0m`); };
+
+    worker.onmessage = ({ data: { text, type } }) => {
+      if (type === 'STDOUT') term.writeln(`\x1b[36m${text}\x1b[0m`);
+      if (type === 'STDERR') term.writeln(`\x1b[31m${text}\x1b[0m`);
+      if (type === 'EXIT')   done();
+    };
+
+    // the area resizes with the window and when a dock opens beside it
+    const observer = new ResizeObserver(() => sized.fit());
+    observer.observe(host);
+
+    term.writeln(`\x1b[1;34m=== zugriff ${VERSION} ===\x1b[0m`);
+    term.writeln('Client-side WASM micro-terminal. Type "help" to list available commands.');
+    term.write(`\x1b[32m${PROMPT}\x1b[0m`);
+
+    term.onData(async data => {
+      if (running) return;
+      const code = data.charCodeAt(0);
+      if (code === 13) {   // enter
+        term.write('\r\n');
+        const input = line.trim();
+        line = '';
+        if (!input) return done();
+        running = true;
+        await run(input, { done, term, worker });
+      }
+      else if (code === 127) {   // backspace
+        if (!line.length) return;
+        line = line.slice(0, -1);
+        term.write('\b \b');
+      }
+      else if (code >= 32) {
+        line += data;
+        term.write(data);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+      worker.terminate();
+      term.dispose();
+    };
+  });
+</script>
+
+<div.terminal-container ref={$host}></div>

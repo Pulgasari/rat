@@ -1,0 +1,17 @@
+<script>
+  // <PlayToggle episode={episode} />: play / pause for one episode, following the player
+
+  import player from './../player.js';
+
+  const episode    = this.props.episode;
+  const $isCurrent = player.episode.value?.id === episode.id;
+  const $isPlaying = $isCurrent && player.playing.value;
+  const $isWaiting = $isCurrent && player.waiting.value;
+</script>
+
+<btn-push.play-toggle
+  aria-label={$isPlaying ? 'Pause' : 'Play'}
+  icon={$isWaiting ? 'loading' : $isPlaying ? 'mdi:pause' : 'mdi:play'}
+  title={$isPlaying ? 'Pause' : 'Play'}
+  onclick={() => player.play(episode)}
+/>

@@ -1,7 +1,6 @@
-// apps/podcasts/modules/methods.js
-// pure view helpers — formatting, html→text and the episode/podcast list transforms.
-// the filter reads the shared search query + podcast lookup through the zugriff.app
-// global (app.state.search), so call sites stay filterEpisodes(list).
+// apps/podcasts/methods.js
+// pure view helpers: html to text and the episode/podcast list transforms.
+// formatting (date, duration) is ../.shared/fmt.js
 
 export function hash (str = '') {
   let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
@@ -13,32 +12,6 @@ export function hash (str = '') {
   h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
-}
-
-export function format ({ date, duration }) {
-  if (date)     return fmtDate     (date);
-  if (duration) return fmtDuration (duration);
-  return '';
-}
-
-export function fmtDuration (sec) {
-  if (!sec || sec < 0) return '';
-  sec = Math.round(sec);
-  const h = Math.floor(sec / 3600);
-  const m = Math.floor((sec % 3600) / 60);
-  const s = sec % 60;
-  return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-           : `${m}:${String(s).padStart(2, '0')}`;
-}
-
-export function fmtDate (ms) {
-  if (!ms) return '';
-  const d = new Date(ms);
-  const diff = (Date.now() - ms) / 86400000;
-  if (diff < 1)  return 'today';
-  if (diff < 2)  return 'yesterday';
-  if (diff < 7)  return `${Math.floor(diff)} days ago`;
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 // does this text look like a feed url rather than a name to search for? one field
@@ -67,11 +40,11 @@ export function paragraphs (htmlStr = '') {
     .filter(Boolean);
 }
 
-// filter an episode list by the shared search query. `withPodcast` also matches on the
+// filter an episode list by the search query. `withPodcast` also matches on the
 // podcast title, for the mixed "latest" stream — the view joins that on, so there is
 // no lookup to do per episode per keystroke.
-export function filterEpisodes (list, withPodcast = false) {
-  const q = zugriff.app.state.$search.trim().toLowerCase();
+export function filterEpisodes (list, query = '', withPodcast = false) {
+  const q = query.trim().toLowerCase();
   if (!q) return list;
   return list.filter(ep =>
     ep.title.toLowerCase().includes(q) ||
@@ -86,3 +59,6 @@ export const sortEpisodes = (list, mode) => [...list].sort((a, b) =>
 export const sortPodcasts = (list, mode) => [...list].sort((a, b) =>
     mode === 'alpha' ? a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
   :                    (b.lastEpisodeAt || 0) - (a.lastEpisodeAt || 0));
+
+// a view by its name, a detail with its id: go('podcasts'), go('podcast', id) -> /podcast/<id>
+export const go = (view, id) => RAT.app.router.go(id == null ? `/${view}` : `/${view}/${encodeURIComponent(id)}`);

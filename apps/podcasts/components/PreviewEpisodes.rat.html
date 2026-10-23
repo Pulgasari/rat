@@ -1,0 +1,31 @@
+<script>
+  // <PreviewEpisodes episodes={list} empty={{ icon, title }} />
+  // the episodes of a podcast you are looking at but have not subscribed to.
+  //
+  // not EpisodesIndex: every control there writes to the library (progress, done,
+  // listen-later) and a previewed episode has no place in it — it exists only as long
+  // as the parsed feed is on screen. what is left is what the decision needs: when it
+  // came out, how long it is, what it is about.
+
+  import fmt       from './../../.shared/fmt.js';
+  import { plain } from './../methods.js';
+
+  const TEASER = 240;
+</script>
+
+@if (props.episodes.length)
+  <data-index.preview-episodes viewmode='list'>
+    @for (episode of props.episodes)
+      <data-item>
+        <Artwork src={episode.image} />
+        <div.meta>
+          <Date value={episode.pubDate} />
+          <span.dur>{fmt.duration(episode.duration)}</span>
+        </div.meta>
+        <div.title>{episode.title}</div>
+        @if (plain(episode.description)): <p.teaser>{plain(episode.description).slice(0, TEASER)}</p>
+        @if (episode.link): <Link href={episode.link} icon='mdi:open-in-new' label='Episode page' />
+      </data-item>
+  </data-index>
+@else
+  <Empty {...props.empty} />

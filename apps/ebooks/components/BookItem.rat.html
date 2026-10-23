@@ -1,0 +1,18 @@
+<script>
+  // <BookItem book={book} />
+
+  import { openReader } from './../actions.js';
+  import { progressOf } from './../lib.js';
+
+  const book     = this.props.book;
+  const $percent = progressOf(book.key)?.percent ?? 0;
+</script>
+
+<button.book title={book.name} onclick={() => openReader(book.key)}>
+  <Cover book={book} class='book-cover' />
+  <div.book-meta>
+    <div.book-title>{book.title}</div>
+    @if (book.author): <div.book-author>{book.author}</div>
+  </div.book-meta>
+  @if ($percent > 0): <aufbau-progress.book-progress value={Math.round($percent * 100)} />
+</button.book>

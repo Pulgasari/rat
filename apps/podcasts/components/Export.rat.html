@@ -1,0 +1,56 @@
+<script module>
+  // <Export />: back up the library as json and restore it. the export carries the feed urls
+  // plus the listening state keyed by feed url + episode guid, so an import re-fetches the
+  // feeds and re-attaches progress to them. exportFeeds and importFeeds serve SettingsPanel too
+
+  import toast     from './../../.shared/toast.js';
+  import library   from './../library.js';
+  import { state } from './../state.js';
+
+  export async function exportFeeds () {
+    const data = await library.exportData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const href = URL.createObjectURL(blob);
+    const name = `podcasts-${new Date().toISOString().slice(0, 10)}.json`;
+    const link = Object.assign(document.createElement('a'), { download: name, href });
+
+    document.body.append(link); link.click(); link.remove();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+    toast.success(`Exported ${data.feeds.length} subscription(s)`);
+  }
+
+  export async function importFeeds (file) {
+    if (!file) return;
+
+    let data;
+    try   { data = JSON.parse(await file.text()); }
+    catch { toast.error('Could not read that file'); return; }
+
+    state.dialog.value = null;
+    state.busy.value   = 'Importing…';
+
+    try {
+      const results = await library.importData(data, (count, total) => state.busy.value = `Importing ${count}/${total}…`);
+      const added   = results.filter(result => result.added).length;
+      const failed  = results.filter(result => result.error).length;
+      toast(`added: ${added} | failed: ${failed}`, { type: failed ? 'error' : 'success' });
+    }
+    catch (error) { toast.error(error); }
+    finally       { state.busy.value = ''; }
+  }
+</script>
+
+<script>
+  let $file = null;
+</script>
+
+<div.export>
+  <span.field-label>Subscriptions</span>
+  <i>Back up your subscriptions and listening progress as JSON, or restore from a file.</i>
+  <span>
+    <btn-push icon='download' label='Export JSON' onclick={exportFeeds} />
+    <btn-push icon='upload'   label='Import JSON' onclick={() => $file?.click()} />
+    <input hidden type='file' accept='application/json,.json' ref={$file}
+      onchange={event => { importFeeds(event.target.files[0]); event.target.value = ''; }} />
+  </span>
+</div.export>
