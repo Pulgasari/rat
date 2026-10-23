@@ -99,7 +99,16 @@ class Schema {
 // Title Case: capitalized words separated by spaces (e.g. "Title Case", "Hello World 123")
 
 
-
+capitalize     = value => { const s = String(value ?? ''); return s.charAt(0).toUpperCase() + s.slice(1); },
+toLowerCase    = value => String(value ?? '').toLowerCase(),
+toUpperCase    = value => String(value ?? '').toUpperCase(),
+toCamelCase    = value => 
+toConstantCase = 
+toKebabCase    = 
+toPascalCase   = 
+toSlugCase     = value => slugify(value),
+toSnakeCase    = 
+toTitleCase    = 
 
 
 
@@ -116,32 +125,32 @@ const toWords = (value) => String(value ?? '')
 
 const CamelCase = {
   pattern   : /^[a-z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
-  transform : value => toWords(value).join('-'),
+  transform : value => toWords(value).map((word, index) => index ? upperFirst(word) : word).join(''),
 }
 
 const ConstantCase = {
   pattern   : /^[A-Z0-9]+(_[A-Z0-9]+)*$/,
-  transform : ,
+  transform : value => toWords(value).join('_').toUpperCase(),
 }
 
 const KebabCase = {
   pattern   : /^[a-z0-9]+(-[a-z0-9]+)*$/,
-  transform : ,
+  transform : value => toWords(value).join('-'),
 }
 
 const PascalCase = {
   pattern   : /^[A-Z][a-z0-9]*([A-Z][a-z0-9]*)*$/,
-  transform : ,
+  transform : value => toWords(value).map(upperFirst).join(''),
 }
 
 const SnakeCase = {
   pattern   : /^[a-z0-9]+(_[a-z0-9]+)*$/,
-  transform : ,
+  transform : value => toWords(value).join('_'),
 }
 
 const TitleCase = {
   pattern   : /^[A-Z][a-z0-9]*(\s[A-Z][a-z0-9]*)*$/,
-  transform : ,
+  transform : value => toWords(value).map(upperFirst).join(' '),
 }
 
 
