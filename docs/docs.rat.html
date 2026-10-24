@@ -53,12 +53,16 @@
   </nav.docs-nav>
 </rat-area>
 
-<rat-view route='/*' name='page'>
+<rat-view route='/*' id|name='page'>
   <header.docs-bar>
     <button.docs-menu aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
     <span>RAT docs</span>
   </header.docs-bar>
-  <main.docs-page>
-    <output-md format='markdown' raw={$text} on:output-md-rendered={event => codeBlocks(event.currentTarget)} />
-  </main.docs-page>
+  <main>
+    <output-md 
+      format='markdown' 
+      raw={$text} 
+      on:output-md-rendered={event => codeBlocks(event.currentTarget)}
+    />
+  </main>
 </rat-view>
