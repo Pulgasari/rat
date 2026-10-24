@@ -332,6 +332,7 @@ strongest form of "compiler over runtime magic".
 maybe gonna add one of those?
 
 ```md
+Interface
 Struct
 URL
 ```
