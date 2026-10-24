@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <title>RAT · docs</title>
+  <meta name='description' content='rat: a small framework for browser apps without a build step. Components in .rat files, signals, schemas.' />
+  <script src='../packages/app/run.js'></script>
+  <style>
+    :root     { color-scheme: light dark; font: 16px/1.6 system-ui, sans-serif; }
+    body      { margin: 0; }
+    .docs-nav { display: flex; flex-direction: column; gap: 0.25rem; padding: 1.5rem 1rem; min-inline-size: 12rem; }
+    .docs-nav a         { color: inherit; padding: 0.25rem 0.5rem; border-radius: 0.25rem; text-decoration: none; }
+    .docs-nav a.active  { background: color-mix(in srgb, currentColor 12%, transparent); }
+    .docs-brand         { font-weight: 800; font-size: 1.5rem; margin-block-end: 1rem; }
+    .docs-page          { max-inline-size: 48rem; padding: 1.5rem 2rem; }
+  </style>
+</head>
+<body>
+  <rat-app src='docs.rat.html' routing='hash'></rat-app>
+</body>
+</html>
