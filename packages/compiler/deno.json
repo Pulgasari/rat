@@ -1,0 +1,16 @@
+{
+  "name": "@rat/compiler",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./index.js"
+  },
+  "imports": {
+    "acorn": "npm:acorn@^8.14.0"
+  },
+  "publish": {
+    "exclude": [
+      "_parserblocks.js"
+    ]
+  }
+}

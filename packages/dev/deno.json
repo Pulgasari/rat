@@ -1,0 +1,12 @@
+{
+  "name": "@rat/dev",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./unplugin.js"
+  },
+  "imports": {
+    "acorn": "npm:acorn@^8.14.0",
+    "unplugin": "npm:unplugin@^2.3.0"
+  }
+}

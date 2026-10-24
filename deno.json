@@ -1,0 +1,26 @@
+{
+  "workspace": [
+    "./packages/app",
+    "./packages/bunker",
+    "./packages/commands",
+    "./packages/compiler",
+    "./packages/dev",
+    "./packages/hotkeys",
+    "./packages/import",
+    "./packages/runtime",
+    "./packages/signals",
+    "./packages/types"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "deno.ns",
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ]
+  },
+  "nodeModulesDir": "none",
+  "tasks": {
+    "publish:dry": "deno publish --dry-run"
+  }
+}
