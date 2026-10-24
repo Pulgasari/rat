@@ -116,6 +116,8 @@ JSON.stringify(settings);                      // '{"view":"list","zoom":80}'
 
 a field may be called anything but `assign`, `schema` and `toJSON`.
 
+`?` before a field's name makes it optional, short for `.optional()`: `Record({ exec: Fn, '?title': Str })` is `Record({ exec: Fn, title: Str.optional() })`.
+
 ## Table
 
 a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object with exactly the columns (a field the schema does not know is dropped), its position is its key.
