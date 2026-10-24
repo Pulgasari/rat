@@ -1,5 +1,5 @@
 // @rat/app :: commands
-// the new form, a draft: not wired in yet, @rat/commands is still the one in use
+// the new form, a draft: not wired in yet, @rat/commands is still the one in use (hotkeys.js uses this one)
 
 /*
 commands are the vocabulary of an app, the things it can do. ui, hotkeys and code
@@ -8,7 +8,8 @@ share one behaviour.
 
 the registry is a $Dict: one key per command in kebab-case, whatever spelling it
 was set or asked with, and an entry with the function and what a ui shows of it.
-a palette or a settings page that lists the commands follows it by itself.
+a palette or a settings page that lists the commands follows it by itself. the
+registry is that $Dict, with set taking a function as well and run and listen added.
 
   const commands = createCommands({
     save       : () => …,                                    // a function is { exec }
@@ -23,6 +24,7 @@ a palette or a settings page that lists the commands follows it by itself.
   commands.get('toggle_play');              // { description, exec, title }
   commands.has('Toggle Play');              // true
   [...commands.keys()];                     // ['toggle-play', 'open-settings']
+  commands instanceof $Dict;                // true: size, entries, forEach … as on any $Dict
 
   commands.run('toggle-play', event);       // exec(event)
   commands.run('go[settings]');             // exec('settings')
@@ -46,7 +48,6 @@ import { $Dict, Fn, KebabCase, Str } from '@rat/types';
 
 const COMMAND  = 'rat:command';
 const LITERALS = { false: false, null: null, true: true };
-const METHODS  = new Set(['assign', 'clear', 'delete', 'entries', 'get', 'has', 'keys', 'listen', 'run', 'set', 'size', 'values']);
 
 // ::: the schema
 
@@ -89,23 +90,49 @@ function raise (node, error) {
   if (!node?.isConnected || node.dispatchEvent(event)) (globalThis.reportError ?? console.error)(error);
 }
 
+// ::: keyed: a $Dict, any other key an entry
+
+/*
+the $Dict itself (get, has, keys, size, instanceof …), its methods bound to it,
+plus own (set, assign, run …) over them. any other string key is an entry: read
+gives read(entry), a write sets it, delete deletes it. a key the $Dict has
+itself (size, clear, keys …) is no entry this way, get(name) still is
+*/
+function keyed (dict, own, read) {
+  const bound = new Map;
+  const proxy = new Proxy(dict, {
+    deleteProperty (target, key) { return target.delete(key); },
+    has            (target, key) { return Object.hasOwn(own, key) || key in target || target.has(key); },
+
+    get (target, key) {
+      if (Object.hasOwn(own, key)) return own[key];
+      if (typeof key !== 'string' || key in target) {
+        const value = Reflect.get(target, key, target);
+        if (typeof value !== 'function') return value;
+        if (!bound.has(key)) bound.set(key, value.bind(target));
+        return bound.get(key);
+      }
+      const entry = target.get(key);
+      return entry === undefined ? undefined : read(entry);
+    },
+
+    set (target, key, value) {
+      if (Object.hasOwn(own, key) || key in target) return false;
+      own.set(key, value);
+      return true;
+    },
+  });
+  return proxy;
+}
+
 // ::: the registry
 
 function createCommands (entries = {}) {
   const dict = Commands.create();
 
-  const api = {
-    assign (entries) { for (const [name, command] of Object.entries(entries)) dict.set(name, entryOf(command)); return proxy; },
-    clear  ()        { dict.clear(); return proxy; },
-    delete (name)    { return dict.delete(name); },
+  const own = {
+    assign (entries) { for (const [name, command] of Object.entries(entries)) own.set(name, command); return proxy; },
     set    (name, command) { dict.set(name, entryOf(command)); return proxy; },
-
-    entries () { return dict.entries(); },
-    get  (name) { return dict.get(name); },
-    has  (name) { return dict.has(name); },
-    keys ()     { return dict.keys(); },
-    get size () { return dict.size; },
-    values ()   { return dict.values(); },
 
     // run('save'), run('go', 'settings'), run('go[settings]')
     run (text, ...args) {
@@ -133,22 +160,11 @@ function createCommands (entries = {}) {
     },
   };
 
-  // any other key is a command: reading gives its exec, writing sets it
-  const proxy = new Proxy(api, {
-    deleteProperty (target, key)        { return dict.delete(key); },
-    get            (target, key)        { return typeof key !== 'string' || METHODS.has(key) ? Reflect.get(target, key) : dict.get(key)?.exec; },
-    has            (target, key)        { return METHODS.has(key) || dict.has(key); },
-    ownKeys        ()                   { return [...dict.keys()]; },
-    set            (target, key, value) { if (METHODS.has(key)) return false; dict.set(key, entryOf(value)); return true; },
-
-    getOwnPropertyDescriptor (target, key) {
-      return dict.has(key) ? { configurable: true, enumerable: true, value: dict.get(key).exec, writable: true } : undefined;
-    },
-  });
-
-  return api.assign(entries);
+  // commands.togglePlay is its exec, commands.togglePlay = fn sets it
+  const proxy = keyed(dict, own, entry => entry.exec);
+  return own.assign(entries);
 }
 
 // :::::: EXPORT
 
-export { COMMAND, Command, Commands, command, commandListener, createCommands, parseCommand };
+export { COMMAND, Command, Commands, command, commandListener, createCommands, keyed, parseCommand };

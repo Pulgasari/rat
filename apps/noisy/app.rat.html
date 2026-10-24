@@ -1,0 +1,67 @@
+<script>
+  // noisy: the audio files in folders the user grants, by genre, artist, release and track.
+  // the library is library.js, the panels browse.js, playing player.js.
+  // wide: menu | four panels side by side | player. narrow: menu over the panels as tabs to swipe through, player below
+
+  import toast from './../.shared/toast.js';
+
+  import { PANELS, clearSelection, shownTracks } from './browse.js';
+  import { load }                                from './library.js';
+  import player                                  from './player.js';
+
+  const TITLES = { artists: 'Artists', genres: 'Genres', releases: 'Releases', tracks: 'Tracks' };
+  const EMPTY  = { artists: 'No artists yet', genres: 'Add a folder in the settings', releases: 'Pick an artist', tracks: 'Pick a release' };
+
+  RAT.app.hold(load().catch(error => toast.error(error)));
+
+  RAT.app.commands.assign({
+    'clear-selection' : clearSelection,
+    'next'            : () => player.next(),
+    'previous'        : () => player.previous(),
+    'toggle-play'     : () => player.toggle(),
+  });
+
+  // narrow: the panels are a strip that snaps, one panel wide. $tab is the one in view
+  let $tab  = 0;
+  let strip = null;
+
+  const narrow = () => strip && strip.scrollWidth > strip.clientWidth;
+  const show   = index => strip?.children[index]?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+
+  function panels (element) {
+    strip = element;
+    const onScroll = () => { $tab = Math.round(element.scrollLeft / Math.max(1, element.clientWidth)); };
+    element.addEventListener('scroll', onScroll, { passive: true });
+    return () => element.removeEventListener('scroll', onScroll);
+  }
+
+  // a single pick moves on to the next panel where only one is in view. a track plays
+  function picked (panel, key, mode) {
+    if (panel === 'tracks' && mode === 'one') {
+      const queue = shownTracks.value;
+      player.play(queue, queue.findIndex(track => track.key === key));
+      return;
+    }
+    if (mode === 'one' && narrow()) show(PANELS.indexOf(panel) + 1);
+  }
+</script>
+
+<rat-area name='main'>
+  <div.noisy>
+    <Menu />
+
+    <nav.tabs>
+      @for (name of PANELS): <button class:active={$tab === PANELS.indexOf(name)} onclick={() => show(PANELS.indexOf(name))}>{TITLES[name]}</button>
+    </nav.tabs>
+
+    <div.panels @panels>
+      @for (name of PANELS): <Panel name={name} title={TITLES[name]} empty={EMPTY[name]} onpick={(key, mode) => picked(name, key, mode)} />
+    </div.panels>
+
+    <Player />
+  </div.noisy>
+</rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name='noisy'><Folders /></Settings>
+</rat-area>

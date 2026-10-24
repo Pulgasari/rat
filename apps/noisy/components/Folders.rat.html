@@ -1,0 +1,36 @@
+<script>
+  // <Folders />: the granted folders in the settings, adding, rescanning, reconnecting, removing
+
+  import toast from './../../.shared/toast.js';
+
+  import { addFolder, pending, removeFolder, rescanAll } from './../library.js';
+
+  const folders = RAT.app.folders;
+
+  const $sources = folders.sources.value;
+  const $perms   = folders.perms.value;
+  const $pending = pending.value;
+
+  async function add () {
+    try {
+      const source = await addFolder();
+      if (source) toast.success(`Added ${source.name}`);
+    }
+    catch (error) { toast.error(error); }
+  }
+</script>
+
+<section.folders>
+  <h3>folders</h3>
+  @for (source of $sources)
+    <div.folder>
+      <span>{source.name}</span>
+      @if ($perms[source.id] !== 'granted'): <btn-push label='Reconnect' onclick={() => folders.reconnect(source.id)} />
+      <btn-icon icon='delete' label='Remove' onclick={() => removeFolder(source.id)} />
+    </div.folder>
+  <div.folder-actions>
+    <btn-push icon='folder-add' label='Add a folder' onclick={add} />
+    @if ($sources.length): <btn-push icon='refresh' label='Rescan' onclick={rescanAll} />
+  </div.folder-actions>
+  @if ($pending): <p.hint>{$pending} files left to read</p.hint>
+</section.folders>

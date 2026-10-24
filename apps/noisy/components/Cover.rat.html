@@ -1,0 +1,11 @@
+<script>
+  // <Cover id={track.cover} />: the cover of a track from the thumbnails (library.js put it there), else a note
+
+  let $url = null;
+
+  if (props.id) RAT.app.thumbnails.requestFile(props.id, () => null).then(url => { $url = url; }).catch(() => {});
+</script>
+
+<span.cover style:background-image={$url ? `url("${$url}")` : null}>
+  @if (!$url): <svg-icon icon='mdi:music-note' />
+</span.cover>

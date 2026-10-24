@@ -15,6 +15,7 @@
 [ebooks](https://code.pulgasari.dev/rat/apps/ebooks/) ·
 [feeds](https://code.pulgasari.dev/rat/apps/feeds/) ·
 [icons](https://code.pulgasari.dev/rat/apps/icons/) ·
+[noisy](https://code.pulgasari.dev/rat/apps/noisy/) ·
 [notes](https://code.pulgasari.dev/rat/apps/notes/) ·
 [podcasts](https://code.pulgasari.dev/rat/apps/podcasts/)
 

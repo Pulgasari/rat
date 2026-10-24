@@ -1,0 +1,41 @@
+<script>
+  // <Panel name='artists' title='Artists' empty='Pick a genre or two' />: one of the four, its list from browse.js.
+  // a click picks one (ctrl/meta toggles, shift a range), a long press toggles. onpick(key, mode) after a pick
+
+  import gestures from '@aufbau/gestures';
+
+  import { lists, modeOf, pick, picked } from './../browse.js';
+
+  const name   = props.name;
+  const chosen = picked[name];
+
+  const $items  = lists[name].value;
+  const $picked = chosen.size;
+
+  function choose (key, mode) {
+    pick(name, key, mode);
+    props.onpick?.(key, mode);
+  }
+
+  const keyAt = target => target?.closest?.('[data-key]')?.dataset.key;
+</script>
+
+<section.panel data-panel={name}>
+  <header.panel-head>
+    <h2>{props.title}</h2>
+    <span.panel-count>{$picked ? `${$picked} / ${$items.length}` : $items.length}</span>
+    @if ($picked): <btn-icon icon='close' label='Clear' onclick={() => chosen.clear()} />
+  </header.panel-head>
+
+  @if ($items.length)
+    <data-index.panel-list viewmode='list' item-size='2.75rem' gap='0' @gestures={{ onLongPress: gesture => { const key = keyAt(gesture.target); if (key) choose(key, 'toggle'); } }}>
+      @for (item of $items)
+        <data-item.row data-key={item.key} class:picked={chosen.has(item.key)} onclick={event => choose(item.key, modeOf(event))}>
+          @if (item.cover !== undefined): <Cover id={item.cover} />
+          <span.row-label>{item.label}</span>
+          <span.row-sub>{item.sub ?? item.count}</span>
+        </data-item.row>
+    </data-index.panel-list>
+  @else
+    <p.panel-empty>{props.empty}</p.panel-empty>
+</section.panel>
