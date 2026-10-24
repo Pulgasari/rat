@@ -1,0 +1,133 @@
+<script>
+  // vectorizer: an image to an svg, on the device (trace.js). pick, drop or paste an image,
+  // see it next to its svg, adjust, download
+
+  import { autoloader } from '@aufbau/elements';
+  import { effect }     from '@rat/runtime';
+
+  import toast from './../.shared/toast.js';
+
+  import { DEFAULTS, bitmapOf, trace } from './trace.js';
+
+  autoloader();
+
+  let $bitmap = null;
+  let $busy   = false;
+  let $name   = '';
+  let $source = null;   // an object url of the image
+  let $svg    = '';
+
+  let $colors     = DEFAULTS.colors;
+  let $mode       = DEFAULTS.mode;
+  let $smoothness = DEFAULTS.smoothness;
+  let $speckles   = DEFAULTS.speckles;
+  let $tolerance  = DEFAULTS.tolerance;
+
+  const $svgUrl = $svg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent($svg)}` : null;
+  const $size   = $svg ? `${($svg.length / 1024).toFixed(1)} kb` : '';
+
+  async function open (file) {
+    if (!file?.type.startsWith('image/')) return toast.error('That is no image.');
+    try {
+      if ($source) URL.revokeObjectURL($source);
+      $source = URL.createObjectURL(file);
+      $name   = file.name.replace(/\.[^.]+$/, '') || 'image';
+      $bitmap = await bitmapOf(file);
+    }
+    catch (error) { toast.error(error); }
+  }
+
+  function reset () {
+    if ($source) URL.revokeObjectURL($source);
+    $bitmap = $source = null;
+    $svg = '';
+  }
+
+  // traced again a moment after the last change, not on every step of a slider
+  effect(() => {
+    const bitmap   = $bitmap;
+    const settings = { colors: $colors, mode: $mode, smoothness: $smoothness, speckles: $speckles, tolerance: $tolerance };
+    if (!bitmap) return;
+    let current = true;
+    const timer = setTimeout(async () => {
+      $busy = true;
+      try {
+        const svg = await trace(bitmap, settings);
+        if (current) $svg = svg;
+      }
+      catch (error) { toast.error(error); }
+      finally { if (current) $busy = false; }
+    }, 200);
+    return () => { current = false; clearTimeout(timer); };
+  });
+
+  function download () {
+    const link = Object.assign(document.createElement('a'), { download: `${$name}.svg`, href: URL.createObjectURL(new Blob([$svg], { type: 'image/svg+xml' })) });
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  const copy = () => navigator.clipboard.writeText($svg).then(() => toast.success('svg copied'), error => toast.error(error));
+
+  // an image pasted anywhere
+  effect(() => {
+    const paste = event => { const file = [...event.clipboardData?.files ?? []].find(file => file.type.startsWith('image/')); if (file) open(file); };
+    document.addEventListener('paste', paste);
+    return () => document.removeEventListener('paste', paste);
+  });
+
+  const number = event => Number(event.target.value);
+</script>
+
+<rat-area name='main'>
+  <main.vectorizer>
+    @if (!$source)
+      <label.drop on:dragover!={() => {}} on:drop!={event => open(event.dataTransfer.files[0])}>
+        <svg-icon icon='mdi:vector-curve' />
+        <strong>Pick an image</strong>
+        <span>or drop it here, or paste it</span>
+        <input type='file' accept='image/*' onchange={event => open(event.target.files[0])} />
+      </label.drop>
+    @else
+      <section.compare>
+        <figure>
+          <img src={$source} alt='the image' />
+          <figcaption>{$name}</figcaption>
+        </figure>
+        <figure class:busy={$busy}>
+          @if ($svgUrl): <img src={$svgUrl} alt='the svg' />
+          <figcaption>{$busy || !$svg ? 'tracing …' : `svg · ${$size}`}</figcaption>
+        </figure>
+      </section.compare>
+
+      <form.settings on:submit!={() => {}}>
+        <fieldset.modes>
+          <label><input type='radio' name='mode' value='color' checked={$mode === 'color'} onchange={() => $mode = 'color'} /> color</label>
+          <label><input type='radio' name='mode' value='mono'  checked={$mode === 'mono'}  onchange={() => $mode = 'mono'} /> black & white</label>
+        </fieldset.modes>
+        @if ($mode === 'color')
+          <label>
+            <span>colors <output>{$colors}</output></span>
+            <input type='range' min='1' max='16' step='1' value={$colors} oninput={event => $colors = number(event)} />
+          </label>
+        <label>
+          <span>speckles <output>{$speckles}px</output></span>
+          <input type='range' min='0' max='100' step='1' value={$speckles} oninput={event => $speckles = number(event)} />
+        </label>
+        <label>
+          <span>smoothness <output>{$smoothness}</output></span>
+          <input type='range' min='0' max='1.33' step='0.01' value={$smoothness} oninput={event => $smoothness = number(event)} />
+        </label>
+        <label>
+          <span>curve tolerance <output>{$tolerance}</output></span>
+          <input type='range' min='0' max='1' step='0.05' value={$tolerance} oninput={event => $tolerance = number(event)} />
+        </label>
+      </form.settings>
+
+      <div.actions>
+        <btn-push icon='download' label='Download svg' onclick={download} disabled={!$svg} />
+        <btn-push icon='mdi:content-copy' label='Copy' onclick={copy} disabled={!$svg} />
+        <btn-push icon='mdi:image-plus' label='Another image' onclick={reset} />
+      </div.actions>
+  </main.vectorizer>
+</rat-area>
