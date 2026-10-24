@@ -5,3 +5,6 @@
 
 ## reads
 - https://www.inngest.com/blog/too-many-javascript-schema-libraries-support-only-one
+
+## other stuff
+- https://github.com/voxpelli/types-in-js
