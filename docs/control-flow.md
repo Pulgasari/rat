@@ -4,7 +4,7 @@ Blocks around markup, written with `@`.
 
 ## @if
 
-```html
+```rat
 @if ($user)
   <p>hello {$user.name}</p>
 @else
@@ -13,7 +13,7 @@ Blocks around markup, written with `@`.
 
 ## @for
 
-```html
+```rat
 <ul>
   @for (todo of $todos): <li>{todo.title}</li>
 </ul>
@@ -21,7 +21,7 @@ Blocks around markup, written with `@`.
 
 ## @match
 
-```html
+```rat
 @match ($view)
   @case 'grid': <grid-view />
   @case 'list': <list-view />
@@ -30,7 +30,7 @@ Blocks around markup, written with `@`.
 
 ## Three forms of a body
 
-```html
+```rat
 @if ($ok) { <b>yes</b> }    <!-- braces -->
 @if ($ok): <b>yes</b>        <!-- one line -->
 @if ($ok)                    <!-- indented below -->
@@ -39,7 +39,7 @@ Blocks around markup, written with `@`.
 
 ## match in the script
 
-```js
+```ratjs
 const label = match (event) {
   { type: 'user', name } => `user ${name}`,
   'idle' | 'paused'      => 'waiting',

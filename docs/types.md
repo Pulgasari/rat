@@ -2,7 +2,7 @@
 
 `@rat/types` has schemas: values that check and convert a value. They are plain js, no TypeScript.
 
-```js
+```ratjs
 import { Num, Str, Enum, Record } from '@rat/types';
 
 Num.range(0, 255).parse('120');   // 120
@@ -15,14 +15,14 @@ const Settings = Record({ view: Enum('grid', 'list'), '?title': Str });
 
 A schema as the value of a signal checks every write:
 
-```js
+```ratjs
 let $view = Enum('grid', 'list');   // starts at 'grid'
 $view = 'table';                    // TypeError: one of grid, list
 ```
 
 ## Cases of writing
 
-```js
+```ratjs
 import { KebabCase, Str } from '@rat/types';
 
 KebabCase.is('togglePlay');               // false
