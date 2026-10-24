@@ -124,9 +124,9 @@ a field may be called anything but `assign`, `schema` and `toJSON`.
 Str is the schema of a string, and the cases of writing one:
 
 ```js
-  Str.min(3).max(40)
-  Str.pattern(/^#/, 'a hex color')
-  Str.email, Str.uuid
+Str.min(3).max(40)
+Str.pattern(/^#/, 'a hex color')
+Str.email, Str.uuid
 ```
 
 a case only lets through a string already written that way. from() makes one of any string, Str.to(Case) is the schema that does that on the way in:
