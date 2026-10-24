@@ -62,30 +62,18 @@ export function createReactiveSystem ({ update, notify, unwatched, }) {
     }
     function unlink(link, sub = link.sub) {
         const { dep, prevDep, nextDep, nextSub, prevSub } = link;
-        if (nextDep !== undefined) {
-            nextDep.prevDep = prevDep;
-        }
-        else {
-            sub.depsTail = prevDep;
-        }
-        if (prevDep !== undefined) {
-            prevDep.nextDep = nextDep;
-        }
-        else {
-            sub.deps = nextDep;
-        }
-        if (nextSub !== undefined) {
-            nextSub.prevSub = prevSub;
-        }
-        else {
-            dep.subsTail = prevSub;
-        }
-        if (prevSub !== undefined) {
-            prevSub.nextSub = nextSub;
-        }
-        else if ((dep.subs = nextSub) === undefined) {
-            unwatched(dep);
-        }
+        if (nextDep !== undefined) { nextDep.prevDep = prevDep; }
+        else { sub.depsTail = prevDep; }
+        
+        if (prevDep !== undefined) { prevDep.nextDep = nextDep; }
+        else { sub.deps = nextDep; }
+      
+        if (nextSub !== undefined) nextSub.prevSub = prevSub;
+        else dep.subsTail = prevSub;
+        
+        if (prevSub !== undefined) { prevSub.nextSub = nextSub; }
+        else if ((dep.subs = nextSub) === undefined) { unwatched(dep); }
+      
         return nextDep;
     }
     function propagate(link, innerWrite) {
@@ -100,22 +88,14 @@ export function createReactiveSystem ({ update, notify, unwatched, }) {
                     sub.flags |= 8;
                 }
             }
-            else if (!(flags & (4 | 8))) {
-                flags = 0;
-            }
-            else if (!(flags & 4)) {
-                sub.flags = (flags & ~8) | 32;
-            }
+            else if (!(flags & (4 | 8))) { flags = 0; }
+            else if (!(flags & 4)) { sub.flags = (flags & ~8) | 32; }
             else if (!(flags & (16 | 32)) && isValidLink(link, sub)) {
                 sub.flags = flags | (8 | 32);
                 flags &= 1;
             }
-            else {
-                flags = 0;
-            }
-            if (flags & 2) {
-                notify(sub);
-            }
+            else { flags = 0; }
+            if (flags & 2) { notify(sub); }
             if (flags & 1) {
                 const subSubs = sub.subs;
                 if (subSubs !== undefined) {
