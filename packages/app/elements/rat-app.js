@@ -25,7 +25,8 @@ src the app is [loading] by itself until they are mounted.
 
 config.rat.js next to src (or config-src) is loaded before the app's code: its
 mods land on the app (RAT.app.database …, see ../mods.js), its autoImport
-names the folders components come from without an import (see ../loader.js),
+names the folders components come from without an import (see ../loader.js), its
+viewport is the <meta name='viewport'> of the page (see ../viewport.js),
 the config itself is app.config.
 
 areas open and close by their name, two forms to find out which serves better:
@@ -64,6 +65,7 @@ import { RAT, mount } from '@rat/runtime';
 import { catchErrors, showError }        from '../boundary.js';
 import { autoImport, componentOf, load } from '../loader.js';
 import { useMods }                       from '../mods.js';
+import { viewport }                      from '../viewport.js';
 import { RatArea }                       from './rat-area.js';
 import { RatView }                       from './rat-view.js';
 
@@ -268,6 +270,7 @@ export class RatApp extends DominaElement {
     const module = await load(url);
     const config = module.default ?? { ...module };
     if (config.autoImport) autoImport(config.autoImport, url);
+    if (config.viewport)   viewport(config.viewport);
     await useMods(this, config);
     return this.#config = config;
   }
