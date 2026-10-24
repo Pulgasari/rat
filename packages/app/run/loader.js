@@ -12,6 +12,8 @@
        ./x.js, ../x    an absolute url, against the file's own url
        @rat/runtime    stays, for the import map
      a dynamic import('./x.rat') stays lazy: it goes through load() when it runs.
+       import.meta.url the file's own url: new URL('./x.md', import.meta.url) works
+                       here and in a build alike
   3. import the result from a blob url, named after the file for devtools.
 
 every file announces itself before it compiles: a 'rat:compile' event on the
@@ -52,7 +54,7 @@ const SELF     = import.meta.url;
 const cache = new Map; // url -> Promise<blob url>
 
 const COMPILED = 'rat:compiled';
-const VERSION  = 5;
+const VERSION  = 6;
 
 const EXTENSIONS = ['.rat.html', '.rat', '.rat.js'];
 
@@ -69,7 +71,8 @@ function hashOf (text) {
 // ::: imports
 
 // [{ start, end, value, dynamic }] for every import / export … from with a string literal.
-// for import('…') start and end span the whole call, for the rest the string
+// for import('…') start and end span the whole call, for the rest the string.
+// [{ start, end, meta }] for every import.meta.url: a blob has no url of its own
 async function specifiers (code) {
   const { parse } = await import('acorn');
   const found = [];
@@ -77,6 +80,7 @@ async function specifiers (code) {
     if (!node || !isString(node.type)) return;
     if (/^(Import|ExportNamed|ExportAll)Declaration$/.test(node.type) && node.source) found.push({ dynamic: false, end: node.source.end, start: node.source.start, value: node.source.value });
     if (node.type === 'ImportExpression' && node.source.type === 'Literal' && typeof node.source.value === 'string') found.push({ dynamic: true, end: node.end, start: node.start, value: node.source.value });
+    if (node.type === 'MemberExpression' && node.object.type === 'MetaProperty' && node.object.meta.name === 'import' && node.property.name === 'url') found.push({ end: node.end, meta: true, start: node.start });
     for (const key in node) {
       const value = node[key];
       if (isArray(value)) value.forEach(visit);
@@ -96,7 +100,8 @@ const kindOf = url => {
 const isUrl = specifier => RELATIVE.test(specifier) || /^[a-z][\w+.-]*:/i.test(specifier);
 
 // the replacement for one specifier, a promise for a static .rat import (compiled in parallel)
-function replacement ({ dynamic, value }, url, chain) {
+function replacement ({ dynamic, meta, value }, url, chain) {
+  if (meta) return JSON.stringify(url);
   const target = new URL(value, url).href;
   if (!kindOf(target)) return dynamic ? `import(${JSON.stringify(target)})` : JSON.stringify(target);
   if (dynamic) return `import(${JSON.stringify(SELF)}).then(app => app.load(${JSON.stringify(target)}))`;
@@ -104,7 +109,7 @@ function replacement ({ dynamic, value }, url, chain) {
 }
 
 async function rewrite ({ code, found: all }, url, chain) {
-  const found = all.filter(({ value }) => isUrl(value)).sort((a, b) => a.start - b.start);
+  const found = all.filter(({ meta, value }) => meta || isUrl(value)).sort((a, b) => a.start - b.start);
   const texts = await Promise.all(found.map(specifier => replacement(specifier, url, chain)));
 
   // from the end, so earlier positions stay valid

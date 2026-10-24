@@ -221,20 +221,23 @@ export class RatApp extends DominaElement {
 
   // :::::: SRC
 
-  // the component of src in place of what the app held. matching waits for it
-  async start () {
+  // a build hands over the component and the config itself, no src and no config.rat.js to load (@rat/dev)
+  run (component, config = {}) { return this.hold(this.start(component, config)); }
+
+  // the component of src (or the one handed over) in place of what the app held. matching waits for it
+  async start (component, config) {
     const { src } = this;
-    if (!src) return;
+    if (!src && !component) return;
 
     const status = ({ detail }) => { this.dataset.status = `compiling ${detail.name}`; };
     this.#mounting = true;
     this.loading   = true;
-    this.dataset.status = `loading ${src}`;
+    this.dataset.status = `loading ${src ?? component.name}`;
     document.addEventListener('rat:compile', status);
 
     try {
-      await this.configure();
-      const Component = componentOf(await load(new URL(src, this.baseURI).href));
+      await this.configure(config);
+      const Component = component ?? componentOf(await load(new URL(src, this.baseURI).href));
       if (!Component) throw new Error(`[rat] ${src} exports no component`);
       this.#dispose?.();
       this.replaceChildren();
@@ -244,7 +247,7 @@ export class RatApp extends DominaElement {
     }
     catch (error) {
       this.loading = false;
-      showError(this, error, () => { this.removeAttribute('error'); this.start(); });
+      showError(this, error, () => { this.removeAttribute('error'); this.start(component, config); });
     }
     finally {
       document.removeEventListener('rat:compile', status);
@@ -258,9 +261,12 @@ export class RatApp extends DominaElement {
   // :::::: CONFIG
 
   // config.rat.js next to src (config-src names another): the mods, once, before
-  // the app's own code runs. without config-src a missing file is no config
-  async configure () {
+  // the app's own code runs. without config-src a missing file is no config.
+  // a config handed over (run) is taken as it is: autoImport is the build's then
+  async configure (given) {
     if (this.#config) return this.#config;
+    if (given) return this.#config = await this.#apply(given);
+
     const named = this.configSrc;
     const url   = named ? new URL(named, this.baseURI).href : new URL('config.rat.js', new URL(this.src, this.baseURI)).href;
 
@@ -270,9 +276,13 @@ export class RatApp extends DominaElement {
     const module = await load(url);
     const config = module.default ?? { ...module };
     if (config.autoImport) autoImport(config.autoImport, url);
-    if (config.viewport)   viewport(config.viewport);
+    return this.#config = await this.#apply(config);
+  }
+
+  async #apply (config) {
+    if (config.viewport) viewport(config.viewport);
     await useMods(this, config);
-    return this.#config = config;
+    return config;
   }
 
   // :::::: MATCHING

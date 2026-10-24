@@ -13,8 +13,9 @@ demos: [`demos/app`](../../demos/app/), [`demos/app2`](../../demos/app2/) (views
 
 ## how it works
 
-1. **`run.js`** is a classic script, not a module: it runs before any module, so the import map
-   it writes is in place in time. it maps `@rat/*` into this repo, `@htx/*` and `@domina/*` into
+1. **`run.js`** is a classic script, not a module: it runs before any module. it writes the import
+   map of `run/importmap.json` into the page before its first `import()` (data, so a build reads
+   the same file: `@rat/dev`). it maps `@rat/*` into this repo, `@htx/*` and `@domina/*` into
    the repos next to it (`code.pulgasari.dev/rat/`, `/htx/`, `/domina/`, or a local checkout of
    all three side by side), `acorn` and `@pulgasari/is` / `str` to esm.sh. an import map already
    on the page wins: put it before `run.js` to point anything elsewhere. then it imports
@@ -162,6 +163,7 @@ export default {
 |---|---|
 | `RAT` | always there, from `@rat/runtime`: every export of `@rat/types` (`RAT.Enum` …), `RAT.app` the app, `RAT.config` its config, `RAT.toggle(name)`. as a module: `import RAT from '@rat/app'`, `import { RAT } from '@rat/runtime'`. another name: `globalThis.APP = RAT` |
 | `app.config` | the config, `{}` without one |
+| `build` | the build of the app (`@rat/dev`): vite's build options (`outDir`, `minify`, `sourcemap` …), merged over rat's defaults. read from the file, not run: values only, no imports. every option, commented out: `dev/docs/config.rat.js` |
 | `mods` | the parts rat provides that not every app needs, each a module of `@rat/app` (`database.js`, `files.js`, `folders.js`, `hotkeys.js`, `offline.js`, `store.js`, `thumbnails.js`, listed in `mods.js`), loaded only when named. each lands on the app under its name, in the order written. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
 | `folders` | folders the user grants, in the database's table `folders` (`schema: { folders: FOLDERS }`, the database first). `createFolders` and `FOLDERS` from `@rat/app/modules/folders.js` |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
