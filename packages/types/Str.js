@@ -34,13 +34,13 @@ class StrSchema extends Schema {
   // a case of writing: only a string already in this case passes, from() makes one of any string
   case ({ regex = null, transform }) {
     return this.derive({
-      describe : { regex: regex?.source ?? null },
+      describe: { regex: regex?.source ?? null },
       transform,
-      run      : (value, path) => {
+      run: (value, path) => {
         const result = this.run(value, path);
         if (result.issues) return result;
-        if (transform(result.value) !== result.value) return { issues: [{ message: `expected ${regex ?? 'this case'}`, path }] };
-        return result;
+        if (transform(result.value) === result.value) return result;
+        return { issues: [{ message: `expected ${regex ?? 'this case'}`, path }] };
       },
     });
   }
@@ -106,4 +106,10 @@ const UpperCase = Str.case({
 
 // :::::: EXPORT
 
-export { CamelCase, ConstantCase, KebabCase, LowerCase, MockingCase, PascalCase, SnakeCase, Str, StrSchema, TitleCase, UpperCase, toWords };
+export {
+  Str, StrSchema, 
+  CamelCase, ConstantCase, KebabCase,
+  LowerCase, MockingCase, PascalCase, 
+  SnakeCase, TitleCase, UpperCase,
+  toWords
+};
