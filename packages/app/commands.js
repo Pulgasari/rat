@@ -186,6 +186,20 @@ const KebabCase = Str.case({
   transform : value => toWords(value).join('-'),
 });
 
+
+
+
+const toWords = (value) => String(value ?? '')
+  .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+  .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+  .replace(/[\s\-_.]+/g, ' ')
+  .trim()
+  .toLowerCase()
+  .split(' ')
+  .filter(Boolean);
+
+const upperFirst = (word) => word.charAt(0).toUpperCase() + word.slice(1);
+
 class StrSchema extends Schema {
   // … min, max, pattern, email, uuid as now
 
