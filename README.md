@@ -36,12 +36,8 @@ playground:
 | package         | path                                     | status |
 |-----------------|------------------------------------------|--------|
 | `@rat/app`      | [`packages/app`](packages/app)           | v0     |
-| `@rat/bunker`   | [`packages/bunker`](packages/bunker)     | v0     |
-| `@rat/commands` | [`packages/commands`](packages/commands) | v0     |
 | `@rat/compiler` | [`packages/compiler`](packages/compiler) | v0     |
-| `@rat/hotkeys`  | [`packages/hotkeys`](packages/hotkeys)   | v0     |
 | `@rat/import`   | [`packages/import`](packages/import)     | v0     |
-| `@rat/app` router | [`packages/app/router`](packages/app/router) | v0     |
 | `@rat/runtime`  | [`packages/runtime`](packages/runtime)   | v0     |
 | `@rat/signals`  | [`packages/signals`](packages/signals)   | v0     |
 | `@rat/types`    | [`packages/types`](packages/types)       | v0     |
