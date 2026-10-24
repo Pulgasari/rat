@@ -3,6 +3,7 @@
 ## libs
 - https://github.com/pbv-public/js-schema
 - https://github.com/ianstormtaylor/superstruct
+- https://github.com/samchon/typia
 
 ## reads
 - https://www.inngest.com/blog/too-many-javascript-schema-libraries-support-only-one
