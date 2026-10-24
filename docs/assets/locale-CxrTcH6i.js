@@ -1,1 +1,0 @@
-const l=n=>n.closest("[lang]")?.lang||document.documentElement.lang||navigator.language;function e(n,a,t={}){try{return new Intl.DisplayNames([n],{fallback:"code",type:a,...t})}catch{return null}}function r(n,a){try{return n?.of(a)??a}catch{return a}}export{e as d,l,r as n};

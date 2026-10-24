@@ -9,6 +9,7 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   .rat, .rat.html, .rat.js   compiled to es modules (compileAsync: style languages, style inline)
   bare specifiers            resolved through importmap.json of @rat/app, the map run.js writes into
                              the page. an https entry stays external
+  class names (vite)         kept when minified (keepNames): elements take their tag from them
   index.html (vite)          the script of run.js becomes the entry of the build: it imports @rat/app,
                              the src of <rat-app> and config.rat.js next to it and hands both over
                              (app.run). src goes from <rat-app>, nothing is loaded at runtime
@@ -90,6 +91,9 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
     },
 
     vite: {
+      // class names stay: an element without a tag of its own takes its class name (@domina/element)
+      config: () => ({ esbuild: { keepNames: true } }),
+
       transformIndexHtml: {
         order: 'pre',
         async handler (html, { filename }) {

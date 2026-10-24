@@ -1,1 +1,0 @@
-const r={circle:"50%",square:"0px",rounded:"12px",squircle:"24% / 50%"},n=e=>e?r[e]??e:"",i=e=>/^[\d.]/.test(e)||/(px|rem|em|%|vw|vh|vmin|vmax|ch|fr|pt|cm|mm|in)$/.test(e);function o(e){const s={size:"",shape:""};if(!e)return s;for(const t of String(e).trim().split(/\s+/))t&&(i(t)?s.size=t:s.shape=t);return s}export{o as p,n as r};

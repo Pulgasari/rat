@@ -1,4 +1,0 @@
-import{r as n,p as a}from"./index-BFdBVABv.js";import"./index-CAN6sJ0x.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";const o="rings",d="Rings",s={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:24,min:6,max:100,step:1,bake:!0},width:{type:"number",default:2,min:.5,max:12,step:.5,bake:!0,unit:"px"}};function f(r={}){const t=n(s,r),e=Number(t.size),i=e/2-Number(t.width);return a(o,e,`
-    <rect width="${e}" height="${e}" fill="${t.bg}"/>
-    <circle cx="${e/2}" cy="${e/2}" r="${i}" fill="none" stroke="${t.fg}" stroke-width="${t.width}"/>
-  `,t.rotate,r)}export{f as default,o as id,d as name,s as vars};

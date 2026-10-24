@@ -1,1 +1,0 @@
-async function o(e,{app:r}){if(!navigator.serviceWorker)return null;const n=new URL(e.src??"sw.js",new URL(r.src??location.href,r.baseURI));return navigator.serviceWorker.register(n).catch(s=>(console.warn("[rat] offline:",s.message),null))}export{o as default};
