@@ -28,7 +28,7 @@ import { DominaElement } from '@domina/element';
 import { mount, raise }  from '@rat/runtime';
 
 import { catchErrors, showError } from '../boundary.js';
-import { componentOf, load }      from '../loader.js';
+import { componentOf, load }      from '../run/loader.js';
 
 const sameParams = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 

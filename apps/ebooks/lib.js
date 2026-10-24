@@ -1,6 +1,6 @@
 // apps/ebooks/lib.js
 //
-// the library: the folders the user grants (@rat/app/folders.js), the books found
+// the library: the folders the user grants (@rat/app/modules/folders.js), the books found
 // in them (table books) and where each one was left (table progress).
 //
 // scanning is two-phase: a scan lists the files and shows the shelf at once with
@@ -10,7 +10,7 @@
 
 import { effect, signal } from '@rat/signals';
 
-import { createFolders } from '@rat/app/folders.js';
+import { createFolders } from '@rat/app/modules/folders.js';
 
 import { extractMeta, kindOf, prettyName } from './library.js';
 

@@ -27,6 +27,9 @@ as nothing has to be compiled, the compiler is not even loaded. a file that
 inlines a css file (style inline) is compiled every time, its css may change.
 ?fresh (run.js) drops them all, VERSION does when the compiled output changes.
 
+a host that compiles itself (middleware.js on vercel) answers with the module and
+x-rat-compiled: its code is taken as it is, the compiler is not loaded.
+
 autoImport (config.rat.js, set by <rat-app>): a component the markup uses
 (<Dock />) that the file neither imports nor declares is looked for in these
 folders, relative to the config, as Name.rat.html, Name.rat, Name.rat.js. the
@@ -38,7 +41,7 @@ first file found is imported, none is an error.
   autoImport : { './components/': ['Dock', 'Footer'] }       only these names there
 */
 
-import { isArray, isFn, isString } from './_shared.js';
+import { isArray, isFn, isString } from '../_shared.js';
 
 const HTML     = /\.html?$/;
 const HTX      = /\.htx$/;
@@ -158,7 +161,10 @@ async function build (url, chain) {
   const source = await response.text();
   const name   = new URL(url).pathname.split('/').pop();
 
-  const compiled = await compiledOf(source, url, name);
+  // compiled by the host already (middleware.js): the code as it is, no compiler in the page
+  const compiled = response.headers.get('x-rat-compiled')
+    ? { code: source, found: await specifiers(source), unresolved: (response.headers.get('x-rat-unresolved') ?? '').split(',').filter(Boolean) }
+    : await compiledOf(source, url, name);
   const code     = await rewrite(compiled, url, chain);
   // at the end, so the lines of the code stay where they were: imports are hoisted anyway
   const imports  = await importsOf(compiled.unresolved, url, chain);

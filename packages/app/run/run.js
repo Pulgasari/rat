@@ -3,7 +3,7 @@
 /*
 the one script a page without a build needs:
 
-  <script src="./packages/app/run.js"></script>
+  <script src="./packages/app/run/run.js"></script>
   <rat-app src="app.rat"></rat-app>
 
 a classic script on purpose: it runs before any module, so the import map it
@@ -46,7 +46,7 @@ what the loader compiled from them is dropped (rat:compiled), so they compile an
   // every selector in :where(), so any rule of the page wins
   const SPLASH = `
     :where(:root) {
-      --rat-logo    : url("${at('./splash.svg')}");
+      --rat-logo    : url("${at('../assets/splash.svg')}");
       --rat-spinner : url("data:image/svg+xml,${encodeURIComponent(SPINNER)}");
     }
 
@@ -94,52 +94,52 @@ what the loader compiled from them is dropped (rat:compiled), so they compile an
 
   const map = {
     //////////// @rat ////////////
-    '@rat/app'        : at('./index.js'),
-    '@rat/app/'       : at('./'),
-    '@rat/bunker'     : at('../bunker/index.js'),
-    '@rat/commands'   : at('../commands/index.js'),
-    '@rat/compiler'   : at('../compiler/index.js'),
-    '@rat/hotkeys'    : at('../hotkeys/index.js'),
-    '@rat/import'     : at('../import/index.js'),
-    '@rat/runtime'    : at('../runtime/index.js'),
-    '@rat/signals'    : at('../signals/index.js'),
-    '@rat/syntax/'    : at('../syntax/'),
-    '@rat/types'      : at('../types/index.js'),
-    '@rat/types/'     : at('../types/'),
+    '@rat/app'        : at('../index.js'),
+    '@rat/app/'       : at('../'),
+    '@rat/bunker'     : at('../../bunker/index.js'),
+    '@rat/commands'   : at('../../commands/index.js'),
+    '@rat/compiler'   : at('../../compiler/index.js'),
+    '@rat/hotkeys'    : at('../../hotkeys/index.js'),
+    '@rat/import'     : at('../../import/index.js'),
+    '@rat/runtime'    : at('../../runtime/index.js'),
+    '@rat/signals'    : at('../../signals/index.js'),
+    '@rat/syntax/'    : at('../../syntax/'),
+    '@rat/types'      : at('../../types/index.js'),
+    '@rat/types/'     : at('../../types/'),
     //////////// @aufbau ////////////
-    '@aufbau/elements'  : at('../../../aufbau/elements/index.js'),
-    '@aufbau/elements/' : at('../../../aufbau/elements/'),
-    '@aufbau/gestures'  : at('../../../aufbau/gestures/index.js'),
-    '@aufbau/svg/'      : at('../../../aufbau/svg/'),
+    '@aufbau/elements'  : at('../../../../aufbau/elements/index.js'),
+    '@aufbau/elements/' : at('../../../../aufbau/elements/'),
+    '@aufbau/gestures'  : at('../../../../aufbau/gestures/index.js'),
+    '@aufbau/svg/'      : at('../../../../aufbau/svg/'),
     //////////// @bunker ////////////
-    '@bunker/core'    : at('../../../bunker/core/index.js'),
-    '@bunker/db'      : at('../../../bunker/db/index.js'),
-    '@bunker/policy'  : at('../../../bunker/policy/index.js'),
-    '@bunker/storage' : at('../../../bunker/storage/index.js'),
-    '@bunker/utils/'  : at('../../../bunker/utils/'),
+    '@bunker/core'    : at('../../../../bunker/core/index.js'),
+    '@bunker/db'      : at('../../../../bunker/db/index.js'),
+    '@bunker/policy'  : at('../../../../bunker/policy/index.js'),
+    '@bunker/storage' : at('../../../../bunker/storage/index.js'),
+    '@bunker/utils/'  : at('../../../../bunker/utils/'),
     //////////// @domina ////////////
-    '@domina/chain'   : at('../../../domina/packages/chain/index.js'),
-    '@domina/dom'     : at('../../../domina/packages/dom/index.js'),
-    '@domina/element' : at('../../../domina/packages/element/index.js'),
-    '@domina/observer': at('../../../domina/packages/observer/index.js'),
-    '@domina/proxy'   : at('../../../domina/packages/proxy/index.js'),
-    '@domina/render'  : at('../../../domina/packages/render/index.js'),
-    '@domina/verbs/'  : at('../../../domina/packages/verbs/'),
+    '@domina/chain'   : at('../../../../domina/packages/chain/index.js'),
+    '@domina/dom'     : at('../../../../domina/packages/dom/index.js'),
+    '@domina/element' : at('../../../../domina/packages/element/index.js'),
+    '@domina/observer': at('../../../../domina/packages/observer/index.js'),
+    '@domina/proxy'   : at('../../../../domina/packages/proxy/index.js'),
+    '@domina/render'  : at('../../../../domina/packages/render/index.js'),
+    '@domina/verbs/'  : at('../../../../domina/packages/verbs/'),
     //////////// @gestalt ////////////
-    '@gestalt/core'   : at('../../../gestalt/packages/core/index.js'),
+    '@gestalt/core'   : at('../../../../gestalt/packages/core/index.js'),
     //////////// @htx ////////////
-    '@htx/compiler'   : at('../../../htx/packages/compiler/index.js'),
-    '@htx/htx'        : at('../../../htx/packages/htx/index.js'),
-    '@htx/js/render'  : at('../../../htx/packages/js/render.js'),
+    '@htx/compiler'   : at('../../../../htx/packages/compiler/index.js'),
+    '@htx/htx'        : at('../../../../htx/packages/htx/index.js'),
+    '@htx/js/render'  : at('../../../../htx/packages/js/render.js'),
     //////////// @pulgasari ////////////
-    '@pulgasari/canonicalmap' : at('../../../js-packages/obj/CanonicalMap.js'),
-    '@pulgasari/coerce'       : at('../../../js-packages/coerce/index.js'),
+    '@pulgasari/canonicalmap' : at('../../../../js-packages/obj/CanonicalMap.js'),
+    '@pulgasari/coerce'       : at('../../../../js-packages/coerce/index.js'),
     '@pulgasari/is'           : JSR + '@pulgasari/is',
     '@pulgasari/logger'       : JSR + '@pulgasari/logger',
-    '@pulgasari/shift'        : at('../../../js-packages/shift/index.js'),
+    '@pulgasari/shift'        : at('../../../../js-packages/shift/index.js'),
     '@pulgasari/str'          : JSR + '@pulgasari/str',
-    '@pulgasari/timing'       : at('../../../js-packages/timing/index.js'),
-    '@pulgasari/url'          : at('../../../js-packages/url/index.js'),
+    '@pulgasari/timing'       : at('../../../../js-packages/timing/index.js'),
+    '@pulgasari/url'          : at('../../../../js-packages/url/index.js'),
     //////////// other stuff ////////////
     'acorn'           : ESM + 'acorn@8.14.0',
   };

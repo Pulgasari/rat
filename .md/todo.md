@@ -15,7 +15,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [x] hotkeys an `app.commands` (`@rat/hotkeys`): mod `hotkeys`
 - [x] auto-import per config: `autoImport: true` (verzeichnis der config), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
 - [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), mods (`database`, `files`, `store`, `hotkeys`)
-- [x] pwa-hülle: manifest (apps), service worker als mod `offline` (`packages/app/sw.js`, je app ein `sw.js`), kompilate im cache (`rat:compiled`)
+- [x] pwa-hülle: manifest (apps), service worker als mod `offline` (`packages/app/run/sw.js`, je app ein `sw.js`), kompilate im cache (`rat:compiled`)
 
 ## `@rat/router`
 - [ ] (?) globaler router, den views direkt abonnieren

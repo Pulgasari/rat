@@ -8,7 +8,7 @@ rat is a small framework for apps in the browser, without a build step. You writ
 <!DOCTYPE html>
 <html>
 <head>
-  <script src='rat/packages/app/run.js'></script>
+  <script src='rat/packages/app/run/run.js'></script>
 </head>
 <body>
   <rat-app src='app.rat.html'></rat-app>

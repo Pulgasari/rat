@@ -5,7 +5,7 @@ the service worker of a rat app: it works offline once it was open, and
 browsers offer to install it. a worker reaches only the pages below its own
 folder, so an app has a sw.js of its own next to its page, one line:
 
-  importScripts('../../packages/app/sw.js');
+  importScripts('../../packages/app/run/sw.js');
 
 and asks for it in config.rat.js: mods: { offline: true }.
 

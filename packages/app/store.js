@@ -4,7 +4,7 @@
 
 import { createStore } from '@rat/bunker';
 
-import './bunker.js';
+import './vendor/bunker.js';
 
 import { driverOf, nameOf } from './_shared.js';
 
