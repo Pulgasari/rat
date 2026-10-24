@@ -2,12 +2,13 @@
 
 import { Schema, scalar } from './schema.js';
 
-// ::: the schema
+// ::: SCHEMA
 
 class StrSchema extends Schema {
   min     (length) { return this.check(value => value.length >= length, `at least ${length} characters`, { min: length }); }
   max     (length) { return this.check(value => value.length <= length, `at most ${length} characters`,  { max: length }); }
   pattern (regex, message = `matching ${regex}`) { return this.check(value => regex.test(value), message, { pattern: regex.source }); }
+  
   get email () { return this.pattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'an email address'); }
   get uuid  () { return this.pattern(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'a uuid'); }
 
@@ -28,7 +29,7 @@ class StrSchema extends Schema {
 
 const Str = new StrSchema({ initial: '', kind: 'str', run: scalar('a string', value => typeof value === 'string') });
 
-// ::: the cases
+// ::: CASES
 
 // 'togglePlay', 'toggle-play', 'Toggle Play', 'XMLHttp' -> ['toggle', 'play'], ['xml', 'http']
 const toWords = value => String(value ?? '')
