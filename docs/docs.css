@@ -3,12 +3,13 @@
 
 :root { font: 16px/1.6 system-ui, sans-serif; }
 
-/* gestalt only defines the colors of the palette (--color-bg, --color-fg, --color-ink), something has to use them */
+/*
 body {
   accent-color     : var(--color-ink);
   background-color : var(--color-bg);
   color            : var(--color-fg);
 }
+*/
 
 a { color: var(--color-ink); }
 
@@ -23,16 +24,15 @@ output-md article {
   flex-direction : column;
   gap            : 0.25rem;
   min-inline-size: 12rem;
-  padding        : 1.5rem 1rem;
-}
+  padding        : 1rem;
 
-.docs-nav a        { border-radius: 0.25rem; color: inherit; padding: 0.25rem 0.5rem; text-decoration: none; }
-.docs-nav a.active { background: color-mix(in srgb, var(--color-ink) 20%, transparent); }
+  a        { color: inherit; padding: 0.5rem; }
+  a.active { --bg: --alpha(ink, 0.20); }
+}
 
 .docs-brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
 
-.docs-page {
-  box-sizing      : border-box;
+#page > main {
   max-inline-size : 48rem;
   min-inline-size : 0;
   overflow-wrap   : anywhere;
@@ -40,14 +40,15 @@ output-md article {
 }
 
 /* code and tables scroll inside the page instead of widening it */
-.docs-page pre, .docs-page write-code { display: block; max-inline-size: 100%; overflow-x: auto; }
-.docs-page table                      { display: block; max-inline-size: 100%; overflow-x: auto; }
+#page > main pre,
+#page > main write-code,
+#page > main table { display: block; max-inline-size: 100%; overflow-x: auto; }
 
 /* the bar with the menu button: on a narrow screen only, where the menu is a drawer */
-.docs-bar  { align-items: center; display: none; gap: 0.75rem; padding: 0.75rem 1rem; }
+.docs-bar  { align-items: center; display: none; gap: 1rem; padding: 1rem; }
 .docs-menu { background: none; border: 0; color: inherit; font-size: 1.5rem; }
 
 @media (max-width: 48rem) {
-  .docs-bar  { display: flex; }
-  .docs-page { padding: 1rem; }
+  .docs-bar    { display: flex; }
+  #page > main { padding: 1rem; }
 }
