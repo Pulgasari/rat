@@ -38,30 +38,6 @@ three things, kept apart:
 
 **one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
-```js
-new List(['a', 'b'])                  // a list
-List(Str)                             // the schema: a list of strings
-
-new Enum('grid', 'list', 'masonry')   // a value that holds one of them
-Enum('grid', 'list', 'masonry')       // the schema: one of them
-
-new $Enum('grid', 'list', 'masonry')  // the same value, reactive
-```
-
-| | value (`new`) | schema (call) | reactive |
-|---|---|---|---|
-| `Array` | plain js | – | `$Array` |
-| `Color` | yes | `Color()` | `$Color` |
-| `Enum` | yes | `Enum('a', 'b')` | `$Enum` |
-| `List` | yes | `List(Str)` | `$List` |
-| `Record` | yes | `Record({ … })` | `$Record` |
-| `Table` | yes | `Table({ … })` | `$Table` |
-| `Tuple` | yes, frozen | `Tuple(Str, Num)` | none: a change is a new tuple |
-| `Union` | none | `Union(Num, Str)` | none | 
-| `Bool`, `Num`, `Str` | plain js | the schema itself | `$Bool`, `$Num`, `$Str` |
-
-`Union` has no value of its own: a value of `Union(Num, Str)` is a number or a string. the same for `Bool`, `Num` and `Str`. reactive, these are typed signals (`let $id = Union(Num, Str)`), or for `Bool`, `Num`, `Str` the objects `$Bool`, `$Num`, `$Str` with methods, see below.
-
 # Basic DataTypes
 
 ## Bool
