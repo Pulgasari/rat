@@ -9,8 +9,8 @@ export default {
   ...config,
   name : 'noisy',
 
-  // the components of this app first, then the shared ones
-  autoImport : ['./components/', '../.shared/components/'],
+  // the components of this app by name (a name it does not list is not looked for there, no 404), then the shared ones
+  autoImport : [{ './components/': ['Cover', 'Folders', 'Menu', 'Panel', 'Player'] }, '../.shared/components/'],
 
   mods : {
     database   : { schema: { folders: FOLDERS, tracks: null } },   // tracks, key: '<source id>/<path>'

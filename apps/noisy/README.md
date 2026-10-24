@@ -31,4 +31,6 @@ what was more work in rat than it should be, while building this:
 9. **two writes to a $Set notify twice.** a pick is `clear()` then `add()`, so `pick` runs in `batch()`. a `replace(values)` on `$Set` would say it at once.
 10. **commands live in code, the hotkeys that run them in the config.** `toggle-play`, `next`, `previous` are registered in `app.rat.html`, the keys for them in `config.rat.js`. it works, but the two halves are in two places.
 
+11. **autoImport looks by fetching.** a component of `../.shared/components/` is first asked for in `./components/` as `.rat.html`, `.rat`, `.rat.js`: three 404s in the console for every shared one. the config names this app's own components now. without a build a folder has no listing, so the fix is a list (the names form) or a manifest of the folder.
+
 what was easy: the panels follow the picks through `computed` alone, `let { $time, $queue } = player` in a component, `@gestures={{ onLongPress }}` as a behavior, the config mods (database, folders, thumbnails, hotkeys, offline) as one block.
