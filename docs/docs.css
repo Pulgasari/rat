@@ -1,10 +1,11 @@
 /* docs :: docs.css */
 @import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
 
-:root { color-scheme: light dark; font: 16px/1.6 system-ui, sans-serif; }
-body  { margin: 0; }
+:root { font: 16px/1.6 system-ui, sans-serif; }
+
 
 .docs-nav {
+  --bg           : --color(bg);
   display        : flex;
   flex-direction : column;
   gap            : 0.25rem;
