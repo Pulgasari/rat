@@ -28,6 +28,23 @@ class with a single character instead of `class:active={…}`.
 selector syntax rat already has (`<li.item>`).
 inspired by: imba
 
+## binding modifiers
+
+**problem.** an `<input>` always gives a string. `bind:value={$size}` in the
+syntax-tour example therefore needs `Number($size)` wherever the value is used.
+
+**in rat.**
+
+```html
+<input type="range" bind:value.number={$size} />
+<input bind:value.trim={$name} />
+<input bind:value.lazy={$query} />
+```
+
+**cost.** small, in the runtime's `bind:`.
+
+inspired by: vue
+
 ---
 
 # `.rat`
