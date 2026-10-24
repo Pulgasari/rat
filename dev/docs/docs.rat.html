@@ -3,8 +3,12 @@
 
   import { autoloader } from '@aufbau/elements';
   import dom            from '@domina/dom';
+  import { rat, ratjs } from '@rat/syntax/targets/hljs.js';
 
   autoloader();
+
+  // the languages of rat as modules of this app, not a specifier <write-code> imports by its name: a build has no import map
+  customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
 
   const PAGES = [
     { name: 'getting-started', title: 'Getting started' },
