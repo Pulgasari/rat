@@ -9,7 +9,7 @@ export default {
   viewport    : {
     width        : 'device-width',
     initialScale : 1,
-    maxinumScale : 1,
+    maximumScale : 1,
     userScalable : 'no',
     fit          : 'cover',
   },
