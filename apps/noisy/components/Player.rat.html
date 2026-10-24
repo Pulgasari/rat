@@ -1,0 +1,32 @@
+<script>
+  // <Player />: what plays and its controls, a column wide, a row narrow (player.js)
+
+  import player from './../player.js';
+
+  let { $duration, $error, $index, $playing, $queue, $time } = player;
+
+  const $track = $queue[$index] ?? null;
+
+  const clock = seconds => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+</script>
+
+<aside.player class:idle={!$track}>
+  @if ($track)
+    <Cover id={$track.cover} />
+    <div.player-now>
+      <span.player-title>{$track.title}</span>
+      <span.player-artist>{$track.artist}</span>
+    </div.player-now>
+  @else
+    <span.player-title>Player</span>
+
+  <div.player-controls>
+    <btn-icon icon='mdi:skip-previous' label='Previous' onclick='previous' />
+    <btn-icon icon={$playing ? 'mdi:pause' : 'mdi:play'} label={$playing ? 'Pause' : 'Play'} onclick='toggle-play' />
+    <btn-icon icon='mdi:skip-next' label='Next' onclick='next' />
+  </div.player-controls>
+
+  @if ($track): <input.player-seek type='range' min='0' max={$duration || 0} step='1' value={$time} oninput={event => player.seek(Number(event.target.value))} aria-label='Position' />
+  @if ($track): <span.player-time>{clock($time)} / {clock($duration)}</span>
+  @if ($error): <span.player-error>{$error.message}</span>
+</aside.player>
