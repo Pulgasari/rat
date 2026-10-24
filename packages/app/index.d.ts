@@ -27,7 +27,7 @@ export class RatApp extends HTMLElement {
   skin?      : string;
 
   readonly commands : import('@rat/commands').Commands;
-  readonly router   : import('./router/index.js').Router;
+  readonly router   : import('./modules/router.js').Router;
   /** The config of config.rat.js, {} without one. */
   readonly config   : Record<string, any>;
   /** config-src: another file than config.rat.js next to src. */
@@ -63,7 +63,7 @@ export class RatView extends HTMLElement {
   readonly app    : RatApp | null;
   readonly loaded : boolean;
   /** A leave guard, returns its stop. Any other type is an event listener. */
-  on (type: 'leave', fn: (event: import('./router/index.js').LeaveEvent) => unknown, options?: { unload?: boolean }): () => void;
+  on (type: 'leave', fn: (event: import('./modules/router.js').LeaveEvent) => unknown, options?: { unload?: boolean }): () => void;
   on (type: string, ...args: unknown[]): this;
 }
 

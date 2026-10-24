@@ -3,7 +3,7 @@
 rat without a build: a page, `.rat` files next to it, one script.
 
 ```html
-<script src="./packages/app/run.js"></script>
+<script src="./packages/app/run/run.js"></script>
 
 <rat-app src="app.rat"></rat-app>
 <rat-part src="./chart.rat" load="visible"></rat-part>
@@ -51,7 +51,7 @@ splash while it is not defined or `[loading]`, what it holds hidden meanwhile: l
 - background and color are the page's: the logo and the spinner are masks in `currentColor`,
   so light, dark and any palette work without a setting.
 - every rule sits in `:where()`, any rule of the page wins. `--rat-logo` and `--rat-spinner`
-  (`url(…)`) swap the images. the logo is `splash.svg` next to `run.js`.
+  (`url(…)`) swap the images. the logo is `assets/splash.svg`.
 - content inside `<rat-app>` replaces the splash: `<rat-app src="app.rat">my own</rat-app>`.
 - the status comes from the loader: each file announces itself with a `rat:compile` event
   (`detail: { name, url }`) before it compiles, the element writes it into `data-status`.
@@ -163,11 +163,11 @@ export default {
 | `RAT` | always there, from `@rat/runtime`: every export of `@rat/types` (`RAT.Enum` …), `RAT.app` the app, `RAT.config` its config, `RAT.toggle(name)`. as a module: `import RAT from '@rat/app'`, `import { RAT } from '@rat/runtime'`. another name: `globalThis.APP = RAT` |
 | `app.config` | the config, `{}` without one |
 | `mods` | the parts rat provides that not every app needs, each a module of `@rat/app` (`database.js`, `files.js`, `folders.js`, `hotkeys.js`, `offline.js`, `store.js`, `thumbnails.js`, listed in `mods.js`), loaded only when named. each lands on the app under its name, in the order written. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
-| `folders` | folders the user grants, in the database's table `folders` (`schema: { folders: FOLDERS }`, the database first). `createFolders` and `FOLDERS` from `@rat/app/folders.js` |
+| `folders` | folders the user grants, in the database's table `folders` (`schema: { folders: FOLDERS }`, the database first). `createFolders` and `FOLDERS` from `@rat/app/modules/folders.js` |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
-| `thumbnails` | small webp copies of images in opfs (`createThumbs`, `@rat/app/thumbnails.js`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
-| `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/sw.js')`): a worker reaches only the pages below its own folder. files of the page's origin network first, of other origins cache first |
+| `thumbnails` | small webp copies of images in opfs (`createThumbs`, `@rat/app/modules/thumbnails.js`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
+| `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/run/sw.js')`): a worker reaches only the pages below its own folder. files of the page's origin network first, of other origins cache first |
 
 ## middleware (vercel)
 
@@ -175,7 +175,7 @@ export default {
 
 ```js
 // middleware.js at the root of the vercel project
-export { middleware as default } from './rat/packages/app/middleware.js';
+export { middleware as default } from './rat/packages/app/run/middleware.js';
 export const config = { matcher: ['/:path*.rat', '/:path*.rat.html', '/:path*.rat.js'] };
 ```
 

@@ -25,7 +25,7 @@ src the app is [loading] by itself until they are mounted.
 
 config.rat.js next to src (or config-src) is loaded before the app's code: its
 mods land on the app (RAT.app.database …, see ../mods.js), its autoImport
-names the folders components come from without an import (see ../loader.js), its
+names the folders components come from without an import (see ../run/loader.js), its
 viewport is the <meta name='viewport'> of the page (see ../viewport.js),
 the config itself is app.config.
 
@@ -58,12 +58,12 @@ import { gestalt }        from '@gestalt/core';
 import { createCommands } from '@rat/commands';
 import { Enum }           from '@rat/types';
 
-import { createRouter, fill, join, matchRoute, segmentsOf } from '../router.js';
+import { createRouter, fill, join, matchRoute, segmentsOf } from '../modules/router.js';
 
 import { RAT, mount } from '@rat/runtime';
 
 import { catchErrors, showError }        from '../boundary.js';
-import { autoImport, componentOf, load } from '../loader.js';
+import { autoImport, componentOf, load } from '../run/loader.js';
 import { useMods }                       from '../mods.js';
 import { viewport }                      from '../viewport.js';
 import { RatArea }                       from './rat-area.js';

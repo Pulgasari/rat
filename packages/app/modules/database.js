@@ -9,8 +9,8 @@ a table reads as table.$items in markup (bunker.js)
 // :::::: IMPORT
 
 import { createDatabase } from '@rat/bunker';
-import './bunker.js';
-import { driverOf, nameOf } from './_shared.js';
+import '../vendor/bunker.js';
+import { driverOf, nameOf } from '../_shared.js';
 
 // ::::::
 

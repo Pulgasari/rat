@@ -1,6 +1,6 @@
 # autoImport
 
-no mod: nothing lands on `RAT.app`, it is a setting of the loader (`packages/app/loader.js`), read by `<rat-app>` from `config.rat.js`.
+no mod: nothing lands on `RAT.app`, it is a setting of the loader (`packages/app/run/loader.js`), read by `<rat-app>` from `config.rat.js`.
 
 a component the markup uses (`<Dock />`) that the file neither imports nor declares is looked for in these folders, relative to the `config.rat.js` of the app, as `Dock.rat.html`, `Dock.rat`, `Dock.rat.js`. the first file found is imported. none: an error that names the file, the component and the folders. an import of its own or a local name always wins.
 

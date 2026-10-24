@@ -41,7 +41,7 @@ first file found is imported, none is an error.
   autoImport : { './components/': ['Dock', 'Footer'] }       only these names there
 */
 
-import { isArray, isFn, isString } from './_shared.js';
+import { isArray, isFn, isString } from '../_shared.js';
 
 const HTML     = /\.html?$/;
 const HTX      = /\.htx$/;

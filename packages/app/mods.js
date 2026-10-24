@@ -21,13 +21,13 @@ true takes the defaults. a module is loaded only when an app names it.
 */
 
 const MODS = {
-  database   : () => import('./database.js'),
-  files      : () => import('./files.js'),
-  folders    : () => import('./folders.js'),
-  hotkeys    : () => import('./hotkeys.js'),
+  database   : () => import('./modules/database.js'),
+  files      : () => import('./modules/files.js'),
+  folders    : () => import('./modules/folders.js'),
+  hotkeys    : () => import('./modules/hotkeys.js'),
   offline    : () => import('./offline.js'),
   store      : () => import('./store.js'),
-  thumbnails : () => import('./thumbnails.js'),
+  thumbnails : () => import('./modules/thumbnails.js'),
 };
 
 // every mod of the config onto the app, in order. an unknown name, or one the app has already, is left out

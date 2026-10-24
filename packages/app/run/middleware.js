@@ -11,14 +11,14 @@ the project's own middleware.js at its root re-exports it, with the matcher
 written there (vercel reads config from that file only):
 
   // middleware.js
-  export { middleware as default } from './rat/packages/app/middleware.js';
+  export { middleware as default } from './rat/packages/app/run/middleware.js';
   export const config = { matcher: ['/:path*.rat', '/:path*.rat.html', '/:path*.rat.js'] };
 
 a page that opens a .rat.html file itself (a document, not a module) gets the
 file as it is.
 */
 
-import { compileAsync } from '../compiler/index.js';
+import { compileAsync } from '../../compiler/index.js';
 
 const SKIP = 'x-skip-middleware';
 
