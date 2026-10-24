@@ -22,7 +22,6 @@ demos:
 [app](https://code.pulgasari.dev/rat/demos/app/) ·
 [app2](https://code.pulgasari.dev/rat/demos/app2/)
 
-
 playground:
 [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat) ·
 [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat) ·
@@ -54,13 +53,5 @@ playground:
 
 dir: 
 [demos](demos/) ·
-[playground](demos/playground/)
-
-md: 
-[causa: types](.md/causa_types.md) ·
-[compiler](.md/compiler.md) ·
-[concept](.md/concept.md) ·
-[decisions](.md/decisions.md) ·
-[ideas](.md/ideas/README.md) ·
-[syntax](.md/syntax.md) ·
-[todo](.md/todo.md)
+[docs](docs/) ·
+[packages](packages/)
