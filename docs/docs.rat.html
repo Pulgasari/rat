@@ -12,7 +12,7 @@
     { name: 'components',      title: 'Components'      },
     { name: 'signals',         title: 'Signals'         },
     { name: 'control-flow',    title: 'Control flow'    },
-    { name: 'types',           title: 'Types'           },
+    { name: 'types',           title: 'Types'           path: './../packages/types/README.md' },
   ];
 
   const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES[0].name;
@@ -42,7 +42,8 @@
   effect(() => {
     const page = $page;
     let alive = true;
-    fetch(`${page}.md`)
+    const path = `${page}.md`;
+    fetch(path)
       .then(response => response.ok ? response.text() : `# Not found\n\nThere is no page "${page}".`)
       .then(text => { if (alive) $text = text; });
     return () => { alive = false; };
