@@ -66,12 +66,16 @@ viewmode.values;           // ['grid', 'list', 'masonry']
 
 a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays.
 
+flat array-like sequence of unique values of the same type. optionally auto-sorted.
+
 ```js
 const tags = new List(['a', 'b']);
 tags.push('c');
 tags.at(-1);      // 'c'
 tags.length;      // 3
 ```
+
+## Point
 
 ## Record
 
@@ -134,6 +138,10 @@ todos.columns;                                         // ['title', 'done']
 
 every `List` method works, the ones that add or replace rows (`push`, `unshift`, `set`, `splice`, `replace`, `update`) check them. `$Table` has one version for the whole table: any write updates whatever read the table.
 
+## Tree
+
+nested nodes-like structure
+
 ## Tuple
 
 a fixed number of values in a fixed order, frozen.
@@ -160,9 +168,9 @@ Shade.which('red');    // 'named', the case that fits (an index for Union(a, b))
 
 a union value is just a value of one of its cases, a string or a number, it has nothing of its own. so there is no data type and no reactive variant: `let $id = Id` is a signal that only takes what fits.
 
-## Additional Data Types
+# Additional Data Types
 
-### Color
+## Color
 
 one color, read and written in any notation. it holds rgba, `hex` and `h` `s` `l` are read and
 written through it (codecs, see [codecs](https://github.com/Pulgasari/pulgasari.github.io/blob/main/md/webdev/codecs.md)).
@@ -346,26 +354,6 @@ through and the parts it bound, anything else is the result as it is. nothing ma
 | `is(value, test)` | true or false |
 | `pass(value, test)` | the value the test lets through, or `NONE` |
 | `which(value, tests)` | `{ index, parts }` of the first test that matches, index `-1` for none |
-
----
-
-# types
-
-## Color
-
-## Dict
-
-map like
-
-## List
-
-flat array-like sequence of unique values of the same type. optionally auto-sorted.
-
-## Point
-
-## Tree
-
-nested nodes-like structure
 
 ---
 
