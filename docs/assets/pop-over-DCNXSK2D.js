@@ -1,0 +1,1 @@
+import{P as o}from"./Pop-BHltHZU_.js";import"./index-CAN6sJ0x.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";import"./placement-3pTR5Us0.js";class p extends o{}p.init("pop-over");export{p as default};
