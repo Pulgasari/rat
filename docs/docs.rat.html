@@ -1,9 +1,8 @@
 <script>
-  // the docs: the markdown files next to this one, one per page, in the order of PAGES
+  // the docs: one markdown file per page, in the order of PAGES
 
   import { autoloader } from '@aufbau/elements';
   import dom            from '@domina/dom';
-  import { effect }     from '@rat/runtime';
 
   autoloader();
 
@@ -12,12 +11,12 @@
     { name: 'components',      title: 'Components'      },
     { name: 'signals',         title: 'Signals'         },
     { name: 'control-flow',    title: 'Control flow'    },
-    { name: 'types',           title: 'Types'           path: './../packages/types/README.md' },
+    { name: 'types',           title: 'Types',          path: './../packages/types/README.md' },
   ];
 
+  // a page is <name>.md next to this file, or its own path
   const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES[0].name;
-
-  let $text = '';
+  const $src  = PAGES.find(page => page.name === $page)?.path ?? `${$page}.md`;
 
   // a fenced code block becomes a <write-code> of aufbau, once the page is rendered: highlighted, rat and ratjs known
   function codeBlocks (root) {
@@ -38,16 +37,6 @@
   const menu   = () => RAT.app.area('menu');
   const picked = () => { if (menu()?.isOverlay) menu().hide(); };
   const wide   = matchMedia('(min-width: 48rem)').matches;
-
-  effect(() => {
-    const page = $page;
-    let alive = true;
-    const path = `${page}.md`;
-    fetch(path)
-      .then(response => response.ok ? response.text() : `# Not found\n\nThere is no page "${page}".`)
-      .then(text => { if (alive) $text = text; });
-    return () => { alive = false; };
-  });
 </script>
 
 <rat-area name='menu' dock='start' open={wide}>
@@ -65,9 +54,8 @@
     <span>RAT docs</span>
   </header.docs-bar>
   <main>
-    <output-md 
-      format='markdown' 
-      raw={$text} 
+    <output-md
+      src={$src}
       on:output-md-rendered={event => codeBlocks(event.currentTarget)}
     />
   </main>
