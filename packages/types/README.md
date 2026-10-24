@@ -30,11 +30,11 @@
 
 three things, kept apart:
 
-| | what it is | examples |
-|---|---|---|
-| **data types** | classes whose instances hold data | `Array`, `Map`, `Set` (js), `Color`, `Enum`, `List`, `Record`, `Table`, `Tuple` |
-| **schemas** | descriptions that check and coerce a value: predicates with messages | `Str`, `Num.range(1, 9)`, `Color()`, `Enum('a', 'b')`, `List(Str)`, `Record({…})`, `Table({…})`, `Tuple(Str, Num)`, `Union(Num, Str)` |
-| **reactive variants** | data types whose reads subscribe and whose writes notify | `$Array`, `$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`, `$Table` |
+| | what it is |
+|---|---|
+| **data types** | classes whose instances hold data |
+| **schemas** | descriptions that check or coerce a value: predicates with messages | 
+| **reactive variants** | data types whose reads subscribe and whose writes notify |
 
 **one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
