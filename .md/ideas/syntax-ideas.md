@@ -28,9 +28,13 @@ class with a single character instead of `class:active={…}`.
 selector syntax rat already has (`<li.item>`).
 inspired by: imba
 
-##
+---
 
-### sigils (short tags for literals)
+# misc
+
+random other stuff
+
+## sigils (short tags for literals)
 
 - `~r/\d+/` is a regex,
 - `~D[2026-10-13]` a date,
@@ -39,3 +43,32 @@ inspired by: imba
 rat already has the same mechanism: tagged templates (``html`…` ``, ``ass`…` ``). nothing new needed, but a reminder that custom tags (``date`2026-10-13` ``, ``re`\d+` ``) are a cheap way to make literals readable.
 
 inspired by: elixir
+
+## property wrappers
+
+```swift
+struct Counter: View {
+  @State private var count = 0           // reactive: changing it redraws the view
+  @AppStorage("theme") var theme = "dark" // persisted in user defaults
+
+  var body: some View {
+    Button("\(count)") { count += 1 }
+  }
+}
+```
+
+**problem.** rat has `$` for "reactive". but "reactive and stored in localStorage" or
+"reactive and synced to the url" each need code by hand.
+
+**in rat.** a wrapper after the `$` declaration, using `@` like the behaviors, since it
+attaches behavior to a value:
+
+```js
+let $theme  = 'dark'  @stored('theme');     // localStorage, through @bunker
+let $page   = 1       @query('page');       // ?page=… in the url
+let $filter = ''      @debounced(300);      // updates at most every 300 ms
+```
+
+**cost.** medium. it fits `@rat/types` (`persist`) and needs a decision on the notation.
+
+inspired by: swift
