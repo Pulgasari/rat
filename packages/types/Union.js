@@ -1,19 +1,5 @@
 // @rat/types :: Union
 
-/*
-Union is a schema only: one of several schemas, the first that fits wins.
-
-  const Id    = Union(Num.int, Str.uuid);
-  const Shade = Union({ hex: Str.pattern(/^#[0-9a-f]{6}$/i), named: Enum('red', 'blue') });
-
-  Id.is(3);              // true
-  Shade.which('red');    // 'named', the case that fits (an index for Union(a, b))
-
-a union value is just a value of one of its cases, a string or a number, it
-has nothing of its own. so there is no data type and no reactive variant:
-`let $id = Id` is a signal that only takes what fits.
-*/
-
 import { Schema, isSchema } from './schema.js';
 
 class UnionSchema extends Schema {
