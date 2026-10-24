@@ -4,6 +4,7 @@
 Record is a data type and, called, its schema:
 
   const Settings = Record({ view: Enum('grid', 'list'), zoom: Num.range(50, 200).default(100) });
+  const Command  = Record({ exec: Fn, '?title': Str });   // ? before a name: optional, Str.optional()
 
   const settings = new Record(Settings);                  // { view: 'grid', zoom: 100 }
   const custom   = new Record(Settings, { zoom: 120 });   // the rest at its initial value
@@ -30,9 +31,13 @@ const RESERVED = new Set(['assign', 'schema', 'toJSON']);
 
 // ::: the schema
 
+// '?title': Str is title: Str.optional()
+const shapeOf = fields => Object.fromEntries(Object.entries(fields).map(([key, schema]) => key.startsWith('?') ? [key.slice(1), schema.optional()] : [key, schema]));
+
 // an object with known fields; unknown fields are kept as they are
-function recordOf (shape) {
-  const keys = Object.keys(shape);
+function recordOf (fields) {
+  const shape = shapeOf(fields);
+  const keys  = Object.keys(shape);
   return new Schema({
     describe : { fields: Object.fromEntries(keys.map(key => [key, shape[key].describe])) },
     initial  : Object.fromEntries(keys.map(key => [key, shape[key].initial])),
