@@ -1,0 +1,44 @@
+<script>
+  // the docs: the markdown files next to this one, one per page, in the order of PAGES
+
+  import { autoloader } from '@aufbau/elements';
+  import { effect }     from '@rat/runtime';
+
+  autoloader();
+
+  const PAGES = [
+    { name: 'getting-started', title: 'Getting started' },
+    { name: 'components',      title: 'Components'      },
+    { name: 'signals',         title: 'Signals'         },
+    { name: 'control-flow',    title: 'Control flow'    },
+    { name: 'types',           title: 'Types'           },
+  ];
+
+  const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES[0].name;
+
+  let $text = '';
+
+  effect(() => {
+    const page = $page;
+    let alive = true;
+    fetch(`${page}.md`)
+      .then(response => response.ok ? response.text() : `# Not found\n\nThere is no page "${page}".`)
+      .then(text => { if (alive) $text = text; });
+    return () => { alive = false; };
+  });
+</script>
+
+<rat-area name='menu' dock='start' open>
+  <nav.docs-nav>
+    <a.docs-brand href='../'>RAT</a>
+    @for (page of PAGES): <a href={'#/' + page.name} class:active={$page === page.name}>{page.title}</a>
+    <a href='../demos/'>Demos</a>
+    <a href='https://github.com/pulgasari/rat'>GitHub</a>
+  </nav.docs-nav>
+</rat-area>
+
+<rat-view route='/*' name='page'>
+  <main.docs-page>
+    <output-md format='markdown' raw={$text} />
+  </main.docs-page>
+</rat-view>
