@@ -12,7 +12,9 @@ body {
 
 a { color: var(--color-ink); }
 
-output-md {
+output-md article {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
