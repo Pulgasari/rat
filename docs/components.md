@@ -2,7 +2,7 @@
 
 A `.rat` file is one component. Its name is the file name: `Card.rat` is `<Card>`.
 
-```html
+```rat
 <script>
   let { $title } = this.props;
 </script>
@@ -28,7 +28,7 @@ A `.rat` file is one component. Its name is the file name: `Card.rat` is `<Card>
 
 ## Props
 
-```html
+```rat
 <Card title='Hello' count={$n}>the content</Card>
 ```
 
@@ -36,7 +36,7 @@ The component reads them as `this.props`. `let { $title } = this.props` makes a 
 
 ## Using a component
 
-```html
+```rat
 <script>
   import Card from './Card.rat';
 </script>

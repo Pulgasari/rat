@@ -2,7 +2,7 @@
 
 A signal is a value that tells whoever read it when it changes. In a `.rat` script every `$name` is one.
 
-```js
+```ratjs
 let   $count  = 0;            // a signal
 const $double = $count * 2;   // computed: follows $count
 $count++;                     // the markup that read $count or $double updates
@@ -14,7 +14,7 @@ $count++;                     // the markup that read $count or $double updates
 
 ## Effects
 
-```js
+```ratjs
 import { effect } from '@rat/runtime';
 
 effect(() => {
@@ -26,7 +26,7 @@ An effect runs again whenever a signal it read changes. A function it returns cl
 
 ## Collections
 
-```js
+```ratjs
 let $todos = [];
 $todos.push({ title: 'milk' });   // reactive too: a $Array
 ```

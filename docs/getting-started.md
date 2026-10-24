@@ -20,7 +20,7 @@ rat is a small framework for apps in the browser, without a build step. You writ
 
 ## A component
 
-```html
+```rat
 <script>
   let $count = 0;
 </script>

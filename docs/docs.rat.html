@@ -18,6 +18,22 @@
 
   let $text = '';
 
+  // a fenced code block becomes a <write-code> of aufbau, once the page is rendered: highlighted, rat and ratjs known
+  function codeBlocks (root) {
+    for (const code of root.querySelectorAll('pre > code')) {
+      const block = document.createElement('write-code');
+      block.setAttribute('lang', code.className.match(/language-(\S+)/)?.[1] ?? 'plaintext');
+      block.setAttribute('actions', 'copy');
+      block.textContent = code.textContent;
+      code.parentElement.replaceWith(block);
+    }
+  }
+
+  // a narrow screen has the menu as a drawer: closed at first, closed again once a page is picked
+  const menu   = () => RAT.app.area('menu');
+  const picked = () => { if (menu()?.isOverlay) menu().hide(); };
+  const wide   = matchMedia('(min-width: 48rem)').matches;
+
   effect(() => {
     const page = $page;
     let alive = true;
@@ -28,17 +44,21 @@
   });
 </script>
 
-<rat-area name='menu' dock='start' open>
+<rat-area name='menu' dock='start' open={wide}>
   <nav.docs-nav>
     <a.docs-brand href='../'>RAT</a>
-    @for (page of PAGES): <a href={'#/' + page.name} class:active={$page === page.name}>{page.title}</a>
+    @for (page of PAGES): <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
     <a href='../demos/'>Demos</a>
     <a href='https://github.com/pulgasari/rat'>GitHub</a>
   </nav.docs-nav>
 </rat-area>
 
 <rat-view route='/*' name='page'>
+  <header.docs-bar>
+    <button.docs-menu aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
+    <span>RAT docs</span>
+  </header.docs-bar>
   <main.docs-page>
-    <output-md format='markdown' raw={$text} />
+    <output-md format='markdown' raw={$text} on:output-md-rendered={event => codeBlocks(event.currentTarget)} />
   </main.docs-page>
 </rat-view>
