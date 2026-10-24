@@ -169,6 +169,18 @@ export default {
 | `thumbnails` | small webp copies of images in opfs (`createThumbs`, `@rat/app/thumbnails.js`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
 | `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/sw.js')`): a worker reaches only the pages below its own folder. files of the page's origin network first, of other origins cache first |
 
+## middleware (vercel)
+
+`middleware.js` compiles a `.rat`, `.rat.html` or `.rat.js` file on the edge: the page gets the module and loads no compiler. the loader sees `x-rat-compiled` and takes the code as it is, autoImport comes along in `x-rat-unresolved`. a host without middleware (github pages) keeps compiling in the page.
+
+```js
+// middleware.js at the root of the vercel project
+export { middleware as default } from './rat/packages/app/middleware.js';
+export const config = { matcher: ['/:path*.rat', '/:path*.rat.html', '/:path*.rat.js'] };
+```
+
+`acorn` has to be an npm dependency of the project, the edge bundles it. a `<style lang='scss'>` loads its compiler from a cdn, which the edge can not: such a file fails there.
+
 ## errors
 
 `<rat-view>`, `<rat-part>` and `<rat-app>` are error boundaries. an error of a
