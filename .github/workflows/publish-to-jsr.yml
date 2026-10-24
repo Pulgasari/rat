@@ -1,0 +1,42 @@
+name: publish to jsr
+
+# one package by hand (actions -> publish to jsr -> run workflow). the version is the one in its deno.json.
+# app, import and runtime import packages that are not on jsr yet (@domina/*, @htx/*, @bunker/*, @gestalt/*)
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "package to publish"
+        required: true
+        type: choice
+        options:
+          - app
+          - bunker
+          - commands
+          - compiler
+          - dev
+          - hotkeys
+          - import
+          - runtime
+          - signals
+          - types
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write # oidc token jsr uses for auth + provenance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: publish package
+        working-directory: packages/${{ inputs.package }}
+        run: deno publish

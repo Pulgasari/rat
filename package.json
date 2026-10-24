@@ -2,6 +2,7 @@
   "name"            : "rat",
   "private"         : true,
   "type"            : "module",
+  "workspaces"      : ["packages/compiler", "packages/dev"],
   "scripts"         : { "build:docs": "vite build --config dev/docs/vite.config.js" },
   "devDependencies" : { "acorn": "^8.14.0", "unplugin": "^2.3.0", "vite": "^7.0.0" }
 }

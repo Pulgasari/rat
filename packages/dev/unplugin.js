@@ -24,7 +24,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath }    from 'node:url';
 import { parse }            from 'acorn';
 import { createUnplugin }   from 'unplugin';
-import { compileAsync }     from '../compiler/index.js';
+import { compileAsync }     from '@rat/compiler';
 
 const ENTRY     = '\0rat:entry:';
 const IMPORTMAP = fileURLToPath(new URL('../app/run/importmap.json', import.meta.url));
