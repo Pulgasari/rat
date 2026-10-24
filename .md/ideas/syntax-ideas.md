@@ -79,6 +79,19 @@ in several holes.
 
 **cost.** small. the compiler turns it into a `const` at the start of the body function.
 
+## keywords
+```md
+# reactivity
+signal
+computed
+effect
+
+# other
+cmd | command
+```
+
+```
+
 ---
 
 # misc
