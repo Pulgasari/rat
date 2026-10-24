@@ -1,28 +1,17 @@
-# rat :: markup shorthands
+# rat :: syntax ideads
 
-status: **ideas**.
+##markup shorthands
 
-## imba: tags and selectors in the language
+## indentation instead of closing tags
 
-**idea: tags and their selectors are part of the language.**
+inspired by: imba
 
 ```imba
-tag todo-item
-  prop todo
-  <self.item .done=todo.done>
-    <input type='checkbox' bind=todo.done>
-    <span> todo.title
-    <button @click.stop=remove> 'x'
+<self.item .done=todo.done>
+  <input type='checkbox' bind=todo.done>
+  <span> todo.title
+  <button @click.stop=remove> 'x'
 ```
-
-- `<self.item>`: the tag's own element, with a class, like htx's `<div.card>`
-- `.done=todo.done`: a class toggled by a value, like rat's `class:done={…}`
-- `@click.stop`: event modifiers, chained with dots
-- indentation instead of closing tags (rat's syntax 2, for markup)
-
-**problem.** none new, but imba is proof that rat's direction works in practice:
-selector tags, class toggles, modifiers and indentation-based markup in one language,
-used in production for years.
 
 ## imba: `.class` as an attribute
 
