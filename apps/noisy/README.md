@@ -33,4 +33,8 @@ what was more work in rat than it should be, while building this:
 
 11. **autoImport looks by fetching.** a component of `../.shared/components/` is first asked for in `./components/` as `.rat.html`, `.rat`, `.rat.js`: three 404s in the console for every shared one. the config names this app's own components now. without a build a folder has no listing, so the fix is a list (the names form) or a manifest of the folder.
 
+12. **`aufbau: { elements: { mode: 'auto' } }` in the config is read by nothing.** every app calls `autoloader()` of `@aufbau/elements` itself, without it no `<btn-icon>`, `<data-index>`, `<svg-icon>` is defined. a config key (or `<rat-app>` doing it) would say it once.
+
+13. **an html entity in markup text is shown as written.** `black &amp; white` came out with `&amp;` in it (vectorizer), a plain `&` works.
+
 what was easy: the panels follow the picks through `computed` alone, `let { $time, $queue } = player` in a component, `@gestures={{ onLongPress }}` as a behavior, the config mods (database, folders, thumbnails, hotkeys, offline) as one block.

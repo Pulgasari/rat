@@ -1,0 +1,92 @@
+/* vectorizer :: app.css */
+
+.vectorizer {
+  box-sizing     : border-box;
+  display        : grid;
+  gap            : 1.25rem;
+  justify-items  : center;
+  margin         : 0 auto;
+  max-inline-size: 72rem;
+  min-block-size : 100dvh;
+  padding        : 1.25rem;
+  align-content  : center;
+}
+
+/* :::::: PICK */
+
+.drop {
+  align-content  : center;
+  border         : 2px dashed color-mix(in oklab, currentColor 35%, transparent);
+  border-radius  : 1.25rem;
+  cursor         : pointer;
+  display        : grid;
+  gap            : 0.5rem;
+  inline-size    : min(28rem, 100%);
+  justify-items  : center;
+  min-block-size : 16rem;
+  padding        : 2rem;
+  text-align     : center;
+
+  svg-icon { --icon-size: 3rem; opacity: 0.8; }
+  span     { opacity: 0.6; }
+  input    { display: none; }
+
+  &:hover { background: color-mix(in oklab, currentColor 5%, transparent); }
+}
+
+/* :::::: COMPARE */
+
+.compare {
+  display               : grid;
+  gap                   : 1rem;
+  grid-template-columns : repeat(auto-fit, minmax(16rem, 1fr));
+  justify-self          : stretch;
+
+  figure {
+    display        : grid;
+    gap            : 0.5rem;
+    grid-template-rows: minmax(0, 1fr) auto;
+    margin         : 0;
+  }
+
+  img {
+    /* light squares, as in a drawing app: a dark svg stays visible on a dark palette */
+    background      : repeating-conic-gradient(#e6e6e6 0 25%, #fff 0 50%) 0 0 / 1rem 1rem;
+    block-size      : min(55dvh, 32rem);
+    border-radius   : 0.75rem;
+    inline-size     : 100%;
+    object-fit      : contain;
+  }
+
+  figcaption { font-size: 0.85rem; opacity: 0.7; text-align: center; }
+
+  .busy img { opacity: 0.5; transition: opacity 0.2s; }
+}
+
+/* :::::: SETTINGS */
+
+.settings {
+  display               : grid;
+  gap                   : 0.75rem 1.5rem;
+  grid-template-columns : repeat(auto-fit, minmax(12rem, 1fr));
+  inline-size           : min(48rem, 100%);
+  justify-self          : center;
+
+  label  { display: grid; gap: 0.25rem; }
+  span   { display: flex; justify-content: space-between; font-size: 0.85rem; }
+  output { opacity: 0.7; }
+}
+
+.modes {
+  border     : 0;
+  display    : flex;
+  gap        : 1rem;
+  grid-column: 1 / -1;
+  justify-content: center;
+  margin     : 0;
+  padding    : 0;
+
+  label { align-items: center; display: flex; gap: 0.4rem; }
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }

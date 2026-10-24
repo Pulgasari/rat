@@ -17,7 +17,8 @@
 [icons](https://code.pulgasari.dev/rat/apps/icons/) ·
 [noisy](https://code.pulgasari.dev/rat/apps/noisy/) ·
 [notes](https://code.pulgasari.dev/rat/apps/notes/) ·
-[podcasts](https://code.pulgasari.dev/rat/apps/podcasts/)
+[podcasts](https://code.pulgasari.dev/rat/apps/podcasts/) ·
+[vectorizer](https://code.pulgasari.dev/rat/apps/vectorizer/)
 
 **md:**
 [`TODO.md`](TODO.md)
