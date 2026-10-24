@@ -65,15 +65,18 @@ Object.defineProperty(EnumType, 'name', { value: 'Enum' });
 
 // ::: Enum + $Enum
 
-const Enum = typed(EnumType, enumOf);
+// create(value): at value, else at the initial one
+const atValue = (Type, schema, value) => { const enumeration = new Type(schema); if (value !== undefined) enumeration.value = value; return enumeration; };
 
-const $Enum = reactive(Enum, {
+const Enum = typed(EnumType, enumOf, atValue);
+
+const $Enum = typed(reactive(Enum, {
   reads  : ['value', 'is', 'toJSON', 'toString', 'valueOf'],
   writes : {
     cycle : enumeration => enumeration.values.length > 1,
     value : (enumeration, value) => !enumeration.is(value),
   },
-});
+}), enumOf, atValue);
 
 register(Enum, $Enum);
 

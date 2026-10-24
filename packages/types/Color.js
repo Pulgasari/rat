@@ -157,9 +157,11 @@ Object.defineProperty(ColorType, 'name', { value: 'Color' });
 
 const differs = name => (color, value) => !Object.is(color[name], value);
 
-const Color = typed(ColorType, colorOf);
+const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
 
-const $Color = reactive(Color, {
+const Color = typed(ColorType, colorOf, ofValue);
+
+const $Color = typed(reactive(Color, {
   reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
   writes : {
     a   : differs('a'),
@@ -172,7 +174,7 @@ const $Color = reactive(Color, {
     s   : differs('s'),
     set : (color, input) => !color.equals(input),
   },
-});
+}), colorOf, ofValue);
 
 register(Color,  $Color);
 

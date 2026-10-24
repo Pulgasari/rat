@@ -18,9 +18,10 @@ give a schema, with new a value.
 class Schema {
   // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
   // parts: the schemas a structure is made of (record fields, tuple items, union cases).
-  // transform: how a value is made into this schema's form, for from() (a case of Str)
-  constructor ({ checks = [], describe = {}, initial, kind, nullable = false, parts = null, run, transform = null }) {
-    Object.assign(this, { checks, describe: { kind, ...describe }, initial, kind, nullable, parts, run, transform });
+  // transform: how a value is made into this schema's form, for from() (a case of Str).
+  // make: (schema, value) -> a value of the data type, for create() (typed sets it)
+  constructor ({ checks = [], describe = {}, initial, kind, make = null, nullable = false, parts = null, run, transform = null }) {
+    Object.assign(this, { checks, describe: { kind, ...describe }, initial, kind, make, nullable, parts, run, transform });
     Object.freeze(this);
   }
 
@@ -42,6 +43,12 @@ class Schema {
   }
 
   is (value) { return !this.validate(value).issues; }
+
+  // a value of the data type this schema was made by: $Dict(Key, Value).create({ … }) is a $Dict with it
+  create (value) {
+    if (!this.make) throw new TypeError(`[rat] ${this.kind} is no data type, there is nothing to create: its values are plain js`);
+    return this.make(this, value);
+  }
 
   // a value in this schema's form: KebabCase.from('togglePlay') -> 'toggle-play'
   from (value) {
@@ -95,8 +102,15 @@ const Num  = new NumSchema({ initial: 0,     kind: 'num',  run: scalar('a number
 const isSchema = value => value instanceof Schema;
 
 // one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
-// of a list of strings. the class stays a class (new, extends, instanceof), only a call differs
-const typed = (Class, toSchema) => new Proxy(Class, { apply: (target, self, args) => toSchema(...args) });
+// of a list of strings. the class stays a class (new, extends, instanceof), only a call differs.
+// the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
+// make: (Type, schema, value) -> the value, when the constructor is not (schema, value)
+const byConstructor = (Type, schema, value) => new Type(schema, value);
+
+function typed (Class, toSchema, make = byConstructor) {
+  const Type = new Proxy(Class, { apply: (target, self, args) => toSchema(...args).derive({ make: (schema, value) => make(Type, schema, value) }) });
+  return Type;
+}
 
 // a structure's input: a plain object, not an array, a class instance counts (a Record does)
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);

@@ -111,9 +111,12 @@ const LIST_WRITES = {
   unshift : (list, ...items) => items.length > 0,
 };
 
-const List = typed(ListType, listOf);
+// create(items): the items checked, a List holds no schema of its own
+const ofItems = (Type, schema, items = []) => new Type(schema.parse(items));
 
-const $List = reactive(List, { reads: LIST_READS, writes: LIST_WRITES });
+const List = typed(ListType, listOf, ofItems);
+
+const $List = typed(reactive(List, { reads: LIST_READS, writes: LIST_WRITES }), listOf, ofItems);
 
 register (List, $List);
 

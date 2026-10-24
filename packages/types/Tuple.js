@@ -74,7 +74,7 @@ class TupleType {
 
 Object.defineProperty(TupleType, 'name', { value: 'Tuple' });
 
-const Tuple = typed(TupleType, tupleOf);
+const Tuple = typed(TupleType, tupleOf, (Type, schema, items = schema.initial) => new Type(...schema.parse(items)));
 
 // :::::: EXPORT
 

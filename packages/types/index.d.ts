@@ -32,6 +32,14 @@ export interface Schema<T> {
   from (value: unknown): T;
   /** This schema's check, then made into target and checked by it: Str.to(KebabCase). */
   to<U> (target: Schema<U>): Schema<U>;
+
+  /** A value of the data type this schema was made by. A schema of plain js values (Str, Num …) throws. */
+  create (value?: unknown): unknown;
+}
+
+/** The schema of a data type: create() makes a value of it, $Dict(…).create() a reactive one. */
+export interface TypedSchema<T, I> extends Schema<T> {
+  create (value?: unknown): I;
 }
 
 export interface NumSchema extends Schema<number> {
@@ -54,6 +62,8 @@ export interface StrSchema extends Schema<string> {
 export interface ListSchema<T> extends Schema<T[] | List<T>> {
   min (length: number): this;
   max (length: number): this;
+  /** A List of these items, checked: List(Num).create([1, 2]), a $List from $List(Num). */
+  create (items?: Iterable<unknown>): List<T>;
 }
 
 export type Infer<S> = S extends Schema<infer T> ? T : never;
@@ -87,11 +97,11 @@ export interface DictConstructor {
   new <K, V>(schema: Schema<Map<K, V>>, entries?: Iterable<[unknown, unknown]> | Record<string, unknown>): Dict<K, V>;
   new <K, V>(other: Dict<K, V>): Dict<K, V>;
   /** The schema: keys of key, values of value (a schema, or fields for a Record). */
-  <K, V>(key: Schema<K>, value: Schema<V> | Record<string, Schema<any>>): Schema<Map<K, V>>;
+  <K, V>(key: Schema<K>, value: Schema<V> | Record<string, Schema<any>>): TypedSchema<Map<K, V>, Dict<K, V>>;
 }
 
 export const Dict  : DictConstructor;
-/** A Dict whose reads subscribe and whose writes notify. */
+/** A Dict whose reads subscribe and whose writes notify. Called, the schema whose create() makes one. */
 export const $Dict : DictConstructor;
 
 
@@ -140,8 +150,8 @@ export interface ListConstructor {
 }
 
 export const List: ListConstructor;
-/** A List whose reads subscribe and whose writes notify. */
-export const $List: { new <T>(items?: Iterable<T>): List<T>; from<T> (items: Iterable<T>): List<T>; of<T> (...items: T[]): List<T> };
+/** A List whose reads subscribe and whose writes notify. Called, the schema whose create() makes one. */
+export const $List: ListConstructor;
 
 /** Holds one value out of a fixed list. */
 export interface Enum<V> {
@@ -161,15 +171,12 @@ export interface EnumConstructor {
   new <const V extends readonly unknown[]>(...values: V): Enum<V[number]>;
   new <V>(source: Schema<V> | Enum<V>): Enum<V>;
   /** The schema: one value out of a fixed list, the first is the initial one. */
-  <const V extends readonly unknown[]>(...values: V): Schema<V[number]>;
+  <const V extends readonly unknown[]>(...values: V): TypedSchema<V[number], Enum<V[number]>>;
 }
 
 export const Enum: EnumConstructor;
-/** An Enum whose value and is() subscribe and whose cycle() and value = … notify. */
-export const $Enum: {
-  new <const V extends readonly unknown[]>(...values: V): Enum<V[number]>;
-  new <V>(source: Schema<V> | Enum<V>): Enum<V>;
-};
+/** An Enum whose value and is() subscribe and whose cycle() and value = … notify. Called, the schema whose create() makes one. */
+export const $Enum: EnumConstructor;
 /** A Map whose reads subscribe and whose writes notify. */
 export const $Map: MapConstructor;
 /** A Set whose reads subscribe and whose writes notify. */
@@ -191,12 +198,12 @@ export interface RecordConstructor {
   /** Fixed fields without a schema, or a copy of another Record. */
   new <T extends object>(values: T | Record<T>): Record<T>;
   /** The schema: an object with known fields, unknown fields kept. */
-  <S extends Shape>(shape: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
+  <S extends Shape>(shape: S): TypedSchema<{ [K in keyof S]: Infer<S[K]> }, Record<{ [K in keyof S]: Infer<S[K]> }>>;
 }
 
 export const Record: RecordConstructor;
-/** A Record whose field reads subscribe and whose field writes notify, one version for all fields. */
-export const $Record: { new <T extends object>(schema: Schema<T>, values?: Partial<T>): Record<T>; new <T extends object>(values: T | Record<T>): Record<T> };
+/** A Record whose field reads subscribe and whose field writes notify, one version for all fields. Called, the schema whose create() makes one. */
+export const $Record: RecordConstructor;
 
 /** A value with a schema, like $Enum: reads subscribe, writes are checked and notify. */
 export interface Scalar<T> {
@@ -235,12 +242,12 @@ export interface TableConstructor {
   /** A copy of another Table. */
   new <T extends object>(other: Table<T>): Table<T>;
   /** The schema: rows of these fields, or of a Record schema. */
-  <S extends Shape>(shape: S | Schema<{ [K in keyof S]: Infer<S[K]> }>): Schema<{ [K in keyof S]: Infer<S[K]> }[]>;
+  <S extends Shape>(shape: S | Schema<{ [K in keyof S]: Infer<S[K]> }>): TypedSchema<{ [K in keyof S]: Infer<S[K]> }[], Table<{ [K in keyof S]: Infer<S[K]> }>>;
 }
 
 export const Table: TableConstructor;
-/** A Table whose reads subscribe and whose writes notify, one version for the whole table. */
-export const $Table: { new <T extends object>(schema: Schema<T[]> | Schema<T>, rows?: Iterable<Partial<T>>): Table<T>; new <T extends object>(other: Table<T>): Table<T> };
+/** A Table whose reads subscribe and whose writes notify, one version for the whole table. Called, the schema whose create() makes one. */
+export const $Table: TableConstructor;
 
 /** A plain array whose reads (index, length, methods) subscribe and whose writes notify. Array.isArray stays true. */
 export declare const $Array: { <T>(items?: Iterable<T>): T[]; new <T>(items?: Iterable<T>): T[] };
@@ -261,7 +268,7 @@ export interface TupleConstructor {
   new <const T extends readonly unknown[]>(...items: T): Tuple<T>;
   from<T> (items: Iterable<T>): Tuple<T[]>;
   /** The schema: an array or a Tuple of exactly these items. */
-  <const S extends readonly Schema<any>[]>(...items: S): Schema<{ [K in keyof S]: Infer<S[K]> }>;
+  <const S extends readonly Schema<any>[]>(...items: S): TypedSchema<{ [K in keyof S]: Infer<S[K]> }, Tuple<{ [K in keyof S]: Infer<S[K]> }>>;
 }
 
 export const Tuple: TupleConstructor;
@@ -296,12 +303,12 @@ export interface Color {
 export interface ColorConstructor {
   new (input?: ColorInput): Color;
   /** The schema: anything that reads as a color. */
-  (): Schema<ColorInput>;
+  (): TypedSchema<ColorInput, Color>;
 }
 
 export const Color: ColorConstructor;
-/** A Color whose reads subscribe and whose writes notify. */
-export const $Color: { new (input?: ColorInput): Color };
+/** A Color whose reads subscribe and whose writes notify. Called, the schema whose create() makes one. */
+export const $Color: ColorConstructor;
 
 // :::::: Id, Ref
 
