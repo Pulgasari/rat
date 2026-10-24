@@ -12,6 +12,9 @@ body {
 
 a { color: var(--color-ink); }
 
+output-md {
+  gap: 1rem;
+}
 
 .docs-nav {
   display        : flex;
