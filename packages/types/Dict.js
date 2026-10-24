@@ -5,16 +5,18 @@ Dict is a Map whose keys and values follow a schema each. called, it is the
 schema:
 
   const Commands = Dict(Str.to(KebabCase), Record({ exec: Fn, title: Str.optional() }));
-  // or with fields for the value: Dict(Str.to(KebabCase), { exec: Fn, title: Str.optional() })
+  // or with fields for the value: Dict(Str.to(KebabCase), { exec: Fn, '?title': Str })
 
-  const commands = new Dict(Commands);
+  const commands = Commands.create();              // or new Dict(Commands), entries as the argument
   commands.set('togglePlay', { exec: () => … });   // the key becomes 'toggle-play', the value is checked
   commands.get('toggle_play').exec();              // a key is read through the key schema too
   commands.has('Toggle Play');                     // true
 
 a key the key schema refuses is not there (get: undefined, has: false), set
 throws. $Dict, its reactive variant, is below: reads subscribe, writes notify,
-like $Map.
+like $Map. called, it is the schema as well, whose create() makes a $Dict:
+
+  const commands = $Dict(Str.to(KebabCase), { exec: Fn }).create({ save: { exec: save } });
 */
 
 import { reactive, register } from '@rat/signals';
@@ -86,14 +88,14 @@ const Dict = typed(DictType, dictOf);
 
 // ::: $Dict
 
-const $Dict = reactive(Dict, {
+const $Dict = typed(reactive(Dict, {
   reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', 'toJSON', Symbol.iterator],
   writes : {
     clear  : dict => dict.size > 0,
     delete : (dict, key) => dict.has(key),
     set    : true,
   },
-});
+}), dictOf);
 
 register(Dict, $Dict);
 

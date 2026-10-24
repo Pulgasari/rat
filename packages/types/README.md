@@ -38,6 +38,17 @@ three things, kept apart:
 
 **one name, two forms.** where a data type has a schema, both go by the same name `new` makes a value, a call makes the schema. `Map` and `Set` work the same way in js already: `new Map` is a map, `Map()` is something else (an error there).
 
+**a schema knows its data type.** `create(value)` makes a value of the type the schema was made by, checked by it. a reactive variant called is a schema too, its `create()` makes the reactive value:
+
+```js
+const Commands = $Dict(Str.to(KebabCase), { exec: Fn, '?title': Str });
+const commands = Commands.create({ save: { exec: save } });   // a $Dict with the schema Commands
+
+List(Num).create(['1', 2]);   // a List [1, 2]
+Enum('grid', 'list').create('list');
+Str.create();                 // TypeError: a string is plain js, there is nothing to create
+```
+
 # Basic DataTypes
 
 ## Bool

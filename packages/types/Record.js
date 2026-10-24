@@ -102,13 +102,13 @@ const Record = typed(RecordType, recordOf);
 // one version for the whole record:
 // a field write updates whatever read any field
 
-const $Record = reactive(Record, {
+const $Record = typed(reactive(Record, {
   reads  : [GET, 'toJSON'],
   writes : {
     [SET]  : (record, key, value) => !Object.is(record[GET](key), value),
     assign : true,
   },
-});
+}), recordOf);
 
 register(Record, $Record);
 

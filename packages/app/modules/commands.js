@@ -42,7 +42,7 @@ an error of a command, thrown or a rejected promise, reaches the nearest error
 boundary as 'rat:error' from the element the command came from.
 */
 
-import { $Dict, Dict, Fn, KebabCase, Str } from '@rat/types';
+import { $Dict, Fn, KebabCase, Str } from '@rat/types';
 
 const COMMAND  = 'rat:command';
 const LITERALS = { false: false, null: null, true: true };
@@ -51,7 +51,7 @@ const METHODS  = new Set(['assign', 'clear', 'delete', 'entries', 'get', 'has', 
 // ::: the schema
 
 const Command  = { '?description': Str, exec: Fn, '?title': Str };
-const Commands = Dict(Str.to(KebabCase), Command);
+const Commands = $Dict(Str.to(KebabCase), Command);
 
 // a function is the shortest entry
 const entryOf = command => typeof command === 'function' ? { exec: command } : command;
@@ -92,7 +92,7 @@ function raise (node, error) {
 // ::: the registry
 
 function createCommands (entries = {}) {
-  const dict = new $Dict(Commands);
+  const dict = Commands.create();
 
   const api = {
     assign (entries) { for (const [name, command] of Object.entries(entries)) dict.set(name, entryOf(command)); return proxy; },

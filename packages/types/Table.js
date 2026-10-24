@@ -88,10 +88,10 @@ const Table = typed(TableType, tableOf);
 
 // ::: $Table: one version for the whole table
 
-const $Table = reactive(Table, {
+const $Table = typed(reactive(Table, {
   reads  : [...LIST_READS, 'column', 'columns', 'where'],
   writes : { ...LIST_WRITES, update: true },
-});
+}), tableOf);
 
 register(Table, $Table);
 
