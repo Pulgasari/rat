@@ -1,25 +1,5 @@
 // @rat/types :: Str
 
-/*
-Str is the schema of a string, and the cases of writing one:
-
-  Str.min(3).max(40)
-  Str.pattern(/^#/, 'a hex color')
-  Str.email, Str.uuid
-
-a case only lets through a string already written that way. from() makes one
-of any string, Str.to(Case) is the schema that does that on the way in:
-
-  KebabCase.is('toggle-play');             // true
-  KebabCase.is('togglePlay');              // false
-  KebabCase.from('togglePlay');            // 'toggle-play'
-  Str.to(KebabCase).parse('togglePlay');   // 'toggle-play'
-  KebabCase.describe.regex;                // the pattern, at hand
-
-a case of your own: Str.case({ regex, transform }). transform decides: what it
-leaves as it is is in the case, the regex only describes it.
-*/
-
 import { Schema, scalar } from './schema.js';
 
 // ::: the schema
