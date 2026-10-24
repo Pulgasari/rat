@@ -1,0 +1,10 @@
+{
+  "name"         : "@rat/dev",
+  "version"      : "0.0.1",
+  "description"  : "rat in a build: compiles .rat files and resolves bare specifiers through the import map of @rat/app, for vite, rollup, rolldown, esbuild and webpack",
+  "type"         : "module",
+  "main"         : "./unplugin.js",
+  "exports"      : { ".": "./unplugin.js" },
+  "dependencies" : { "@rat/compiler": "0.0.1", "unplugin": "^2.3.0" },
+  "license"      : "MIT"
+}

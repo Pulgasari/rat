@@ -13,8 +13,9 @@ demos: [`demos/app`](../../demos/app/), [`demos/app2`](../../demos/app2/) (views
 
 ## how it works
 
-1. **`run.js`** is a classic script, not a module: it runs before any module, so the import map
-   it writes is in place in time. it maps `@rat/*` into this repo, `@htx/*` and `@domina/*` into
+1. **`run.js`** is a classic script, not a module: it runs before any module. it writes the import
+   map of `run/importmap.json` into the page before its first `import()` (data, so a build reads
+   the same file: `@rat/dev`). it maps `@rat/*` into this repo, `@htx/*` and `@domina/*` into
    the repos next to it (`code.pulgasari.dev/rat/`, `/htx/`, `/domina/`, or a local checkout of
    all three side by side), `acorn` and `@pulgasari/is` / `str` to esm.sh. an import map already
    on the page wins: put it before `run.js` to point anything elsewhere. then it imports
