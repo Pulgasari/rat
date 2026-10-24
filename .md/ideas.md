@@ -1,6 +1,7 @@
 # ideas
 
 [htx](#htx) -
+[types](#types) -
 [tooling](#tooling)
 
 ---
@@ -323,6 +324,17 @@ the compiled module contains the finished list, no fetch, no json, no loop at ru
 **cost.** large: the compiler has to execute code (in node: easy, in the browser: a
 worker), and it fits the build adapters and the `dom:clone` target. but it is the
 strongest form of "compiler over runtime magic".
+
+---
+
+# types
+
+maybe gonna add one of those?
+
+```md
+Struct
+URL
+```
 
 ---
 
