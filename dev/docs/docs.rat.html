@@ -11,7 +11,7 @@
     { name: 'components',      title: 'Components'      },
     { name: 'signals',         title: 'Signals'         },
     { name: 'control-flow',    title: 'Control flow'    },
-    { name: 'types',           title: 'Types',          path: './../packages/types/README.md' },
+    { name: 'types',           title: 'Types',          path: '../../packages/types/README.md' },
   ];
 
   // a page is <name>.md next to this file, or its own path
@@ -41,9 +41,9 @@
 
 <rat-area name='menu' dock='start' open={wide}>
   <nav.docs-nav>
-    <a.docs-brand href='../'>RAT</a>
+    <a.docs-brand href='../../'>RAT</a>
     @for (page of PAGES): <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
-    <a href='../demos/'>Demos</a>
+    <a href='../../demos/'>Demos</a>
     <a href='https://github.com/pulgasari/rat'>GitHub</a>
   </nav.docs-nav>
 </rat-area>
