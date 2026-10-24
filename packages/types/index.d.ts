@@ -27,6 +27,11 @@ export interface Schema<T> {
   is       (value: unknown): value is T;
   /** The checked value, or a TypeError naming every issue. */
   parse    (value: unknown): T;
+
+  /** A value in this schema's form, through its transform (a case of Str): KebabCase.from('togglePlay'). */
+  from (value: unknown): T;
+  /** This schema's check, then made into target and checked by it: Str.to(KebabCase). */
+  to<U> (target: Schema<U>): Schema<U>;
 }
 
 export interface NumSchema extends Schema<number> {
@@ -42,6 +47,8 @@ export interface StrSchema extends Schema<string> {
   pattern (regex: RegExp, message?: string): this;
   readonly email : this;
   readonly uuid  : this;
+  /** A case of writing: only a string transform leaves as it is passes, from() makes one. regex describes it. */
+  case (spec: { regex?: RegExp | null, transform: (value: string) => string }): StrSchema;
 }
 
 export interface ListSchema<T> extends Schema<T[] | List<T>> {
@@ -54,6 +61,38 @@ export type Infer<S> = S extends Schema<infer T> ? T : never;
 export const Bool : Schema<boolean>;
 export const Num  : NumSchema;
 export const Str  : StrSchema;
+
+export const CamelCase    : StrSchema;
+export const ConstantCase : StrSchema;
+export const KebabCase    : StrSchema;
+export const LowerCase    : StrSchema;
+export const MockingCase  : StrSchema;
+export const PascalCase   : StrSchema;
+export const SnakeCase    : StrSchema;
+export const TitleCase    : StrSchema;
+export const UpperCase    : StrSchema;
+
+/** A function, nothing coerced. */
+export const Fn : Schema<(...args: any[]) => unknown>;
+
+/** A Map whose keys and values follow a schema each; get, has and delete read a key through the key schema. */
+export interface Dict<K, V> extends Map<K, V> {
+  readonly schema : Schema<Map<K, V>>;
+  /** The key as the key schema makes it, or undefined. */
+  keyOf (key: unknown): K | undefined;
+  toJSON (): Record<string, V>;
+}
+
+export interface DictConstructor {
+  new <K, V>(schema: Schema<Map<K, V>>, entries?: Iterable<[unknown, unknown]> | Record<string, unknown>): Dict<K, V>;
+  new <K, V>(other: Dict<K, V>): Dict<K, V>;
+  /** The schema: keys of key, values of value (a schema, or fields for a Record). */
+  <K, V>(key: Schema<K>, value: Schema<V> | Record<string, Schema<any>>): Schema<Map<K, V>>;
+}
+
+export const Dict  : DictConstructor;
+/** A Dict whose reads subscribe and whose writes notify. */
+export const $Dict : DictConstructor;
 
 
 /** The base class, for schemas of your own. */

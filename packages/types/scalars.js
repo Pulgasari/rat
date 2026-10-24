@@ -19,7 +19,8 @@ signal (let $zoom = Num.range(50, 200)) only gets set, these have methods.
 */
 
 import { reactive } from '@rat/signals';
-import { Bool, Num, Schema, Str } from './schema.js';
+import { Bool, Num, Schema } from './schema.js';
+import { Str }               from './Str.js';
 
 const GET = Symbol('rat.scalar.get');
 const SET = Symbol('rat.scalar.set');
