@@ -1,0 +1,18 @@
+/* docs :: docs.css */
+
+:root { color-scheme: light dark; font: 16px/1.6 system-ui, sans-serif; }
+body  { margin: 0; }
+
+.docs-nav {
+  display        : flex;
+  flex-direction : column;
+  gap            : 0.25rem;
+  min-inline-size: 12rem;
+  padding        : 1.5rem 1rem;
+}
+
+.docs-nav a        { border-radius: 0.25rem; color: inherit; padding: 0.25rem 0.5rem; text-decoration: none; }
+.docs-nav a.active { background: color-mix(in srgb, currentColor 12%, transparent); }
+
+.docs-brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
+.docs-page  { max-inline-size: 48rem; padding: 1.5rem 2rem; }
