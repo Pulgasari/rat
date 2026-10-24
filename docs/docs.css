@@ -3,9 +3,17 @@
 
 :root { font: 16px/1.6 system-ui, sans-serif; }
 
+/* gestalt only defines the colors of the palette (--color-bg, --color-fg, --color-ink), something has to use them */
+body {
+  accent-color     : var(--color-ink);
+  background-color : var(--color-bg);
+  color            : var(--color-fg);
+}
+
+a { color: var(--color-ink); }
+
 
 .docs-nav {
-  --bg           : --color(bg);
   display        : flex;
   flex-direction : column;
   gap            : 0.25rem;
@@ -14,7 +22,7 @@
 }
 
 .docs-nav a        { border-radius: 0.25rem; color: inherit; padding: 0.25rem 0.5rem; text-decoration: none; }
-.docs-nav a.active { background: color-mix(in srgb, currentColor 12%, transparent); }
+.docs-nav a.active { background: color-mix(in srgb, var(--color-ink) 20%, transparent); }
 
 .docs-brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
 
