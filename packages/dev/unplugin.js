@@ -10,6 +10,8 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   bare specifiers            resolved through importmap.json of @rat/app, the map run.js writes into
                              the page. an https entry stays external
   class names (vite)         kept when minified (keepNames): elements take their tag from them
+  build of config.rat.js     the build options of the app (vite's build), merged over the defaults
+                             here. read from the file, not run: values only, no imports
   index.html (vite)          the script of run.js becomes the entry of the build: it imports @rat/app,
                              the src of <rat-app> and config.rat.js next to it and hands both over
                              (app.run). src goes from <rat-app>, nothing is loaded at runtime
@@ -20,6 +22,7 @@ options: importmap (a path, an { imports } object, or false), the rest goes to t
 import { readFile }         from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath }    from 'node:url';
+import { parse }            from 'acorn';
 import { createUnplugin }   from 'unplugin';
 import { compileAsync }     from '../compiler/index.js';
 
@@ -30,6 +33,28 @@ const RUN       = /<script\b[^>]*\bsrc=(['"])[^'"]*\/run\/run\.js\1[^>]*><\/scri
 const SRC       = /(<rat-app\b[^>]*?)\s+src=(['"])([^'"]+)\2/;
 
 const fileOf = id => id.split('?')[0];
+
+// the defaults of a build: relative urls, css as it is (gestalt: @function, if()), files as files
+// (output-md tells markdown by its extension, a data: url has none)
+const DEFAULTS = { assetsInlineLimit: 0, cssMinify: false };
+
+// the build key of config.rat.js, without running the file: its imports are the page's
+function buildOf (source) {
+  const program = parse(source, { ecmaVersion: 'latest', sourceType: 'module' });
+  const object  = program.body.find(node => node.type === 'ExportDefaultDeclaration')?.declaration;
+  const build   = object?.type === 'ObjectExpression' && object.properties.find(node => (node.key?.name ?? node.key?.value) === 'build');
+  return build ? new Function(`return (${source.slice(build.value.start, build.value.end)});`)() : {};
+}
+
+// <rat-app src> of root/index.html -> the build of the config.rat.js next to it (or config-src)
+async function appBuildOf (root) {
+  const html = await readFile(resolve(root, 'index.html'), 'utf8').catch(() => '');
+  const app  = html.match(/<rat-app\b[^>]*>/)?.[0] ?? '';
+  const attr = name => app.match(new RegExp(`\\s${name}=(['"])([^'"]+)\\1`))?.[2];
+  const file = attr('config-src') ? resolve(root, attr('config-src')) : attr('src') && resolve(root, dirname(attr('src')), 'config.rat.js');
+  const code = file && await readFile(file, 'utf8').catch(() => null);
+  return code ? buildOf(code) : {};
+}
 
 // the entry of a page: the component and the config, handed over to <rat-app>
 const entryOf = (src, config) => [
@@ -92,7 +117,9 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
 
     vite: {
       // class names stay: an element without a tag of its own takes its class name (@domina/element)
-      config: () => ({ esbuild: { keepNames: true } }),
+      async config ({ root = process.cwd() }) {
+        return { base: './', build: { ...DEFAULTS, ...await appBuildOf(resolve(root)) }, esbuild: { keepNames: true } };
+      },
 
       transformIndexHtml: {
         order: 'pre',
