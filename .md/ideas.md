@@ -53,9 +53,21 @@ inspired by: vue
 
 # `.rat`
 
-# rat :: local names in markup
+## keywords
 
-## idea: `@let` (from svelte)
+create a bunch of keywords for all the core features.
+
+```md
+# reactivity
+signal
+computed
+effect
+
+# other
+cmd | command
+```
+
+## local names in markup: `@let` (from svelte)
 
 ```html
 @for (box of $boxes)
@@ -70,41 +82,10 @@ inspired by: vue
 
 inspired by: svelte
 
-## keywords
-```md
-# reactivity
-signal
-computed
-effect
-
-# other
-cmd | command
-```
 
 # rat :: async blocks
 
-status: **idea**, syntax is an **open decision** ([d-28](#d-28)).
-
-see also: [with chains](with-chains.md); solidjs.md and svelte.md in `pulgasari.github.io/md/webdev/libs/` (both move towards `await` in the reactive graph instead of a block)
-
-## idea: `@await` (from svelte)
-
-**origin.** svelte renders the three states of a promise directly in markup:
-
-```svelte
-{#await fetchUser(id)}
-  <p>loading …</p>
-{:then user}
-  <p>hello {user.name}</p>
-{:catch error}
-  <p>failed: {error.message}</p>
-{/await}
-```
-
-**problem.** loading, success and error otherwise need three signals and an `@if`
-chain, written by hand for every fetch.
-
-**in rat.** in all three body forms, like `@if`:
+## async blocks | `@await`
 
 ```html
 @await (fetchUser($id))
@@ -115,13 +96,19 @@ chain, written by hand for every fetch.
   <p>failed: {error.message}</p>
 ```
 
-because the promise expression reads `$id`, a new id starts a new request
-automatically, and an outdated answer is dropped.
+render the three states of a promise directly in markup.
+
+**problem.** loading, success and error otherwise need three signals and an `@if` chain, written by hand for every fetch.
+
+because the promise expression reads `$id`, a new id starts a new request automatically, and an outdated answer is dropped.
 
 **cost.** medium: a new runtime block (`$$.wait`) that keeps track of which promise is
 the current one.
 
-<a id="d-28"></a>
+inspired by: svelte
+
+note: svelte and solidjs both move towards `await` in the reactive graph instead of a block.
+
 ## d-28 · async blocks: the syntax
 
 ```html
