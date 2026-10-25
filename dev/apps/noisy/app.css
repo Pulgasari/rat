@@ -78,7 +78,7 @@ narrow: menu, tabs, one panel to swipe, player
 .panel-list {
   flex     : 1;
   overflow : auto;
-  padding  : 0 0.5rem 0.5rem;
+  padding  : var(--noisy-gap);
 }
 
 .panel-empty {
@@ -123,7 +123,7 @@ narrow: menu, tabs, one panel to swipe, player
   flex                : none;
   inline-size         : 2rem;
   place-items         : center;
-  background-color    : color-mix(in oklab, currentColor 10%, transparent);
+  background-color    : --alpha(cc, 0.1);
 }
 
 /* :::::: PLAYER */
@@ -132,10 +132,9 @@ narrow: menu, tabs, one panel to swipe, player
   align-items    : center;
   display        : flex;
   flex-direction : column;
-  gap            : 0.75rem;
+  gap            : var(--noisy-gap);
   grid-area      : player;
   overflow       : hidden;
-  padding        : 0.75rem 0.25rem;
 
   .cover { inline-size: calc(var(--noisy-rail) * 1.2); }
 }
@@ -154,7 +153,7 @@ narrow: menu, tabs, one panel to swipe, player
 
 .player.idle .player-title { flex: 1; writing-mode: vertical-rl; }
 
-.player-controls { display: flex; flex-direction: column; gap: 0.25rem; }
+.player-controls { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .player-seek  { display: none; }
 .player-time  { font-size: 0.7rem; opacity: 0.6; }
@@ -186,7 +185,7 @@ narrow: menu, tabs, one panel to swipe, player
       flex          : 1;
       font          : inherit;
       opacity       : 0.6;
-      padding       : 0.4rem;
+      padding       : 0.5rem;
 
       &.active { background: color-mix(in oklab, currentColor 12%, transparent); opacity: 1; }
     }
@@ -203,7 +202,6 @@ narrow: menu, tabs, one panel to swipe, player
 
   .player {
     flex-direction : row;
-    padding        : 0.5rem 0.75rem;
 
     .cover { inline-size: 2.75rem; }
   }
@@ -228,7 +226,10 @@ narrow: menu, tabs, one panel to swipe, player
 */
 
 
-.noisy { --s: var(--noisy-gap); --r: var(--noisy-radius); }
+.noisy {
+  --s: var(--noisy-gap);
+  --r: var(--noisy-radius); 
+}
 
 /* orientation: landscape | default */
 .noisy                { padding: var(--s) 0; }
