@@ -1,0 +1,10 @@
+{
+  "name"         : "@rat/cli",
+  "version"      : "0.0.1",
+  "description"  : "rat on the command line: create, dev, build, compile, check",
+  "type"         : "module",
+  "bin"          : { "rat": "./index.js" },
+  "exports"      : { ".": "./index.js" },
+  "dependencies" : { "@rat/compiler": "0.0.1", "@rat/dev": "0.0.1", "acorn": "^8.14.0", "vite": "^7.0.0" },
+  "license"      : "MIT"
+}
