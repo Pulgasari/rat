@@ -11,6 +11,17 @@ export class RatPart extends HTMLElement {
   stop (): void;
 }
 
+/** A $Dict of the app's commands: one kebab-case key per command, entries as properties (commands.togglePlay() runs it). */
+export interface Commands extends Map<string, { description?: string, exec: (...args: any[]) => unknown, title?: string }> {
+  [name: string]: any;
+  set (name: string, command: ((...args: any[]) => unknown) | { description?: string, exec: (...args: any[]) => unknown, title?: string }): this;
+  assign (entries: Record<string, ((...args: any[]) => unknown) | { exec: (...args: any[]) => unknown }>): this;
+  /** run('save'), run('go[settings]'), run('go', 'settings'). */
+  run (text: string, ...args: unknown[]): unknown;
+  /** Runs the 'rat:command' events that reach root and stops them there. */
+  listen (root?: EventTarget): () => void;
+}
+
 /** The root of an app, one per page: router, commands, views, areas. src mounts a .rat file into it. */
 export class RatApp extends HTMLElement {
   routing    : 'hash' | 'path' | 'query' | 'memory' | 'none';
@@ -26,7 +37,7 @@ export class RatApp extends HTMLElement {
   palette?   : string;
   skin?      : string;
 
-  readonly commands : import('@rat/commands').Commands;
+  readonly commands : Commands;
   readonly router   : import('./modules/router.js').Router;
   /** The config of config.rat.js, {} without one. */
   readonly config   : Record<string, any>;

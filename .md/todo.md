@@ -7,12 +7,12 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] (?) `<rat-part>` auf `@domina/element`
 - [x] `<rat-part>` lädt auch `.htx` und `.html` (der loader, für alle elemente und imports)
 - [x] error boundary: `<rat-view>`, `<rat-part>`, `<rat-app>` (popover als letzte), `raise`/`guard` in `@rat/runtime`
-- [x] error boundary: fehler in command-handlern (`@rat/commands`) kommen an, als `rat:error` vom auslösenden element
+- [x] error boundary: fehler in command-handlern (`Commands`) kommen an, als `rat:error` vom auslösenden element
 - [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
 - [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
 - [x] umschalten per `name`, beide formen gebaut, in der praxis vergleichen: `onclick='rat:toggle[menu]'` (ein command-name mit `:` ist ein eigenes event) und `RAT.toggle('menu')` (globales `RAT`)
 - [ ] `<rat-overlay>` ebenso per `name` umschalten
-- [x] hotkeys an `app.commands` (`@rat/hotkeys`): mod `hotkeys`
+- [x] hotkeys an `app.commands` (`Hotkeys`): mod `hotkeys`
 - [x] auto-import per config: `autoImport: true` (verzeichnis der config), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
 - [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), mods (`database`, `files`, `store`, `hotkeys`)
 - [x] pwa-hülle: manifest (apps), service worker als mod `offline` (`packages/app/run/sw.js`, je app ein `sw.js`), kompilate im cache (`rat:compiled`)

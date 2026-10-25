@@ -2,10 +2,8 @@
   "workspace": [
     "./packages/app",
     "./packages/bunker",
-    "./packages/commands",
     "./packages/compiler",
     "./packages/dev",
-    "./packages/hotkeys",
     "./packages/import",
     "./packages/runtime",
     "./packages/signals",

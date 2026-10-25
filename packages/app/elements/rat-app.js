@@ -19,7 +19,7 @@ place of what the app holds, its views and areas then come from there. with a
 src the app is [loading] by itself until they are mounted.
 
   app.router     ../router, routing = hash | path | query | memory | none, base for path
-  app.commands   @rat/commands, listening on the app: onclick='go[settings]', back
+  app.commands   Commands (../modules/commands.js), listening on the app: onclick='go[settings]', back
   app.view       the deepest active view, app.views every view below the app
   app.area(name) a <rat-area>, app.areas all of them
 
@@ -31,7 +31,7 @@ the config itself is app.config.
 
 areas open and close by their name, two forms to find out which serves better:
 
-  onclick='rat:toggle[menu]'       the event rat:toggle (@rat/commands), the app takes it
+  onclick='rat:toggle[menu]'       the event rat:toggle (commands of @rat/runtime), the app takes it
   RAT.toggle('menu', force?)       the global RAT (@rat/runtime): RAT.app is the app
 
 matching: per level the first view whose route matches, exactly, else as the
@@ -55,7 +55,7 @@ events: rat:ready, rat:navigate ({ from, to, path, params }), rat:error.
 
 import { DominaElement }  from '@domina/element';
 import { gestalt }        from '@gestalt/core';
-import { createCommands } from '@rat/commands';
+import { Commands } from '../modules/commands.js';
 import { Enum }           from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '../modules/router.js';
@@ -159,7 +159,7 @@ export class RatApp extends DominaElement {
     }`;
   }
 
-  #commands = createCommands();
+  #commands = new Commands;
   #config   = null;
   #dispose  = null;
   #errors   = null;

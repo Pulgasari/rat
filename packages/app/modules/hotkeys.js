@@ -1,7 +1,5 @@
-import { matchesCombo, parseCombos } from '@rat/hotkeys';
-import { $Dict, Bool, Dict, Fn, Str, Union } from '@rat/types';
-
-import { command } from './commands.js';
+import { command, matchesCombo, parseCombos } from '@rat/runtime';
+import { $Dict, Bool, Dict, Fn, Str, Union }   from '@rat/types';
 
 const combos = new Map;
 

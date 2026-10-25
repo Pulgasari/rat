@@ -1,4 +1,4 @@
-# @rat/commands
+# commands
 
 ## usage
 
@@ -7,8 +7,8 @@ const { commands } = RAT.app;
 ```
 
 ```js
-import { createCommands } from '@rat/commands';
-const commands = createCommands();
+import { Commands } from '@rat/app/modules/commands.js';
+const commands = new Commands;
 ```
 
 ## define

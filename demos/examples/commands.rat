@@ -1,6 +1,6 @@
 <script>
   // a string as event handler is a command: it fires 'rat:command' upwards.
-  // later a registry from @rat/commands listens at the app root, here the component does it itself
+  // later a registry (Commands of @rat/app) listens at the app root, here the component does it itself
   const commands = [
     { name: 'toggleSidebar', label: 'sidebar umschalten' },
     { name: 'save',          label: 'speichern'          },

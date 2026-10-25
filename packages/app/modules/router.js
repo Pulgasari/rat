@@ -344,8 +344,8 @@ function createRouter ({ base = '', initial = '/', key = 'route', mode = 'hash',
 
     // go and back as commands: go[settings], go[/notes/3], back
     bind (commands) {
-      commands.add('go', (to, event) => typeof to === 'string' ? router.go(to) : undefined);
-      commands.add('back', () => router.back());
+      commands.set('go', (to, event) => typeof to === 'string' ? router.go(to) : undefined);
+      commands.set('back', () => router.back());
       return router;
     },
 
