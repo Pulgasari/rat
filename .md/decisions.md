@@ -70,6 +70,7 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 - `<rat-app src>` lädt `config.rat.js` daneben selbst (`config-src` für eine andere datei)
 - globales `RAT` immer, aus `@rat/runtime`: alle exporte von `@rat/types`, dazu `app`, `config`, `toggle` aus `@rat/app`. kein opt-in, kein umbenennen (eine zeile selbst: `globalThis.APP = RAT`). als modul: `import RAT from '@rat/app'`, `import { RAT } from '@rat/runtime'`
 - `autoImport` in `config.rat.js` (kein mod: nichts landet an `RAT.app`, es ist eine einstellung des loaders): ordner, relativ zur `config.rat.js` der app, in denen eine nicht importierte komponente (`<Dock />`) als `Dock.rat.html`, `Dock.rat`, `Dock.rat.js` gesucht wird. `true`, ein pfad, eine liste, `{ pfad: ['Dock'] }` für nur diese namen. nichts gefunden: fehler. ein eigener import oder ein lokaler name gewinnt
+- `import: [...]` in der config: module, die vor dem code der app laufen (ihre elemente, eine web component vom cdn). eine app importiert ihre elemente dort statt `autoloader()`, der ist für seiten, die ihre tags nicht kennen (markdown, docs). ein build nimmt genau diese
 - `name: options | true` direkt in der config, ohne `mods`-hülle (bausteine, die rat bereitstellt, nicht jede app braucht) landen an `RAT.app.<name>`: `database`, `files`, `store`, `hotkeys`. was die app selbst baut, ist ihr eigener code, kein mod
 
 ## syntax

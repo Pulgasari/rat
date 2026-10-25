@@ -7,6 +7,18 @@ export default {
   ...config,
   name : 'noisy',
 
+  // the elements of @aufbau the app uses, defined before its code runs (no autoloader: a build takes these and no others)
+  import : [
+    '@aufbau/elements/webcomponents/input/tags.js',
+    '@aufbau/elements/webcomponents/btn-icon.js',
+    '@aufbau/elements/webcomponents/btn-push.js',
+    '@aufbau/elements/webcomponents/data-index.js',
+    '@aufbau/elements/webcomponents/data-item.js',
+    '@aufbau/elements/webcomponents/input-option.js',
+    '@aufbau/elements/webcomponents/pop-toast.js',
+    '@aufbau/elements/webcomponents/svg-icon.js',
+  ],
+
   autoImport : [
     {'./components/': ['Cover', 'Folders', 'Menu', 'Panel', 'Player']}, 
     '../.shared/components/'

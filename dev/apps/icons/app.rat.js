@@ -6,9 +6,8 @@
 // data comes from api.iconify.design (iconify.js), favourites from the
 // database of config.rat.js (RAT.app.database.favs, @rat/bunker).
 
-import { autoloader } from '@aufbau/elements';
 import gestures       from '@aufbau/gestures';
-import { effect }     from '@rat/runtime';
+import { effect } from '@rat/runtime';
 
 import createElement from '@domina/verbs/createElement.js';
 
@@ -25,8 +24,6 @@ import * as api from './iconify.js';
 
 // the <iconify-icon> element, not awaited: the app runs without it, the grid fills in once it is there
 import('https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js').catch(() => {});
-
-autoloader();
 
 // :::::: STATE
 
@@ -195,8 +192,6 @@ const SizeControl = () => html`
 `;
 
 // :::::: VIEWS
-
-
 
 const HomeView = () => html`
   <div.home>

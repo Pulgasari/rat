@@ -16,9 +16,10 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
                              relative default import (...config) is followed
   autoImport of it           a component a file uses without an import gets one, found the way the
                              loader finds it in the page
-  index.html (vite)          the script of run.js becomes the entry of the build: it imports @rat/app
-                             and config.rat.js and hands the config and the src of <rat-app> over
-                             (app.run): the mods are there before the app's code runs
+  import of it              the modules the app runs first (its elements …): imported by the entry
+  index.html (vite)          the script of run.js becomes the entry of the build: it imports @rat/app,
+                             config.rat.js and its import, and hands the config and the src of <rat-app>
+                             over (app.run): the mods are there before the app's code runs
 
 options: importmap (a path, an { imports } object, or false), the rest goes to the compiler.
 */
@@ -104,11 +105,15 @@ async function replaceAsync (text, pattern, replace) {
 
 // the entry of a page: the config and how to load the component, handed over to <rat-app>. the
 // component is imported after the config: its modules may read the mods (RAT.app.database) at once
-const entryOf = (src, config) => [
+const entryOf = (src, config, modules = []) => [
   `import '@rat/app';`,
+  ...modules.map(specifier => `import ${JSON.stringify(specifier)};`),
   config ? `import config from ${JSON.stringify(config)};` : 'const config = {};',
   `document.querySelector('rat-app').run(() => import(${JSON.stringify(src)}), config);`,
 ].join('\n');
+
+// config.import as the entry imports it: a relative one against the config
+const modulesOf = (list = [], config) => [list].flat().map(specifier => /^\.{1,2}\//.test(specifier) ? resolve(dirname(config), specifier) : specifier);
 
 // { imports } -> [specifier, file path or url], the paths relative to the map's file
 async function readMap (importmap) {
@@ -150,8 +155,8 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
     loadInclude: id => id.startsWith(ENTRY),
 
     load (id) {
-      const { config, src } = pages.get(id.slice(ENTRY.length)) ?? {};
-      return src ? entryOf(src, config) : null;
+      const { config, modules, src } = pages.get(id.slice(ENTRY.length)) ?? {};
+      return src ? entryOf(src, config, modules) : null;
     },
 
     transformInclude: id => RAT.test(fileOf(id)),
@@ -194,7 +199,7 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
           const map   = html.match(/<script\b[^>]*\btype=(['"])importmap\1[^>]*>([\s\S]*?)<\/script>/)?.[2];
           if (map) own = await readMap({ ...JSON.parse(map), base: dir });
           const found = await readFile(config).then(() => config, () => null);
-          pages.set(id, { config: found, src });
+          pages.set(id, { config: found, modules: found ? modulesOf(await keyOfConfig(found, 'import'), found) : [], src });
           if (found) folders = foldersOf(await keyOfConfig(found, 'autoImport'), found);
           return html.replace(SRC, '$1').replace(RUN, `<script type="module" src="./__rat-entry.js"></script>`);
         },

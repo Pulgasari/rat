@@ -86,6 +86,10 @@ const gestaltProp = name => ({
 
 const isWild = view => view.route.includes('*'); // a view without route is not routed, one with * comes last
 
+// config.import: modules run before the app's code (its elements, a web component from a cdn), relative to the config
+const RELATIVE = /^\.{1,2}\//;
+const imports  = (list = [], base) => Promise.all([list].flat().map(specifier => RELATIVE.test(specifier) ? new URL(specifier, base).href : specifier).map(url => import(/* @vite-ignore */ url)));
+
 // :::::: REFS
 
 let current = null;
@@ -265,7 +269,7 @@ export class RatApp extends DominaElement {
   // a config handed over (run) is taken as it is: autoImport is the build's then
   async configure (given) {
     if (this.#config) return this.#config;
-    if (given) return this.#config = await this.#apply(given);
+    if (given) return this.#config = await this.#apply(given);   // a build: its entry imported config.import already
 
     const named = this.configSrc;
     const url   = named ? new URL(named, this.baseURI).href : new URL('config.rat.js', new URL(this.src, this.baseURI)).href;
@@ -276,6 +280,7 @@ export class RatApp extends DominaElement {
     const module = await load(url);
     const config = module.default ?? { ...module };
     if (config.autoImport) autoImport(config.autoImport, url);
+    await imports(config.import, url);
     return this.#config = await this.#apply(config);
   }
 

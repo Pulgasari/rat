@@ -1,12 +1,12 @@
 // apps/.shared/toast.js
 //
-// toasts through <pop-toast> of @aufbau/elements, loaded on the first one
+// toasts through <pop-toast> of @aufbau/elements
 //
 //   toast('saved');  toast.error('could not save');  toast.success('copied');
 
-import { load } from '@aufbau/elements';
+import PopToast from '@aufbau/elements/webcomponents/pop-toast.js';
 
-const notify = type => (input, options) => load('pop-toast').then(module => module?.default.notify(input, { ...options, type }));
+const notify = type => (input, options) => PopToast.notify(input, { ...options, type });
 
 export const toast = Object.assign(notify('info'), {
   error   : notify('error'),

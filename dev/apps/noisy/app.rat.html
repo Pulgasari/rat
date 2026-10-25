@@ -3,8 +3,6 @@
   // the library is library.js, the panels browse.js, playing player.js.
   // wide: menu | four panels side by side | player. narrow: menu over the panels as tabs to swipe through, player below
 
-  import { autoloader } from '@aufbau/elements';
-
   import toast from './../.shared/toast.js';
 
   import { PANELS, clearSelection, shownTracks } from './browse.js';
@@ -13,8 +11,6 @@
 
   const TITLES = { artists: 'Artists', genres: 'Genres', releases: 'Releases', tracks: 'Tracks' };
   const EMPTY  = { artists: 'No artists yet', genres: 'Add a folder in the settings', releases: 'Pick an artist', tracks: 'Pick a release' };
-
-  autoloader();
 
   RAT.app.hold(load().catch(error => toast.error(error)));
 
