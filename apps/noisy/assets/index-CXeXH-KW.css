@@ -383,6 +383,7 @@ or move to: gestalt/packages/css/surfaces.css */
 
 /* panela-anderson :: details */
 
+/*
 .noisy { --r: var(--noisy-radius); }
 .noisy > :first-child { border-radius: 0 var(--r) var(--r) 0; }
 .noisy > :last-child  { border-radius: var(--r) 0 0 var(--r); }
@@ -391,6 +392,8 @@ or move to: gestalt/packages/css/surfaces.css */
    .noisy > :first-child { border-radius: 0 0 var(--r) var(--r); }
    .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
 }
+*/
+
 
 .noisy { --r: var(--noisy-radius); }
 
@@ -405,3 +408,84 @@ or move to: gestalt/packages/css/surfaces.css */
 }
 
 
+
+/*
+$R = var(--noisy-radius);
+
+// orientation: landscape | default
+.noisy > :first-child { border-radius: 0 $R $R 0; }
+.noisy > :last-child  { border-radius: $R 0 0 $R; }
+
+// orientation: portrait
+@media (orientation: portrait) {
+   .noisy > :first-child { border-radius: 0 0 $R $R; }
+   .noisy > :last-child  { border-radius: $R $R 0 0; }
+}
+
+
+
+
+
+_ = var(--noisy-radius);
+
+// orientation: landscape | default
+.noisy > :first-child { radius: 0 _ _ 0 }
+.noisy > :last-child  { radius: _ 0 0 _ }
+
+// orientation: portrait
+@media (orientation: portrait) {
+   .noisy > :first-child { radius: 0 0 _ _ }
+   .noisy > :last-child  { radius: _ _ 0 0 }
+}
+
+
+
+
+_ = var(--noisy-radius);
+
+// orientation: landscape | default
+.noisy > :first-child { radius: 0 _ _ 0 }
+.noisy > :last-child  { radius: _ 0 0 _ }
+
+// orientation: portrait
+@media (orientation: portrait) {
+   @prop radius {
+      > [+1] :: 0 0 _ _
+      > [-1] :: _ _ 0 0
+   }
+}
+
+
+
+
+
+@pred orient = () => media.orientation === 'portrait' ? portrait : landscape
+
+@snippet {
+   _ = var(--noisy-radius);
+
+   @case 'landscape' {
+      > [+1] { border-radius: 0 _ _ 0 }
+      > [-1] { border-radius: _ 0 0 _ }
+   }
+   
+   @case 'portrait' {
+      > [+1] { border-radius: 0 0 _ _ }
+      > [-1] { border-radius: _ _ 0 0 }
+   }
+}
+
+
+
+
+@pred orient = () => media.orientation === 'portrait' ? portrait : landscape
+
+@snippet {
+   _ = var(--noisy-radius);
+
+   @prop 'border-radius' = @switch (pred) {
+      @case 'landscape' => > [+1] = 0 _ _ 0 ;; > [-1] = _ 0 0 _ ;;
+      @case 'portrait'  => > [+1] = 0 0 _ _ ;; > [-1] = _ _ 0 0 ;;
+   }
+}
+*/
