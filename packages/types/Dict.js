@@ -13,7 +13,14 @@ schema:
   commands.has('Toggle Play');                     // true
 
 a key the key schema refuses is not there (get: undefined, has: false), set
-throws. $Dict, its reactive variant, is below: reads subscribe, writes notify,
+throws. an entry is a property too, read through read() (a subclass may give
+another view of it). the members of the Dict win: an entry named get, size,
+delete … is reached through get() and set() only.
+
+  commands.togglePlay;                     // commands.get('togglePlay')
+  commands.openSettings = { exec: … };     // commands.set('openSettings', …)
+  delete commands.togglePlay;
+ $Dict, its reactive variant, is below: reads subscribe, writes notify,
 like $Map. called, it is the schema as well, whose create() makes a $Dict:
 
   const commands = $Dict(Str.to(KebabCase), { exec: Fn }).create({ save: { exec: save } });
@@ -54,6 +61,34 @@ function dictOf (key, value) {
   });
 }
 
+// ::: entries as properties
+
+// a dict -> its methods, called on it: a Map method needs the Map, not the proxy. what gives the dict back gives the proxy
+const bound = new WeakMap;
+
+function boundOf (target, key, method, proxy) {
+  if (!bound.has(target)) bound.set(target, new Map);
+  const methods = bound.get(target);
+  if (!methods.has(key)) methods.set(key, (...args) => { const result = method.apply(target, args); return result === target ? proxy : result; });
+  return methods.get(key);
+}
+
+const isMember = (target, key) => typeof key === 'symbol' || key in target;
+
+const member = key => new TypeError(`[rat] ${String(key)} is a member of the Dict: an entry of that name goes through set() and delete()`);
+
+const ENTRIES = {
+  deleteProperty (target, key)        { if (isMember(target, key)) throw member(key); return target.delete(key); },
+  has            (target, key)        { return isMember(target, key) || target.has(key); },
+  set            (target, key, value) { if (isMember(target, key)) throw member(key); target.set(key, value); return true; },
+
+  get (target, key, proxy) {
+    if (!isMember(target, key)) return target.read(target.get(key));
+    const value = Reflect.get(target, key, target);
+    return typeof value === 'function' && key !== 'constructor' ? boundOf(target, key, value, proxy) : value;
+  },
+};
+
 // ::: the data type
 
 class DictType extends Map {
@@ -65,7 +100,11 @@ class DictType extends Map {
     if (!(schema instanceof Schema) || schema.kind !== 'dict') throw new TypeError('[rat] a Dict needs a Dict schema: new Dict(Dict(Key, Value))');
     Object.defineProperty(this, 'schema', { value: schema });
     for (const [key, value] of copy ? source : entries instanceof Map ? entries : Object.entries(entries)) this.set(key, value);
+    return new Proxy(this, ENTRIES);
   }
+
+  // what an entry read as a property gives: the value, another view of it in a subclass
+  read (value) { return value; }
 
   // the key as the key schema makes it, or undefined when it refuses it
   keyOf (key) {
