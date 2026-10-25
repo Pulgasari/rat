@@ -1,8 +1,10 @@
 # ideas
 
 [htx](#htx) -
+[rat](#rat) -
 [types](#types) -
-[tooling](#tooling)
+[tooling](#tooling) -
+[misc](#misc)
 
 ---
 
