@@ -38,16 +38,14 @@ inspired by: imba
 
 ## binding modifiers
 
-**problem.** an `<input>` always gives a string. `bind:value={$size}` in the
-syntax-tour example therefore needs `Number($size)` wherever the value is used.
-
-**in rat.**
-
 ```html
 <input type="range" bind:value.number={$size} />
 <input bind:value.trim={$name} />
 <input bind:value.lazy={$query} />
 ```
+
+**problem.** an `<input>` always gives a string. `bind:value={$size}` in the
+syntax-tour example therefore needs `Number($size)` wherever the value is used.
 
 **cost.** small, in the runtime's `bind:`.
 
