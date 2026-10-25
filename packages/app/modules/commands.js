@@ -1,3 +1,4 @@
+import { raise }                         from '@rat/runtime';
 import { $Dict, Dict, Fn, KebabCase, Str } from '@rat/types';
 
 const COMMAND  = 'rat:command';
@@ -25,11 +26,6 @@ function command (target, text, event = null, args = []) {
 }
 
 const commandListener = text => event => command(event.currentTarget, text, event);
-
-function raise (node, error) {
-  const event = new CustomEvent('rat:error', { bubbles: true, cancelable: true, composed: true, detail: { boundary: null, error } });
-  if (!node?.isConnected || node.dispatchEvent(event)) (globalThis.reportError ?? console.error)(error);
-}
 
 class Commands extends $Dict {
   constructor (entries = {}) { super(Schema, entries); }
