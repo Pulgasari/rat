@@ -29,11 +29,10 @@ inspired by: imba
 <li .done={todo.done} .active={todo === $current}>…</li>
 ```
 
-**idea: the `.class` shorthand as an attribute.** `<div .active=$isActive>` toggles a
-class with a single character instead of `class:active={…}`.
+**idea: the `.class` shorthand as an attribute.** `<div .active=$isActive>` toggles a class with a single character instead of `class:active={…}`.
 
-**cost.** small, in the parser: an attribute starting with `.` is `class:`. it fits the
-selector syntax rat already has (`<li.item>`).
+**cost.** small, in the parser: an attribute starting with `.` is `class:`. it fits the selector syntax rat already has (`<li.item>`).
+
 inspired by: imba
 
 ## binding modifiers
@@ -44,8 +43,7 @@ inspired by: imba
 <input bind:value.lazy={$query} />
 ```
 
-**problem.** an `<input>` always gives a string. `bind:value={$size}` in the
-syntax-tour example therefore needs `Number($size)` wherever the value is used.
+**problem.** an `<input>` always gives a string. `bind:value={$size}` in the syntax-tour example therefore needs `Number($size)` wherever the value is used.
 
 **cost.** small, in the runtime's `bind:`.
 
@@ -57,24 +55,7 @@ inspired by: vue
 
 # rat :: local names in markup
 
-status: **idea**.
-
 ## idea: `@let` (from svelte)
-
-**origin.** svelte's `{@const}` declares a name inside a block:
-
-```svelte
-{#each boxes as box}
-  {@const area = box.width * box.height}
-  <p>{box.width} × {box.height} = {area}</p>
-{/each}
-```
-
-**problem.** a value computed per item (inside `@for`) has no place to live: the
-`<script>` runs once per component, not once per item. so the expression gets repeated
-in several holes.
-
-**in rat.**
 
 ```html
 @for (box of $boxes)
@@ -83,7 +64,11 @@ in several holes.
   <meter value={area} max="100"></meter>
 ```
 
+**problem.** a value computed per item (inside `@for`) has no place to live: the `<script>` runs once per component, not once per item. so the expression gets repeated in several holes.
+
 **cost.** small. the compiler turns it into a `const` at the start of the body function.
+
+inspired by: svelte
 
 ## keywords
 ```md
