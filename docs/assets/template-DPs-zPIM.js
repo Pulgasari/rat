@@ -1,0 +1,1 @@
+var i=Object.defineProperty;var e=(r,t)=>i(r,"name",{value:t,configurable:!0});import"./index-HgPxnqYB.js";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/str";const p=e(r=>Object.fromEntries(Object.entries(r??{}).filter(([,t])=>t!==!1&&t!=null&&t!=="")),"attrs");export{p as a};
