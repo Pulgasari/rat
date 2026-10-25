@@ -339,7 +339,8 @@ narrow: menu, tabs, one panel to swipe, player
 
 /* :::::: NARROW: menu, tabs, one panel at a time to swipe, player */
 
-@media (width < 48rem) {
+/* @media (width < 48rem) { */
+@media (orientation: portrait) {
   .noisy {
     grid-template-areas   : "menu" "tabs" "panels" "player";
     grid-template-columns : minmax(0, 1fr);
