@@ -1,5 +1,12 @@
-/* noisy :: app.css
-   wide: menu | genres artists releases tracks | player. narrow: menu, tabs, one panel to swipe, player */
+/* noisy :: app.css */
+
+/*
+wide: menu | genres artists releases tracks | player.
+narrow: menu, tabs, one panel to swipe, player
+*/
+
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+/* @import url('https://esm.sh/jsr/@gestalt/css/core.css'); */
 
 .noisy {
   --noisy-gap    : 1rem;
