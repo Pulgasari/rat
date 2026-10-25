@@ -2,8 +2,7 @@
 
 // :::::::::::: IMPORT
 
-import { autoloader } from '@aufbau/elements';
-import { effect }     from '@rat/runtime';
+import { effect } from '@rat/runtime';
 
 // ::: modules
 import { hint }          from '../.shared/install.js';
@@ -14,8 +13,6 @@ import { toast }         from '../.shared/toast.js';
 import Header from './Header.rat.html';
 
 // :::::::::::: CONFIG | INIT
-
-autoloader(); // @aufbau/elements
 
 const app    = props.app;
 const config = app.config;

@@ -2,14 +2,11 @@
   // vectorizer: an image to an svg, on the device (trace.js). pick, drop or paste an image,
   // see it next to its svg, adjust, download
 
-  import { autoloader } from '@aufbau/elements';
-  import { effect }     from '@rat/runtime';
+  import { effect } from '@rat/runtime';
 
   import toast from './../.shared/toast.js';
 
   import { DEFAULTS, bitmapOf, trace } from './trace.js';
-
-  autoloader();
 
   let $bitmap = null;
   let $busy   = false;

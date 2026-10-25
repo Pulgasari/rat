@@ -22,6 +22,9 @@ export default {
   // autoImport : ['./components/', '../.shared/components/'],   // in this order
   // autoImport : { './components/': ['Dock', 'Footer'] },       // only these names there
 
+  // modules run before the app's code: its elements, a web component from a cdn. relative ones against this file
+  // import : ['@aufbau/elements/webcomponents/btn-icon.js', 'https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js'],
+
   // the parts not every app needs, each on RAT.app.<name>, in this order. true takes the defaults, false leaves it out
   // database   : { schema: { notes: { id: Id }, folders: FOLDERS }, driver: 'indexeddb', name: 'docs' },   // @rat/bunker, a table per key
   // files      : { driver: 'opfs' },                                                                       // the origin private file system, or { root: handle }
