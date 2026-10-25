@@ -11,13 +11,11 @@ export default {
   // the components of this app first, then the shared ones
   autoImport : ['./components/', '../.shared/components/'],
 
-  mods: {
-    database: {
-      schema: {
-        books    : null,      // key: '<source id>/<path>'
-        folders  : FOLDERS,   // the granted folders (@rat/app/modules/folders.js)
-        progress : null,      // key: the book key
-      },
+  database: {
+    schema: {
+      books    : null,      // key: '<source id>/<path>'
+      folders  : FOLDERS,   // the granted folders (@rat/app/modules/folders.js)
+      progress : null,      // key: the book key
     },
   },
   imports: { // schlicht hier importmap erweiterbar -> run.js liest das mit aus?

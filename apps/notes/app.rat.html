@@ -6,7 +6,6 @@ import { autoloader } from '@aufbau/elements';
 import { effect }     from '@rat/runtime';
 
 // ::: modules
-import { createFolders } from '@rat/app/modules/folders.js';
 import { hint }          from '../.shared/install.js';
 import { read, write }   from '../.shared/storage.js';
 import { toast }         from '../.shared/toast.js';
@@ -20,7 +19,7 @@ autoloader(); // @aufbau/elements
 
 const app    = props.app;
 const config = app.config;
-const lib    = createFolders({ accept: config.folders.accept, id: 'notes', table: app.database.folders });
+const lib    = app.folders;
 
 // the splash stays until the folders are known
 app.hold(lib.load());

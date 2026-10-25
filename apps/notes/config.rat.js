@@ -15,10 +15,9 @@ import { FOLDERS } from '@rat/app/modules/folders.js';
 export default {
   ...config,
   name: 'Notes',
-  // the folders hold markdown, their handles are kept in the database (@rat/app/modules/folders.js)
-  folders: { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt' },
-  mods: {
-    database : { schema: { folders: FOLDERS } },
-    offline  : true,
-  },
+
+  // the folders hold markdown, their handles are kept in the database (@rat/app/modules/folders.js): the database first
+  database : { schema: { folders: FOLDERS } },
+  folders  : { accept: 'md, markdown, mdown, mkd, mdwn, mdtxt', id: 'notes' },
+  offline  : true,
 };

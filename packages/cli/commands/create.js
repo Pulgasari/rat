@@ -66,10 +66,10 @@ const appRat = name => `<script>
 
 function configRat (name, mods) {
   const imports = mods.includes('folders') ? "import { FOLDERS } from '@rat/app/modules/folders.js';\n\n" : '';
-  const width   = Math.max(...mods.map(mod => mod.length));
-  const entries = mods.map(mod => `    ${mod.padEnd(width)} : ${mod === 'database' && mods.includes('folders') ? '{ schema: { folders: FOLDERS } }' : MOD[mod]},`);
+  const width   = Math.max(4, ...mods.map(mod => mod.length));
+  const entries = mods.map(mod => `  ${mod.padEnd(width)} : ${mod === 'database' && mods.includes('folders') ? '{ schema: { folders: FOLDERS } }' : MOD[mod]},`);
   return `${imports}export default {
-  name : '${name}',${mods.length ? `\n\n  mods : {\n${entries.join('\n')}\n  },` : ''}
+  ${'name'.padEnd(width)} : '${name}',${mods.length ? `\n\n${entries.join('\n')}` : ''}
 };
 `;
 }
