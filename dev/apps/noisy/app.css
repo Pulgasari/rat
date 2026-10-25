@@ -203,3 +203,16 @@
   .player-controls           { flex-direction: row; }
   .player-time               { display: none; }
 }
+
+/* panela-anderson :: details */
+
+.noisy { --r: var(--noisy-radius); }
+.noisy > :first-child { border-radius: 0 var(--r) var(--r) 0; }
+.noisy > :last-child  { border-radius: var(--r) 0 0 var(--r); }
+
+@media (width < 48rem) {
+   .noisy > :first-child { border-radius: 0 0 var(--r) var(--r); }
+   .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
+}
+
+
