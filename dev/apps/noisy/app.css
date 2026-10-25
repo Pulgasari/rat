@@ -168,8 +168,7 @@ narrow: menu, tabs, one panel to swipe, player
     grid-template-rows    : auto auto minmax(0, 1fr) auto;
   }
 
-  .menu { flex-direction: row; padding: 0.25rem 0.75rem; }
-
+  .menu       { flex-direction: row; }
   .menu-brand { margin: 0 auto 0 0; rotate: none; writing-mode: horizontal-tb; }
 
   .tabs {
