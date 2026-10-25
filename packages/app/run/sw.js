@@ -9,11 +9,12 @@ folder, so an app has a sw.js of its own next to its page, one line:
 
 and asks for it in config.rat.js: mods: { offline: true }.
 
-  files of the page's origin   network first, the cache when there is none:
-                               an edit shows on the next load, offline the last one does
-  files of other origins       the cache first, refreshed behind it: their urls
-                               carry versions (esm.sh, cdns)
-  a request for a fresh copy   (cache: 'reload' | 'no-cache', ?fresh) the network first
+  files with a version in their url   the cache first, refreshed behind it: the url changes
+  (esm.sh/x@1.2, ?v=3)                with the content
+  every other file                    network first, the cache when there is none: an edit
+                                      shows on the next load (code.pulgasari.dev too), offline
+                                      the last one does
+  a request for a fresh copy          (cache: 'reload' | 'no-cache', ?fresh) the network first
 */
 
 const CACHE = 'rat:offline';
@@ -24,9 +25,9 @@ addEventListener('activate', event => event.waitUntil(clients.claim()));
 addEventListener('fetch', event => {
   const { request } = event;
   if (request.method !== 'GET' || !/^https?:/.test(request.url)) return;
-  const own   = new URL(request.url).origin === location.origin;
-  const fresh = request.cache === 'reload' || request.cache === 'no-cache';
-  event.respondWith(own || fresh ? networkFirst(request) : cacheFirst(request, event));
+  const versioned = /@\d|[?&]v=/.test(request.url);
+  const fresh     = request.cache === 'reload' || request.cache === 'no-cache';
+  event.respondWith(versioned && !fresh ? cacheFirst(request, event) : networkFirst(request));
 });
 
 const keep = (cache, request, response) => {
