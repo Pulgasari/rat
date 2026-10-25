@@ -12,7 +12,8 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 
 ## vorbereitung (frühere festlegungen)
 - persistenz über `@bunker`: `$Record`/`$List` in indexeddb/opfs halten, `persist` in `@rat/types`
-- `@rat/core` gelöscht, commands und hotkeys sind `@rat/commands` und `@rat/hotkeys`
+- `@rat/core` gelöscht, commands und hotkeys waren `@rat/commands` und `@rat/hotkeys`
+- `@rat/commands` und `@rat/hotkeys` gelöscht: die registries sind `Commands` und `Hotkeys` (`$Dict`s) in `@rat/app/modules/`, feuern aus markup (`command`, `commandListener`, `parseCommand`) und die tastennotation (`keys.js`) sind in `@rat/runtime`
 - commands mit argumenten (d-16): `onclick='go[settings]'`, `move[up, 3]`
 
 ## `@domina/element`: media, a11y

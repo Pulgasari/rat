@@ -8,6 +8,8 @@ export * from './common/rat.js';
 export * from './common/range.js';
 
 export * from './browser/cases.js';
+export * from './browser/commands.js';
 export * from './browser/dom.js';
 export * from './browser/errors.js';
 export * from './browser/events.js';
+export * from './browser/keys.js';

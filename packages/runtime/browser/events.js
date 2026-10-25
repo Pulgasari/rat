@@ -4,7 +4,7 @@
 the listeners compiled event attributes turn into. two kinds:
 
   listener(handler, options)   the handler, behind the modifiers written on the attribute
-  commandListener(name)        fires 'rat:command' with { event, name } upwards (@rat/commands)
+  commandListener(name)        fires 'rat:command' with { args, event, name } upwards (commands.js)
 
 modifiers, as written and as handed over by the compiler:
 
@@ -14,13 +14,12 @@ modifiers, as written and as handed over by the compiler:
   on:click:once={init}                times: 1               once, then never again
   on:click:3={tap}                    times: 3               three times at most
 
-the key notation is @rat/hotkeys', the same as for app-wide hotkeys.
+the key notation is keys.js', the same as for app-wide hotkeys (Hotkeys of @rat/app).
 */
 
-import { commandListener }             from '@rat/commands';
-import { matchesCombos, parseCombos }  from '@rat/hotkeys';
-
-import { raise } from './errors.js';
+import { commandListener }            from './commands.js';
+import { raise }                      from './errors.js';
+import { matchesCombos, parseCombos } from './keys.js';
 
 // a string handler names a command, resolved when the event fires: the value
 // may come from an expression (onclick={item.command}). an error of the handler,
@@ -44,4 +43,4 @@ function listener (handler, { keys = null, prevent = false, times = 0 } = {}) {
 
 // :::::: EXPORT
 
-export { commandListener, listener };
+export { listener };

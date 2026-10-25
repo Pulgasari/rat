@@ -322,7 +322,7 @@ const dock = [
 
 export default props => {
   props.app.hold(loadCollections());
-  props.app.commands.add('up', up);
+  props.app.commands.set('up', up);
   hint('Icons');
 
   // the query survives a reload, its results do not

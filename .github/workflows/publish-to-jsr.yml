@@ -13,10 +13,8 @@ on:
         options:
           - app
           - bunker
-          - commands
           - compiler
           - dev
-          - hotkeys
           - import
           - runtime
           - signals

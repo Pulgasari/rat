@@ -63,7 +63,7 @@ twice is one navigation.
 ## commands
 
 ```js
-router.bind(commands);   // go and back in a @rat/commands registry
+router.bind(commands);   // go and back in a Commands registry (@rat/app/modules/commands.js)
 ```
 
 ```html

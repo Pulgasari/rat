@@ -77,7 +77,7 @@ were refetched. files from other origins (esm.sh) are left alone: their urls car
 `<rat-app>` is the root of an app, `<rat-view>` a view of it, `<rat-area>` a region (sidebar,
 drawer, bottom sheet), `<rat-part>` a piece of any page (an island,
 [parts](../../.md/ideas/parts.md)). app, view and area are built on `@domina/element`,
-`router/` and `@rat/commands`, the successors of `<app-root>` and its kin from
+`modules/router.js` and `modules/commands.js`, the successors of `<app-root>` and its kin from
 `@aufbau/elements`.
 
 | `<rat-part>` | |
@@ -113,9 +113,9 @@ what a part holds until the component mounts stays: a loading screen without cod
 | `transition` | of the views: `fade` (default), `slide`, `none`, or the name of a keyframes |
 | `loading` | the splash of `run.js` stays until the active views are mounted and `app.hold(promise)` is done |
 | `density`, `geometry`, `layout`, `look`, `mode`, `palette`, `skin` | handed to `@gestalt/core` |
-| `app.router`, `app.commands` | `router/`, `@rat/commands` listening on the app (`go[settings]`, `back`) |
+| `app.router`, `app.commands` | `modules/router.js`, `Commands` (`modules/commands.js`, a `$Dict`) listening on the app (`go[settings]`, `back`) |
 | `app.view`, `app.views`, `app.area(name)`, `app.areas` | the deepest active view, every view, the areas |
-| `onclick='rat:toggle[menu]'`, `RAT.toggle('menu', force?)` | an area opened or closed by its name: the event (`@rat/commands`) or the function (`RAT.toggle`, `RAT.app` is the app). both, to find out which serves better |
+| `onclick='rat:toggle[menu]'`, `RAT.toggle('menu', force?)` | an area opened or closed by its name: the event (fired by `@rat/runtime`) or the function (`RAT.toggle`, `RAT.app` is the app). both, to find out which serves better |
 | `rat:ready`, `rat:navigate` | events, `rat:navigate` with `{ from, to, path, params }` |
 
 one per page, a second one warns and stays out of it.
