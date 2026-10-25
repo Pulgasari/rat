@@ -1,4 +1,4 @@
-@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
 
 
 /* ── TO STYLE: what every app shares ─────────────────────────────────────────
@@ -175,8 +175,16 @@ or move to: gestalt/packages/css/surfaces.css */
     data-item      { border-bottom : 1px solid var(--line); }
   }
 }
-/* noisy :: app.css
-   wide: menu | genres artists releases tracks | player. narrow: menu, tabs, one panel to swipe, player */
+
+
+
+/* noisy :: app.css */
+
+/*
+wide: menu | genres artists releases tracks | player.
+narrow: menu, tabs, one panel to swipe, player
+*/
+/* @import url('https://esm.sh/jsr/@gestalt/css/core.css'); */
 
 .noisy {
   --noisy-gap    : 1rem;
@@ -248,7 +256,7 @@ or move to: gestalt/packages/css/surfaces.css */
 .panel-list {
   flex     : 1;
   overflow : auto;
-  padding  : 0 0.5rem 0.5rem;
+  padding  : var(--noisy-gap);
 }
 
 .panel-empty {
@@ -267,9 +275,12 @@ or move to: gestalt/packages/css/surfaces.css */
   min-block-size: 2.5rem;
   padding       : 0 0.6rem;
   user-select   : none;
-
+  /*
   &:hover   { background: color-mix(in oklab, currentColor 8%, transparent); }
   &.picked  { background: color-mix(in oklab, var(--color-ink, currentColor) 35%, transparent); }
+  */
+  &:hover  { --bg: --alpha(cc, 0.1); }
+  &.picked { --bg: --alpha(ink, 0.35); }
 }
 
 .row-label {
@@ -290,7 +301,7 @@ or move to: gestalt/packages/css/surfaces.css */
   flex                : none;
   inline-size         : 2rem;
   place-items         : center;
-  background-color    : color-mix(in oklab, currentColor 10%, transparent);
+  background-color    : --alpha(cc, 0.1);
 }
 
 /* :::::: PLAYER */
@@ -299,10 +310,9 @@ or move to: gestalt/packages/css/surfaces.css */
   align-items    : center;
   display        : flex;
   flex-direction : column;
-  gap            : 0.75rem;
+  gap            : var(--noisy-gap);
   grid-area      : player;
   overflow       : hidden;
-  padding        : 0.75rem 0.25rem;
 
   .cover { inline-size: calc(var(--noisy-rail) * 1.2); }
 }
@@ -321,7 +331,7 @@ or move to: gestalt/packages/css/surfaces.css */
 
 .player.idle .player-title { flex: 1; writing-mode: vertical-rl; }
 
-.player-controls { display: flex; flex-direction: column; gap: 0.25rem; }
+.player-controls { display: flex; flex-direction: column; gap: 0.5rem; }
 
 .player-seek  { display: none; }
 .player-time  { font-size: 0.7rem; opacity: 0.6; }
@@ -336,8 +346,7 @@ or move to: gestalt/packages/css/surfaces.css */
     grid-template-rows    : auto auto minmax(0, 1fr) auto;
   }
 
-  .menu { flex-direction: row; padding: 0.25rem 0.75rem; }
-
+  .menu       { flex-direction: row; }
   .menu-brand { margin: 0 auto 0 0; rotate: none; writing-mode: horizontal-tb; }
 
   .tabs {
@@ -353,7 +362,7 @@ or move to: gestalt/packages/css/surfaces.css */
       flex          : 1;
       font          : inherit;
       opacity       : 0.6;
-      padding       : 0.4rem;
+      padding       : 0.5rem;
 
       &.active { background: color-mix(in oklab, currentColor 12%, transparent); opacity: 1; }
     }
@@ -370,7 +379,6 @@ or move to: gestalt/packages/css/surfaces.css */
 
   .player {
     flex-direction : row;
-    padding        : 0.5rem 0.75rem;
 
     .cover { inline-size: 2.75rem; }
   }
@@ -395,16 +403,19 @@ or move to: gestalt/packages/css/surfaces.css */
 */
 
 
-.noisy { --s: var(--noisy-gap); --r: var(--noisy-radius); }
+.noisy {
+  --s: var(--noisy-gap);
+  --r: var(--noisy-radius); 
+}
 
 /* orientation: landscape | default */
-.noisy                { padding: var(--g) 0; }
+.noisy                { padding: var(--s) 0; }
 .noisy > :first-child { border-radius: 0 var(--r) var(--r) 0; }
 .noisy > :last-child  { border-radius: var(--r) 0 0 var(--r); }
 
 /* orientation: portrait */
 @media (orientation: portrait) {
-   .noisy                { padding: 0 var(--g); }
+   .noisy                { padding: 0 var(--s); }
    .noisy > :first-child { border-radius: 0 0 var(--r) var(--r); }
    .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
 }
