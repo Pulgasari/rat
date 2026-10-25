@@ -6,7 +6,7 @@ app's database, their content as trees through @rat/bunker's Files. the ui
 reads the signals.
 
   // config.rat.js, the database first: its table holds the folders
-  mods: { database: { schema: { folders: FOLDERS } }, folders: { accept: 'md, markdown' } }   // RAT.app.folders
+  database: { schema: { folders: FOLDERS } }, folders: { accept: 'md, markdown' }   // RAT.app.folders
 
   const folders = createFolders({ accept: 'md, markdown', table: app.database.folders });   // without the mod
 

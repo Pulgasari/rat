@@ -4,7 +4,7 @@
 a thumbnail cache on the device: hand it an image url and it returns a small
 webp copy from the origin private file system (Files on opfs), made the first
 time by fetching the original and downscaling it on a canvas. after that the
-original host is not touched again. in an app: mods: { thumbnails: { … } }, RAT.app.thumbnails
+original host is not touched again. in an app: thumbnails: { … } in config.rat.js, RAT.app.thumbnails
 
   const thumbs = createThumbs({ proxy: 'https://proxy/?url={url}' });
   const url    = await thumbs.request(imageUrl);   // an object url, or null: show the original then

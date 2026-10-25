@@ -1,0 +1,134 @@
+<script>
+
+// :::::::::::: IMPORT
+
+import { autoloader } from '@aufbau/elements';
+import { effect }     from '@rat/runtime';
+
+// ::: modules
+import { hint }          from '../.shared/install.js';
+import { read, write }   from '../.shared/storage.js';
+import { toast }         from '../.shared/toast.js';
+  
+// ::: components (the shared ones come through autoImport, ../zugriff.config.js)
+import Header from './Header.rat.html';
+
+// :::::::::::: CONFIG | INIT
+
+autoloader(); // @aufbau/elements
+
+const app    = props.app;
+const config = app.config;
+const lib    = app.folders;
+
+// the splash stays until the folders are known
+app.hold(lib.load());
+hint(config.name);
+
+// the open note, { sourceId, path } | null. kept by hand until persistence is decided
+const OPEN = 'notes:open';
+const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
+
+  // ::: signal
+  let $filter   = '';
+  let $open     = stored();
+  let $text     = null;
+  let $textSize = read('notes:textSize', 16);
+
+  // ::: effect
+  effect(() => write('notes:textSize', $textSize));
+
+  // ::: computed
+  const $note    = $open && lib.trees.value[$open.sourceId] ? lib.nodeAt($open.sourceId, $open.path) : null;
+  const $sources = lib.sources.value;
+  const $path    = $note ? $note.path : '';
+
+  const titleOf = node => node.name.replace(/\.[^.]+$/, '');
+
+  function remember (open) {
+    $open = open;
+    if (open) localStorage.setItem(OPEN, JSON.stringify(open));
+    else localStorage.removeItem(OPEN);
+  }
+
+  // a drawer closes once something in it was picked, a sidebar stays
+  const closeMenu = () => { const menu = app.area('menu'); if (menu?.isOverlay) menu.hide(); };
+
+  function openNote (sourceId, path) {
+    remember({ path, sourceId });
+    app.router.go('/note');
+    closeMenu();
+  }
+
+  function forget (sourceId) {
+    toast('Folder removed');
+    if ($open?.sourceId !== sourceId) return;
+    remember(null);
+    app.router.go('/');
+  }
+
+  async function addFolder () {
+    try { if (await lib.add()) toast.success('Folder added'); }
+    catch (error) { toast.error(error.message); }
+  }
+
+  const dock = [
+    { icon: 'folder',   label: 'folders',  onclick: () => app.toggle('menu') },
+    { icon: 'notes',    label: 'note',     to: '/note' },
+    { icon: 'settings', label: 'settings', onclick: () => app.toggle('config') },
+  ];
+
+  // the text of the open note, read fresh off disk
+  effect(() => {
+    const note = $note;
+    $text = null;
+    if (!note) return;
+    let alive = true;
+    lib.read(note).then(text => { if (alive) $text = text; }, error => { if (alive) $text = `could not read that note: ${error.message}`; });
+    return () => { alive = false; };
+  });
+</script>
+
+<rat-area name='menu' dock='start' open>
+  <div.menu>
+    <Brand name={config.name} icon='./app.svg' />
+    <input type='search' placeholder='filter notes ...' bind:value={$filter} />
+    <FolderTree lib={lib} filter={$filter} selected={$open} onopen={openNote} onremove={forget} labelOf={titleOf} fileIcon='notes' expandedKey='notes:expanded' emptyText='No markdown files here' />
+    <div.side-foot>
+      <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
+    </div.side-foot>
+  </div.menu>
+</rat-area>
+
+<rat-view route='/' name='start'>
+  <Header />
+  @if ($sources.length)
+    <Empty icon='notes' title='No note open' hint='Choose a note to start reading.' />
+  @else
+    <Empty icon='notes' title='No note open' hint='Open a folder of Markdown files to get started.'>
+      <btn-push icon='folder-add' label='Open a folder' onclick={addFolder} />
+    </Empty>
+</rat-view>
+
+<rat-view route='/note' name='note' transition='slide'>
+  <Header path={$path} />
+  @if ($text === null)
+    <Loading />
+  @else
+    <output-md id='notes-reader' format='markdown' raw={$text} style={'font-size: ' + $textSize + 'px'} />
+    <nav-toc target='#notes-reader' selector='h1, h2, h3' />
+</rat-view>
+
+<rat-area name='dock' dock='bottom' overlay='never' open><Dock items={dock} /></rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name={config.name}>
+    <section>
+      <h3>reading</h3>
+      <label>
+        <span>text size</span>
+        <input-number look='slider' min='12' max='24' step='1' value={$textSize} onchange={event => $textSize = Number(event.detail?.value ?? event.target.value)} />
+      </label>
+    </section>
+  </Settings>
+</rat-area>

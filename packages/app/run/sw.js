@@ -7,7 +7,7 @@ folder, so an app has a sw.js of its own next to its page, one line:
 
   importScripts('../../packages/app/run/sw.js');
 
-and asks for it in config.rat.js: mods: { offline: true }.
+and asks for it in config.rat.js: offline: true.
 
   files with a version in their url   the cache first, refreshed behind it: the url changes
   (esm.sh/x@1.2, ?v=3)                with the content

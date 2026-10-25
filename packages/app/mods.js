@@ -2,19 +2,18 @@
 
 /*
 the parts rat provides that not every app needs, each a module of its own here.
-config.rat.js names the ones it wants, each lands on the app (RAT.app.<name>),
-in the order written:
+config.rat.js names the ones it wants by their name, beside its other keys. each lands
+on the app (RAT.app.<name>), in the order written:
 
   export default {
-    mods : {
-      database   : { schema: { podcasts: { id: Id, title: String }, folders: FOLDERS } },
-      files      : true,                     // the origin private file system
-      folders    : { accept: 'md, epub' },   // folders the user grants, in the database's table folders
-      hotkeys    : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
-      offline    : true,                     // a service worker: offline once open, installable (sw.js)
-      store      : { driver: 'local' },      // keys and values
-      thumbnails : { proxy: '…{url}' },      // small copies of images in opfs
-    },
+    name       : 'podcasts',
+    database   : { schema: { podcasts: { id: Id, title: String }, folders: FOLDERS } },
+    files      : true,                     // the origin private file system
+    folders    : { accept: 'md, epub' },   // folders the user grants, in the database's table folders
+    hotkeys    : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
+    offline    : true,                     // a service worker: offline once open, installable (sw.js)
+    store      : { driver: 'local' },      // keys and values
+    thumbnails : { proxy: '…{url}' },      // small copies of images in opfs
   };
 
 true takes the defaults. a module is loaded only when an app names it.
@@ -30,11 +29,10 @@ const MODS = {
   thumbnails : () => import('./modules/thumbnails.js'),
 };
 
-// every mod of the config onto the app, in order. an unknown name, or one the app has already, is left out
+// every key of the config that names a mod onto the app, in order. one the app has already is left out
 async function useMods (app, config) {
-  for (const [name, value] of Object.entries(config.mods ?? {})) {
-    if (value === false || value == null) continue;
-    if (!MODS[name]) { console.warn(`[rat] mod "${name}": there is none, ${Object.keys(MODS).join(', ')} are`); continue; }
+  for (const [name, value] of Object.entries(config)) {
+    if (!Object.hasOwn(MODS, name) || value === false || value == null) continue;
     if (name in app) { console.warn(`[rat] mod "${name}": the app has a ${name} already, left out`); continue; }
 
     const { default: make } = await MODS[name]();

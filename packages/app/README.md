@@ -149,13 +149,11 @@ else the view `name="x"`.
 import { Id } from '@rat/types';
 
 export default {
-  name    : 'icons',
-  mods    : {
-    database : { schema: { favs: { name: Id } } },               // RAT.app.database (@rat/bunker)
-    files    : true,                                              // RAT.app.files, opfs
-    store    : { driver: 'local' },                               // RAT.app.store
-    hotkeys  : { 'ctrl+k|/': 'go[search]', 'escape': 'rat:toggle[context]' },
-  },
+  name     : 'icons',
+  database : { schema: { favs: { name: Id } } },               // RAT.app.database (@rat/bunker)
+  files    : true,                                              // RAT.app.files, opfs
+  store    : { driver: 'local' },                               // RAT.app.store
+  hotkeys  : { 'ctrl+k|/': 'go[search]', 'escape': 'rat:toggle[context]' },
 };
 ```
 
@@ -164,7 +162,7 @@ export default {
 | `RAT` | always there, from `@rat/runtime`: every export of `@rat/types` (`RAT.Enum` …), `RAT.app` the app, `RAT.config` its config, `RAT.toggle(name)`. as a module: `import RAT from '@rat/app'`, `import { RAT } from '@rat/runtime'`. another name: `globalThis.APP = RAT` |
 | `app.config` | the config, `{}` without one |
 | `build` | the build of the app (`@rat/dev`): vite's build options (`outDir`, `minify`, `sourcemap` …), merged over rat's defaults. read from the file, not run: values only, no imports. every option, commented out: `dev/docs/config.rat.js` |
-| `mods` | the parts rat provides that not every app needs, each a module of `@rat/app` (`database.js`, `files.js`, `folders.js`, `hotkeys.js`, `offline.js`, `store.js`, `thumbnails.js`, listed in `mods.js`), loaded only when named. each lands on the app under its name, in the order written. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
+| mods | the parts rat provides that not every app needs, each a module of `@rat/app` (`database`, `files`, `folders`, `hotkeys`, `offline`, `store`, `thumbnails`, listed in `mods.js`), named by their key in the config beside the others, loaded only when named. each lands on the app under its name, in the order written. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
 | `folders` | folders the user grants, in the database's table `folders` (`schema: { folders: FOLDERS }`, the database first). `createFolders` and `FOLDERS` from `@rat/app/modules/folders.js` |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |

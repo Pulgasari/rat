@@ -54,10 +54,10 @@ export class RatApp extends HTMLElement {
   match (path: string): { params: Record<string, string>; views: RatView[] };
   /** ready() waits for it too. */
   hold<T> (promise: Promise<T>): Promise<T>;
-  /** Loads src (or takes the component handed over) and mounts it in place of what the app holds. */
-  start (component?: Function, config?: Record<string, any>): Promise<void>;
-  /** A build hands over the component and the config itself: no src, no config.rat.js to load (@rat/dev). */
-  run (component: Function, config?: Record<string, any>): Promise<void>;
+  /** Loads src (or the module of the importer handed over) and mounts its component in place of what the app holds. */
+  start (importer?: () => Promise<object>, config?: Record<string, any>): Promise<void>;
+  /** A build hands over the config and how to import the component (@rat/dev): the mods first, then the app's modules. */
+  run (importer: () => Promise<object>, config?: Record<string, any>): Promise<void>;
   /** The last error boundary: shows an error in a popover over the app. */
   report (error: unknown): void;
   /** Loads config.rat.js once (or takes the config handed over): RAT and the mods. */

@@ -2,7 +2,7 @@
 
 persistent data in four parts, the platform apis behind one interface each.
 
-here for now, on its way to `@bunker` once it has proven itself in the apps (`rat/apps`).
+here for now, on its way to `@bunker` once it has proven itself in the apps (`rat/dev/apps`).
 
 | | what | drivers |
 |---|---|---|
@@ -140,10 +140,8 @@ behind it. one load per key at a time. the store holds `{ at, value }`.
 
 ```js
 export default {
-  mods    : {
-    database : { schema: { favs: { name: Id } } },   // RAT.app.database
-    files    : true,                                  // RAT.app.files, opfs
-    store    : { driver: 'local' },                   // RAT.app.store
-  },
+  database : { schema: { favs: { name: Id } } },   // RAT.app.database
+  files    : true,                                  // RAT.app.files, opfs
+  store    : { driver: 'local' },                   // RAT.app.store
 };
 ```

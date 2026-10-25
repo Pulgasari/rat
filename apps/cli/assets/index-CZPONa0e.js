@@ -1,0 +1,1 @@
+var o=Object.defineProperty;var n=(l,t)=>o(l,"name",{value:t,configurable:!0});const a=n((l,t=100)=>{let e=null;const u=n((...c)=>{clearTimeout(e),e=setTimeout(()=>{e=null,l(...c)},t)},"debounced");return u.cancel=()=>{clearTimeout(e),e=null},u},"debounce");export{a as d};

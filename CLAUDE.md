@@ -7,4 +7,4 @@
 project-specific rules only. everything general belongs in `pulgasari/agents`.
 
 - docs: `.md/` (`concept.md`, `compiler.md`, `decisions.md`, `syntax/`, `ideas/`, `todo.md`)
-- apps and their todo: `apps/README.md`
+- apps and their todo: `dev/apps/README.md` (the sources). `apps/` holds them built

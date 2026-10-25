@@ -23,15 +23,13 @@ export default {
   // autoImport : { './components/': ['Dock', 'Footer'] },       // only these names there
 
   // the parts not every app needs, each on RAT.app.<name>, in this order. true takes the defaults, false leaves it out
-  // mods : {
-  //   database   : { schema: { notes: { id: Id }, folders: FOLDERS }, driver: 'indexeddb', name: 'docs' },   // @rat/bunker, a table per key
-  //   files      : { driver: 'opfs' },                                                                       // the origin private file system, or { root: handle }
-  //   folders    : { accept: 'md, epub', table: 'folders' },                                                 // folders the user grants, in the database's table (database first)
-  //   hotkeys    : { 'ctrl+k|/': 'go[search]', 'escape': 'rat:toggle[menu]' },                               // a command as in markup, or a name of app.commands
-  //   offline    : { src: 'sw.js' },                                                                         // a service worker next to the app: offline once open, installable
-  //   store      : { driver: 'local', name: 'docs' },                                                        // keys and values: local, session, memory, cookie, cache, indexeddb
-  //   thumbnails : { width: 250, quality: 0.8, concurrency: 3, dir: 'thumbs', maxBytes: 64 * 1024 * 1024, proxy: '', resizer: null },   // small webp copies in opfs
-  // },
+  // database   : { schema: { notes: { id: Id }, folders: FOLDERS }, driver: 'indexeddb', name: 'docs' },   // @rat/bunker, a table per key
+  // files      : { driver: 'opfs' },                                                                       // the origin private file system, or { root: handle }
+  // folders    : { accept: 'md, epub', table: 'folders' },                                                 // folders the user grants, in the database's table (database first)
+  // hotkeys    : { 'ctrl+k|/': 'go[search]', 'escape': 'rat:toggle[menu]' },                               // a command as in markup, or a name of app.commands
+  // offline    : { src: 'sw.js' },                                                                         // a service worker next to the app: offline once open, installable
+  // store      : { driver: 'local', name: 'docs' },                                                        // keys and values: local, session, memory, cookie, cache, indexeddb
+  // thumbnails : { width: 250, quality: 0.8, concurrency: 3, dir: 'thumbs', maxBytes: 64 * 1024 * 1024, proxy: '', resizer: null },   // small webp copies in opfs
 
   // the build (npm run build:docs, @rat/dev): vite's build options, merged over rat's defaults. read, not run: values only, no imports
   build : {
