@@ -97,6 +97,7 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | `@rat/app` | no build: `run.js`, `<rat-app>`, `<rat-part>` | v0 |
 | `@rat/import` | files of any format as values | v0 |
 | `@rat/types` | data types with their schemas (`Color`, `Enum`, `List`, `Record`, `Tuple`), schemas (`Str`, `Num`, `Union` …), reactive variants (`$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`) | v0 |
+| `@rat/cli` | `rat create`, `dev`, `build`, `compile`, `check` (node) | v0 |
 | `@rat/dev` | one build plugin (unplugin: vite, rollup, rolldown, esbuild, webpack): compiles .rat files, resolves through `importmap.json` of `@rat/app` | built |
 | `@rat/elements` | bridge to `@aufbau/elements`, components as custom elements | planned |
 

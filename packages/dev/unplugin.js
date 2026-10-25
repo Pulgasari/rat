@@ -56,6 +56,12 @@ async function appBuildOf (root) {
   return code ? buildOf(code) : {};
 }
 
+async function replaceAsync (text, pattern, replace) {
+  const parts = await Promise.all([...text.matchAll(pattern)].map(match => replace(...match)));
+  let index = 0;
+  return text.replace(pattern, () => parts[index++]);
+}
+
 // the entry of a page: the component and the config, handed over to <rat-app>
 const entryOf = (src, config) => [
   `import '@rat/app';`,
@@ -113,6 +119,18 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
       const read = path => readFile(resolve(dirname(file), path), 'utf8');
       const { code } = await compileAsync(source, { ...options, filename: file, read });
       return { code };
+    },
+
+    // sw.js beside a page goes along (the offline mod registers it at runtime, vite does not see it). a local
+    // importScripts in it is inlined: its path into the rat repo is not there after the build
+    async generateBundle () {
+      for (const id of pages.keys()) {
+        const file = resolve(dirname(id), 'sw.js');
+        const code = await readFile(file, 'utf8').catch(() => null);
+        if (code == null) continue;
+        const inlined = await replaceAsync(code, /importScripts\((['"])([^'"]+)\1\);?/g, async (whole, quote, path) => /^[a-z]+:/i.test(path) ? whole : readFile(resolve(dirname(file), path), 'utf8').catch(() => whole));
+        this.emitFile({ fileName: 'sw.js', source: inlined, type: 'asset' });
+      }
     },
 
     vite: {

@@ -1,22 +1,42 @@
-#!/usr/bin/env -S deno run -A
+#!/usr/bin/env node
 // @rat/cli
 
-import { parseArgs } from '@std/cli/parse-args';
-import  buildCommand from './commands/build.js';
-import createCommand from './commands/create.js';
-import    devCommand from './commands/dev.js';
-import   helpCommand from './commands/help.js';
+import { argv } from 'node:process';
+import { parseArgs } from 'node:util';
 
-// Flags parsen (z. B. --target linux oder -t linux)
-const flags = parseArgs(Deno.args, {
-  string : ['target'],
-  alias  : { target: 't' },
-});
+import { close, color, error, print } from './wizard.js';
 
-const cmd     = flags._[0];
-const subArgs = flags._.slice(1).map(String); // captures everything after 'plugin'
+const COMMANDS = {
+  build   : () => import('./commands/build.js'),
+  check   : () => import('./commands/check.js'),
+  compile : () => import('./commands/compile.js'),
+  create  : () => import('./commands/create.js'),
+  dev     : () => import('./commands/dev.js'),
+};
 
-     if (cmd ===  'build') await  buildCommand({ target: flags.target });
-else if (cmd === 'create') await createCommand();
-else if (cmd ===    'dev') await    devCommand();
-else                       await   helpCommand();
+const HELP = `${color.green('rat')} <command> …
+
+  create [name]       a new app from a few questions   --mods database,offline  --yes
+  dev [dir]           serves dir without a build: .rat compiled here, reload on save   --port 8080  --root
+  build [dir]         builds the app in dir: vite + @rat/dev, the build of its config.rat.js
+  compile <files>     .rat, .rat.html, .rat.js -> .js next to them   -o dir  --stdout  --watch
+  check [files]       compiles without writing: errors with file:line:column, exit code 1`;
+
+const [name, ...rest] = argv.slice(2);
+
+if (!COMMANDS[name]) {
+  if (name && !['-h', '--help', 'help'].includes(name)) error(`no command "${name}"\n`);
+  print(HELP);
+}
+else {
+  const command = await COMMANDS[name]();
+  try {
+    const { positionals, values } = parseArgs({ args: rest, allowPositionals: true, options: command.options });
+    await command.run(positionals, values);
+  }
+  catch (failure) {
+    error(failure.message);
+    process.exitCode = 1;
+  }
+  finally { close(); }
+}
