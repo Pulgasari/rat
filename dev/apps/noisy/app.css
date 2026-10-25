@@ -2,7 +2,7 @@
    wide: menu | genres artists releases tracks | player. narrow: menu, tabs, one panel to swipe, player */
 
 .noisy {
-  --noisy-gap    : 0.75rem;
+  --noisy-gap    : 1rem;
   --noisy-radius : 1rem;
   --noisy-rail   : 3.5rem;
 
@@ -16,9 +16,11 @@
 }
 
 .menu, .panel, .player {
-  background    : color-mix(in oklab, currentColor 6%, transparent);
-  border-radius : var(--noisy-radius);
-  min-block-size: 0;
+   background    : color-mix(in oklab, currentColor 6%, transparent);
+   border-radius : var(--noisy-radius);
+   min-block-size: 0;
+   gap     : var(--noisy-gap);
+   padding : var(--noisy-gap);
 }
 
 /* :::::: MENU */
@@ -27,9 +29,7 @@
   align-items    : center;
   display        : flex;
   flex-direction : column;
-  gap            : 0.5rem;
   grid-area      : menu;
-  padding        : 0.75rem 0;
 }
 
 .menu-brand {
@@ -60,8 +60,8 @@
 .panel-head {
   align-items : center;
   display     : flex;
-  gap         : 0.5rem;
-  padding     : 0.75rem 1rem 0.5rem;
+  gap         : var(--noisy-gap);
+  padding     : var(--noisy-gap);
 
   h2 { flex: 1; font-size: 1rem; margin: 0; }
 }
@@ -86,7 +86,7 @@
   border-radius : 0.5rem;
   cursor        : pointer;
   display       : flex;
-  gap           : 0.6rem;
+  gap           : var(--noisy-gap);
   min-block-size: 2.5rem;
   padding       : 0 0.6rem;
   user-select   : none;
@@ -108,7 +108,7 @@
   aspect-ratio        : 1;
   background-position : center;
   background-size     : cover;
-  border-radius       : 0.35rem;
+  border-radius       : 0.25rem;
   display             : grid;
   flex                : none;
   inline-size         : 2rem;
@@ -218,14 +218,16 @@
 */
 
 
-.noisy { --r: var(--noisy-radius); }
+.noisy { --s: var(--noisy-gap); --r: var(--noisy-radius); }
 
 /* orientation: landscape | default */
+.noisy                { padding: var(--g) 0; }
 .noisy > :first-child { border-radius: 0 var(--r) var(--r) 0; }
 .noisy > :last-child  { border-radius: var(--r) 0 0 var(--r); }
 
 /* orientation: portrait */
 @media (orientation: portrait) {
+   .noisy                { padding: 0 var(--g); }
    .noisy > :first-child { border-radius: 0 0 var(--r) var(--r); }
    .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
 }
