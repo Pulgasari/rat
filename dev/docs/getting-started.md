@@ -1,6 +1,6 @@
 # Getting started
 
-rat is a small framework for apps in the browser, without a build step. You write components in `.rat` files: markup first, a `<script>` for the logic, a `<style>` for the looks. The page compiles them when it loads them.
+rat is an experimental js-framework in early stage of development.
 
 ## A page
 
@@ -11,7 +11,7 @@ rat is a small framework for apps in the browser, without a build step. You writ
   <script src='rat/packages/app/run/run.js'></script>
 </head>
 <body>
-  <rat-app src='app.rat.html'></rat-app>
+  <rat-app src='app.rat'></rat-app>
 </body>
 </html>
 ```
