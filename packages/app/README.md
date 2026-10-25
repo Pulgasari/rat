@@ -169,7 +169,7 @@ export default {
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
 | `thumbnails` | small webp copies of images in opfs (`createThumbs`, `@rat/app/modules/thumbnails.js`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
-| `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/run/sw.js')`): a worker reaches only the pages below its own folder. files of the page's origin network first, of other origins cache first |
+| `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/run/sw.js')`): a worker reaches only the pages below its own folder. a file with a version in its url (esm.sh/x@1.2) cache first, every other one network first |
 
 ## middleware (vercel)
 
