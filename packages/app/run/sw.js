@@ -30,6 +30,10 @@ addEventListener('fetch', event => {
   event.respondWith(versioned && !fresh ? cacheFirst(request, event) : networkFirst(request));
 });
 
+// an opaque response (from a no-cors request: <img>, background-image) is no answer to a cors one
+// (mask-image, fetch): the browser drops it, an icon masked by it is not there
+const fits = (response, request) => !!response && (response.type !== 'opaque' || request.mode === 'no-cors');
+
 const keep = (cache, request, response) => {
   if (response.ok || response.type === 'opaque') cache.put(request, response.clone()).catch(() => {});
   return response;
@@ -40,7 +44,7 @@ async function networkFirst (request) {
   try { return keep(cache, request, await fetch(request)); }
   catch (error) {
     const hit = await cache.match(request);
-    if (hit) return hit;
+    if (fits(hit, request)) return hit;
     throw error;
   }
 }
@@ -49,7 +53,7 @@ async function cacheFirst (request, event) {
   const cache   = await caches.open(CACHE);
   const hit     = await cache.match(request);
   const network = fetch(request).then(response => keep(cache, request, response));
-  if (!hit) return network;
+  if (!fits(hit, request)) return network;
   event.waitUntil(network.catch(() => {}));
   return hit;
 }
