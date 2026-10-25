@@ -228,13 +228,13 @@ narrow: menu, tabs, one panel to swipe, player
 .noisy { --s: var(--noisy-gap); --r: var(--noisy-radius); }
 
 /* orientation: landscape | default */
-.noisy                { padding: var(--g) 0; }
+.noisy                { padding: var(--s) 0; }
 .noisy > :first-child { border-radius: 0 var(--r) var(--r) 0; }
 .noisy > :last-child  { border-radius: var(--r) 0 0 var(--r); }
 
 /* orientation: portrait */
 @media (orientation: portrait) {
-   .noisy                { padding: 0 var(--g); }
+   .noisy                { padding: 0 var(--s); }
    .noisy > :first-child { border-radius: 0 0 var(--r) var(--r); }
    .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
 }
