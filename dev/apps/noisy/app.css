@@ -97,9 +97,12 @@ narrow: menu, tabs, one panel to swipe, player
   min-block-size: 2.5rem;
   padding       : 0 0.6rem;
   user-select   : none;
-
+  /*
   &:hover   { background: color-mix(in oklab, currentColor 8%, transparent); }
   &.picked  { background: color-mix(in oklab, var(--color-ink, currentColor) 35%, transparent); }
+  */
+  &:hover  { --bg: --alpha(cc, 0.1); }
+  &.picked { --bg: --alpha(ink, 0.35); }
 }
 
 .row-label {
