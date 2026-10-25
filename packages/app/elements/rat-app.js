@@ -221,23 +221,23 @@ export class RatApp extends DominaElement {
 
   // :::::: SRC
 
-  // a build hands over the component and the config itself, no src and no config.rat.js to load (@rat/dev)
-  run (component, config = {}) { return this.hold(this.start(component, config)); }
+  // a build hands over the config and how to import the component (@rat/dev): the mods first, then the app's modules
+  run (importer, config = {}) { return this.hold(this.start(importer, config)); }
 
-  // the component of src (or the one handed over) in place of what the app held. matching waits for it
-  async start (component, config) {
+  // the component of src (or of the importer handed over) in place of what the app held. matching waits for it
+  async start (importer, config) {
     const { src } = this;
-    if (!src && !component) return;
+    if (!src && !importer) return;
 
     const status = ({ detail }) => { this.dataset.status = `compiling ${detail.name}`; };
     this.#mounting = true;
     this.loading   = true;
-    this.dataset.status = `loading ${src ?? component.name}`;
+    this.dataset.status = `loading ${src ?? 'the app'}`;
     document.addEventListener('rat:compile', status);
 
     try {
       await this.configure(config);
-      const Component = component ?? componentOf(await load(new URL(src, this.baseURI).href));
+      const Component = componentOf(importer ? await importer() : await load(new URL(src, this.baseURI).href));
       if (!Component) throw new Error(`[rat] ${src} exports no component`);
       this.#dispose?.();
       this.replaceChildren();
@@ -247,7 +247,7 @@ export class RatApp extends DominaElement {
     }
     catch (error) {
       this.loading = false;
-      showError(this, error, () => { this.removeAttribute('error'); this.start(component, config); });
+      showError(this, error, () => { this.removeAttribute('error'); this.start(importer, config); });
     }
     finally {
       document.removeEventListener('rat:compile', status);

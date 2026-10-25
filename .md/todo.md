@@ -34,7 +34,7 @@ offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 - [ ] (idee, gemerkt) ein wert für mehrere attribute: `name+src='nav'` / `icon|title='settings'`
 
 ## apps
-- [x] testobjekt: `apps/notes` lauffähig machen (dazu `apps/icons`, siehe `apps/README.md`)
+- [x] testobjekt: `dev/apps/notes` lauffähig machen (dazu `dev/apps/icons`, siehe `dev/apps/README.md`)
 - [x] einmal kompilieren: der loader hält kompilate im cache api, compiler und acorn laden nur bei einer änderung
 
 ## sonstiges

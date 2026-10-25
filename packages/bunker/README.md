@@ -2,7 +2,7 @@
 
 persistent data in four parts, the platform apis behind one interface each.
 
-here for now, on its way to `@bunker` once it has proven itself in the apps (`rat/apps`).
+here for now, on its way to `@bunker` once it has proven itself in the apps (`rat/dev/apps`).
 
 | | what | drivers |
 |---|---|---|

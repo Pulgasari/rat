@@ -1,0 +1,16 @@
+{
+  "id": "vectorizer",
+  "name": "vectorizer",
+  "short_name": "vectorizer",
+  "description": "An image to an svg, on the device.",
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": ["graphics", "utilities"],
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [{ "src": "./assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}
