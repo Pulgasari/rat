@@ -1,8 +1,9 @@
-// @rat/app :: drivers :: clipboard, capacitor (android, ios). the plugin @capacitor/clipboard of the app's
-// capacitor project, through the bridge: no js of it in the build
+// @rat/app :: drivers :: clipboard, capacitor (android, ios): @capacitor/clipboard
 
-const plugin = () => globalThis.Capacitor?.Plugins?.Clipboard ?? Promise.reject(new Error('[rat] clipboard: @capacitor/clipboard is not installed in the capacitor project'));
+import { plugin } from '../_capacitor.js';
+
+const Clipboard = () => plugin('Clipboard', '@capacitor/clipboard');
 
 export const can   = { read: true, write: true };
-export const read  = async () => (await plugin().read()).value ?? '';
-export const write = text => plugin().write({ string: text });
+export const read  = async () => (await (await Clipboard()).read()).value ?? '';
+export const write = async text => (await Clipboard()).write({ string: text });

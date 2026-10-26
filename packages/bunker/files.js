@@ -8,6 +8,7 @@ to it and carries its permission. the content is read only when asked for.
   const files = createFiles({ driver: 'opfs' });     // the origin private file system
   const files = await Files.pick({ id: 'notes' });   // a folder the user grants (null when cancelled)
   const files = createFiles({ root: handle });       // any directory handle, a stored one too
+  const files = createFiles({ driver: () => root });  // a function giving a directory handle (or a promise of one)
 
   await files.write('notes/hello.md', '# hello');    // folders on the way are made
   await files.read('notes/hello.md');                // 'text' (default), 'json', 'blob', 'bytes'
@@ -21,6 +22,9 @@ to it and carries its permission. the content is read only when asked for.
   await entry.info()                                  // { size, modified, type } of a file
   await entry.permission('read')                      // 'granted' | 'prompt' | 'denied', never asks
   await entry.request('read')                         // asks, inside a click
+
+anything shaped like a FileSystemDirectoryHandle works as a root: the native
+drivers of @rat/app hand one over a file system of their own.
 
 a handle is structured-clonable: files.root.handle goes into a database table
 and makes the same files on the next visit (createFiles({ root })).
@@ -76,8 +80,11 @@ class Files {
   #root;
 
   constructor ({ driver = 'opfs', root = null } = {}) {
-    this.#root = root ? Promise.resolve(root) : driver === 'opfs' ? navigator.storage.getDirectory() : null;
-    if (!this.#root) throw new TypeError(`[bunker] files: no driver "${driver}", 'opfs' or a root handle`);
+    this.#root = root ? Promise.resolve(root)
+      : typeof driver === 'function' ? Promise.resolve(driver())
+      : driver === 'opfs' ? navigator.storage.getDirectory()
+      : null;
+    if (!this.#root) throw new TypeError(`[bunker] files: no driver "${driver}", 'opfs', a function or a root handle`);
   }
 
   // a folder the user picks, inside a click. null when they cancel

@@ -1,23 +1,24 @@
 // @rat/app :: database
 
 /*
-RAT.app.database: tables of records (@rat/bunker createDatabase),
-indexeddb unless driver says otherwise, named after the app.
-a table reads as table.$items in markup (bunker.js)
+RAT.app.database: tables of records (@rat/bunker createDatabase), named after the app.
+indexeddb in the browser, sqlite on android, ios and the desktop, unless driver says
+otherwise. a table reads as table.$items in markup (bunker.js)
 */
 
 // :::::: IMPORT
 
 import { createDatabase } from '@rat/bunker';
 import '../vendor/bunker.js';
-import { driverOf, nameOf } from '../_shared.js';
+import { nameOf } from '../_shared.js';
+import { bunkerDriverOf } from '../drivers.js';
 
 // ::::::
 
-const database = (options, { config }) => createDatabase ({ 
+const database = async (options, { config }) => createDatabase({
   ...options,
-  driver : driverOf (options.driver ?? 'indexeddb'),
-  name   : nameOf(options, config)
+  driver : await bunkerDriverOf('database', options.driver),
+  name   : nameOf(options, config),
 });
 
 // :::::: EXPORT

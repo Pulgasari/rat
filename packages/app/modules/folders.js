@@ -8,7 +8,7 @@ reads the signals.
   // config.rat.js, the database first: its table holds the folders
   database: { schema: { folders: FOLDERS } }, folders: { accept: 'md, markdown' }   // RAT.app.folders
 
-  const folders = createFolders({ accept: 'md, markdown', table: app.database.folders });   // without the mod
+  const folders = createFolders({ accept: 'md, markdown', table: app.database.folders });   // without the mod, web only
 
   await folders.load();              // the stored ones, their permission (never asks), the granted ones scanned
   await folders.add();               // the picker, inside a click. null when cancelled
@@ -26,11 +26,17 @@ reads the signals.
   folders.ready      signal: true once load() knows the folders
 
 accept: extensions ('md, markdown', ['md']), a function of the name, or nothing for every file.
+
+the picker and the way a folder is kept come from the shell's driver (drivers/folders/): chromium's
+picker in the browser, the system's on android, ios and the desktop, with real paths there.
 */
 
 import { Files }  from '@rat/bunker';
 import { Id }     from '@rat/types';
 import { signal } from '@rat/signals';
+
+import { driverOf } from '../drivers.js';
+import * as web     from '../drivers/folders/web.js';
 
 // the fields of the table that holds the folders
 const FOLDERS = { added: Number, handle: Object, id: Id, name: String };
@@ -53,11 +59,12 @@ function patch (target, key, value) {
   target.value = next;
 }
 
-function createFolders ({ accept, id = 'folders', table }) {
+function createFolders ({ accept, driver = web, id = 'folders', table }) {
   const test  = acceptOf(accept);
   const files = new Map;   // id -> Files
 
   const rootOf = async sourceId => (await files.get(sourceId).root());
+  const pick   = async () => { const handle = await driver.pick({ id }); return handle ? new Files({ root: handle }) : null; };
 
   const folders = {
     perms    : signal({}),
@@ -68,7 +75,7 @@ function createFolders ({ accept, id = 'folders', table }) {
 
     async load () {
       const rows = (await table.values()).sort((a, b) => a.added - b.added);
-      for (const row of rows) files.set(row.id, new Files({ root: row.handle }));
+      for (const row of rows) files.set(row.id, new Files({ root: driver.revive(row.handle) }));
       folders.sources.value = rows.map(({ id, name }) => ({ id, name }));
       for (const row of rows) patch(folders.perms, row.id, await (await rootOf(row.id)).permission());
       folders.ready.value = true;
@@ -76,13 +83,13 @@ function createFolders ({ accept, id = 'folders', table }) {
     },
 
     async add () {
-      const picked = await Files.pick({ id });
+      const picked = await pick();
       if (!picked) return null;
       const root = await picked.root();
       for (const sourceId of files.keys()) {
         if (await (await rootOf(sourceId)).handle.isSameEntry?.(root.handle)) throw new Error('That folder is open already.');
       }
-      const row = await table.add({ added: Date.now(), handle: root.handle, name: root.name });
+      const row = await table.add({ added: Date.now(), handle: driver.keep(root.handle), name: root.name });
       files.set(row.id, picked);
       folders.sources.value = [...folders.sources.value, { id: row.id, name: row.name }];
       patch(folders.perms, row.id, 'granted');
@@ -98,10 +105,10 @@ function createFolders ({ accept, id = 'folders', table }) {
     },
 
     async repick (sourceId) {
-      const picked = await Files.pick({ id });
+      const picked = await pick();
       if (!picked) return false;
       const root = await picked.root();
-      await table.update(sourceId, { handle: root.handle, name: root.name });
+      await table.update(sourceId, { handle: driver.keep(root.handle), name: root.name });
       files.set(sourceId, picked);
       folders.sources.value = folders.sources.value.map(source => source.id === sourceId ? { id: sourceId, name: root.name } : source);
       patch(folders.perms, sourceId, 'granted');
@@ -141,9 +148,9 @@ function createFolders ({ accept, id = 'folders', table }) {
 }
 
 // the mod: RAT.app.folders, over the table of the database (options.table, 'folders')
-function folders ({ accept, id, table = 'folders' }, { app, config }) {
+async function folders ({ accept, driver, id, table = 'folders' }, { app, config }) {
   if (!app.database?.[table]) throw new Error(`[rat] mod folders: the database needs a table "${table}" (schema: { ${table}: FOLDERS }), before folders`);
-  return createFolders({ accept, id: id ?? config.id ?? 'folders', table: app.database[table] });
+  return createFolders({ accept, driver: await driverOf('folders', driver), id: id ?? config.id ?? 'folders', table: app.database[table] });
 }
 
 // :::::: EXPORT
