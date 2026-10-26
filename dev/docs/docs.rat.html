@@ -18,14 +18,18 @@
     { name: 'types',           title: 'Types',          path: new URL('../../packages/types/README.md', import.meta.url).href },
   ];
 
+  const TOPICS = ['config', 'components', 'comptime', 'directives', 'htx', 'modules', 'schemas', 'signals', 'types'];
+  const PAGES2 = TOPICS.map(item => ({ name: item, title: item }));
+
   // a page is <name>.md next to this file, or its own path. new URL(…, import.meta.url): the loader
   // gives it this file's url, a build copies the files it names
-  const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES[0].name;
-  const $src  = PAGES.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
+  const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES2[0].name;
+  const $src  = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
 
   // a fenced code block becomes a <write-code> of aufbau, once the page is rendered: highlighted, rat and ratjs known
   function codeBlocks (root) {
-    for (const code of root.querySelectorAll('pre > code')) {
+    const ctx = root.currentTarget;
+    for (const code of ctx.querySelectorAll('pre > code')) {
       const lang  = code.className.match(/language-(\S+)/)?.[1] ?? 'plaintext';
       const block = dom.createElement('write-code', { lang, actions: 'copy' }, code.textContent);
       code.parentElement.replaceWith(block);
@@ -57,7 +61,7 @@
   <main>
     <output-md
       src={$src}
-      on:output-md-rendered={event => codeBlocks(event.currentTarget)}
+      on:output-md-rendered={codeBlocks}
     />
   </main>
 </rat-view>
