@@ -19,10 +19,11 @@
 - [ ] `<rat-overlay>` ebenso per `name` umschalten
 
 ## syntax | schema | types
+- [ ] the "comptime" idea from [ideas.md](ideas.md)
 - [ ] extend schema for elements-hints (control-elements)
 - [ ] extend schema for persistence
 
-## sonstiges
+## sonstiges (nicht jetzt)
 - [ ] `@rat/bunker` nach `@bunker` umziehen, sobald es sich in den apps bewährt hat
 - [ ] props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
 
