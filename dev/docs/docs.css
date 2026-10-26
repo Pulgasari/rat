@@ -34,8 +34,8 @@ output-md article {
 }
 
 /* the bar with the menu button: on a narrow screen only, where the menu is a drawer */
-#bar  { align-items: center; display: none; gap: 1rem; padding: 1rem; }
-#menu { background: none; border: 0; color: inherit; font-size: 1.5rem; }
+#bar        { align-items: center; display: none; gap: 1rem; padding: 1rem; }
+#bar button { background: none; border: 0; color: inherit; font-size: 1.5rem; }
 
 @media (max-width: 48rem) {
   #bar         { display: flex; }
