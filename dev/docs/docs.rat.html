@@ -28,12 +28,6 @@
     for (const code of root.querySelectorAll('pre > code')) {
       const lang  = code.className.match(/language-(\S+)/)?.[1] ?? 'plaintext';
       const block = dom.createElement('write-code', { lang, actions: 'copy' }, code.textContent);
-      /*
-      const block = document.createElement('write-code');
-      block.setAttribute('lang', lang);
-      block.setAttribute('actions', 'copy');
-      block.textContent = code.textContent;
-      */
       code.parentElement.replaceWith(block);
     }
   }
@@ -44,13 +38,15 @@
   const wide   = matchMedia('(min-width: 48rem)').matches;
 </script>
 
-<rat-area name='menu' dock='start' open={wide}>
-  <nav.docs-nav>
-    <a.docs-brand href='../../'>RAT</a>
-    @for (page of PAGES): <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
+<rat-area id|name='menu' dock='start' open={wide}>
+  <nav>
+    <a.brand href='../../'>RAT</a>
+    @for (page of PAGES) {
+      <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
+    }
     <a href='../../demos/'>Demos</a>
     <a href='https://github.com/pulgasari/rat'>GitHub</a>
-  </nav.docs-nav>
+  </nav>
 </rat-area>
 
 <rat-view route='/*' id|name='page'>
