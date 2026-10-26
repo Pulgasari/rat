@@ -12,8 +12,6 @@ $.count(5); // write
 
 // a 5th form (F5)
 $.count = $(0); // create
-$['count'] = 0; // create
-$['count'](0);  // create
 $.count.$;      // signal
 $.count;        // read
 $.count = 5;    // write
@@ -21,6 +19,8 @@ $.count.get();  // read
 $.count.set(5); // write
 
 
+$['count'] = 0; // create
+$['count'](0);  // create
 
 
 
