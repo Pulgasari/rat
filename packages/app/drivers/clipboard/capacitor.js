@@ -8,4 +8,4 @@ const plugin = () => globalThis.Capacitor?.Plugins?.Clipboard ?? Promise.reject(
 export const
 can   = { read: true, write: true },
 read  = async () => (await plugin().read()).value ?? '',
-write = text     => plugin().write({ string: text });
+write = (text)   => plugin().write({ string: text });
