@@ -18,6 +18,11 @@ $.count = 5;    // write
 $.count.get();  // read
 $.count.set(5); // write
 
+// F6
+$.set.count = 5; // write + create
+$.get.count;     // read
+$.sig.count;     // signal
+
 
 $['count'] = 0; // create
 $['count'](0);  // create
