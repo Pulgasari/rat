@@ -10,8 +10,10 @@ $.count = $(0);
 $.count;    // read
 $.count(5); // write
 
-// a 5th form (F4)
-$.count = $(0);
+// a 5th form (F5)
+$.count = $(0); // create
+$['count'] = 0; // create
+$['count'](0);  // create
 $.count.$;      // signal
 $.count;        // read
 $.count = 5;    // write
