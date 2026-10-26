@@ -55,6 +55,12 @@ The `#/sync` view sends files to a device on the local network over LocalSend v2
 udp multicast and https to a lan address with a self-signed certificate are nothing a web page may do. In a
 browser the view says so; it works in the android app with the FileSync plugin.
 
+## android
+
+`rat build dev/apps/files --target android` (the ci workflow `android.yml` with an sdk): the granted folder
+through the storage access framework (rat's `Saf` plugin, the grant persisted), the servers without cors
+(`NativeHttp`), sending over the lan (`FileSync`, `android.plugins` in `config.rat.js`).
+
 ## settings
 
 open with (a tap, a double click, auto), the search bar and the tabs at the top or the bottom, a pattern behind

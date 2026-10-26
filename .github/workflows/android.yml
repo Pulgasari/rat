@@ -1,0 +1,75 @@
+name: build android apps
+
+# rat build --target android for the apps named (or every app whose config.rat.js has android): the web
+# build, the capacitor project beside the app (packages/cli/android.js), gradle. a debug apk per app, an
+# artifact of the run, installable for testing (signed with the throwaway debug key of the run).
+# manual only: packaging never runs on a commit.
+
+on:
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'the apps, space separated (empty: every app with android in its config.rat.js)'
+        required: false
+        default: ''
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: rat
+
+      - { uses: actions/checkout@v4, with: { path: aufbau,      repository: Pulgasari/aufbau      } }
+      - { uses: actions/checkout@v4, with: { path: bunker,      repository: Pulgasari/bunker      } }
+      - { uses: actions/checkout@v4, with: { path: domina,      repository: Pulgasari/domina      } }
+      - { uses: actions/checkout@v4, with: { path: gestalt,     repository: Pulgasari/gestalt     } }
+      - { uses: actions/checkout@v4, with: { path: htx,         repository: Pulgasari/htx         } }
+      - { uses: actions/checkout@v4, with: { path: js-packages, repository: Pulgasari/js-packages } }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # capacitor 8's android template compiles against java 21
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: android sdk packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: build
+        working-directory: rat
+        env:
+          APPS: ${{ inputs.apps }}
+        run: |
+          npm ci
+          if [ -z "$APPS" ]; then
+            APPS=$(for app in dev/apps/*/; do grep -q '^  android' "$app/config.rat.js" 2>/dev/null && basename "$app"; done)
+          fi
+          failed=''
+          for app in $APPS; do
+            npx rat build "dev/apps/$app" --target android || failed="$failed $app"
+          done
+          echo "failed=$failed" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks
+          path: rat/dev/apps/*/.capacitor/*.apk
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: report
+        run: if [ -n "$failed" ]; then echo "::error::did not build:$failed"; exit 1; fi

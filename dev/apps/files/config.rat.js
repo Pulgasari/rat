@@ -32,5 +32,8 @@ export default {
   offline    : true,
   thumbnails : { maxBytes: 128 * 1024 * 1024, width: 256 },
 
+  // rat build --target android: the android app, with the lan sending of the FileSync plugin
+  android : { id: 'dev.pulgasari.files', name: 'Files', plugins: ['filesync'] },
+
   build : { emptyOutDir: true, outDir: '../../../apps/files' },   // rat build -> apps/files
 };

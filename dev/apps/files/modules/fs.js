@@ -28,7 +28,7 @@ export async function list (root, path = []) {
 
   const rows = await Promise.all(handles.map(async handle => {
     if (handle.kind === 'directory') return { kind: 'directory', name: handle.name };
-    const file = handle.peekFile?.() ?? await handle.getFile();   // a server's handle knows it without downloading
+    const file = await handle.peekFile?.() ?? await handle.getFile();   // a server's or android's handle knows it without reading
     return { kind: 'file', lastModified: file.lastModified, name: handle.name, size: file.size, type: file.type };
   }));
 

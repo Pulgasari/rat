@@ -7,6 +7,7 @@ import { dirname, join, relative, resolve } from 'node:path';
 import rat, { TARGETS, appConfig } from '@rat/dev';
 import { build } from 'vite';
 
+import { android, projectOf } from '../android.js';
 import { color, print, warn } from '../wizard.js';
 
 export const options = {
@@ -22,8 +23,8 @@ const execute = (command, args, cwd) => new Promise((done, fail) => {
 
 // after the build: the shell of the target takes it. its project is named in config.rat.js
 const AFTER = {
-  // capacitor : the capacitor project of the app, its webDir pointing to the build
-  async android (root) { await capacitor(root, 'android'); },
+  // android: the capacitor project made beside the app (android.js), or the one capacitor in config.rat.js names
+  async android (root) { (await appConfig(root, 'capacitor')).value ? await capacitor(root, 'android') : await android(root); },
   async ios     (root) { await capacitor(root, 'ios'); },
 
   // desktop : the deno entrypoint of the app, which opens the window and hands it to host() of @rat/app
@@ -50,7 +51,13 @@ export async function run ([dir = '.'], { target }) {
 
   const root   = resolve(dir);
   const config = ['vite.config.js', 'vite.config.mjs'].map(name => join(root, name)).find(existsSync);
-  await build(config ? { configFile: config, root } : { configFile: false, plugins: [rat.vite()], root });
+
+  // android: the web build goes into the capacitor project (android.js), not into build.outDir
+  const own    = target === 'android' && !(await appConfig(root, 'capacitor')).value;
+  const outDir = own ? (await projectOf(root)).www : undefined;
+  if (own && config) warn('a vite.config.js of the app keeps its own outDir: the android project takes .capacitor/www');
+
+  await build(config ? { configFile: config, root } : { configFile: false, plugins: [rat.vite({ outDir })], root });
 
   await AFTER[target]?.(root);
 }
