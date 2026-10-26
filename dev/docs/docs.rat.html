@@ -9,7 +9,7 @@
 
   // the languages of rat as modules of this app, not a specifier <write-code> imports by its name: a build has no import map
   customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
-
+  /*
   const PAGES = [
     { name: 'welcome',         title: 'welcome' },
     { name: 'components',      title: 'Components'      },
@@ -17,13 +17,13 @@
     { name: 'control-flow',    title: 'Control flow'    },
     { name: 'types',           title: 'Types',          path: new URL('../../packages/types/README.md', import.meta.url).href },
   ];
-
+  */
   const TOPICS = ['config', 'components', 'comptime', 'directives', 'htx', 'modules', 'schemas', 'signals', 'types'];
   const PAGES2 = TOPICS.map(item => ({ name: item, title: item }));
 
   // a page is <name>.md next to this file, or its own path. new URL(…, import.meta.url): the loader
   // gives it this file's url, a build copies the files it names
-  const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES2[0].name;
+  const $page = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
   const $src  = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
 
   // a fenced code block becomes a <write-code> of aufbau, once the page is rendered: highlighted, rat and ratjs known
