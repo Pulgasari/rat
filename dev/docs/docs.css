@@ -3,14 +3,6 @@
 
 :root { font: 16px/1.6 system-ui, sans-serif; }
 
-/*
-body {
-  accent-color     : var(--color-ink);
-  background-color : var(--color-bg);
-  color            : var(--color-fg);
-}
-*/
-
 a { color: var(--color-ink); }
 
 output-md article {
@@ -19,36 +11,36 @@ output-md article {
   gap: 1rem;
 }
 
-.docs-nav {
+#menu > nav {
   display        : flex;
   flex-direction : column;
   gap            : 0.25rem;
   min-inline-size: 12rem;
   padding        : 1rem;
-
+  /*
+  gestalt-flow  : flex column;
+  gestalt-space : tiny normal;
+  */
   a        { color: inherit; padding: 0.5rem; }
   a.active { --bg: --alpha(ink, 0.20); }
 }
 
-.docs-brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
+.brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
 
 #page > main {
   max-inline-size : 48rem;
   min-inline-size : 0;
   overflow-wrap   : anywhere;
-  padding         : 1.5rem 2rem;
+  padding         : 2rem;
+
+  pre, table, write-code { display: block; max-inline-size: 100%; overflow-x: auto; }
 }
 
-/* code and tables scroll inside the page instead of widening it */
-#page > main pre,
-#page > main write-code,
-#page > main table { display: block; max-inline-size: 100%; overflow-x: auto; }
-
 /* the bar with the menu button: on a narrow screen only, where the menu is a drawer */
-.docs-bar  { align-items: center; display: none; gap: 1rem; padding: 1rem; }
-.docs-menu { background: none; border: 0; color: inherit; font-size: 1.5rem; }
+#bar        { align-items: center; display: none; gap: 1rem; padding: 1rem; }
+#bar button { background: none; border: 0; color: inherit; font-size: 1.5rem; }
 
 @media (max-width: 48rem) {
-  .docs-bar    { display: flex; }
+  #bar         { display: flex; }
   #page > main { padding: 1rem; }
 }

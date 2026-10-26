@@ -7,7 +7,8 @@ export default {
   ...config,
   name : 'noisy',
 
-  // the elements of @aufbau the app uses, defined before its code runs (no autoloader: a build takes these and no others)
+  // the elements of @aufbau the app uses, defined before its code runs
+  // (no autoloader: a build takes these and no others)
   import : [
     '@aufbau/elements/webcomponents/input/tags.js',
     '@aufbau/elements/webcomponents/btn-icon.js',
@@ -33,7 +34,10 @@ export default {
     'escape'      : 'clear-selection',
   },
   offline    : true,
-  thumbnails : { width: 160 },   // the covers, from the tags
+  thumbnails : { width: 160 }, // the covers, from the tags
 
-  build : { emptyOutDir: true, outDir: '../../../apps/noisy' },   // rat build -> apps/noisy
+  build : { 
+    emptyOutDir : true, 
+    outDir      : '../../../apps/noisy'
+  }, // rat build -> apps/noisy
 };

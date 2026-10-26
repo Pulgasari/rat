@@ -20,7 +20,7 @@ async function clipboard ({ driver: named } = {}) {
   const driver = await driverOf('clipboard', named);
   return {
     can   : { ...driver.can },
-    read  : () => driver.can.read ? driver.read() : unable('read'),
+    read  : ()   => driver.can.read  ? driver.read()              : unable('read'),
     write : text => driver.can.write ? driver.write(String(text)) : unable('write'),
   };
 }

@@ -11,29 +11,27 @@
   customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
 
   const PAGES = [
-    { name: 'getting-started', title: 'Getting started' },
+    { name: 'welcome',         title: 'welcome' },
     { name: 'components',      title: 'Components'      },
     { name: 'signals',         title: 'Signals'         },
     { name: 'control-flow',    title: 'Control flow'    },
     { name: 'types',           title: 'Types',          path: new URL('../../packages/types/README.md', import.meta.url).href },
   ];
 
+  const TOPICS = ['config', 'components', 'comptime', 'directives', 'htx', 'modules', 'schemas', 'signals', 'types'];
+  const PAGES2 = TOPICS.map(item => ({ name: item, title: item }));
+
   // a page is <name>.md next to this file, or its own path. new URL(…, import.meta.url): the loader
   // gives it this file's url, a build copies the files it names
-  const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES[0].name;
-  const $src  = PAGES.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
+  const $page = RAT.app.router.$path.value.replace(/^\//, '') || PAGES2[0].name;
+  const $src  = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
 
   // a fenced code block becomes a <write-code> of aufbau, once the page is rendered: highlighted, rat and ratjs known
   function codeBlocks (root) {
-    for (const code of root.querySelectorAll('pre > code')) {
+    const ctx = root.currentTarget;
+    for (const code of ctx.querySelectorAll('pre > code')) {
       const lang  = code.className.match(/language-(\S+)/)?.[1] ?? 'plaintext';
       const block = dom.createElement('write-code', { lang, actions: 'copy' }, code.textContent);
-      /*
-      const block = document.createElement('write-code');
-      block.setAttribute('lang', lang);
-      block.setAttribute('actions', 'copy');
-      block.textContent = code.textContent;
-      */
       code.parentElement.replaceWith(block);
     }
   }
@@ -44,24 +42,26 @@
   const wide   = matchMedia('(min-width: 48rem)').matches;
 </script>
 
-<rat-area name='menu' dock='start' open={wide}>
-  <nav.docs-nav>
-    <a.docs-brand href='../../'>RAT</a>
-    @for (page of PAGES): <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
+<rat-area id|name='menu' dock='start' open={wide}>
+  <nav>
+    <a.brand href='../../'>RAT</a>
+    @for (page of PAGES2) {
+      <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
+    }
     <a href='../../demos/'>Demos</a>
     <a href='https://github.com/pulgasari/rat'>GitHub</a>
-  </nav.docs-nav>
+  </nav>
 </rat-area>
 
 <rat-view route='/*' id|name='page'>
-  <header.docs-bar>
-    <button.docs-menu aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
+  <header#bar>
+    <button aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
     <span>RAT docs</span>
-  </header.docs-bar>
+    </header#bar>
   <main>
     <output-md
       src={$src}
-      on:output-md-rendered={event => codeBlocks(event.currentTarget)}
+      on:output-md-rendered={codeBlocks}
     />
   </main>
 </rat-view>

@@ -1,51 +1,61 @@
 # RAT :: todo
 
-offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
+## `@rat/app`
+- [ ] move `/store.js` to `/modules/store.js`
+- [ ] create module drivers:
+  - [ ] database
+  - [ ] dialogs
+  - [ ] external
+  - [ ] files
+  - [ ] folders
+  - [ ] hotkeys
+  - [ ] notifications
+  - [ ] thumbnails
+
+## syntax | schema | types
+- [ ] the "comptime" idea from [ideas.md](ideas.md)
+- [ ] extend schema for elements-hints (control-elements)
+- [ ] extend schema for persistence
+
+---
+
+# not for now
 
 ## `@rat/app`
-- [x] `<rat-app>` entfernen, `<rat-app2>` wird `<rat-app>` (mit `src`: lädt `app.rat` und mountet in sich)
-- [ ] (?) `<rat-part>` auf `@domina/element`
-- [x] `<rat-part>` lädt auch `.htx` und `.html` (der loader, für alle elemente und imports)
-- [x] error boundary: `<rat-view>`, `<rat-part>`, `<rat-app>` (popover als letzte), `raise`/`guard` in `@rat/runtime`
-- [x] error boundary: fehler in command-handlern (`Commands`) kommen an, als `rat:error` vom auslösenden element
 - [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
 - [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
-- [x] umschalten per `name`, beide formen gebaut, in der praxis vergleichen: `onclick='rat:toggle[menu]'` (ein command-name mit `:` ist ein eigenes event) und `RAT.toggle('menu')` (globales `RAT`)
 - [ ] `<rat-overlay>` ebenso per `name` umschalten
-- [x] hotkeys an `app.commands` (`Hotkeys`): mod `hotkeys`
-- [x] auto-import per config: `autoImport: true` (verzeichnis der config), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
-- [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), mods (`database`, `files`, `store`, `hotkeys`)
-- [x] pwa-hülle: manifest (apps), service worker als mod `offline` (`packages/app/run/sw.js`, je app ein `sw.js`), kompilate im cache (`rat:compiled`)
-
-## `@rat/router`
-- [ ] (?) globaler router, den views direkt abonnieren
-
-## syntax
-- [ ] props nach d-13 b umsetzen (`let { $title } = props`)
-- [x] `let` vor `$name` auf oberster ebene im `<script>` optional (`const` bleibt pflicht, nicht in `.rat.js`)
-- [ ] (ungeklärt, verschoben, jetzt mit `@rat/bunker` als unterbau) persistenz eines signals: form klären (statt `$(init, '[persist]')`, idee: `persist $filter;`)
-- [ ] sichtbarer anfang/ende einer komponente statt `<>` (`<self>`?)
-- [ ] meta-angaben in der ersten zeile (`<!-- rat:root -->` o.ä.)
-- [ ] schema mit ui-hinweisen (`Enum({ values, element: { look } })`), form klären
-- [ ] benannte slots ([slots](ideas/slots.md)), für layouts
-- [ ] `@await` / async-blöcke (d-28)
-- [ ] `key` generell besprechen (`@for (todo of $todos; key todo.id)` und anderswo)
-- [ ] `@for`-index (d-15)
-- [ ] (idee, gemerkt) ein wert für mehrere attribute: `name+src='nav'` / `icon|title='settings'`
-
-## apps
-- [x] testobjekt: `dev/apps/notes` lauffähig machen (dazu `dev/apps/icons`, siehe `dev/apps/README.md`)
-- [x] einmal kompilieren: der loader hält kompilate im cache api, compiler und acorn laden nur bei einer änderung
 
 ## sonstiges
-- [x] `@rat/bunker`: Store, Database, Files, memo (siehe decisions.md)
-- [x] notes: `FolderLibrary` durch `@rat/bunker` Files ersetzt (`apps/.shared/folders.js`, handles in der tabelle `folders`)
 - [ ] `@rat/bunker` nach `@bunker` umziehen, sobald es sich in den apps bewährt hat
-- [x] compiler: ein nicht geschlossenes element als solches melden (auch das, das ein falsches schließ-tag zugemacht hat)
 - [ ] props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
-- [ ] `/.md` gründlich aufräumen (erst absprechen)
 
-## packages (?)
-- [ ] `@rat/analyzer`
-- [ ] `@rat/cli`
-- [x] ~~`@rat/database`~~: ist `@rat/bunker` geworden
+---
+
+## element-hints as part of a schema
+
+schemas bilden werte ab.
+types sind werte/objekte.
+werte als ganzes bilden data.
+
+jeder wert hat in einer ui potentiell min. eine darstellungsform (output) sowie eine erstellungsform (input).
+
+```html
+// input
+<textarea>...</textarea>
+
+// output
+<article>
+  <h1>...</h1>
+  <p>...</p>
+  <p>...</p>
+</article>
+```
+
+je nachdem inwiefern eine library oder framework gibt es für verschiedene werte unterschiedliche elemente/komponenten.
+
+```js
+const aboutMe = new RAT.Text (...);
+const inputElement  = aboutMe.el.input;
+const outputElement = aboutMe.el.output;
+```

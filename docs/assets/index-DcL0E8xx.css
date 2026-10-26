@@ -1,0 +1,47 @@
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+
+/* docs :: docs.css */
+
+:root { font: 16px/1.6 system-ui, sans-serif; }
+
+a { color: var(--color-ink); }
+
+output-md article {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#menu > nav {
+  display        : flex;
+  flex-direction : column;
+  gap            : 0.25rem;
+  min-inline-size: 12rem;
+  padding        : 1rem;
+  /*
+  gestalt-flow  : flex column;
+  gestalt-space : tiny normal;
+  */
+  a        { color: inherit; padding: 0.5rem; }
+  a.active { --bg: --alpha(ink, 0.20); }
+}
+
+.brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
+
+#page > main {
+  max-inline-size : 48rem;
+  min-inline-size : 0;
+  overflow-wrap   : anywhere;
+  padding         : 2rem;
+
+  pre, table, write-code { display: block; max-inline-size: 100%; overflow-x: auto; }
+}
+
+/* the bar with the menu button: on a narrow screen only, where the menu is a drawer */
+#bar        { align-items: center; display: none; gap: 1rem; padding: 1rem; }
+#bar button { background: none; border: 0; color: inherit; font-size: 1.5rem; }
+
+@media (max-width: 48rem) {
+  #bar         { display: flex; }
+  #page > main { padding: 1rem; }
+}

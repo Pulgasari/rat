@@ -12,6 +12,20 @@
 
 these ones would/should be more likely an enhancement of `htx` directly.
 
+### multi-attributes by `+`
+
+```html
+<div name+id='example'>...</div>
+```
+
+### pseudo-elements | generic element tags
+
+```html
+<input:number id|name='amount' value='666' />
+```
+
+the names are generic tag names which gets mapped to the real tagnames relating to the current context a project runs in or builds for.
+
 ### indentation instead of closing tags
 
 ```imba
@@ -257,14 +271,10 @@ ja, aber genaue syntax mir noch unklar.
 
 **reply:** four variants in [d-29](#d-29).
 
-# rat :: comptime
+## `comptime` :: code that runs in the compiler
 
 status: **done** in `.rat` files (`<script comptime>`, [syntax](syntax/rat.md#comptime)). plain `.js` (a
 `with { type: 'comptime' }` import, as bun's macros) is open.
-
-see also: [no build](no-build.md)
-
-## idea: code that runs in the compiler (from zig)
 
 ```zig
 const table = comptime blk: {
@@ -297,6 +307,8 @@ the compiled module contains the finished list, no fetch, no json, no loop at ru
 **cost.** large: the compiler has to execute code (in node: easy, in the browser: a
 worker), and it fits the build adapters and the `dom:clone` target. but it is the
 strongest form of "compiler over runtime magic".
+
+inspired by: `zig`
 
 ---
 
