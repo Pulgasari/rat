@@ -27,7 +27,7 @@ const MODS = {
   folders    : () => import('./modules/folders.js'),
   hotkeys    : () => import('./modules/hotkeys.js'),
   offline    : () => import('./offline.js'),
-  store      : () => import('./store.js'),
+  store      : () => import('./modules/store.js'),
   thumbnails : () => import('./modules/thumbnails.js'),
 };
 

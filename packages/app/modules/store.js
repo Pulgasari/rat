@@ -4,9 +4,9 @@
 
 import { createStore } from '@rat/bunker';
 
-import './vendor/bunker.js';
+import '../vendor/bunker.js';
 
-import { driverOf, nameOf } from './_shared.js';
+import { driverOf, nameOf } from '../_shared.js';
 
 const store = (options, { config }) => createStore({ ...options, driver: driverOf(options.driver ?? 'local'), name: nameOf(options, config) });
 
