@@ -27,7 +27,7 @@ playground:
 [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
 
 apps (demos): 
-[noisy](https://code.pulgasari.dev/apps/noisy/)
+[noisy](https://code.pulgasari.dev/rat/apps/noisy/)
 
 ## packages
 
