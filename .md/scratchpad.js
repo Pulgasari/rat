@@ -1,9 +1,17 @@
 // commands | hotkeys
 
-RAT.Command.create('do-sth', () => {...});
-RAT.Command.create({ name: 'do-sth', exec: () => {...} });
+const unable = what => Promise.reject(new Error(`[rat] clipboard: this platform does not let the app ${what} it`));
 
-RAT.Hotkey.create('ctrl + d', 'do-sth');
+RAT.PREFIX = '[RAT] ';
+RAT.ERROR = function () {};
+RAT.ERROR.create = function (message, ...vars) {
+  const msg = RAT.PREFIX + message
+  return new Error (msg);
+}
+const NOT_ALLOWED = RAT.ERROR.create(`clipboard: this platform does not let the app ${$0} it`);
+
+const unable = what => Promise.reject(NOT_ALLOWED, what);
+
 
 //
 
