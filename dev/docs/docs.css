@@ -17,7 +17,10 @@ output-md article {
   gap            : 0.25rem;
   min-inline-size: 12rem;
   padding        : 1rem;
-
+  /*
+  gestalt-flow  : flex column;
+  gestalt-space : tiny normal;
+  */
   a        { color: inherit; padding: 0.5rem; }
   a.active { --bg: --alpha(ink, 0.20); }
 }
