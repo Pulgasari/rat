@@ -3,7 +3,7 @@
 /*
 the js side. two steps, in this order:
 
-  sugar     text level, token based: |> and for…of without a declaration.
+  sugar     text level, token based: |>, <| and for…of without a declaration.
             acorn cannot parse |>, so this runs before anything is parsed
   reactive  ast level: declared $names become signals / computeds, every
             read and write of one gets .value. only insertions, so edits
@@ -27,6 +27,16 @@ const CLOSERS    = new Set([tt.parenR, tt.bracketR, tt.braceR]);
 
 const isPipe = (list, index) =>
   list[index]?.type === tt.bitwiseOR && list[index + 1]?.value === '>' && list[index].end === list[index + 1].start;
+
+// |> at index (its |), or at the > of it
+const isPipeAt = (list, index) => isPipe(list, index) || isPipe(list, index - 1);
+
+// <| or :: at index (its first half), or at the second half. :: is no js anywhere: two colons side by side
+const adjacent  = (list, index) => list[index + 1] && list[index].end === list[index + 1].start;
+const isApply   = (list, index) => Boolean(list[index]) && adjacent(list, index) && (
+     list[index].value === '<' && list[index + 1].type === tt.bitwiseOR
+  || list[index].type === tt.colon && list[index + 1].type === tt.colon);
+const isApplyAt = (list, index) => isApply(list, index) || isApply(list, index - 1);
 
 // a line break between two tokens
 const breaks = (code, a, b) => code.slice(a.end, b.start).includes('\n');
@@ -73,7 +83,7 @@ function leftOperand (code, list, pipe) {
     if (CLOSERS.has(token.type)) { depth++; first = at; continue; }
     if (OPENERS.has(token.type)) { if (depth === 0) break; depth--; first = at; continue; }
     if (depth === 0) {
-      if (LEFT_STOP.has(token.type) || isPipe(list, at)) break;
+      if (LEFT_STOP.has(token.type) || isPipeAt(list, at) || isApplyAt(list, at)) break;
       // a line break on the top level ends the operand, unless the pipe opens the line
       if (first < pipe && breaks(code, token, list[first])) break;
     }
@@ -92,7 +102,7 @@ function rightOperand (code, list, from) {
     if (OPENERS.has(token.type)) { depth++; last = at; continue; }
     if (CLOSERS.has(token.type)) { if (depth === 0) break; depth--; last = at; continue; }
     if (depth === 0) {
-      if (RIGHT_STOP.has(token.type) || isPipe(list, at) || token.type === tt.eof) break;
+      if (RIGHT_STOP.has(token.type) || isPipe(list, at) || isApply(list, at) || token.type === tt.eof) break;
       // a line break ends it, unless the next line continues the chain (. ?.)
       if (last >= from && breaks(code, list[last], token) && token.type !== tt.dot && token.type !== tt.questionDot) break;
     }
@@ -101,6 +111,55 @@ function rightOperand (code, list, from) {
 
   const start = list[from]?.start ?? code.length;
   return { end: last >= from ? list[last].end : start, first: from, last, start };
+}
+
+// ::: sugar :: apply
+
+/*
+the other way round: the left side is called with the right side. <| and :: are the same, two spellings
+to try out side by side.
+
+  fn <| value                     fn(value)
+  fn :: value                     fn(value)
+  RAT.app.hold <| load().catch <| toast.error
+                                  RAT.app.hold(load().catch(toast.error))
+
+it groups to the right (rightmost first) and binds tighter than |>: a |> f <| b is f(b)(a). a member
+call keeps its object, the left side is written out as it is.
+*/
+function applies (code, offset = 0) {
+  for (let round = 0; round < 1000; round++) {
+    const list  = tokens(code, offset);
+    const index = list.findLastIndex((_, at) => isApply(list, at));
+    if (index < 0) return code;
+
+    const left  = leftOperand(code, list, index);
+    const right = rightOperand(code, list, index + 2);
+    const fail  = message => new CompileError(message, { index: list[index].start + offset, source: ' '.repeat(offset) + code });
+
+    const fn    = code.slice(left.start, left.end).trim();
+    const value = code.slice(right.start, right.end).trim();
+    const name  = code.slice(list[index].start, list[index + 1].end);
+    if (!fn)    throw fail(`${name} has no left operand`);
+    if (!value) throw fail(`${name} has no right operand`);
+
+    const own = list.filter(token => token.start >= left.start && token.end <= left.end);
+    code = code.slice(0, left.start) + (isChain(own) ? `${fn}(${value})` : `(${fn})(${value})`) + code.slice(right.end);
+  }
+  throw new Error('[rat] <| rewrite did not settle');
+}
+
+// names, dots and calls only (load().catch, a keyword after a dot is a name): called as it is, no parentheses
+function isChain (list) {
+  let depth = 0;
+  for (const [at, token] of list.entries()) {
+    if (OPENERS.has(token.type)) { depth++; continue; }
+    if (CLOSERS.has(token.type)) { depth--; continue; }
+    if (depth) continue;
+    const member = token.type.keyword && (list[at - 1]?.type === tt.dot || list[at - 1]?.type === tt.questionDot);
+    if (token.type !== tt.name && token.type !== tt.dot && token.type !== tt.questionDot && token.type !== tt._this && !member) return false;
+  }
+  return true;
 }
 
 const isTopic  = token => token.type === tt.name && token.value === TOPIC;
@@ -551,14 +610,14 @@ function forOf (code, offset = 0) {
 
 /*
 order matters: cases first (their guards own a #), match next (its arms own a #), # must be a name before anything
-else tokenizes, ranges before pipes (1..5 |> sum), is before pipes (x |> # is A).
+else tokenizes, ranges before pipes (1..5 |> sum), is before pipes (x |> # is A), <| before |> (it binds tighter).
 cases: a map the named cases are collected in, name -> the parts they hand out
 */
 const sugar = (code, offset = 0, cases = new Map) => {
   code = caseDeclarations(code, offset, cases);
   code = matchExpressions(code, offset);
   code = isOperator(ranges(topics(code, offset), offset), offset);
-  return forOf(strayTopic(pipes(code, offset), offset), offset);
+  return forOf(strayTopic(pipes(applies(code, offset), offset), offset), offset);
 };
 
 // sugar errors come from acorn's tokenizer, positioned but without a file
@@ -871,7 +930,7 @@ function transformExpression ({ code, start }, { filename, names, source }) {
 
 export { 
   TOPIC, 
-  bindings, caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, walk,
+  applies, bindings, caseDeclarations, declared, forOf, isOperator, pipes, ranges, sugar, topics, walk,
   transformExpression, transformScript,
 };
 

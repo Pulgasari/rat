@@ -12,7 +12,7 @@
   const TITLES = { artists: 'Artists', genres: 'Genres', releases: 'Releases', tracks: 'Tracks' };
   const EMPTY  = { artists: 'No artists yet', genres: 'Add a folder in the settings', releases: 'Pick an artist', tracks: 'Pick a release' };
 
-  RAT.app.hold(load().catch(error => toast.error(error)));
+  RAT.app.hold <| load().catch <| toast.error;
 
   RAT.app.commands.assign({
     'clear-selection' : clearSelection,

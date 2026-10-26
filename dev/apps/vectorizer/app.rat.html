@@ -64,7 +64,7 @@
     URL.revokeObjectURL(link.href);
   }
 
-  const copy = () => navigator.clipboard.writeText($svg).then(() => toast.success('svg copied'), error => toast.error(error));
+  const copy = () => navigator.clipboard.writeText($svg).then(() => toast.success('svg copied'), toast.error);
 
   // an image pasted anywhere
   effect(() => {

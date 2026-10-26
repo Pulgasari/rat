@@ -6,7 +6,7 @@
 
   import { load } from './lib.js';
 
-  RAT.app.hold(load().catch(error => toast.error(error)));
+  RAT.app.hold <| load().catch <| toast.error;
 </script>
 
 <rat-area name='main'>

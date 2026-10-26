@@ -10,7 +10,8 @@ here, beside the app (.capacitor/, not in git), from what config.rat.js says:
   2. the project: capacitor.config.json, a package.json with the plugins the app's mods need (files ->
      @capacitor/filesystem, dialogs -> @capacitor/dialog …), npm install, cap add android once
   3. rat's own plugins (@rat/app/native/android: Saf and NativeHttp always, the folders named in plugins)
-     copied into the android project, registered in MainActivity, their manifest entries added
+     copied into the android project, registered in MainActivity, their manifest entries added. the app's
+     icon, its color on the bars and the launch screen (android-res.js: android.icon, android.color)
   4. cap sync android, then gradle where an android sdk is (ANDROID_HOME): .capacitor/<name>.apk, a debug
      build, installable. without a sdk the project is ready for android studio or ci
 */
@@ -23,9 +24,11 @@ import { fileURLToPath } from 'node:url';
 
 import { appConfig } from '@rat/dev';
 
+import { resources } from './android-res.js';
 import { color, print, warn } from './wizard.js';
 
 const NATIVE  = fileURLToPath(new URL('../app/native/android/', import.meta.url));
+const SHARP   = '^0.35.0';   // the icons, android-res.js
 const VERSION = '^8.0.0';
 const MARK    = 'rat:plugins';
 
@@ -72,7 +75,7 @@ async function settingsOf (root) {
   const mods = [];
   for (const mod of Object.keys(PLUGINS)) if (await named(mod)) mods.push(mod);
 
-  return { id: android.id ?? `dev.rat.${slug}`, mods, name, native: android.plugins ?? [], slug };
+  return { android, config: file, id: android.id ?? `dev.rat.${slug}`, mods, name, native: android.plugins ?? [], slug };
 }
 
 async function scaffold (project, { id, mods, name, slug }) {
@@ -81,7 +84,7 @@ async function scaffold (project, { id, mods, name, slug }) {
   await writeFile(join(project, 'capacitor.config.json'), JSON.stringify({ appId: id, appName: name, webDir: 'www' }, null, 2) + '\n');
 
   const plugins      = [...new Set(mods.flatMap(mod => PLUGINS[mod]))].sort();
-  const dependencies = Object.fromEntries(['@capacitor/android', '@capacitor/cli', '@capacitor/core', ...plugins].map(name => [name, VERSION]));
+  const dependencies = { ...Object.fromEntries(['@capacitor/android', '@capacitor/cli', '@capacitor/core', ...plugins].map(name => [name, VERSION])), sharp: SHARP };
   await writeFile(join(project, 'package.json'), JSON.stringify({ dependencies, name: `rat-${slug}-android`, private: true }, null, 2) + '\n');
 
   print(`${name}: ${plugins.length ? plugins.join(', ') : 'no npm plugins'}`);
@@ -200,6 +203,8 @@ export async function android (root) {
 
   await scaffold(project, settings);
   await addNative(project, settings.native);
+  const { color: tint, icon } = await resources(project, settings.config, settings.android);
+  print(`${settings.name}: ${icon ? `the icon of ${relative('.', icon)}, ` : ''}${tint} on the bars and the launch screen`);
   await execute('npx', ['cap', 'sync', 'android'], project);
   await assemble(project, settings.slug);
 }
