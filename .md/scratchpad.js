@@ -1,5 +1,30 @@
 // commands | hotkeys
 
+// a 3rd form (F3)
+const count = signal(0);
+count;     // read
+count(5);  // write
+
+// a 4th form (F4)
+$.count = $(0);
+$.count;    // read
+$.count(5); // write
+
+// a 5th form (F4)
+$.count = $(0);
+$.count.$;      // signal
+$.count;        // read
+$.count = 5;    // write
+$.count.get();  // read
+$.count.set(5); // write
+
+
+
+
+
+
+
+
 const unable = what => Promise.reject(new Error(`[rat] clipboard: this platform does not let the app ${what} it`));
 
 RAT.PREFIX = '[RAT] ';
