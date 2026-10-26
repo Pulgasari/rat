@@ -447,8 +447,7 @@ const pattern = (element, { id, ...options }) => {
 
 ## styles
 
-`<style>` is css. `scss`, `sass` and `ass` ([`@aufbau/ass`](https://github.com/pulgasari/aufbau/tree/main/ass))
-are built in ([d-20](ideas/styles.md#d-20)):
+`<style>` is css. `scss` and `sass` are built in ([d-20](ideas/styles.md#d-20)):
 
 ```html
 <style lang="scss">
@@ -457,13 +456,13 @@ are built in ([d-20](ideas/styles.md#d-20)):
 ```
 
 ```js
-await compileAsync(source, { filename });      // loads sass / @aufbau/ass on first use
-await loadStyles('scss', 'ass'); compile(…);   // or load once, then compile synchronously
+await compileAsync(source, { filename });      // loads sass on first use
+await loadStyles('scss'); compile(…);          // or load once, then compile synchronously
 compile(source, { styles: { less: code => … } }); // any other language: pass a function
 ```
 
 - `lang="scss"` or `type="text/scss"`.
-- a loader tries the bare specifier first (`sass`, `@aufbau/ass`: an import map or
+- a loader tries the bare specifier first (`sass`: an import map or
   `node_modules`), then a pinned url.
 - *(planned)* a service worker that compiles `.rat` files on request, so a plain browser
   page can `import './card.rat'` without a build.
@@ -488,7 +487,7 @@ compile(source, { styles: { less: code => … } }); // any other language: pass 
 |---|---|---|
 | `link` | a `<link rel="stylesheet">` in the head, once per url | global |
 | `adopt` (default) | fetched, a constructable stylesheet in `document.adoptedStyleSheets`, once per url | global |
-| `inline` | read while compiling, added to the component's `<style>`. no request at runtime, no unstyled flash. `.scss` / `.sass` / `.ass` go through that language | the component |
+| `inline` | read while compiling, added to the component's `<style>`. no request at runtime, no unstyled flash. `.scss` / `.sass` go through that language | the component |
 
 - the statement works in `<script>` and `<script module>`, at the top level, at the start of a
   statement. `style` stays a plain name everywhere else (`style.color`, `const style = …`).

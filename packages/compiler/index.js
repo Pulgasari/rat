@@ -75,7 +75,7 @@ function unresolvedOf (asts, code) {
 
 /*
 a <style> in another language goes through options.styles[lang], a function
-(code, { filename }) => css, or through a built-in one (scss, sass, ass) that
+(code, { filename }) => css, or through a built-in one (scss, sass) that
 was loaded before: compileAsync() loads them by itself.
 */
 function preprocess (code, lang, { filename, index, source, styles = {} }) {

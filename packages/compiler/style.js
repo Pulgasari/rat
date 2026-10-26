@@ -45,7 +45,7 @@ three ways a css file gets into the page, the same in a script and as a tag:
   link     a <link rel="stylesheet"> in the head. global, once per url
   adopt    fetched, a constructable stylesheet in document.adoptedStyleSheets. global, once per url
   inline   read while compiling and added to the component's own <style>: scoped like it,
-           no request at runtime. a .scss / .sass / .ass file goes through that language
+           no request at runtime. a .scss / .sass file goes through that language
 
 link and adopt run when the module is first imported, relative urls resolve against the file.
 */
@@ -103,6 +103,6 @@ const RELATIVE_URL = /url\(\s*(['"]?)(?![a-z][\w+.-]*:|\/|#)([^'")]+)\1\s*\)/gi;
 const rebase = (css, base) => css.replace(RELATIVE_URL, (_, quote, path) => `url("${new URL(path, base).href}")`);
 
 // the language of a css file by its extension
-const langOfPath = path => /\.(scss|sass|ass)$/i.exec(path)?.[1].toLowerCase() ?? 'css';
+const langOfPath = path => /\.(scss|sass)$/i.exec(path)?.[1].toLowerCase() ?? 'css';
 
 export { MODES, attrOf, hash, inlineSources, langOfPath, rebase, scopeStyle, styleStatements };

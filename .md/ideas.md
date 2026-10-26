@@ -165,7 +165,7 @@ random other stuff
 - `~D[2026-10-13]` a date,
 - and you can define your own (`~css"…"`).
 
-rat already has the same mechanism: tagged templates (``html`…` ``, ``ass`…` ``). nothing new needed, but a reminder that custom tags (``date`2026-10-13` ``, ``re`\d+` ``) are a cheap way to make literals readable.
+rat already has the same mechanism: tagged templates (``html`…` ``). nothing new needed, but a reminder that custom tags (``date`2026-10-13` ``, ``re`\d+` ``) are a cheap way to make literals readable.
 
 inspired by: elixir
 
