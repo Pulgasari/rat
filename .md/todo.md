@@ -12,18 +12,21 @@
   - [ ] notifications
   - [ ] thumbnails
 
-## `@rat/app`
-- [ ] (?) `<rat-part>` auf `@domina/element`
-- [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
-- [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
-- [ ] `<rat-overlay>` ebenso per `name` umschalten
-
 ## syntax | schema | types
 - [ ] the "comptime" idea from [ideas.md](ideas.md)
 - [ ] extend schema for elements-hints (control-elements)
 - [ ] extend schema for persistence
 
-## sonstiges (nicht jetzt)
+---
+
+# not for now
+
+## `@rat/app`
+- [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
+- [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
+- [ ] `<rat-overlay>` ebenso per `name` umschalten
+
+## sonstiges
 - [ ] `@rat/bunker` nach `@bunker` umziehen, sobald es sich in den apps bewährt hat
 - [ ] props an signals andocken (optional, ohne dass domina fest an `@rat/signals` hängt)
 
