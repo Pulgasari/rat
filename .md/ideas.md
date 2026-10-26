@@ -12,6 +12,20 @@
 
 these ones would/should be more likely an enhancement of `htx` directly.
 
+### multi-attributes by `+`
+
+```html
+<div name+id='example'>...</div>
+```
+
+### pseudo-elements | generic element tags
+
+```html
+<input:number id|name='amount' value='666' />
+```
+
+the names are generic tag names which gets mapped to the real tagnames relating to the current context a project runs in or builds for.
+
 ### indentation instead of closing tags
 
 ```imba
