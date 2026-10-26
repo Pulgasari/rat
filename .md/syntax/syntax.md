@@ -351,13 +351,15 @@ $todos |> #.length |> `${#} todos`;               // # works in any expression
   on its own bracket level. when in doubt, parens.
 - a value used more than once is bound to a parameter, so it is evaluated once.
 
-### apply `<|`
+### apply `<|` / `::`
 
 the other way round: the left side is called with the right side. `fn <| value` is `fn(value)`, it groups to
-the right, so a chain reads from the outside in:
+the right, so a chain reads from the outside in. `::` is the same operator, a second spelling to try out
+which one reads better (one of them goes once that is decided):
 
 ```js
 RAT.app.hold <| load().catch <| toast.error;      // RAT.app.hold(load().catch(toast.error))
+RAT.app.hold :: load().catch :: toast.error;      // the same
 show <| format <| item.name;                      // show(format(item.name))
 items.forEach(item => show <| item.name);         // the left side stops at => , = ( …, like |>
 ```

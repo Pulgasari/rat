@@ -343,7 +343,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -552,7 +552,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -933,7 +933,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -1142,7 +1142,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -1246,7 +1246,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -1455,7 +1455,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -1664,7 +1664,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {
@@ -1920,7 +1920,7 @@
           "name": "keyword.operator.pipe"
         },
         {
-          "match": "<\\|",
+          "match": "<\\||::",
           "name": "keyword.operator.pipe"
         },
         {

@@ -52,7 +52,7 @@ const operators = [
 ];
 
 const pipe  = '|>';
-const apply = '<|';
+const apply = ['<|', '::'];   // two spellings of the same, to try out
 
 // the tags whose templates are rat markup in .rat.js (compiler: TAGS, d-11)
 const templateTags = ['html', 'htx', 'rat'];
@@ -164,7 +164,7 @@ const states = {
     { match: `${IDENT}(?=\\s*\\()`,  token: 'entity.name.function' },
     { match: IDENT,                  token: 'variable.other' },
     { match: escape(pipe),           token: 'keyword.operator.pipe' },
-    { match: escape(apply),          token: 'keyword.operator.pipe' },
+    { match: either(apply),          token: 'keyword.operator.pipe' },
     { match: '(?<!\\.)\\.\\.(?!\\.)',     token: 'keyword.operator.range' },
     { match: '#(?![\\w$])',            token: 'variable.language.topic' },
     { match: either(operators),      token: 'keyword.operator' },

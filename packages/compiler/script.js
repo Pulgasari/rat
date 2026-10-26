@@ -31,8 +31,11 @@ const isPipe = (list, index) =>
 // |> at index (its |), or at the > of it
 const isPipeAt = (list, index) => isPipe(list, index) || isPipe(list, index - 1);
 
-// <| at index (its <), or at the | of it
-const isApply   = (list, index) => list[index]?.value === '<' && list[index + 1]?.type === tt.bitwiseOR && list[index].end === list[index + 1].start;
+// <| or :: at index (its first half), or at the second half. :: is no js anywhere: two colons side by side
+const adjacent  = (list, index) => list[index + 1] && list[index].end === list[index + 1].start;
+const isApply   = (list, index) => Boolean(list[index]) && adjacent(list, index) && (
+     list[index].value === '<' && list[index + 1].type === tt.bitwiseOR
+  || list[index].type === tt.colon && list[index + 1].type === tt.colon);
 const isApplyAt = (list, index) => isApply(list, index) || isApply(list, index - 1);
 
 // a line break between two tokens
@@ -113,9 +116,11 @@ function rightOperand (code, list, from) {
 // ::: sugar :: apply
 
 /*
-the other way round: the left side is called with the right side.
+the other way round: the left side is called with the right side. <| and :: are the same, two spellings
+to try out side by side.
 
   fn <| value                     fn(value)
+  fn :: value                     fn(value)
   RAT.app.hold <| load().catch <| toast.error
                                   RAT.app.hold(load().catch(toast.error))
 
@@ -134,8 +139,9 @@ function applies (code, offset = 0) {
 
     const fn    = code.slice(left.start, left.end).trim();
     const value = code.slice(right.start, right.end).trim();
-    if (!fn)    throw fail('<| has no left operand');
-    if (!value) throw fail('<| has no right operand');
+    const name  = code.slice(list[index].start, list[index + 1].end);
+    if (!fn)    throw fail(`${name} has no left operand`);
+    if (!value) throw fail(`${name} has no right operand`);
 
     const own = list.filter(token => token.start >= left.start && token.end <= left.end);
     code = code.slice(0, left.start) + (isChain(own) ? `${fn}(${value})` : `(${fn})(${value})`) + code.slice(right.end);
