@@ -45,7 +45,7 @@
 <rat-area id|name='menu' dock='start' open={wide}>
   <nav>
     <a.brand href='../../'>RAT</a>
-    @for (page of PAGES) {
+    @for (page of PAGES2) {
       <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
     }
     <a href='../../demos/'>Demos</a>
