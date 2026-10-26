@@ -23,11 +23,8 @@ narrow: menu, tabs, one panel to swipe, player
 }
 
 .menu, .panel, .player {
-   background    : color-mix(in oklab, currentColor 6%, transparent);
-   border-radius : var(--noisy-radius);
-   min-block-size: 0;
-   gap     : var(--noisy-gap);
-   padding : var(--noisy-gap);
+  background    : --alpha(cc, 5%);
+  min-block-size: 0;
 }
 
 /* :::::: MENU */
@@ -52,50 +49,25 @@ narrow: menu, tabs, one panel to swipe, player
 
 .panels {
   display               : grid;
-  gap                   : var(--noisy-gap);
   grid-area             : panels;
   grid-template-columns : repeat(4, minmax(0, 1fr));
   min-block-size        : 0;
 }
 
-.panel {
-  display        : flex;
-  flex-direction : column;
-  overflow       : hidden;
-}
+.panel { display: flex; flex-direction: column; overflow: hidden; }
 
-.panel-head {
-  align-items : center;
-  display     : flex;
-  gap         : var(--noisy-gap);
-  padding     : var(--noisy-gap);
-
-  h2 { flex: 1; font-size: 1rem; margin: 0; }
-}
+.panel-head    { align-items: center; display: flex; }
+.panel-head h2 { flex: 1; font-size: 1rem; margin: 0; }
 
 .panel-count { font-size: 0.8rem; opacity: 0.6; }
-
-.panel-list {
-  flex     : 1;
-  overflow : auto;
-  padding  : var(--noisy-gap);
-}
-
-.panel-empty {
-  margin     : auto;
-  opacity    : 0.5;
-  padding    : 1rem;
-  text-align : center;
-}
+.panel-list  { flex: 1; overflow: auto; }
+.panel-empty { margin: auto; opacity: 0.5; text-align: center; }
 
 .row {
   align-items   : center;
-  border-radius : 0.5rem;
   cursor        : pointer;
   display       : flex;
-  gap           : var(--noisy-gap);
   min-block-size: 2.5rem;
-  padding       : 0 0.6rem;
   user-select   : none;
   /*
   &:hover   { background: color-mix(in oklab, currentColor 8%, transparent); }
@@ -132,7 +104,6 @@ narrow: menu, tabs, one panel to swipe, player
   align-items    : center;
   display        : flex;
   flex-direction : column;
-  gap            : var(--noisy-gap);
   grid-area      : player;
   overflow       : hidden;
 
@@ -158,6 +129,31 @@ narrow: menu, tabs, one panel to swipe, player
 .player-seek  { display: none; }
 .player-time  { font-size: 0.7rem; opacity: 0.6; }
 .player-error { color: var(--color-error, red); font-size: 0.75rem; }
+
+/* DENSITY + GEOMETRY */
+
+.menu, 
+.panel,
+.panel-empty,
+.panel-head,
+.panel-list,
+.panels,
+.player {
+  --gap: normal;
+  --pad: normal;
+}
+
+.row {
+  --rad: 0.5rem;
+  --gap: normal;
+  --pad: small;
+}
+
+.menu,
+.panel, 
+.player {
+  border-radius : 1rem;
+}
 
 /* :::::: NARROW: menu, tabs, one panel at a time to swipe, player */
 
@@ -243,85 +239,3 @@ narrow: menu, tabs, one panel to swipe, player
    .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
 }
 
-
-
-/*
-$R = var(--noisy-radius);
-
-// orientation: landscape | default
-.noisy > :first-child { border-radius: 0 $R $R 0; }
-.noisy > :last-child  { border-radius: $R 0 0 $R; }
-
-// orientation: portrait
-@media (orientation: portrait) {
-   .noisy > :first-child { border-radius: 0 0 $R $R; }
-   .noisy > :last-child  { border-radius: $R $R 0 0; }
-}
-
-
-
-
-
-_ = var(--noisy-radius);
-
-// orientation: landscape | default
-.noisy > :first-child { radius: 0 _ _ 0 }
-.noisy > :last-child  { radius: _ 0 0 _ }
-
-// orientation: portrait
-@media (orientation: portrait) {
-   .noisy > :first-child { radius: 0 0 _ _ }
-   .noisy > :last-child  { radius: _ _ 0 0 }
-}
-
-
-
-
-_ = var(--noisy-radius);
-
-// orientation: landscape | default
-.noisy > :first-child { radius: 0 _ _ 0 }
-.noisy > :last-child  { radius: _ 0 0 _ }
-
-// orientation: portrait
-@media (orientation: portrait) {
-   @prop radius {
-      > [+1] :: 0 0 _ _
-      > [-1] :: _ _ 0 0
-   }
-}
-
-
-
-
-
-@pred orient = () => media.orientation === 'portrait' ? portrait : landscape
-
-@snippet {
-   _ = var(--noisy-radius);
-
-   @case 'landscape' {
-      > [+1] { border-radius: 0 _ _ 0 }
-      > [-1] { border-radius: _ 0 0 _ }
-   }
-   
-   @case 'portrait' {
-      > [+1] { border-radius: 0 0 _ _ }
-      > [-1] { border-radius: _ _ 0 0 }
-   }
-}
-
-
-
-
-@pred orient = () => media.orientation === 'portrait' ? portrait : landscape
-
-@snippet {
-   _ = var(--noisy-radius);
-
-   @prop 'border-radius' = @switch (pred) {
-      @case 'landscape' => > [+1] = 0 _ _ 0 ;; > [-1] = _ 0 0 _ ;;
-      @case 'portrait'  => > [+1] = 0 0 _ _ ;; > [-1] = _ _ 0 0 ;;
-   }
-}
-*/
