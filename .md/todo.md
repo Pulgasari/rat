@@ -1,28 +1,26 @@
 # RAT :: todo
 
+## @rat/app
+- [ ] move `/store.js` to `/modules/store.js`
+- [ ] create module drivers:
+  - [ ] database
+  - [ ] dialogs
+  - [ ] external
+  - [ ] files
+  - [ ] folders
+  - [ ] hotkeys
+  - [ ] notifications
+  - [ ] thumbnails
+
 offen, zum abhaken. entschiedenes steht in [decisions.md](decisions.md).
 
 ## `@rat/app`
-- [x] `<rat-app>` entfernen, `<rat-app2>` wird `<rat-app>` (mit `src`: lädt `app.rat` und mountet in sich)
 - [ ] (?) `<rat-part>` auf `@domina/element`
-- [x] `<rat-part>` lädt auch `.htx` und `.html` (der loader, für alle elemente und imports)
-- [x] error boundary: `<rat-view>`, `<rat-part>`, `<rat-app>` (popover als letzte), `raise`/`guard` in `@rat/runtime`
-- [x] error boundary: fehler in command-handlern (`Commands`) kommen an, als `rat:error` vom auslösenden element
 - [ ] error boundary: eigene fehleranzeige (z.b. `<template slot="error">`)
 - [ ] `<rat-overlay>` auf `<dialog>` (modernes html nutzen: top layer, inert, escape)
-- [x] umschalten per `name`, beide formen gebaut, in der praxis vergleichen: `onclick='rat:toggle[menu]'` (ein command-name mit `:` ist ein eigenes event) und `RAT.toggle('menu')` (globales `RAT`)
 - [ ] `<rat-overlay>` ebenso per `name` umschalten
-- [x] hotkeys an `app.commands` (`Hotkeys`): mod `hotkeys`
-- [x] auto-import per config: `autoImport: true` (verzeichnis der config), `['pathX', …]`, `{ pathX: ['Dock', 'Footer'] }`
-- [x] app-config (`config.rat.js`, `RAT.config`, `RAT.app`), mods (`database`, `files`, `store`, `hotkeys`)
-- [x] pwa-hülle: manifest (apps), service worker als mod `offline` (`packages/app/run/sw.js`, je app ein `sw.js`), kompilate im cache (`rat:compiled`)
-
-## `@rat/router`
-- [ ] (?) globaler router, den views direkt abonnieren
 
 ## syntax
-- [ ] props nach d-13 b umsetzen (`let { $title } = props`)
-- [x] `let` vor `$name` auf oberster ebene im `<script>` optional (`const` bleibt pflicht, nicht in `.rat.js`)
 - [ ] (ungeklärt, verschoben, jetzt mit `@rat/bunker` als unterbau) persistenz eines signals: form klären (statt `$(init, '[persist]')`, idee: `persist $filter;`)
 - [ ] sichtbarer anfang/ende einer komponente statt `<>` (`<self>`?)
 - [ ] meta-angaben in der ersten zeile (`<!-- rat:root -->` o.ä.)
