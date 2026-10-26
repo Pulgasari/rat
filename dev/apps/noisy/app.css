@@ -54,14 +54,12 @@ narrow: menu, tabs, one panel to swipe, player
   min-block-size        : 0;
 }
 
-.panel { display: flex; flex-direction: column; overflow: hidden; }
-
+.panel         { display: flex; flex-direction: column; overflow: hidden; }
 .panel-head    { align-items: center; display: flex; }
 .panel-head h2 { flex: 1; font-size: 1rem; margin: 0; }
-
-.panel-count { font-size: 0.8rem; opacity: 0.6; }
-.panel-list  { flex: 1; overflow: auto; }
-.panel-empty { margin: auto; opacity: 0.5; text-align: center; }
+.panel-count   { font-size: 0.8rem; opacity: 0.6; }
+.panel-list    { flex: 1; overflow: auto; }
+.panel-empty   { margin: auto; opacity: 0.5; text-align: center; }
 
 .row {
   align-items   : center;
@@ -124,7 +122,7 @@ narrow: menu, tabs, one panel to swipe, player
 
 .player.idle .player-title { flex: 1; writing-mode: vertical-rl; }
 
-.player-controls { display: flex; flex-direction: column; gap: 0.5rem; }
+.player-controls { display: flex; flex-direction: column; }
 
 .player-seek  { display: none; }
 .player-time  { font-size: 0.7rem; opacity: 0.6; }
@@ -142,6 +140,8 @@ narrow: menu, tabs, one panel to swipe, player
   --gap: normal;
   --pad: normal;
 }
+
+.player-controls { --gap: small; }
 
 .row {
   --rad: 0.5rem;
@@ -171,19 +171,19 @@ narrow: menu, tabs, one panel to swipe, player
   .tabs {
     display   : flex;
     grid-area : tabs;
-    gap       : 0.25rem;
 
     button {
       background    : none;
       border        : 0;
       border-radius : 999px;
-      color         : inherit;
+      
       flex          : 1;
-      font          : inherit;
+      
       opacity       : 0.6;
-      padding       : 0.5rem;
 
-      &.active { background: color-mix(in oklab, currentColor 12%, transparent); opacity: 1; }
+      --pad: small;
+
+      &.active { --bg: --alpha(cc, 0.1); opacity: 1; }
     }
   }
 
@@ -196,13 +196,9 @@ narrow: menu, tabs, one panel to swipe, player
     > * { flex: 0 0 100%; scroll-snap-align: start; }
   }
 
-  .player {
-    flex-direction : row;
-
-    .cover { inline-size: 2.75rem; }
-  }
-
-  .player-now                { flex: 1; writing-mode: horizontal-tb; }
+  .player                    { flex-direction : row; }
+  .player .cover             { inline-size: 2.75rem; }
+  .player-now                { writing-mode: horizontal-tb; flex: 1;  }
   .player.idle .player-title { writing-mode: horizontal-tb; }
   .player-controls           { flex-direction: row; }
   .player-time               { display: none; }
@@ -239,3 +235,7 @@ narrow: menu, tabs, one panel to swipe, player
    .noisy > :last-child  { border-radius: var(--r) var(--r) 0 0; }
 }
 
+/*
+color         : inherit;
+font          : inherit;
+*/
