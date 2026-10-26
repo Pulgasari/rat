@@ -117,15 +117,15 @@ export interface List<T> extends Iterable<T> {
   includes (value: T): boolean;
   indexOf (value: T): number;
   every (fn: (item: T, index: number) => unknown): boolean;
-  filter (fn: (item: T, index: number) => unknown): T[];
+  filter (fn: (item: T, index: number) => unknown): List<T>;
   find (fn: (item: T, index: number) => unknown): T | undefined;
   findIndex (fn: (item: T, index: number) => unknown): number;
-  flatMap<U> (fn: (item: T, index: number) => U | U[]): U[];
+  flatMap<U> (fn: (item: T, index: number) => U | U[]): List<U>;
   forEach (fn: (item: T, index: number) => void): void;
   join (separator?: string): string;
-  map<U> (fn: (item: T, index: number) => U): U[];
+  map<U> (fn: (item: T, index: number) => U): List<U>;
   reduce<U> (fn: (sum: U, item: T, index: number) => U, initial: U): U;
-  slice (start?: number, end?: number): T[];
+  slice (start?: number, end?: number): List<T>;
   some (fn: (item: T, index: number) => unknown): boolean;
   toArray (): T[];
   /** Is there an item the test (of match) lets through. */
@@ -249,7 +249,7 @@ export const $Str : ScalarConstructor<$Str, string>;
 export interface Table<T extends object> extends List<Readonly<T>> {
   readonly schema  : Schema<T[]>;
   readonly columns : (keyof T)[];
-  column<K extends keyof T> (key: K): T[K][];
+  column<K extends keyof T> (key: K): List<T[K]>;
   /** The row at index with patch over it, checked. */
   update (index: number, patch: Partial<T>): Table<T>;
 }

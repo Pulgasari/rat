@@ -9,7 +9,7 @@ values. called, it is the schema:
   const todos = new Table(Todos, [{ title: 'milk' }]);  // a row gets the initial value of a missing field
   todos.push({ title: 'eggs', done: true });            // checked and coerced like a Record
   todos.update(0, { done: true });                      // a row is frozen: a change goes through the table
-  todos.column('title');                                // ['milk', 'eggs']
+  todos.column('title');                                // a List: milk, eggs
   todos.where({ done: false });                         // the rows a test of match.js lets through, a List
 
 a row is a plain frozen object with exactly the columns, its position is its key. every List method

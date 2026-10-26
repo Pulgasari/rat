@@ -11,7 +11,8 @@ access are no methods and could only be caught with a proxy. a List has length
 as a getter and at(index) / set(index, value) instead of [index]. $List, its
 reactive variant, is below.
 
-the query vocabulary of query.js as methods, a List back where it gives a list:
+what gives a list gives a List (filter, map, flatMap, slice, where …), toArray()
+an array. the query vocabulary of query.js as methods:
 
   tracks.where({ album }).toSortedBy('track').pluck('title')
   tracks.without({ id })
@@ -43,15 +44,15 @@ class ListType {
   indexOf  (value) { return this.#items.indexOf(value); }
 
   every     (fn)         { return this.#items.every(fn); }
-  filter    (fn)         { return this.#items.filter(fn); }
+  filter    (fn)         { return new ListType(this.#items.filter(fn)); }
   find      (fn)         { return this.#items.find(fn); }
   findIndex (fn)         { return this.#items.findIndex(fn); }
-  flatMap   (fn)         { return this.#items.flatMap(fn); }
+  flatMap   (fn)         { return new ListType(this.#items.flatMap(fn)); }
   forEach   (fn)         { this.#items.forEach(fn); }
   join      (separator)  { return this.#items.join(separator); }
-  map       (fn)         { return this.#items.map(fn); }
+  map       (fn)         { return new ListType(this.#items.map(fn)); }
   reduce    (...args)    { return this.#items.reduce(...args); }
-  slice     (start, end) { return this.#items.slice(start, end); }
+  slice     (start, end) { return new ListType(this.#items.slice(start, end)); }
   some      (fn)         { return this.#items.some(fn); }
   toArray   ()           { return [...this.#items]; }
   toJSON    ()           { return this.toArray(); }
