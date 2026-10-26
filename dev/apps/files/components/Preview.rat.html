@@ -3,7 +3,7 @@
 
   import { effect } from '@rat/signals';
 
-  import { file, fs, iconOf, isImage, rootHandle, selected, size } from '../state.js';
+  import { file, fs, iconOf, isImage, rootOfSource, selected, size } from '../state.js';
 
   const $entry = file.value;
 
@@ -16,7 +16,7 @@
     $src = null;
     if (!entry || !isImage(entry)) return;
     let url = null, alive = true;
-    fs.readFile(rootHandle(), entry.path, entry.name).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
+    fs.readFile(rootOfSource(entry.source), entry.path, entry.name).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
     return () => { alive = false; if (url) URL.revokeObjectURL(url); };
   });
 

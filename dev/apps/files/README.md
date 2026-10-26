@@ -35,12 +35,27 @@ folder comes from the shell's folders driver of `@rat/app`.
 | `modules/places.js` | bookmarks and folder types |
 | `modules/transfer.js` | the clipboard, copying and moving |
 | `components/` | the views and their parts |
+| `modules/remotes.js` | the webdav servers, each a root handle (`.shared/webdav/`), kept in `RAT.app.files` |
+| `modules/sync.js` | sending over the lan (LocalSend v2) through the native FileSync plugin |
 
-mods: `database` (the handle), `dialogs` (new folder, rename, delete), `files` (the index), `thumbnails`,
-`offline`.
+mods: `database` (the handle), `dialogs` (new folder, rename, delete), `files` (the index, the servers),
+`thumbnails`, `offline`.
 
-## not ported yet
+## remote
 
-- **remote** (WebDAV, Nextcloud): needs zugriff's webdav handles. the tiles say so
-- **send** (LAN, LocalSend): needs the native FileSync plugin of zugriff's android app
-- the background patterns (`pattern-bg`, `pattern-tile`) of the settings
+WebDAV servers (Nextcloud and ownCloud included) are connected from the dashboard and open in a tab of their
+own. A connection is a root handle like the folder (`.shared/webdav/handles.js`), so browsing, preview,
+thumbnails, copy and move work on it and between it and the folder. In a browser the server has to allow cors
+for this app; in the android app the requests are native (`request()` of `.shared/http.js`, the NativeHttp
+plugin). The credentials stay on the device.
+
+## send (lan)
+
+The `#/sync` view sends files to a device on the local network over LocalSend v2. The network part is native:
+udp multicast and https to a lan address with a self-signed certificate are nothing a web page may do. In a
+browser the view says so; it works in the android app with the FileSync plugin.
+
+## settings
+
+open with (a tap, a double click, auto), the search bar and the tabs at the top or the bottom, a pattern behind
+the app and on the tiles (`input-pattern`, painted by `app.css`).

@@ -2,14 +2,22 @@
   // files: a file manager over one folder the user grants. the state and what can be done with it is
   // state.js, the folder, the index, tasks, places and copying are modules/. the views are components/
 
-  import { root, sheet } from './state.js';
+  import { remotes, root, sheet, sync } from './state.js';
 
   import { hint }  from '../.shared/install.js';
   import { toast } from '../.shared/toast.js';
 
   // the splash stays until the folder is known
-  RAT.app.hold(root.load().catch(error => toast.error(error.message ?? String(error))));
+  RAT.app.hold(Promise.all([root.load(), remotes.load()]).catch(error => toast.error(error.message ?? String(error))));
   hint('Files');
+
+  // discovery runs while the send view is on screen, it costs battery
+  let sending = false;
+  RAT.app.router.on('change', ({ path }) => {
+    if (path === '/sync' && !sending) sync.start();
+    if (path !== '/sync' && sending) sync.stop();
+    sending = path === '/sync';
+  });
 
   // the context area forgets the tasks when it closes
   const ontoggle = event => { if (!event.detail?.open) sheet.value = null; };
@@ -20,6 +28,7 @@
 <rat-view route='/' name='dashboard'><Dashboard /></rat-view>
 <rat-view route='/library' name='library'><Library /></rat-view>
 <rat-view route='/preview' name='preview' transition='slide'><Preview /></rat-view>
+<rat-view route='/sync' name='sync'><Sync /></rat-view>
 
 <rat-area name='context' dock='bottom' peek ontoggle={ontoggle}><div.context><Context /></div.context></rat-area>
 

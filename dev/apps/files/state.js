@@ -3,7 +3,10 @@
 /*
 the state of the app and what can be done with it: the tabs of the library, the listing on screen, the
 selection, the file in the preview, the settings. the views and the context area read it, the actions
-change it. the modules hold the rest: the folder (root), the index (scan), tasks, places, transfer.
+change it. the modules hold the rest: the folder (root), the servers (remotes), the index (scan), tasks,
+places, transfer, sending (sync).
+
+a tab is { path, source }: source null is the granted folder, else the id of a server.
 */
 
 import { computed, effect, signal } from '@rat/signals';
@@ -13,12 +16,14 @@ import { toast }        from '../.shared/toast.js';
 
 import * as fs       from './modules/fs.js';
 import * as places   from './modules/places.js';
+import * as remotes  from './modules/remotes.js';
 import * as root     from './modules/root.js';
 import * as scan     from './modules/scan.js';
+import * as sync     from './modules/sync.js';
 import * as tasks    from './modules/tasks.js';
 import * as transfer from './modules/transfer.js';
 
-export { fs, places, root, scan, tasks, transfer };
+export { fs, places, remotes, root, scan, sync, tasks, transfer };
 
 const { CATEGORIES, categoryOf } = scan;
 
@@ -35,11 +40,32 @@ const stored = (key, fallback) => {
 };
 
 export const settings = {
-  open      : stored('open',      'auto'),     // auto, single (a tap), double (a double click)
-  searchbar : stored('searchbar', 'bottom'),   // bottom, top
-  tabbar    : stored('tabbar',    'bottom'),   // bottom, top
-  viewmode  : stored('viewmode',  'list'),     // list, grid
+  open           : stored('open',         'auto'),     // auto, single (a tap), double (a double click)
+  'pattern-bg'   : stored('pattern-bg',   ''),         // a pattern behind the app: 'dots 8%', '' for none
+  'pattern-tile' : stored('pattern-tile', ''),         // a pattern on the tiles and cards
+  searchbar      : stored('searchbar',    'bottom'),   // bottom, top
+  tabbar         : stored('tabbar',       'bottom'),   // bottom, top
+  viewmode       : stored('viewmode',     'list'),     // list, grid
 };
+
+// the patterns as custom properties on the root, app.css paints them (--pattern-bg-image, --pattern-bg-opacity).
+// a late answer for a value that changed meanwhile is dropped
+export const PATTERNS = ['pattern-bg', 'pattern-tile'];
+
+effect(() => {
+  const element = document.documentElement;
+  for (const name of PATTERNS) {
+    const value = settings[name].value;
+    element.toggleAttribute(`data-${name}`, Boolean(value));
+    if (!value) continue;
+    import('@aufbau/elements/webcomponents/input/types/pattern.js')
+      .then(({ patternStyle }) => patternStyle(value, { name }))
+      .then(style => {
+        if (!style || settings[name].peek() !== value) return;
+        for (const [property, css] of Object.entries(style)) element.style.setProperty(property, css);
+      });
+  }
+});
 
 const touch = () => globalThis.matchMedia?.('(pointer: coarse)').matches;
 
@@ -54,16 +80,17 @@ export const query    = signal('');      // the dashboard's search over the inde
 export const category = signal(null);    // the category the dashboard lists, or null
 export const selected = signal(null);    // the entry the context area is about
 export const file     = signal(null);    // the entry in the preview
-export const sheet    = signal(null);    // what the context area shows instead: 'tasks'
+export const sheet    = signal(null);    // what the context area shows instead: 'tasks', 'remotes'
 export const size     = signal(null);    // { width, height } of the image in the preview
 
-// :::::: TABS, each { path }
+// :::::: TABS, each { path, source }
 
 const tabState = stored('tabs', { index: 0, list: [{ path: [] }] });
 
 export const tabs     = computed(() => tabState.value.list?.length ? tabState.value.list : [{ path: [] }]);
 export const tabIndex = computed(() => Math.min(Math.max(0, tabState.value.index ?? 0), tabs.value.length - 1));
 export const path     = computed(() => tabs.value[tabIndex.value].path);
+export const source   = computed(() => tabs.value[tabIndex.value].source ?? null);
 
 const scrollTop = new Map;   // per tab, for the session
 const scroller  = () => document.querySelector('rat-view[name="library"] .listing');
@@ -72,14 +99,15 @@ function setTabs (list, index = tabIndex.value) {
   tabState.value = { index: Math.min(Math.max(0, index), list.length - 1), list };
 }
 
-export function goTo (next) {
-  setTabs(tabs.value.map((tab, position) => position === tabIndex.value ? { path: next } : tab));
+// from switches the tab to another source, undefined keeps its own
+export function goTo (next, from) {
+  setTabs(tabs.value.map((tab, position) => position === tabIndex.value ? { path: next, source: from === undefined ? tab.source ?? null : from } : tab));
   selected.value = null;
   filter.value   = '';
 }
 
-export function openTab (at = path.value) {
-  const list = [...tabs.value, { path: at }];
+export function openTab (at = path.value, from = source.value) {
+  const list = [...tabs.value, { path: at, source: from }];
   setTabs(list, list.length - 1);
   selected.value = null;
 }
@@ -95,12 +123,21 @@ export function switchTab (position) {
   selected.value = null;
 }
 
-export const tabName = tab => tab.path.at(-1) ?? folderName();
+export const tabName = tab => tab.path.at(-1) ?? sourceName(tab.source ?? null);
 
-// :::::: THE FOLDER
+// :::::: THE FOLDER AND THE SERVERS
 
-export const rootHandle = () => root.perm.value === 'granted' ? root.folder.value?.handle ?? null : null;
-export const folderName = () => root.folder.value?.name ?? 'folder';
+// the granted folder, and the root of a source: null for the folder, a server's id
+export const localRoot    = () => root.perm.value === 'granted' ? root.folder.value?.handle ?? null : null;
+export const rootOfSource = from => from ? remotes.rootOf(from) : localRoot();
+export const sourceName   = from => from ? remotes.byId(from)?.name ?? 'remote' : root.folder.value?.name ?? 'folder';
+
+// the root of the tab on screen
+export const rootHandle = () => rootOfSource(source.value);
+export const folderName = () => sourceName(source.value);
+
+// an entry of the index carries its path and lies in the folder, one of a listing in the tab's source
+export const sourceOf = entry => entry.source !== undefined ? entry.source : entry.path ? null : source.value;
 
 // the listing follows the folder, its permission and the path by itself. the old one goes at once:
 // its entries would still open against the new path. the last request wins, a late answer is dropped
@@ -127,7 +164,7 @@ effect(() => {
 // the index of the whole folder: the stored one at once, a fresh walk behind it
 let scanned = null;
 effect(() => {
-  const handle = rootHandle();
+  const handle = localRoot();
   const folder = root.folder.value;
   if (!handle || !folder || scanned === folder) return;
   scanned = folder;
@@ -143,7 +180,7 @@ function indexFolder (handle, folder) {
   }).catch(error => console.warn('[files] scan failed', error));
 }
 
-export const rescan = () => { const handle = rootHandle(); if (handle) indexFolder(handle, root.folder.value); };
+export const rescan = () => { const handle = localRoot(); if (handle) indexFolder(handle, root.folder.value); };
 
 // :::::: ENTRIES
 
@@ -163,12 +200,12 @@ export const keyOf = entry => `${(entry.path ?? []).join('/')}/${entry.name}`;
 
 export function open (entry, at = path.value) {
   if (entry.kind === 'directory') { goTo([...at, entry.name]); return go('/library'); }
-  file.value = { ...entry, kind: 'file', path: entry.path ?? at };
+  file.value = { ...entry, kind: 'file', path: entry.path ?? at, source: sourceOf(entry) };
   go('/preview');
 }
 
 export function showInFolder (entry) {
-  goTo(entry.path ?? []);
+  goTo(entry.path ?? [], sourceOf(entry));
   go('/library');
 }
 
@@ -192,12 +229,15 @@ export function openTasks () {
 
 // :::::: WRITE
 // the folder is granted read only. a write asks for more on the click that wants it, then runs as a
-// task in the write lane: the app stays usable meanwhile, and two writes never run into each other
+// task in the write lane: the app stays usable meanwhile, and two writes never run into each other.
+// a server's handle has nothing to ask: its credentials are the permission
 
 async function writable () {
-  const handle = await root.writable();
-  if (!handle) toast.error('No permission to change this folder');
-  return handle;
+  const handle = rootHandle();
+  const state  = handle?.requestPermission ? await handle.requestPermission({ mode: 'readwrite' }).catch(() => 'denied') : handle ? 'granted' : 'denied';
+  if (state === 'granted') return handle;
+  toast.error('No permission to change this folder');
+  return null;
 }
 
 // a write as a task. once it is done, the folder it changed is listed anew if it is still on screen
@@ -238,7 +278,7 @@ export async function deleteEntry (entry) {
 }
 
 export function pick (mode, entry) {
-  transfer.pick(mode, entry, entry.path ?? path.value, rootHandle());
+  transfer.pick(mode, entry, entry.path ?? path.value, rootOfSource(sourceOf(entry)));
   area('context')?.hide();
 }
 
@@ -264,7 +304,7 @@ export async function paste () {
 }
 
 export async function download (entry) {
-  const blob = await fs.readFile(rootHandle(), entry.path ?? path.value, entry.name);
+  const blob = await fs.readFile(rootOfSource(sourceOf(entry)), entry.path ?? path.value, entry.name);
   const link = Object.assign(document.createElement('a'), { download: entry.name, href: URL.createObjectURL(blob) });
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 1000);
@@ -293,6 +333,35 @@ export async function closeFolder () {
   scanned = null;
   await root.forget();
   setTabs([{ path: [] }], 0);
+}
+
+// :::::: SERVERS, each opens in a tab of its own
+
+export function openRemote (id) {
+  openTab([], id);
+  go('/library');
+}
+
+export function manageRemotes () {
+  selected.value = null;
+  sheet.value    = 'remotes';
+  area('context')?.show();
+}
+
+// its tabs close with it, the last one falls back to the folder
+export async function forgetRemote (connection) {
+  if (!await dialogs().confirm({ message: `Forget “${connection.name}”? The files on the server stay.`, ok: 'Forget', title: connection.name })) return;
+  await remotes.remove(connection.id);
+  const left = tabs.value.filter(tab => tab.source !== connection.id);
+  setTabs(left.length ? left : [{ path: [] }], 0);
+}
+
+// :::::: SEND, a file of the folder into the outbox, the view opens
+
+export function sendEntry (entry) {
+  sync.addEntry(localRoot(), entry.path ?? path.value, entry)
+    .then(() => { area('context')?.hide(); go('/sync'); })
+    .catch(error => toast.error(error.message ?? String(error)));
 }
 
 // :::::: FOLDER TYPES

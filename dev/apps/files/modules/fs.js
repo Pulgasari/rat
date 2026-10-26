@@ -1,8 +1,8 @@
 // files :: modules/fs.js
 
 /*
-what the app does with a folder, given its root handle: a browser's FileSystemDirectoryHandle, or the
-one a native folders driver of @rat/app gives (drivers/_fs.js). a path is the array of names below the
+what the app does with a folder, given its root handle: a browser's FileSystemDirectoryHandle, the one
+a native folders driver of @rat/app gives (drivers/_fs.js), or a webdav server's (.shared/webdav). a path is the array of names below the
 root, [] the root itself.
 
   dirAt(root, path)                 the folder handle at path
@@ -28,7 +28,7 @@ export async function list (root, path = []) {
 
   const rows = await Promise.all(handles.map(async handle => {
     if (handle.kind === 'directory') return { kind: 'directory', name: handle.name };
-    const file = await handle.getFile();
+    const file = handle.peekFile?.() ?? await handle.getFile();   // a server's handle knows it without downloading
     return { kind: 'file', lastModified: file.lastModified, name: handle.name, size: file.size, type: file.type };
   }));
 

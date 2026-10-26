@@ -22,7 +22,7 @@ export default {
   ],
 
   autoImport : [
-    { './components/': ['Action', 'Bar', 'Context', 'Dashboard', 'Entry', 'Facts', 'FileRow', 'Library', 'Menu', 'PasteBar', 'Preferences', 'Preview', 'Searchbar', 'Status', 'TaskList', 'Tabs', 'Thumb', 'Welcome'] },
+    { './components/': ['Action', 'Bar', 'Context', 'Dashboard', 'Entry', 'Facts', 'FileRow', 'Library', 'Menu', 'PasteBar', 'Preferences', 'Preview', 'RemoteManager', 'Searchbar', 'Status', 'Sync', 'TaskList', 'Tabs', 'Thumb', 'Welcome'] },
     '../.shared/components/',
   ],
 

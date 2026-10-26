@@ -4,13 +4,13 @@
   const MENU = [
     { icon: 'lucide:layout-dashboard', label: 'Dashboard', route: '/'        },
     { icon: 'lucide:folder',           label: 'Library',   route: '/library' },
+    { icon: 'lucide:send',             label: 'Send',      route: '/sync'    },
   ];
 
-  // the tools the app had before, and sending files, coming back one by one
+  // the tools the app had before, coming back one by one
   const SOON = [
-    { icon: 'lucide:send',      label: 'Send'         },
-    { icon: 'lucide:image',     label: 'Image editor' },
-    { icon: 'lucide:file-pen',  label: 'Text editor'  },
+    { icon: 'lucide:image',    label: 'Image editor' },
+    { icon: 'lucide:file-pen', label: 'Text editor'  },
   ];
 
   const $route = RAT.app.router.$path.value;

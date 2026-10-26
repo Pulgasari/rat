@@ -479,3 +479,33 @@ rat-area[name="context"]::part(sheet) { margin-inline: --space(small); }
 
   > h2 { margin: 0; }
 }
+
+/*//////////// PATTERNS ////////////*/
+
+/* the patterns of the settings (state.js sets --pattern-bg-image and its opacity on the root) */
+/* body paints its own background (html has one too): isolated, the pattern lies between it and the app */
+:root[data-pattern-bg] body { isolation: isolate; }
+
+:root[data-pattern-bg] body::before {
+  background-image : var(--pattern-bg-image);
+  content          : '';
+  inset            : 0;
+  opacity          : var(--pattern-bg-opacity, 1);
+  pointer-events   : none;
+  position         : fixed;
+  z-index          : -1;
+}
+
+:root[data-pattern-tile] :is(.tile, .card) {
+  position : relative;
+
+  &::before {
+    background-image : var(--pattern-tile-image);
+    border-radius    : inherit;
+    content          : '';
+    inset            : 0;
+    opacity          : var(--pattern-tile-opacity, 1);
+    pointer-events   : none;
+    position         : absolute;
+  }
+}
