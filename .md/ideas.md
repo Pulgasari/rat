@@ -259,7 +259,8 @@ ja, aber genaue syntax mir noch unklar.
 
 # rat :: comptime
 
-status: **idea**.
+status: **done** in `.rat` files (`<script comptime>`, [syntax](syntax/rat.md#comptime)). plain `.js` (a
+`with { type: 'comptime' }` import, as bun's macros) is open.
 
 see also: [no build](no-build.md)
 

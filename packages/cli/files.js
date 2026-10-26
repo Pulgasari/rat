@@ -1,14 +1,16 @@
 // @rat/cli :: files
 
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { parse } from 'acorn';
 
 import { compileAsync } from '@rat/compiler';
 
-export const RAT  = /\.rat(\.html|\.js)?$/;
-export const jsOf = file => file.replace(RAT, '.js');
+export const COMPTIME = /<script\b[^>]*\bcomptime\b/;
+export const RAT      = /\.rat(\.html|\.js)?$/;
+export const jsOf     = file => file.replace(RAT, '.js');
 
 const SKIP = new Set(['.git', 'node_modules']);
 
@@ -42,10 +44,19 @@ function pointImports (code) {
   return code;
 }
 
+// <script comptime> in node: a module file beside the component for the moment it runs, so its imports
+// resolve from there (node_modules, no import map)
+const comptimeOf = file => async (code, { read }) => {
+  const temp = join(dirname(file), `.${basename(file)}.comptime.mjs`);
+  await writeFile(temp, code);
+  try     { return await (await import(`${pathToFileURL(temp).href}?${Date.now()}`)).default({ read }); }
+  finally { await rm(temp, { force: true }); }
+};
+
 export async function compileFile (file, { base, point = true } = {}) {
   const source = await readFile(file, 'utf8');
   const read   = path => readFile(resolve(dirname(file), path), 'utf8');
-  const { code, unresolved = [] } = await compileAsync(source, { base, filename: basename(file), read });
+  const { code, unresolved = [] } = await compileAsync(source, { base, comptime: comptimeOf(file), filename: basename(file), read });
   return { code: point ? pointImports(code) : code, unresolved };
 }
 

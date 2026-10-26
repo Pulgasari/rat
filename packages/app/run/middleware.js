@@ -15,12 +15,14 @@ written there (vercel reads config from that file only):
   export const config = { matcher: ['/:path*.rat', '/:path*.rat.html', '/:path*.rat.js'] };
 
 a page that opens a .rat.html file itself (a document, not a module) gets the
-file as it is.
+file as it is, and so does a file with a <script comptime>: the edge runs no
+imports of its own, the page compiles it.
 */
 
 import { compileAsync } from '../../compiler/index.js';
 
-const SKIP = 'x-skip-middleware';
+const COMPTIME = /<script\b[^>]*\bcomptime\b/;
+const SKIP     = 'x-skip-middleware';
 
 export const config = { matcher: ['/:path*.rat', '/:path*.rat.html', '/:path*.rat.js'] };
 
@@ -38,9 +40,12 @@ export async function middleware (request) {
   // a css file inlined by the component (style inline …) is read from the host too
   const read = path => raw(new URL(path, request.url)).then(file => file.ok ? file.text() : Promise.reject(new Error(`${path}: ${file.status}`)));
 
+  const source = await response.text();
+  if (COMPTIME.test(source)) return new Response(source, { headers: response.headers });
+
   try {
     const name = new URL(request.url).pathname.split('/').pop();
-    const { code, unresolved = [] } = await compileAsync(await response.text(), { base: request.url, filename: name, read });
+    const { code, unresolved = [] } = await compileAsync(source, { base: request.url, filename: name, read });
     return new Response(code, {
       headers: {
         'Cache-Control'    : 'public, max-age=0, must-revalidate',

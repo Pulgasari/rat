@@ -32,12 +32,48 @@ they are no attributes: an `@` on an element is a [behavior](#behaviors).
 
 | block | ends up in |
 |---|---|
+| `<script comptime>` | runs before the component exists (see [comptime](#comptime)): its top-level `const` and `let` land in the module as data |
 | `<script module>` | module level. `export default` is refused, the markup is the default export |
 | `<script>` | the body of the component function. `export` is refused |
 | `<style>` | `@scope` around the elements with `data-rat="<hash>"` (rooted at their parent, so `.counter { … }` matches the `<div.counter>` on top too; the parent's other children are cut off), adopted as a constructable stylesheet. styles reach into child components (as css cascades), on conflicts the closer component wins (scope proximity). see [styles](#styles) |
 | everything else | the markup |
 
 the component is named after the file: `todo-list.rat` → `TodoList`.
+
+### comptime
+
+`<script comptime>` runs in the build (`@rat/dev`, `rat compile`), without a build in the page right before
+the file is compiled. what its top-level `const` and `let` hold is baked into the module, the code that made it
+and what it imports are not part of it:
+
+```html
+<script comptime>
+  import { use } from '@gestalt/patterns';
+  const dots  = await use('dots', { fg: '#f00', size: 12 }).image();
+  const icons = await read('./icons.json', 'json');
+</script>
+
+<div style:background-image={dots}>
+  @for (icon of icons): <svg-icon name={icon.name} />
+</div>
+```
+
+```js
+// the module
+const dots  = "url(\"data:image/svg+xml,…\")";
+const icons = [{ "name": "add" }, …];
+```
+
+- plain js: no rat sugar, no `$` names (a baked value does not change), no `export`. `await` at the top level works
+- `read(path, as)`: a file relative to the component, `'text'` (default) or `'json'`
+- a value is data: json, `undefined`, `NaN`, `±Infinity`, `-0`, `BigInt`, `Date`, `RegExp`, `URL`, `Map`, `Set`, a typed
+  array. a function, a class instance, a dom node is a compile error naming it
+- no dom in the build: what only makes a string works there (`image()` of a pattern), what injects into the page
+  (`ensureFilter()`) does not
+- in the build it runs in a vite server of its own: bare imports resolve through the import maps, as the app's do.
+  `rat compile` imports it in node (node_modules). in the page it is a blob module under the page's import map: comptime is
+  load time there, the result the same. `rat dev` and the vercel middleware leave such a file to the page
+- what it imports and reads is watched by vite: an edit compiles the component again
 
 at the top level of a `<script>`, `let` before a `$name` may be left out: the first assignment to
 a `$name` declared nowhere at the top level declares it.
