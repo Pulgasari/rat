@@ -271,13 +271,7 @@ ja, aber genaue syntax mir noch unklar.
 
 **reply:** four variants in [d-29](#d-29).
 
-# rat :: comptime
-
-status: **idea**.
-
-see also: [no build](no-build.md)
-
-## idea: code that runs in the compiler (from zig)
+## `comptime` :: code that runs in the compiler
 
 ```zig
 const table = comptime blk: {
@@ -310,6 +304,8 @@ the compiled module contains the finished list, no fetch, no json, no loop at ru
 **cost.** large: the compiler has to execute code (in node: easy, in the browser: a
 worker), and it fits the build adapters and the `dom:clone` target. but it is the
 strongest form of "compiler over runtime magic".
+
+inspired by: `zig`
 
 ---
 
