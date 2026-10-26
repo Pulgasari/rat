@@ -65,6 +65,7 @@ import { RAT, mount } from '@rat/runtime';
 import { catchErrors, showError }        from '../boundary.js';
 import { autoImport, componentOf, load } from '../run/loader.js';
 import { useMods }                       from '../mods.js';
+import { platform }                      from '../platform.js';
 import { viewport }                      from '../viewport.js';
 import { RatArea }                       from './rat-area.js';
 import { RatView }                       from './rat-view.js';
@@ -471,9 +472,10 @@ RatApp.init('rat-app');
 
 // the app from anywhere, on the global RAT of the runtime: RAT.app, RAT.toggle('menu')
 Object.defineProperties(RAT, {
-  app    : { configurable: true, enumerable: true, get: () => current },
-  config : { configurable: true, enumerable: true, get: () => current?.config ?? null },
-  toggle : { configurable: true, enumerable: true, value: (name, force) => current?.toggle(name, force) ?? null },
+  app      : { configurable: true, enumerable: true, get: () => current },
+  config   : { configurable: true, enumerable: true, get: () => current?.config ?? null },
+  platform : { configurable: true, enumerable: true, value: platform },
+  toggle   : { configurable: true, enumerable: true, value: (name, force) => current?.toggle(name, force) ?? null },
 });
 
 // :::::: EXPORT

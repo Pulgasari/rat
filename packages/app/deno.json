@@ -4,6 +4,7 @@
   "license": "MIT",
   "exports": {
     ".": "./index.js",
+    "./host/deno.js": "./host/deno.js",
     "./run.js": "./run/run.js"
   },
   "imports": {

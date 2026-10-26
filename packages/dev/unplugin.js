@@ -17,11 +17,13 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   autoImport of it           a component a file uses without an import gets one, found the way the
                              loader finds it in the page
   import of it              the modules the app runs first (its elements …): imported by the entry
+  target                     the platform of the build (web, android, ios, desktop: an option, or RAT_TARGET),
+                             __RAT_TARGET__ in the code: only the drivers of its shell are part of it
   index.html (vite)          the script of run.js becomes the entry of the build: it imports @rat/app,
                              config.rat.js and its import, and hands the config and the src of <rat-app>
                              over (app.run): the mods are there before the app's code runs
 
-options: importmap (a path, an { imports } object, or false), the rest goes to the compiler.
+options: importmap (a path, an { imports } object, or false), target, the rest goes to the compiler.
 */
 
 import { existsSync }                  from 'node:fs';
@@ -132,7 +134,11 @@ function resolveMap (entries, specifier) {
   return prefix ? prefix[1] + specifier.slice(prefix[0].length) : null;
 }
 
-const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => {
+const TARGETS = ['android', 'desktop', 'ios', 'web'];
+
+const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.RAT_TARGET, ...options } = {}) => {
+  if (target && !TARGETS.includes(target)) throw new Error(`[rat] target "${target}": ${TARGETS.join(', ')} are`);
+
   const pages   = new Map;   // entry id -> { config, src }, absolute paths
   let   folders = [];        // autoImport of the page's config
   let   own     = [];        // the import map of the page
@@ -184,7 +190,8 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
       // class names stay: an element without a tag of its own takes its class name (@domina/element)
       async config ({ root = process.cwd() }) {
         const config = await configOf(resolve(root));
-        return { base: './', build: { ...DEFAULTS, ...await keyOfConfig(config, 'build') }, esbuild: { keepNames: true } };
+        const define = target ? { __RAT_TARGET__: JSON.stringify(target) } : {};
+        return { base: './', build: { ...DEFAULTS, ...await keyOfConfig(config, 'build') }, define, esbuild: { keepNames: true } };
       },
 
       transformIndexHtml: {
@@ -210,6 +217,12 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, ...options } = {}) => 
 
 // :::::: EXPORT
 
+// a key of the config.rat.js of the app in root (index.html, <rat-app src>), and the file: for rat build
+async function appConfig (root, key) {
+  const file = await configOf(resolve(root));
+  return { file, value: await keyOfConfig(file, key) };
+}
+
 export const { esbuild, rolldown, rollup, vite, webpack } = unplugin;
-export { unplugin };
+export { TARGETS, appConfig, unplugin };
 export default unplugin;
