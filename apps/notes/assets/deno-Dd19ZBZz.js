@@ -1,0 +1,1 @@
+var o=Object.defineProperty;var n=(s,t)=>o(s,"name",{value:t,configurable:!0});const c=!0,i=n(async()=>"granted","permission"),e=n(async()=>"granted","request"),r=n(({body:s="",title:t})=>globalThis.bindings["rat:notifications.show"](t,s),"show");export{c as can,i as permission,e as request,r as show};

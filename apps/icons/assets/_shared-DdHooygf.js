@@ -1,1 +1,0 @@
-var t=Object.defineProperty;var n=(a,e)=>t(a,"name",{value:e,configurable:!0});import"https://esm.sh/jsr/@pulgasari/is";const s=n((a,e)=>a.name??e.id??e.name??"rat","nameOf"),o=n(a=>a?.replace?.(/-/g,"")??a,"driverOf");export{o as d,s as n};

@@ -1,0 +1,1 @@
+var e=Object.defineProperty;var a=(r,i)=>e(r,"name",{value:i,configurable:!0});import{p as o}from"./_capacitor-9HBST7L5.js";const t=a(()=>o("Clipboard","@capacitor/clipboard"),"Clipboard"),n={read:!0,write:!0},d=a(async()=>(await(await t()).read()).value??"","read"),s=a(async r=>(await t()).write({string:r}),"write");export{n as can,d as read,s as write};

@@ -1,1 +1,0 @@
-var m=Object.defineProperty;var a=(r,e)=>m(r,"name",{value:e,configurable:!0});import{c as t}from"./store-D22fjUgZ.js";import{n as o,d}from"./_shared-DdHooygf.js";import"https://esm.sh/jsr/@pulgasari/is";const l=a((r,{config:e})=>t({...r,driver:d(r.driver??"local"),name:o(r,e)}),"store");export{l as default};

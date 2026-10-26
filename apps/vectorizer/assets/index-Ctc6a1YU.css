@@ -1,0 +1,271 @@
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+
+
+/* ── TO STYLE: what every app shares ─────────────────────────────────────────
+   (n) = how many apps use it
+
+   frame
+   - #app, app-root
+   - app-area, by name: main | menu (dock=start, a drawer where narrow) |
+     config (dock=end) | context (dock=bottom, a sheet). open, :state(overlay)
+   - app-view, its glide transition
+   - app-view > header: ViewHeader (.ViewBack, h1, .ViewTools) or the app's own (12)
+   - app-view > main
+   - app-panel (5), app-config (Config, 13), app-float (1)
+
+   navigation
+   - Dock: #app-dock > btn-tap.col, .active, aria-current (6)
+   - the menu area's content: .sidebar / .menu, .nav-item, .brand (feeds, audio,
+     todo, notes, prompts, files), each its own markup for now
+   - nav-crumbs (2), nav-toc (notes)
+
+   controls
+   - btn-icon (11), btn-push (8), btn-tap
+   - native button / input / select / textarea: no font inherited (arial)
+   - input-value + input-option, the combobox and segments looks (Picker, Config)
+   - input-text, input-search, SearchPanel .search-panel (5)
+   - input-number (Slider), input-file look=dropzone (Dropzone), input-bool,
+     input-date / -time / -datetime, input-chips, input-url, input-password
+   - .chip, .chip.active (4)
+
+   content
+   - data-index + data-item, aufbau-index + aufbau-item: list and grid
+   - data-tree (Tree, FolderTree with .reconnect)
+   - output-md (Reader), write-md
+   - aufbau-progress, media-file
+   - svg-icon, its sizes in buttons, headers, lists
+
+   feedback
+   - pop-toast (toast(), every app)
+   - pop-modal / Modal .modal-backdrop, pop-prompt (prompt, confirm)
+   - .empty (Empty, 9), Loading, .booting (6, each its own spinner)
+   - .install-tip (InstallTip, 6), Brand
+*/
+
+html, body { height: 100%; }
+body { overflow: hidden; overscroll-behavior: none; }
+
+/* #app is the <app-root>. with areas it is their grid (app-root's own css),
+   an app without areas gets a column */
+#app {
+  height   : 100dvh;
+  overflow : hidden;
+
+  &:not(:has(> app-area)) { display: flex; flex-flow: column; }
+}
+
+app-view {
+  display: flex;
+  flex-direction: column;
+}
+app-view > header {
+  --bg  : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --gap : small;
+  --pad : normal;
+  display: flex; justify-content: space-between;
+  position: sticky; top: 0;
+  text-transform: uppercase;
+
+  button { text-transform: uppercase; }
+  > h1   { flex: 1 1 auto; }   /* next to the back button, the tools at the end */
+}
+app-view > main {
+  justify-content: safe center;
+  display: flex;
+  flex: 1;
+}
+app-view .empty {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-flow: column;
+  --gap: normal;
+}
+
+app-view .empty   { text-align: center; }
+app-view .empty * { text-align: center; }
+
+/* ── the dock, the Dock component: a row of btn-tap, icon over label ─────── */
+
+#app-dock, .dock, .Dock {
+  --bg       : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  border-top : 1px solid var(--line);
+  display    : flex;
+  flex       : none;
+  text-transform: uppercase;
+
+  > btn-tap {
+    --bg           : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+    flex           : 1 1 0;
+    flex-direction : column;
+    font-size      : 1rem;
+    gap            : calc(var(--unit, 0.25rem) * 2);
+    gap            : --space(small);
+    padding        : calc(var(--unit, 0.25rem) * 2);
+    padding        : --space(small);
+    opacity        : 0.5;
+
+    &:hover       { opacity: 1; }
+    &.active      { opacity: 1; color: var(--color-ink); color: --color(ink); }
+    &::part(icon) { font-size: 2rem; }
+  }
+}
+
+/* ── tokens ─────────────────────────────────────────────────────── */
+
+body {
+  --hover   :  color-mix(in oklch, var(--color-fg) 90%, transparent);
+  --line    :  color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --panel   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  --panel-2 : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --zebra   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  /* --radius  : 0.5rem; */
+}
+
+/* ── mobile / android  ─────────────────────────────────────────────────────── */
+
+/*
+safe-area insets. non-zero where the page runs edge-to-edge:
+the capacitor wrappers (android 15+ enforces it, viewport-fit=cover opts in) and notched screens.      
+body's background covers the canvas behind the system bars, #app keeps clear
+*/
+
+body {
+  --safe-top    : env(safe-area-inset-top,    0px);
+  --safe-right  : env(safe-area-inset-right,  0px);
+  --safe-bottom : env(safe-area-inset-bottom, 0px);
+  --safe-left   : env(safe-area-inset-left,   0px);
+}
+
+:root #app {
+  background-clip : content-box;
+  padding         : var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+
+/* CUSTOM PROPS */
+
+
+/* TYPO */
+
+/*
+:root {
+  --font      : "Manrope";
+  --font-code : "JetBrains Mono", monospace;
+  --font-size : 12px;
+}
+*          { font-family : var(--font); }
+html, body { font-size   : var(--font-size); }
+*/
+
+/* move to: gestalt/packages/css/mobile.css */
+
+/* ::selection { background: var(--accent-25); } */
+
+/* ── oled fix (temp) ─────────────────────────────────────────────────────── */
+
+/* move to: zugriff/apps/podcasts/app.css
+or move to: gestalt/packages/css/surfaces.css */
+
+@container style(--palette: oled) {
+  body {
+    --line: color-mix(in oklch, var(--color-fg) 25%, transparent);
+  }
+  #app {
+    app-view > header { border-bottom : 1px solid var(--line); }
+    #app-dock      { border-top    : 1px solid var(--line); }
+    data-item      { border-bottom : 1px solid var(--line); }
+  }
+}
+/* vectorizer :: app.css */
+
+.vectorizer {
+  box-sizing     : border-box;
+  display        : grid;
+  gap            : 1.25rem;
+  justify-items  : center;
+  margin         : 0 auto;
+  max-inline-size: 72rem;
+  min-block-size : 100dvh;
+  padding        : 1.25rem;
+  align-content  : center;
+}
+
+/* :::::: PICK */
+
+.drop {
+  align-content  : center;
+  border         : 2px dashed color-mix(in oklab, currentColor 35%, transparent);
+  border-radius  : 1.25rem;
+  cursor         : pointer;
+  display        : grid;
+  gap            : 0.5rem;
+  inline-size    : min(28rem, 100%);
+  justify-items  : center;
+  min-block-size : 16rem;
+  padding        : 2rem;
+  text-align     : center;
+
+  svg-icon { --icon-size: 3rem; opacity: 0.8; }
+  span     { opacity: 0.6; }
+  input    { display: none; }
+
+  &:hover { background: color-mix(in oklab, currentColor 5%, transparent); }
+}
+
+/* :::::: COMPARE */
+
+.compare {
+  display               : grid;
+  gap                   : 1rem;
+  grid-template-columns : repeat(auto-fit, minmax(16rem, 1fr));
+  justify-self          : stretch;
+
+  figure {
+    display        : grid;
+    gap            : 0.5rem;
+    grid-template-rows: minmax(0, 1fr) auto;
+    margin         : 0;
+  }
+
+  img {
+    /* light squares, as in a drawing app: a dark svg stays visible on a dark palette */
+    background      : repeating-conic-gradient(#e6e6e6 0 25%, #fff 0 50%) 0 0 / 1rem 1rem;
+    block-size      : min(55dvh, 32rem);
+    border-radius   : 0.75rem;
+    inline-size     : 100%;
+    object-fit      : contain;
+  }
+
+  figcaption { font-size: 0.85rem; opacity: 0.7; text-align: center; }
+
+  .busy img { opacity: 0.5; transition: opacity 0.2s; }
+}
+
+/* :::::: SETTINGS */
+
+.settings {
+  display               : grid;
+  gap                   : 0.75rem 1.5rem;
+  grid-template-columns : repeat(auto-fit, minmax(12rem, 1fr));
+  inline-size           : min(48rem, 100%);
+  justify-self          : center;
+
+  label  { display: grid; gap: 0.25rem; }
+  span   { display: flex; justify-content: space-between; font-size: 0.85rem; }
+  output { opacity: 0.7; }
+}
+
+.modes {
+  border     : 0;
+  display    : flex;
+  gap        : 1rem;
+  grid-column: 1 / -1;
+  justify-content: center;
+  margin     : 0;
+  padding    : 0;
+
+  label { align-items: center; display: flex; gap: 0.4rem; }
+}
+
+.actions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
