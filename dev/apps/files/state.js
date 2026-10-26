@@ -157,7 +157,7 @@ effect(() => {
       entries.value = list;
       requestAnimationFrame(() => { const element = scroller(); if (element) element.scrollTop = scrollTop.get(tabIndex.peek()) ?? 0; });
     })
-    .catch(error => { if (mine === request) toast.error(error.message ?? String(error)); })
+    .catch(error => { if (mine === request) toast.error(error); })
     .finally(() => { if (mine === request) loading.value = false; });
 });
 
@@ -245,7 +245,7 @@ function writeTask (task, at, work) {
   const same = () => at.join('/') === path.value.join('/');
   tasks.run({ ...task, lane: 'write' }, work)
     .then(() => { if (same()) goTo([...at]); })
-    .catch(error => toast.error(error.message ?? String(error)));
+    .catch(toast.error);
 }
 
 export async function newFolder () {
@@ -300,7 +300,7 @@ export async function paste () {
   tasks.run({ icon: board.mode === 'move' ? 'lucide:scissors' : 'lucide:copy', label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
     ({ progress, signal }) => transfer.transfer(handle, board.items, board.mode, target, { onProgress: progress, signal }))
     .then(done)
-    .catch(error => { if (error?.name !== 'AbortError') toast.error(error.message ?? String(error)); done(); });
+    .catch(error => { if (error?.name !== 'AbortError') toast.error(error); done(); });
 }
 
 export async function download (entry) {
@@ -319,7 +319,7 @@ export async function chooseFolder () {
     setTabs([{ path: [] }], 0);
     go('/');
   }
-  catch (error) { toast.error(error.message ?? String(error)); }
+  catch (error) { toast.error(error); }
 }
 
 export async function reconnect () {
@@ -361,7 +361,7 @@ export async function forgetRemote (connection) {
 export function sendEntry (entry) {
   sync.addEntry(localRoot(), entry.path ?? path.value, entry)
     .then(() => { area('context')?.hide(); go('/sync'); })
-    .catch(error => toast.error(error.message ?? String(error)));
+    .catch(toast.error);
 }
 
 // :::::: FOLDER TYPES

@@ -36,6 +36,7 @@
     "import",
     "in",
     "instanceof",
+    "is",
     "new",
     "of",
     "typeof",

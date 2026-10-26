@@ -27,7 +27,7 @@
   const hostOf     = device => device.ip ?? device.host;
   const isChosen   = device => Boolean($current) && keyOf($current) === keyOf({ host: hostOf(device), port: device.port ?? 53317 });
   const iconOf     = device => device.deviceType === 'mobile' ? 'lucide:smartphone' : 'lucide:monitor';
-  const run        = work => Promise.resolve().then(work).catch(error => toast.error(error.message ?? String(error)));
+  const run        = work => Promise.resolve().then(work).catch(toast.error);
 
   function choose (device) {
     $chosen  = { alias: device.alias, fingerprint: device.fingerprint ?? '', host: hostOf(device), port: device.port ?? 53317, protocol: device.protocol ?? 'https' };

@@ -8,7 +8,7 @@
   import { toast } from '../.shared/toast.js';
 
   // the splash stays until the folder is known
-  RAT.app.hold(Promise.all([root.load(), remotes.load()]).catch(error => toast.error(error.message ?? String(error))));
+  RAT.app.hold <| Promise.all([root.load(), remotes.load()]).catch <| toast.error;
   hint('Files');
 
   // discovery runs while the send view is on screen, it costs battery

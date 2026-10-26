@@ -350,6 +350,22 @@ $todos |> #.length |> `${#} todos`;               // # works in any expression
 - the left operand reaches back to the next `=`, `,`, `;`, `(`, `?`, `:`, `return` …
   on its own bracket level. when in doubt, parens.
 - a value used more than once is bound to a parameter, so it is evaluated once.
+
+### apply `<|`
+
+the other way round: the left side is called with the right side. `fn <| value` is `fn(value)`, it groups to
+the right, so a chain reads from the outside in:
+
+```js
+RAT.app.hold <| load().catch <| toast.error;      // RAT.app.hold(load().catch(toast.error))
+show <| format <| item.name;                      // show(format(item.name))
+items.forEach(item => show <| item.name);         // the left side stops at => , = ( …, like |>
+```
+
+- the left side is written out as it is: a method keeps its object (`load().catch <| fn` is `load().catch(fn)`).
+- no `#`: the right side is the value, nothing is placed.
+- it binds tighter than `|>`: `a |> f <| b` is `f(b)(a)`. when in doubt, parens.
+- in `.rat` and `.rat.js`, like `|>`. plain `.js` stays js.
 - `#` outside of a pipe is an error. `#private` names are untouched.
 
 further pipe operators (`|?`, `|:`, `|*` …) are an idea, not built: [ideas/pipes](ideas/pipes.md).

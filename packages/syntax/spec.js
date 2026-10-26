@@ -51,7 +51,8 @@ const operators = [
   '?.', '^', '|', '||', '||=', '~', '...',
 ];
 
-const pipe = '|>';
+const pipe  = '|>';
+const apply = '<|';
 
 // the tags whose templates are rat markup in .rat.js (compiler: TAGS, d-11)
 const templateTags = ['html', 'htx', 'rat'];
@@ -163,6 +164,7 @@ const states = {
     { match: `${IDENT}(?=\\s*\\()`,  token: 'entity.name.function' },
     { match: IDENT,                  token: 'variable.other' },
     { match: escape(pipe),           token: 'keyword.operator.pipe' },
+    { match: escape(apply),          token: 'keyword.operator.pipe' },
     { match: '(?<!\\.)\\.\\.(?!\\.)',     token: 'keyword.operator.range' },
     { match: '#(?![\\w$])',            token: 'variable.language.topic' },
     { match: either(operators),      token: 'keyword.operator' },
@@ -214,5 +216,5 @@ const states = {
   ]},
 };
 
-export { either, escape, files, operators, pipe, states, templateTags, words };
-export default { files, operators, pipe, states, templateTags, words };
+export { apply, either, escape, files, operators, pipe, states, templateTags, words };
+export default { apply, files, operators, pipe, states, templateTags, words };
