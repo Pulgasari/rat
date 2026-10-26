@@ -10,9 +10,20 @@ List is a plain class, not an Array subclass: an array's length and index
 access are no methods and could only be caught with a proxy. a List has length
 as a getter and at(index) / set(index, value) instead of [index]. $List, its
 reactive variant, is below.
+
+the query vocabulary of query.js as methods, a List back where it gives a list:
+
+  tracks.where({ album }).toSortedBy('track').pluck('title')
+  tracks.without({ id })
+  tracks.one({ id })   tracks.has({ status: 'reading' })   tracks.keyBy('id')
+
+as with the array methods, the short name changes the list, to… gives a copy:
+sort / toSorted, sortBy / toSortedBy, reverse / toReversed, splice / toSpliced,
+set / with. on a $List the first ones are writes.
 */
 
 import { reactive, register } from '@rat/signals';
+import { by, has, keyBy, one, pluck, where, without } from './query.js';
 import { Schema, typed } from './schema.js';
 
 // ::: the data type
@@ -45,6 +56,19 @@ class ListType {
   toArray   ()           { return [...this.#items]; }
   toJSON    ()           { return this.toArray(); }
 
+  has     (test) { return has(test)(this.#items); }
+  keyBy   (key)  { return keyBy(key)(this.#items); }
+  one     (test) { return one(test)(this.#items); }
+  pluck   (key)  { return new ListType(pluck(key)(this.#items)); }
+  where   (test) { return new ListType(where(test)(this.#items)); }
+  without (test) { return new ListType(without(test)(this.#items)); }
+
+  toReversed ()             { return new ListType(this.#items.toReversed()); }
+  toSorted   (fn)           { return new ListType(this.#items.toSorted(fn)); }
+  toSortedBy (...keys)      { return new ListType(this.#items.toSorted(by(...keys))); }
+  toSpliced  (...args)      { return new ListType(this.#items.toSpliced(...args)); }
+  with       (index, value) { return new ListType(this.#items.with(index, value)); }
+
   [Symbol.iterator] () { return this.#items[Symbol.iterator](); }
 
   push    (...items) { return this.#items.push(...items); }
@@ -53,6 +77,7 @@ class ListType {
   unshift (...items) { return this.#items.unshift(...items); }
   splice  (...args)  { return this.#items.splice(...args); }
   sort    (fn)       { this.#items.sort(fn); return this; }
+  sortBy  (...keys)  { this.#items.sort(by(...keys)); return this; }
   reverse ()         { this.#items.reverse(); return this; }
 
   set     (index, value) { this.#items[index < 0 ? this.#items.length + index : index] = value; return this; }
@@ -95,7 +120,10 @@ const listOf = item => new ListSchema({
 
 // ::: List + $List
 
-const LIST_READS = ['length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator];
+const LIST_READS = [
+  'length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator,
+  'has', 'keyBy', 'one', 'pluck', 'where', 'without', 'toReversed', 'toSorted', 'toSortedBy', 'toSpliced', 'with',
+];
 
 const LIST_WRITES = {
   clear   : list => list.length > 0,
@@ -107,6 +135,7 @@ const LIST_WRITES = {
   set     : (list, index, value) => !Object.is(list.at(index), value),
   shift   : list => list.length > 0,
   sort    : list => list.length > 1,
+  sortBy  : list => list.length > 1,
   splice  : true,
   unshift : (list, ...items) => items.length > 0,
 };

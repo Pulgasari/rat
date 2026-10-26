@@ -128,12 +128,32 @@ export interface List<T> extends Iterable<T> {
   slice (start?: number, end?: number): T[];
   some (fn: (item: T, index: number) => unknown): boolean;
   toArray (): T[];
+  /** Is there an item the test (of match) lets through. */
+  has (test: unknown): boolean;
+  /** { [value of key]: item }, a later item wins. */
+  keyBy (key: keyof T | ((item: T) => PropertyKey)): Record<PropertyKey, T>;
+  /** The first item the test lets through. */
+  one (test: unknown): T | undefined;
+  /** The value of key of every item. */
+  pluck<K extends keyof T> (key: K): List<T[K]>;
+  /** The items the test (of match) lets through. */
+  where (test: unknown): List<T>;
+  /** The items the test does not let through. */
+  without (test: unknown): List<T>;
+  toReversed (): List<T>;
+  toSorted (fn?: (a: T, b: T) => number): List<T>;
+  /** A sorted copy: keys or getters in order, 'desc' after one flips it. */
+  toSortedBy (...keys: (keyof T | ((item: T) => unknown) | 'asc' | 'desc')[]): List<T>;
+  toSpliced (start: number, count?: number, ...items: T[]): List<T>;
+  with (index: number, value: T): List<T>;
   push (...items: T[]): number;
   pop (): T | undefined;
   shift (): T | undefined;
   unshift (...items: T[]): number;
   splice (start: number, count?: number, ...items: T[]): T[];
   sort (fn?: (a: T, b: T) => number): this;
+  /** Sorts the list itself: keys or getters in order, 'desc' after one flips it. */
+  sortBy (...keys: (keyof T | ((item: T) => unknown) | 'asc' | 'desc')[]): this;
   reverse (): this;
   set (index: number, value: T): this;
   remove (value: T): boolean;
@@ -230,8 +250,6 @@ export interface Table<T extends object> extends List<Readonly<T>> {
   readonly schema  : Schema<T[]>;
   readonly columns : (keyof T)[];
   column<K extends keyof T> (key: K): T[K][];
-  /** The rows a test of match lets through. */
-  where (test: unknown): Readonly<T>[];
   /** The row at index with patch over it, checked. */
   update (index: number, patch: Partial<T>): Table<T>;
 }
@@ -339,6 +357,22 @@ export declare const any: Readonly<object>;
 /** The first arm whose test matches gives the result, else otherwise. */
 export declare function match<R = unknown> (value: unknown, arms: Arm<R>[], otherwise?: ((value: any) => R) | R): R | undefined;
 export declare function is (value: unknown, test: Test): boolean;
+
+// :::::: query, data last: rows |> where({ album }) |> toSortedBy('track')
+
+type Key<T> = keyof T | ((item: T) => unknown);
+
+/** The comparator of keys or getters in order, 'desc' after one flips it. Strings naturally, nullish last. */
+export declare function by<T = any> (...keys: (Key<T> | 'asc' | 'desc')[]): (a: T, b: T) => number;
+export declare function has (test: Test): <T>(list: Iterable<T>) => boolean;
+export declare function keyBy<T = any> (key: Key<T>): (list: Iterable<T>) => Record<PropertyKey, T>;
+export declare function one (test: Test): <T>(list: Iterable<T>) => T | undefined;
+export declare function pluck<K extends PropertyKey> (key: K): <T extends Record<K, unknown>>(list: Iterable<T>) => T[K][];
+/** Sorts the array or List itself. */
+export declare function sortBy<T = any> (...keys: (Key<T> | 'asc' | 'desc')[]): <L extends T[] | List<T>>(list: L) => L;
+export declare function toSortedBy<T = any> (...keys: (Key<T> | 'asc' | 'desc')[]): (list: Iterable<T>) => T[];
+export declare function where (test: Test): <T>(list: Iterable<T>) => T[];
+export declare function without (test: Test): <T>(list: Iterable<T>) => T[];
 /** The value the test lets through (as a schema made it), or NONE. */
 export declare function pass (value: unknown, test: Test): unknown;
 export declare function which (value: unknown, tests: Test[]): { index: number, parts: Record<string, any> | null };

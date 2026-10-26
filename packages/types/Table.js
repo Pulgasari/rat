@@ -10,7 +10,7 @@ values. called, it is the schema:
   todos.push({ title: 'eggs', done: true });            // checked and coerced like a Record
   todos.update(0, { done: true });                      // a row is frozen: a change goes through the table
   todos.column('title');                                // ['milk', 'eggs']
-  todos.where({ done: false });                         // the rows a test of match.js lets through
+  todos.where({ done: false });                         // the rows a test of match.js lets through, a List
 
 a row is a plain frozen object with exactly the columns, its position is its key. every List method
 works, the ones that add or replace rows check them. $Table has one version
@@ -20,7 +20,6 @@ for the whole table: any write updates whatever read the table.
 import { reactive, register } from '@rat/signals';
 import { LIST_READS, LIST_WRITES, List } from './List.js';
 import { Record } from './Record.js';
-import { is } from './match.js';
 import { Schema, typed } from './schema.js';
 
 // ::: the schema
@@ -69,8 +68,7 @@ class TableType extends List {
 
   get columns () { return Object.keys(this.schema.parts.row.parts); }
 
-  column (key)  { return this.map(row => row[key]); }
-  where  (test) { return this.filter(row => is(row, test)); }
+  column (key) { return this.map(row => row[key]); }
 
   push    (...rows)        { return super.push(...rows.map(this.parse)); }
   unshift (...rows)        { return super.unshift(...rows.map(this.parse)); }
@@ -89,7 +87,7 @@ const Table = typed(TableType, tableOf);
 // ::: $Table: one version for the whole table
 
 const $Table = typed(reactive(Table, {
-  reads  : [...LIST_READS, 'column', 'columns', 'where'],
+  reads  : [...LIST_READS, 'column', 'columns'],
   writes : { ...LIST_WRITES, update: true },
 }), tableOf);
 
