@@ -22,6 +22,33 @@ $.count.set(5); // write
 $.set.count = 5; // write + create
 $.get.count;     // read
 $.sig.count;     // signal
+$.count;         // read (short)
+$.count = 5;     // write (short)
+$.count = $(0);  // create (with schema)
+
+// F7
+$['set'].count = $(0); // create
+$['set'].count = 5;    // write
+$['get'].count;        // read
+$['sig'].count;        // signal
+
+$({ set: 0 })['count'];
+$({ set })['count'];
+
+$.set({ count: 0, name: 'udo' }); // write (multiple at once)
+$.sig('name'); // signal
+$.get('name'); // read
+$.get('count', 'name');
+$.get(['count', 'name']);
+$.get({ count, name });
+
+
+// F7
+$.count = $(0);    // create (mit schema: $(0, Num))
+$.count;           // read
+$.count = 5;       // write, wirft bei unbekanntem key
+$.sig.count;       // signal
+$.peek.count;      // read, untracked
 
 
 $['count'] = 0; // create
