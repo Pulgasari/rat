@@ -1,0 +1,38 @@
+<script>
+  // <Preferences />: the app's own settings and its folder, above the shared ones in <Settings>
+
+  import { chooseFolder, closeFolder, root, settings } from '../state.js';
+
+  const CHOICES = {
+    open      : { label: 'Open with',  values: [['auto', 'auto'], ['single', 'a tap'], ['double', 'a double click']] },
+    searchbar : { label: 'Search bar', values: [['bottom', 'bottom'], ['top', 'top']] },
+    tabbar    : { label: 'Tabs',       values: [['bottom', 'bottom'], ['top', 'top']] },
+  };
+
+  const $folder = root.folder.value;
+
+  const change = (name, event) => settings[name].value = event.detail?.value ?? event.target.value;
+</script>
+
+<section>
+  <h3>files</h3>
+  @for (name of Object.keys(CHOICES))
+    <label>
+      <span>{CHOICES[name].label}</span>
+      <input-value look='segments' value={settings[name].value} onchange={event => change(name, event)}>
+        @for (choice of CHOICES[name].values): <input-option value={choice[0]}>{choice[1]}</input-option>
+      </input-value>
+    </label>
+</section>
+
+<section>
+  <h3>folder</h3>
+  @if ($folder)
+    <p.folder><svg-icon icon='lucide:folder-open' /> {$folder.name}</p.folder>
+    <div-x.actions>
+      <Action icon='lucide:folder-sync' label='change' onclick={chooseFolder} />
+      <Action icon='lucide:x' label='close' onclick={closeFolder} />
+    </div-x.actions>
+  @else
+    <Action icon='lucide:folder-plus' label='Open a folder' onclick={chooseFolder} />
+</section>

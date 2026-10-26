@@ -1,0 +1,91 @@
+<script>
+  // <Context />: the bottom area. the tasks, the selected entry, the open file, the folder on screen, or the folder as a whole
+
+  import fmt from '../../.shared/fmt.js';
+
+  import {
+    deleteEntry, download, entries, file, folderFacts, folderName, newFolder, newType, open, path, pick, places,
+    renameEntry, rescan, rootHandle, scan, selected, sheet, showInFolder, size,
+  } from '../state.js';
+
+  import { categoryOf } from '../modules/scan.js';
+
+  const $sheet    = sheet.value;
+  const $selected = selected.value;
+  const $file     = file.value;
+  const $route    = RAT.app.router.$path.value;
+  const $path     = path.value;
+  const $facts    = folderFacts.value;
+
+  const where      = entry => '/' + (entry.path ?? $path).join('/');
+  const isMarked   = at => places.isBookmarked(at);
+  const bookmark   = (at, name) => places.toggleBookmark(at, name);
+  const $type      = $path.length ? places.typeOf($path) : null;
+  const $suggested = $path.length && !$type ? places.suggest(entries.value, categoryOf) : null;
+</script>
+
+@if ($sheet === 'tasks')
+  <h2>Tasks</h2>
+  <TaskList />
+@else if ($selected)
+  <h2>{$selected.name}</h2>
+  <Facts rows={[
+    ['name',     $selected.name],
+    ['kind',     $selected.kind === 'directory' ? 'folder' : $selected.type || 'file'],
+    ['size',     $selected.kind === 'file' ? fmt.bytes($selected.size) : null],
+    ['modified', $selected.lastModified ? fmt.date($selected.lastModified) : null],
+    ['in',       where($selected)],
+  ]} />
+  <div-x.actions>
+    <Action icon='lucide:arrow-up-right' label='open' onclick={() => open($selected, $selected.path ?? $path)} />
+    @if ($selected.path): <Action icon='lucide:folder' label='show in folder' onclick={() => showInFolder($selected)} />
+    @if ($selected.kind === 'file'): <Action icon='lucide:download' label='download' onclick={() => download($selected)} />
+    @if ($selected.kind === 'directory')
+      <Action icon={isMarked([...$path, $selected.name]) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isMarked([...$path, $selected.name]) ? 'remove bookmark' : 'bookmark'} onclick={() => bookmark([...$path, $selected.name], $selected.name)} />
+    <Action icon='lucide:copy' label='copy' onclick={() => pick('copy', $selected)} />
+    <Action icon='lucide:scissors' label='move' onclick={() => pick('move', $selected)} />
+    <Action icon='lucide:pencil' label='rename' onclick={() => renameEntry($selected)} />
+    <Action icon='lucide:trash-2' label='delete' onclick={() => deleteEntry($selected)} />
+  </div-x.actions>
+@else if ($route === '/preview' && $file)
+  <h2>Details</h2>
+  <Facts rows={[
+    ['name',       $file.name],
+    ['type',       $file.type || 'unknown'],
+    ['size',       fmt.bytes($file.size)],
+    ['dimensions', size.value ? size.value.width + ' × ' + size.value.height : null],
+    ['modified',   fmt.date($file.lastModified)],
+    ['in',         '/' + $file.path.join('/')],
+  ]} />
+  <div-x.actions>
+    <Action icon='lucide:download' label='download' onclick={() => download($file)} />
+    <Action icon='lucide:folder' label='show in folder' onclick={() => showInFolder($file)} />
+  </div-x.actions>
+@else if ($route === '/library' && rootHandle())
+  <h2>This folder</h2>
+  <Facts rows={[
+    ['folder',   $path.at(-1) ?? folderName()],
+    ['contains', $facts.folders + ' folders, ' + $facts.files + ' files'],
+    ['size',     fmt.bytes($facts.size)],
+    ['mostly',   $facts.mostly],
+  ]} />
+  <div-x.actions>
+    <Action icon='lucide:folder-plus' label='new folder' onclick={newFolder} />
+    @if ($path.length)
+      <Action icon={isMarked($path) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isMarked($path) ? 'remove bookmark' : 'bookmark'} onclick={() => bookmark($path, $path.at(-1))} />
+  </div-x.actions>
+  @if ($path.length)
+    <h3>Type</h3>
+    @if ($suggested)
+      <p.hint>Looks like {$suggested.label}. <button.link type='button' onclick={() => places.setType($path, $suggested.id)}>Make it one</button.link></p.hint>
+    <div-x.actions>
+      @for (type of places.types())
+        <button.action type='button' aria-pressed={String($type?.id === type.id)} onclick={() => places.setType($path, $type?.id === type.id ? null : type.id)}><svg-icon icon={type.icon} /> {type.label}</button.action>
+      <Action icon='lucide:plus' label='new type' onclick={() => newType($path)} />
+    </div-x.actions>
+@else
+  <h2>{folderName()}</h2>
+  <Status />
+  <div-x.actions>
+    <Action icon='lucide:refresh-cw' label='read again' disabled={!rootHandle() || Boolean(scan.scanning.value)} onclick={rescan} />
+  </div-x.actions>

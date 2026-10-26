@@ -1,0 +1,27 @@
+<script>
+  // <Entry entry={entry} />: a file or a folder of the listing on screen
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { about, onEntryClick, open, opensOnTap, path, selected } from '../state.js';
+
+  const entry = props.entry;
+  const at    = path.peek();
+
+  const $picked = selected.value?.name === entry.name && !selected.value?.path;
+
+  const onkeydown = event => { if (event.key === 'Enter' && !opensOnTap()) { event.preventDefault(); open(entry); } };
+</script>
+
+<data-item>
+  <div.row class:selected={$picked}>
+    <button.entry type='button' aria-pressed={$picked ? 'true' : null} onclick={() => onEntryClick(entry)} ondblclick={() => open(entry)} onkeydown={onkeydown}>
+      <Thumb entry={entry} at={at} />
+      <span.text>
+        <span.name>{entry.name}</span>
+        <small>{entry.kind === 'file' ? fmt.date(entry.lastModified) + ' · ' + fmt.bytes(entry.size) : 'folder'}</small>
+      </span.text>
+    </button.entry>
+    <btn-icon icon='lucide:ellipsis-vertical' label='more' onclick={() => about(entry)} />
+  </div.row>
+</data-item>

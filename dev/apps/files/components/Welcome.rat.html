@@ -1,0 +1,31 @@
+<script>
+  // <Welcome />: what the views show without a folder: none picked, one to reconnect, no folders in this browser
+
+  import { chooseFolder, folderName, reconnect, root } from '../state.js';
+
+  const $ready  = root.ready.value;
+  const $folder = root.folder.value;
+</script>
+
+@if (!root.supported())
+  <div-y.hero>
+    <svg-icon icon='lucide:triangle-alert' />
+    <h2>Can't open folders here</h2>
+    <p>This browser has no File System Access API. Try a recent Chromium based browser.</p>
+  </div-y.hero>
+@else if (!$ready)
+  <Loading />
+@else if (!$folder)
+  <div-y.hero>
+    <svg-icon icon='lucide:folder-open' />
+    <h2>Browse a folder</h2>
+    <p>Pick a folder of your device, it becomes the root. Nothing is uploaded or copied.</p>
+    <button.action type='button' onclick={chooseFolder}><svg-icon icon='lucide:folder-plus' /> Open a folder</button.action>
+  </div-y.hero>
+@else
+  <div-y.hero>
+    <svg-icon icon='lucide:folder-key' />
+    <h2>Reconnect “{folderName()}”</h2>
+    <p>This folder needs permission again for this visit.</p>
+    <button.action type='button' onclick={reconnect}><svg-icon icon='lucide:folder-key' /> Reconnect</button.action>
+  </div-y.hero>

@@ -1,0 +1,13 @@
+<script>
+  // <Bar title='Library' back={up}>tools</Bar>: the head of a view. back, else the menu. the settings at the end
+</script>
+
+<header.bar>
+  @if (props.back)
+    <btn-icon icon='lucide:arrow-left' label='back' onclick={props.back} />
+  @else
+    <btn-icon icon='lucide:menu' label='menu' onclick={() => RAT.app.toggle('menu')} />
+  <h1>{props.title}</h1>
+  <slot />
+  <btn-icon icon='lucide:settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</header.bar>

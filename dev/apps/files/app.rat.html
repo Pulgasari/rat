@@ -1,0 +1,28 @@
+<script>
+  // files: a file manager over one folder the user grants. the state and what can be done with it is
+  // state.js, the folder, the index, tasks, places and copying are modules/. the views are components/
+
+  import { root, sheet } from './state.js';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  // the splash stays until the folder is known
+  RAT.app.hold(root.load().catch(error => toast.error(error.message ?? String(error))));
+  hint('Files');
+
+  // the context area forgets the tasks when it closes
+  const ontoggle = event => { if (!event.detail?.open) sheet.value = null; };
+</script>
+
+<rat-area name='menu' dock='start'><Menu /></rat-area>
+
+<rat-view route='/' name='dashboard'><Dashboard /></rat-view>
+<rat-view route='/library' name='library'><Library /></rat-view>
+<rat-view route='/preview' name='preview' transition='slide'><Preview /></rat-view>
+
+<rat-area name='context' dock='bottom' peek ontoggle={ontoggle}><div.context><Context /></div.context></rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name='Files'><Preferences /></Settings>
+</rat-area>

@@ -14,6 +14,7 @@ built (`apps/`, `rat build`, the build workflow):
 [cli](https://code.pulgasari.dev/rat/apps/cli/) ·
 [ebooks](https://code.pulgasari.dev/rat/dev/apps/ebooks/) (source) ·
 [feeds](https://code.pulgasari.dev/rat/dev/apps/feeds/) (source) ·
+[files](https://code.pulgasari.dev/rat/apps/files/) ·
 [icons](https://code.pulgasari.dev/rat/apps/icons/) ·
 [noisy](https://code.pulgasari.dev/rat/apps/noisy/) ·
 [notes](https://code.pulgasari.dev/rat/apps/notes/) ·
