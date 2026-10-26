@@ -7,6 +7,7 @@ on the app (RAT.app.<name>), in the order written:
 
   export default {
     name       : 'podcasts',
+    clipboard  : true,                     // the same in the browser, on android, on the desktop (drivers.js)
     database   : { schema: { podcasts: { id: Id, title: String }, folders: FOLDERS } },
     files      : true,                     // the origin private file system
     folders    : { accept: 'md, epub' },   // folders the user grants, in the database's table folders
@@ -20,6 +21,7 @@ true takes the defaults. a module is loaded only when an app names it.
 */
 
 const MODS = {
+  clipboard  : () => import('./modules/clipboard.js'),
   database   : () => import('./modules/database.js'),
   files      : () => import('./modules/files.js'),
   folders    : () => import('./modules/folders.js'),
