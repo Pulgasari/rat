@@ -117,7 +117,7 @@ const urlOf = (src, base) => /^[a-z][\w+.-]*:/i.test(src) ? JSON.stringify(src)
   : base ? JSON.stringify(new URL(src, base).href)
   : `new URL(${JSON.stringify(src)}, import.meta.url).href`;
 
-function compileComponent (source, { baked, base, filename = 'component.rat', inlined, runtime = '@rat/runtime', styles } = {}) {
+function compileComponent (source, { baked, base, filename = 'component.rat', inlined, processedCss, runtime = '@rat/runtime', styles } = {}) {
   const ast        = parse(source, { filename });
   if (ast.scripts.comptime.length && baked == null) throw new CompileError('<script comptime> runs in compileAsync(source, { comptime }), not in compile()', { filename, index: ast.scripts.comptime[0].start, source });
   const names      = new Set;
@@ -129,7 +129,7 @@ function compileComponent (source, { baked, base, filename = 'component.rat', in
 
   const sheets    = sheetsOf(ast, statements, { filename, source });
   const linked    = sheets.filter(sheet => sheet.mode !== 'inline').map(({ mode, src }) => `${RUNTIME}.sheet('${mode}', ${urlOf(src, base)});`);
-  const css       = stylesOf(ast, sheets, { base, filename, inlined, source, styles });
+  const css       = processedCss ?? stylesOf(ast, sheets, { base, filename, inlined, source, styles });
   const scope     = css ? hash(`${filename}\n${css}`) : null;
   const fragments = [];
   const view      = generate(ast, { cases, filename, fragments, names, runtime: RUNTIME, scope, source });
@@ -204,8 +204,10 @@ function compile (source, options = {}) {
 /*
 compile() after loading the built-in style languages the source uses, reading
 the files it inlines (style inline 'x.css') through options.read, path => text
-or a promise of it, relative to the file, and running its <script comptime>
-through options.comptime, (code, { read }) => its values (comptime.js).
+or a promise of it, relative to the file, running its <script comptime>
+through options.comptime, (code, { read }) => its values (comptime.js), and
+handing the component's css to options.css, (css, { filename }) => css or a
+promise of it, before it is scoped (a build's postcss: @rat/dev).
 */
 async function compileAsync (source, options = {}) {
   const { filename = 'component.rat' } = options;
@@ -218,7 +220,12 @@ async function compileAsync (source, options = {}) {
 
   const langs = [...langsIn(source), ...sources.map(langOfPath)].filter(lang => lang !== 'css' && !options.styles?.[lang] && builtIn(lang));
   if (langs.length) await loadStyles([...new Set(langs)]);
-  return { ...compile(source, { ...options, baked, inlined: { ...options.inlined, ...inlined } }), comptime: blocks.length > 0 };
+  const settings = { ...options, baked, inlined: { ...options.inlined, ...inlined } };
+  const result   = compile(source, settings);
+  if (!options.css || !result.css) return { ...result, comptime: blocks.length > 0 };
+
+  const processedCss = String(await options.css(result.css, { filename }));
+  return { ...compile(source, { ...settings, processedCss }), comptime: blocks.length > 0 };
 }
 
 // :::::: EXPORT

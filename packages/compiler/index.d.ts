@@ -2,6 +2,7 @@
 
 export interface CompileOptions {
   base?     : string;                  // the url css files resolve against
+  css?      : (css: string, context: { filename: string }) => string | Promise<string>;   // compileAsync: the component's css, before it is scoped (a build's postcss)
   comptime? : (code: string, context: { filename: string, read: (path: string, as?: 'json' | 'text') => Promise<unknown> }) => Promise<Record<string, unknown>>; // compileAsync: runs <script comptime>: imports code, returns its default export called with { read }
   filename? : string;                  // decides the mode (.rat / .rat.js) and names the component
   mode?     : 'component' | 'module';  // overrides the filename

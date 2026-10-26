@@ -7,6 +7,8 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   export default { plugins: [rat.vite()] };   // vite.config.js
 
   .rat, .rat.html, .rat.js   compiled to es modules (compileAsync: style languages, style inline)
+  <style> of a component     through vite's css pipeline (vite only): the project's postcss config
+                             (postcss.config.js, css.postcss) runs on it, @gestalt/postcss among others
   <script comptime>          run in a vite server of its own (vite only), its imports resolved as in the
                              build: what it holds lands in the module as data. what it imports and reads
                              is watched
@@ -140,6 +142,12 @@ function resolveMap (entries, specifier) {
 // <script comptime> in a vite server of its own, as a module beside the file: relative imports resolve from
 // there, bare ones through the import maps. open until the values are there (a lazy import inside needs it).
 // { dependencies, values }
+// the css of a component through vite's css pipeline, as if it were a .css file of the project
+async function preprocessCSS (code, filename, config) {
+  const vite = await import('vite');
+  return vite.preprocessCSS(code, filename, config);
+}
+
 async function runComptime (code, file, resolveBare, read) {
   const { createServer } = await import('vite');
   const id     = join(dirname(file), '__rat-comptime.js');
@@ -174,9 +182,10 @@ const TARGETS = ['android', 'desktop', 'ios', 'web'];
 const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.RAT_TARGET, ...options } = {}) => {
   if (target && !TARGETS.includes(target)) throw new Error(`[rat] target "${target}": ${TARGETS.join(', ')} are`);
 
-  const pages   = new Map;   // entry id -> { config, src }, absolute paths
-  let   folders = [];        // autoImport of the page's config
-  let   own     = [];        // the import map of the page
+  const pages    = new Map;   // entry id -> { config, src }, absolute paths
+  let   folders  = [];        // autoImport of the page's config
+  let   own      = [];        // the import map of the page
+  let   resolved = null;      // vite's config, for its css pipeline
   let   entries;
 
   return {
@@ -215,7 +224,9 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.R
         return values;
       };
 
-      const { code, unresolved = [] } = await compileAsync(source, { ...options, comptime, filename: file, read });
+      const css = resolved ? async text => (await preprocessCSS(text, `${file}.css`, resolved)).code : undefined;
+
+      const { code, unresolved = [] } = await compileAsync(source, { ...options, comptime, css, filename: file, read });
       return { code: unresolved.length && folders.length ? `${code}\n${importsOf(unresolved, file, folders)}\n` : code };
     },
 
@@ -238,6 +249,8 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.R
         const define = target ? { __RAT_TARGET__: JSON.stringify(target) } : {};
         return { base: './', build: { ...DEFAULTS, ...await keyOfConfig(config, 'build') }, define, esbuild: { keepNames: true } };
       },
+
+      configResolved (config) { resolved = config; },
 
       transformIndexHtml: {
         order: 'pre',
