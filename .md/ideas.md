@@ -83,6 +83,16 @@ effect
 cmd | command
 ```
 
+## support for `md` (or even `mdx`?)
+
+```html
+<div>
+@md {
+  ...
+}
+</div>
+```
+
 ## local names in markup: `@let` (from svelte)
 
 ```html
