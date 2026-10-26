@@ -22,7 +22,7 @@ export default {
   ],
 
   autoImport : [
-    { './components/': ['Action', 'Bar', 'Context', 'Dashboard', 'Entry', 'Facts', 'FileRow', 'Library', 'Menu', 'PasteBar', 'Preferences', 'Preview', 'Searchbar', 'Status', 'TaskList', 'Tabs', 'Thumb', 'Welcome'] },
+    { './components/': ['Action', 'Bar', 'Context', 'Dashboard', 'Entry', 'Facts', 'FileRow', 'Library', 'Menu', 'PasteBar', 'Preferences', 'Preview', 'RemoteManager', 'Searchbar', 'Status', 'Sync', 'TaskList', 'Tabs', 'Thumb', 'Welcome'] },
     '../.shared/components/',
   ],
 
@@ -31,6 +31,9 @@ export default {
   files      : true,                         // the index of the folder, kept between visits
   offline    : true,
   thumbnails : { maxBytes: 128 * 1024 * 1024, width: 256 },
+
+  // rat build --target android: the android app, with the lan sending of the FileSync plugin
+  android : { id: 'dev.pulgasari.files', name: 'Files', plugins: ['filesync'] },
 
   build : { emptyOutDir: true, outDir: '../../../apps/files' },   // rat build -> apps/files
 };

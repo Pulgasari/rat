@@ -1,0 +1,47 @@
+<script>
+  // <RemoteManager />: the servers, and a form for one more. adding tests it with a listing first
+
+  import { forgetRemote, openRemote, remotes } from '../state.js';
+
+  let $error = null;
+  let $busy  = false;
+
+  const $servers = remotes.connections.value;
+
+  async function add (event) {
+    event.preventDefault();
+    const form  = event.target;
+    const field = name => form.querySelector(`[name="${name}"]`)?.value ?? '';
+    $busy  = true;
+    $error = null;
+    try {
+      const connection = await remotes.add({ name: field('name'), password: field('password'), url: field('url'), username: field('username') });
+      form.reset?.();
+      openRemote(connection.id);
+      RAT.app.area('context')?.hide();
+    }
+    catch (error) { $error = error.message ?? String(error); }
+    finally { $busy = false; }
+  }
+</script>
+
+@if ($servers.length)
+  <ul.tasks>
+    @for (server of $servers)
+      <li.task>
+        <svg-icon icon='lucide:cloud' />
+        <span.text><span.name>{server.name}</span.name><small>{server.url}</small></span.text>
+        <btn-icon icon='lucide:trash-2' label={'forget ' + server.name} onclick={() => forgetRemote(server)} />
+      </li.task>
+  </ul.tasks>
+
+<h3>Connect</h3>
+<form.remote-form onsubmit={add}>
+  <input-url name='url' placeholder='https://cloud.example/remote.php/dav/files/me/' required />
+  <input-text name='username' placeholder='username' autocomplete='username' />
+  <input-password name='password' placeholder='password or app password' autocomplete='current-password' />
+  <input-text name='name' placeholder='name (optional)' />
+  @if ($error): <p.error>{$error}</p.error>
+  <button.action type='submit' disabled={$busy}><svg-icon icon={$busy ? 'lucide:loader' : 'lucide:plug'} /> connect</button.action>
+</form.remote-form>
+<p.hint>In a browser the server has to allow this app (cors), the android app needs nothing of the kind. Nextcloud: the url ends in /remote.php/dav/files/&lt;user&gt;/, best with an app password. The password stays on this device.</p.hint>

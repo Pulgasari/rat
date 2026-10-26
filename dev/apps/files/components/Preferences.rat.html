@@ -3,6 +3,8 @@
 
   import { chooseFolder, closeFolder, root, settings } from '../state.js';
 
+  const PATTERNS = { 'pattern-bg': 'Background', 'pattern-tile': 'Tiles' };
+
   const CHOICES = {
     open      : { label: 'Open with',  values: [['auto', 'auto'], ['single', 'a tap'], ['double', 'a double click']] },
     searchbar : { label: 'Search bar', values: [['bottom', 'bottom'], ['top', 'top']] },
@@ -22,6 +24,11 @@
       <input-value look='segments' value={settings[name].value} onchange={event => change(name, event)}>
         @for (choice of CHOICES[name].values): <input-option value={choice[0]}>{choice[1]}</input-option>
       </input-value>
+    </label>
+  @for (name of Object.keys(PATTERNS))
+    <label>
+      <span>{PATTERNS[name]}</span>
+      <input-pattern opacity value={settings[name].value} onchange={event => change(name, event)} />
     </label>
 </section>
 

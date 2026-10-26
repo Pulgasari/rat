@@ -1,0 +1,18 @@
+{
+  "comment": "what the filesync plugin adds to an app's AndroidManifest.xml, see packages/cli/android.js of rat",
+  "cleartext": true,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.ACCESS_WIFI_STATE",
+    "android.permission.CHANGE_WIFI_MULTICAST_STATE",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_DATA_SYNC",
+    "android.permission.POST_NOTIFICATIONS",
+    "android.permission.ACCESS_FINE_LOCATION"
+  ],
+  "services": [
+    { "name": "dev.rat.filesync.SyncService",     "foregroundServiceType": "dataSync" },
+    { "name": "dev.rat.filesync.TransferService", "foregroundServiceType": "dataSync" }
+  ]
+}

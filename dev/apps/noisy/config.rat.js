@@ -36,6 +36,8 @@ export default {
   offline    : true,
   thumbnails : { width: 160 }, // the covers, from the tags
 
+  android : { id: 'dev.pulgasari.noisy' },   // rat build --target android
+
   build : { 
     emptyOutDir : true, 
     outDir      : '../../../apps/noisy'

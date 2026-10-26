@@ -3,10 +3,11 @@
 
   import fmt from '../../.shared/fmt.js';
 
-  import { about, onEntryClick, open, opensOnTap, path, selected } from '../state.js';
+  import { about, onEntryClick, open, opensOnTap, path, selected, source } from '../state.js';
 
   const entry = props.entry;
   const at    = path.peek();
+  const from  = source.peek();
 
   const $picked = selected.value?.name === entry.name && !selected.value?.path;
 
@@ -16,7 +17,7 @@
 <data-item>
   <div.row class:selected={$picked}>
     <button.entry type='button' aria-pressed={$picked ? 'true' : null} onclick={() => onEntryClick(entry)} ondblclick={() => open(entry)} onkeydown={onkeydown}>
-      <Thumb entry={entry} at={at} />
+      <Thumb entry={entry} at={at} from={from} />
       <span.text>
         <span.name>{entry.name}</span>
         <small>{entry.kind === 'file' ? fmt.date(entry.lastModified) + ' · ' + fmt.bytes(entry.size) : 'folder'}</small>

@@ -38,9 +38,10 @@ class Entry {
     Object.assign(this, { files, handle, kind: handle.kind === 'directory' ? 'folder' : 'file', name: handle.name, path });
   }
 
+  // peekFile(): a handle that has it (a server's, android's) knows this without reading the file
   async info () {
     if (this.kind !== 'file') return null;
-    const file = await this.handle.getFile();
+    const file = await this.handle.peekFile?.() ?? await this.handle.getFile();
     return { modified: file.lastModified, size: file.size, type: file.type };
   }
 

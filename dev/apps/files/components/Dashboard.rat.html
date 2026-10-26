@@ -3,21 +3,24 @@
 
   import fmt from '../../.shared/fmt.js';
 
-  import { SORTED, category, categoryFiles, folderName, goTo, hits, open, places, query, rootHandle, scan, settings } from '../state.js';
+  import { SORTED, category, categoryFiles, goTo, hits, localRoot, manageRemotes, open, openRemote, places, query, remotes, scan, settings, sourceName } from '../state.js';
 
-  const library = at => { goTo(at); RAT.app.router.go('/library'); };
+  const library    = at => { goTo(at, null); RAT.app.router.go('/library'); };
+  const folderName = () => sourceName(null);
 
-  const $ready     = Boolean(rootHandle());
+  const $ready     = Boolean(localRoot());
   const $top       = settings.searchbar.value === 'top';
   const $query     = query.value.trim();
   const $category  = category.value;
   const $index     = scan.index.value;
   const $bookmarks = places.bookmarks();
   const $label     = SORTED.find(item => item.id === $category)?.label ?? $category;
+  const $servers   = remotes.connections.value;
+
+  const hostOf = url => { try { return new URL(url).host; } catch { return url; } };
 
   // places outside the granted folder: tiles that say what each would need
   const PLANNED = [
-    { icon: 'lucide:cloud',      label: 'WebDAV, Nextcloud', note: 'not ported to rat yet' },
     { icon: 'lucide:hard-drive', label: 'Google Drive',      note: 'its own api, sign in with oauth' },
     { icon: 'lucide:terminal',   label: '(S)FTP',            note: 'not from a browser, only in the android app' },
     { icon: 'lucide:network',    label: 'LAN',               note: 'smb shares, only in the android app' },
@@ -110,6 +113,19 @@
     <section>
       <h2>Remote</h2>
       <ul.tiles>
+        @for (server of $servers)
+          <li>
+            <button.tile type='button' onclick={() => openRemote(server.id)}>
+              <svg-icon icon='lucide:cloud' />
+              <span.text><span.name>{server.name}</span.name><small>{hostOf(server.url)}</small></span.text>
+            </button.tile>
+          </li>
+        <li>
+          <button.tile type='button' onclick={manageRemotes}>
+            <svg-icon icon='lucide:cloud-cog' />
+            <span.text><span.name>WebDAV, Nextcloud</span.name><small>{$servers.length ? 'add or remove' : 'connect a server'}</small></span.text>
+          </button.tile>
+        </li>
         @for (remote of PLANNED)
           <li>
             <button.tile type='button' disabled title={remote.note}>

@@ -28,7 +28,8 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
                              config.rat.js and its import, and hands the config and the src of <rat-app>
                              over (app.run): the mods are there before the app's code runs
 
-options: importmap (a path, an { imports } object, or false), target, the rest goes to the compiler.
+options: importmap (a path, an { imports } object, or false), target, outDir (over build.outDir of the
+config: rat build --target android puts the web build into the capacitor project), the rest goes to the compiler.
 */
 
 import { existsSync }                  from 'node:fs';
@@ -179,7 +180,7 @@ async function runComptime (code, file, resolveBare, read) {
 
 const TARGETS = ['android', 'desktop', 'ios', 'web'];
 
-const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.RAT_TARGET, ...options } = {}) => {
+const unplugin = createUnplugin(({ importmap = IMPORTMAP, outDir, target = process.env.RAT_TARGET, ...options } = {}) => {
   if (target && !TARGETS.includes(target)) throw new Error(`[rat] target "${target}": ${TARGETS.join(', ')} are`);
 
   const pages    = new Map;   // entry id -> { config, src }, absolute paths
@@ -247,7 +248,8 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.R
       async config ({ root = process.cwd() }) {
         const config = await configOf(resolve(root));
         const define = target ? { __RAT_TARGET__: JSON.stringify(target) } : {};
-        return { base: './', build: { ...DEFAULTS, ...await keyOfConfig(config, 'build') }, define, esbuild: { keepNames: true } };
+        const own = outDir ? { emptyOutDir: true, outDir } : {};
+        return { base: './', build: { ...DEFAULTS, ...await keyOfConfig(config, 'build'), ...own }, define, esbuild: { keepNames: true } };
       },
 
       configResolved (config) { resolved = config; },

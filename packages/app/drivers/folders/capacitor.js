@@ -1,18 +1,8 @@
-// @rat/app :: drivers :: folders, capacitor (android, ios): @capawesome/capacitor-file-picker picks, the
-// folder is read through @capacitor/filesystem by its path
+// @rat/app :: drivers :: folders, capacitor (android): the storage access framework through rat's Saf plugin.
+// the system's folder picker, the grant persisted across restarts. a folder is kept as its uri
 
-import { plugin } from '../_capacitor.js';
-import { Handle, revive as handleOf } from '../_fs.js';
-import { fsOf } from '../files/capacitor.js';
+import { pickTree, revive as folderOf } from '../_saf.js';
 
-const FilePicker = () => plugin('FilePicker', '@capawesome/capacitor-file-picker');
-
-const fs = fsOf(null);
-
-export async function pick () {
-  try   { const { path } = await (await FilePicker()).pickDirectory(); return path ? new Handle(fs, path) : null; }
-  catch (error) { if (/cancel/i.test(error?.message ?? '')) return null; throw error; }
-}
-
+export const pick   = () => pickTree();
 export const keep   = handle => handle.toJSON();
-export const revive = stored => handleOf(fs, stored);
+export const revive = stored => folderOf(stored);

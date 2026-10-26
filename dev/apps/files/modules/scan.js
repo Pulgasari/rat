@@ -67,7 +67,7 @@ async function walk (handle, path, files, signal) {
     if (signal.aborted) throw new DOMException('scan aborted', 'AbortError');
     if (SKIP(child.name)) continue;
     if (child.kind === 'directory') dirs.push(child);
-    else reads.push(child.getFile().then(
+    else reads.push(Promise.resolve(child.peekFile?.() ?? child.getFile()).then(
       file => ({ lastModified: file.lastModified, name: child.name, path, size: file.size, type: file.type }),
       ()   => null,   // gone or unreadable meanwhile
     ));
