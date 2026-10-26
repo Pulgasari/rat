@@ -18,9 +18,6 @@ official:
 [docs](http://code.pulgasari.dev/rat/docs/) ·
 [playground](https://code.pulgasari.dev/rat/demos/playground/)
 
-apps (demos): 
-[noisy](https://code.pulgasari.dev/apps/noisy/)
-
 playground:
 [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat) ·
 [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat) ·
@@ -28,6 +25,9 @@ playground:
 [pipes](https://code.pulgasari.dev/rat/demos/playground/#pipes.rat.js) ·
 [syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat) ·
 [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
+
+apps (demos): 
+[noisy](https://code.pulgasari.dev/apps/noisy/)
 
 ## packages
 
