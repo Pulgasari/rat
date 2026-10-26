@@ -5,7 +5,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, relative, resolve, sep } from 'node:path';
 
-import { RAT, compileFile, errorOf } from '../files.js';
+import { COMPTIME, RAT, compileFile, errorOf } from '../files.js';
 import { color, error, print } from '../wizard.js';
 
 export const options = {
@@ -67,8 +67,9 @@ export async function run ([page = '.'], { port, root }) {
     const file = await fileOf(top, url.pathname);
     if (!file) { response.writeHead(404).end('not found'); return; }
 
-    // a .rat file as a module, compiled here: the page loads no compiler (as middleware.js)
-    if (RAT.test(file) && request.headers['sec-fetch-dest'] !== 'document') {
+    // a .rat file as a module, compiled here: the page loads no compiler (as middleware.js). one with a
+    // <script comptime> is compiled in the page: its imports go through the page's import map
+    if (RAT.test(file) && request.headers['sec-fetch-dest'] !== 'document' && !COMPTIME.test(await readFile(file, 'utf8'))) {
       try {
         const { code, unresolved } = await compileFile(file, { base: `http://${request.headers.host}${url.pathname}`, point: false });
         return javascript(response, code, { 'x-rat-unresolved': unresolved.join(',') });

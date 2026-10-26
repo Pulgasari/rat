@@ -26,7 +26,8 @@ field a record is stored under `id`, made as by Id.
 
 driver: 'indexeddb' (default) puts every table into one IndexedDB database
 `name`, any store driver works as well ('local', 'memory' …): a table is then
-the keys under `name:table`.
+the keys under `name:table`. a driver given as a function gets name and table
+both, it keeps the tables apart itself (one sqlite file, a table each).
 */
 
 import { Bool, Id, Num, Record, Schema, Str } from '@rat/types';
@@ -101,7 +102,7 @@ class Database {
   constructor ({ driver = 'indexeddb', name = 'bunker', schema = {}, ...options } = {}) {
     this.name = name;
     for (const [table, fields] of Object.entries(schema)) {
-      const store    = driver === 'indexeddb' ? { driver, name, table } : { driver, name: `${name}:${table}` };
+      const store    = driver === 'indexeddb' || typeof driver === 'function' ? { driver, name, table } : { driver, name: `${name}:${table}` };
       const instance = new DatabaseTable ({ ...options, ...store, fields, title: table });
       this.#tables.set(table, instance);
       if (!(table in this)) Object.defineProperty(this, table, { enumerable: true, value: instance });

@@ -7,6 +7,11 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   export default { plugins: [rat.vite()] };   // vite.config.js
 
   .rat, .rat.html, .rat.js   compiled to es modules (compileAsync: style languages, style inline)
+  <style> of a component     through vite's css pipeline (vite only): the project's postcss config
+                             (postcss.config.js, css.postcss) runs on it, @gestalt/postcss among others
+  <script comptime>          run in a vite server of its own (vite only), its imports resolved as in the
+                             build: what it holds lands in the module as data. what it imports and reads
+                             is watched
   bare specifiers            resolved through an import map of the page (it wins, as in the browser),
                              then importmap.json of @rat/app, the map run.js writes into the page.
                              an https entry stays external
@@ -134,14 +139,53 @@ function resolveMap (entries, specifier) {
   return prefix ? prefix[1] + specifier.slice(prefix[0].length) : null;
 }
 
+// <script comptime> in a vite server of its own, as a module beside the file: relative imports resolve from
+// there, bare ones through the import maps. open until the values are there (a lazy import inside needs it).
+// { dependencies, values }
+// the css of a component through vite's css pipeline, as if it were a .css file of the project
+async function preprocessCSS (code, filename, config) {
+  const vite = await import('vite');
+  return vite.preprocessCSS(code, filename, config);
+}
+
+async function runComptime (code, file, resolveBare, read) {
+  const { createServer } = await import('vite');
+  const id     = join(dirname(file), '__rat-comptime.js');
+  const server = await createServer({
+    appType    : 'custom',
+    configFile : false,
+    logLevel   : 'error',
+    optimizeDeps : { noDiscovery: true },
+    plugins    : [{
+      enforce   : 'pre',
+      load      : source => source === id ? code : null,
+      name      : 'rat:comptime',
+      resolveId : specifier => {
+        if (specifier === id) return id;
+        const target = resolveBare(specifier);
+        return target && !/^https?:/.test(target) ? target : null;
+      },
+    }],
+    root   : dirname(file),
+    server : { hmr: false, middlewareMode: true, watch: null, ws: false },
+  });
+  try {
+    const values       = await (await server.ssrLoadModule(id)).default({ read });
+    const dependencies = [...server.moduleGraph.idToModuleMap.keys()].filter(path => path !== id && !path.startsWith('\0') && existsSync(path));
+    return { dependencies, values };
+  }
+  finally { await server.close(); }
+}
+
 const TARGETS = ['android', 'desktop', 'ios', 'web'];
 
 const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.RAT_TARGET, ...options } = {}) => {
   if (target && !TARGETS.includes(target)) throw new Error(`[rat] target "${target}": ${TARGETS.join(', ')} are`);
 
-  const pages   = new Map;   // entry id -> { config, src }, absolute paths
-  let   folders = [];        // autoImport of the page's config
-  let   own     = [];        // the import map of the page
+  const pages    = new Map;   // entry id -> { config, src }, absolute paths
+  let   folders  = [];        // autoImport of the page's config
+  let   own      = [];        // the import map of the page
+  let   resolved = null;      // vite's config, for its css pipeline
   let   entries;
 
   return {
@@ -168,9 +212,21 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.R
     transformInclude: id => RAT.test(fileOf(id)),
 
     async transform (source, id) {
-      const file = fileOf(id);
-      const read = path => readFile(resolve(dirname(file), path), 'utf8');
-      const { code, unresolved = [] } = await compileAsync(source, { ...options, filename: file, read });
+      const file  = fileOf(id);
+      const watch = path => this.addWatchFile?.(path);
+      const read  = path => { const target = resolve(dirname(file), path); watch(target); return readFile(target, 'utf8'); };
+
+      const comptime = async (code, { read }) => {
+        entries ??= readMap(importmap);
+        const map = [...own, ...await entries];
+        const { dependencies, values } = await runComptime(code, file, specifier => resolveMap(map, specifier), read);
+        dependencies.forEach(watch);
+        return values;
+      };
+
+      const css = resolved ? async text => (await preprocessCSS(text, `${file}.css`, resolved)).code : undefined;
+
+      const { code, unresolved = [] } = await compileAsync(source, { ...options, comptime, css, filename: file, read });
       return { code: unresolved.length && folders.length ? `${code}\n${importsOf(unresolved, file, folders)}\n` : code };
     },
 
@@ -193,6 +249,8 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, target = process.env.R
         const define = target ? { __RAT_TARGET__: JSON.stringify(target) } : {};
         return { base: './', build: { ...DEFAULTS, ...await keyOfConfig(config, 'build') }, define, esbuild: { keepNames: true } };
       },
+
+      configResolved (config) { resolved = config; },
 
       transformIndexHtml: {
         order: 'pre',

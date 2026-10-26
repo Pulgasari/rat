@@ -9,11 +9,9 @@ a loader tries the bare specifier first (an import map, node_modules), then
 a pinned url, so it works in a build and in a plain browser page.
 
   scss, sass   sass (dart sass compiled to js), the same version @aufbau/import pins
-  ass          @aufbau/ass
 */
 
 const SASS = 'https://esm.sh/sass@1.70.0';
-const ASS  = 'https://code.pulgasari.dev/aufbau/ass/index.js';
 
 async function first (specifiers) {
   let failure;
@@ -31,7 +29,6 @@ const sass = syntax => async () => {
 };
 
 const loaders = {
-  ass  : async () => { const { compile } = await first(['@aufbau/ass', ASS]); return code => compile(code); },
   sass : sass('indented'),
   scss : sass('scss'),
 };

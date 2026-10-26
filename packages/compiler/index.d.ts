@@ -1,19 +1,24 @@
 // @rat/compiler
 
 export interface CompileOptions {
+  base?     : string;                  // the url css files resolve against
+  css?      : (css: string, context: { filename: string }) => string | Promise<string>;   // compileAsync: the component's css, before it is scoped (a build's postcss)
+  comptime? : (code: string, context: { filename: string, read: (path: string, as?: 'json' | 'text') => Promise<unknown> }) => Promise<Record<string, unknown>>; // compileAsync: runs <script comptime>: imports code, returns its default export called with { read }
   filename? : string;                  // decides the mode (.rat / .rat.js) and names the component
   mode?     : 'component' | 'module';  // overrides the filename
+  read?     : (path: string) => string | Promise<string>;   // compileAsync: a file relative to this one (style inline, read() in comptime)
   runtime?  : string;                  // import specifier of the runtime, default '@rat/runtime'
   styles?   : Record<string, (code: string, context: { filename: string }) => string>; // preprocessors per <style lang>
   tags?     : string[];                // .rat.js: template tags compiled as markup, default ['html', 'htx', 'rat']
 }
 
 export interface CompileResult {
-  ast    : Fragment | ModuleAst;
-  code   : string;
-  css?   : string;
-  names  : string[];                   // the reactive $names found
-  scope? : string | null;              // the data-rat hash, when there is a <style>
+  ast       : Fragment | ModuleAst;
+  code      : string;
+  comptime? : boolean;                 // compileAsync: a <script comptime> ran, the code depends on more than the source
+  css?      : string;
+  names     : string[];                // the reactive $names found
+  scope?    : string | null;           // the data-rat hash, when there is a <style>
 }
 
 export class CompileError extends SyntaxError {

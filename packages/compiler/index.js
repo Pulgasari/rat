@@ -3,7 +3,7 @@
 /*
 one entry, two inputs:
 
-  .rat      markup first. <script module>, <script>, <style>, the rest is markup
+  .rat      markup first. <script comptime>, <script module>, <script>, <style>, the rest is markup
   .rat.html the same as .rat, for highlighting where .rat is unknown (github)
   .rat.js   plain js plus sugar, html`…` without ${…} is compiled as markup
 
@@ -34,6 +34,7 @@ the script this is that function's, an arrow function keeps it.
 
 import { parse as parseProgram } from 'acorn';
 
+import { TAG, bake }            from './comptime.js';
 import { generate }             from './generate.js';
 import { parse }                from './parse.js';
 import { MODES, attrOf, hash, inlineSources, langOfPath, rebase, scopeStyle } from './style.js';
@@ -74,7 +75,7 @@ function unresolvedOf (asts, code) {
 
 /*
 a <style> in another language goes through options.styles[lang], a function
-(code, { filename }) => css, or through a built-in one (scss, sass, ass) that
+(code, { filename }) => css, or through a built-in one (scss, sass) that
 was loaded before: compileAsync() loads them by itself.
 */
 function preprocess (code, lang, { filename, index, source, styles = {} }) {
@@ -116,8 +117,9 @@ const urlOf = (src, base) => /^[a-z][\w+.-]*:/i.test(src) ? JSON.stringify(src)
   : base ? JSON.stringify(new URL(src, base).href)
   : `new URL(${JSON.stringify(src)}, import.meta.url).href`;
 
-function compileComponent (source, { base, filename = 'component.rat', inlined, runtime = '@rat/runtime', styles } = {}) {
+function compileComponent (source, { baked, base, filename = 'component.rat', inlined, processedCss, runtime = '@rat/runtime', styles } = {}) {
   const ast        = parse(source, { filename });
+  if (ast.scripts.comptime.length && baked == null) throw new CompileError('<script comptime> runs in compileAsync(source, { comptime }), not in compile()', { filename, index: ast.scripts.comptime[0].start, source });
   const names      = new Set;
   const cases      = new Map;
   const statements = [];
@@ -127,7 +129,7 @@ function compileComponent (source, { base, filename = 'component.rat', inlined, 
 
   const sheets    = sheetsOf(ast, statements, { filename, source });
   const linked    = sheets.filter(sheet => sheet.mode !== 'inline').map(({ mode, src }) => `${RUNTIME}.sheet('${mode}', ${urlOf(src, base)});`);
-  const css       = stylesOf(ast, sheets, { base, filename, inlined, source, styles });
+  const css       = processedCss ?? stylesOf(ast, sheets, { base, filename, inlined, source, styles });
   const scope     = css ? hash(`${filename}\n${css}`) : null;
   const fragments = [];
   const view      = generate(ast, { cases, filename, fragments, names, runtime: RUNTIME, scope, source });
@@ -137,6 +139,7 @@ function compileComponent (source, { base, filename = 'component.rat', inlined, 
   const lines = [
     `import * as ${RUNTIME} from ${JSON.stringify(runtime)};`,
     ...instance.flatMap(script => script.imports),
+    baked && `\n${baked}`,
     ...modules.map(trimBlock),
     linked.length && `\n${linked.join('\n')}`,
     css && `\nconst ${RUNTIME}style = ${JSON.stringify(scopeStyle(css, scope))};`,
@@ -199,17 +202,30 @@ function compile (source, options = {}) {
 }
 
 /*
-compile() after loading the built-in style languages the source uses, and
-reading the files it inlines (style inline 'x.css') through options.read,
-path => text or a promise of it, relative to the file.
+compile() after loading the built-in style languages the source uses, reading
+the files it inlines (style inline 'x.css') through options.read, path => text
+or a promise of it, relative to the file, running its <script comptime>
+through options.comptime, (code, { read }) => its values (comptime.js), and
+handing the component's css to options.css, (css, { filename }) => css or a
+promise of it, before it is scoped (a build's postcss: @rat/dev).
 */
 async function compileAsync (source, options = {}) {
+  const { filename = 'component.rat' } = options;
+  const mode   = options.mode ?? (filename.endsWith('.js') ? 'module' : 'component');
+  const blocks = mode === 'component' && TAG.test(source) ? parse(source, { filename }).scripts.comptime : [];
+  const baked  = blocks.length ? await bake(blocks, { ...options, filename, source }) : undefined;
+
   const sources = options.read ? [...new Set(inlineSources(source))] : [];
   const inlined = Object.fromEntries(await Promise.all(sources.map(async path => [path, String(await options.read(path))])));
 
   const langs = [...langsIn(source), ...sources.map(langOfPath)].filter(lang => lang !== 'css' && !options.styles?.[lang] && builtIn(lang));
   if (langs.length) await loadStyles([...new Set(langs)]);
-  return compile(source, { ...options, inlined: { ...options.inlined, ...inlined } });
+  const settings = { ...options, baked, inlined: { ...options.inlined, ...inlined } };
+  const result   = compile(source, settings);
+  if (!options.css || !result.css) return { ...result, comptime: blocks.length > 0 };
+
+  const processedCss = String(await options.css(result.css, { filename }));
+  return { ...compile(source, { ...settings, processedCss }), comptime: blocks.length > 0 };
 }
 
 // :::::: EXPORT

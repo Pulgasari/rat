@@ -175,7 +175,7 @@ random other stuff
 - `~D[2026-10-13]` a date,
 - and you can define your own (`~css"…"`).
 
-rat already has the same mechanism: tagged templates (``html`…` ``, ``ass`…` ``). nothing new needed, but a reminder that custom tags (``date`2026-10-13` ``, ``re`\d+` ``) are a cheap way to make literals readable.
+rat already has the same mechanism: tagged templates (``html`…` ``). nothing new needed, but a reminder that custom tags (``date`2026-10-13` ``, ``re`\d+` ``) are a cheap way to make literals readable.
 
 inspired by: elixir
 
@@ -282,6 +282,9 @@ ja, aber genaue syntax mir noch unklar.
 **reply:** four variants in [d-29](#d-29).
 
 ## `comptime` :: code that runs in the compiler
+
+status: **done** in `.rat` files (`<script comptime>`, [syntax](syntax/rat.md#comptime)). plain `.js` (a
+`with { type: 'comptime' }` import, as bun's macros) is open.
 
 ```zig
 const table = comptime blk: {

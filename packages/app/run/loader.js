@@ -3,7 +3,8 @@
 /*
 .rat files in the page, without a build (ideas/no-build.md):
 
-  1. fetch the source, compile it (compileAsync: style languages load first).
+  1. fetch the source, compile it (compileAsync: style languages load first, a
+     <script comptime> runs here, in the page: comptime is load time without a build).
      .htx files go through @htx/compiler (adapter @rat/runtime), a plain .html file
      becomes a component that renders it as it is (raw, scripts in it do not run).
   2. rewrite the imports of the result. a blob module has no path of its own,
@@ -169,7 +170,7 @@ async function build (url, chain) {
   // compiled by the host already (middleware.js): the code as it is, no compiler in the page
   const compiled = response.headers.get('x-rat-compiled')
     ? { code: source, found: await specifiers(source), unresolved: (response.headers.get('x-rat-unresolved') ?? '').split(',').filter(Boolean) }
-    : await compiledOf(source, url, name);
+    : await compiledOf(source, url, name, chain);
   const code     = await rewrite(compiled, url, chain);
   // at the end, so the lines of the code stay where they were: imports are hoisted anyway
   const imports  = await importsOf(compiled.unresolved, url, chain);
@@ -177,25 +178,33 @@ async function build (url, chain) {
 }
 
 // { code, found }: kept from an earlier compile of the same source, or compiled now
-async function compiledOf (source, url, name) {
+async function compiledOf (source, url, name, chain) {
   const store = globalThis.caches ? await caches.open(COMPILED).catch(() => null) : null;
   const key   = `${url}${url.includes('?') ? '&' : '?'}rat-compiled=${VERSION}.${hashOf(source)}`;
   const hit   = await store?.match(key);
   if (hit) return hit.json();
 
   document.dispatchEvent(new CustomEvent('rat:compile', { detail: { name, url } }));
-  const { code, inlined, unresolved = [] } = await compileSource(source, url, name);
+  const { code, comptime, inlined, unresolved = [] } = await compileSource(source, url, name, chain);
   const result = { code, found: await specifiers(code), unresolved };
 
-  if (store && !inlined) {
+  // what read or comptime brought in can change without the source: not kept
+  if (store && !inlined && !comptime) {
     await store.delete(url, { ignoreSearch: true });
     await store.put(key, new Response(JSON.stringify(result), { headers: { 'content-type': 'application/json' } }));
   }
   return result;
 }
 
-// source -> { code, inlined, unresolved }: module code by the kind of the file, inlined when it read another file
-async function compileSource (source, url, name) {
+// <script comptime> in the page, right before the file is compiled: a blob module, its imports rewritten like the file's
+const comptimeOf = (url, chain) => async (code, { read }) => {
+  const blob = URL.createObjectURL(new Blob([`${await rewrite({ code, found: await specifiers(code) }, url, chain)}\n//# sourceURL=${url}.comptime.js\n`], { type: 'text/javascript' }));
+  try     { return await (await import(blob)).default({ read }); }
+  finally { URL.revokeObjectURL(blob); }
+};
+
+// source -> { code, comptime, inlined, unresolved }: module code by the kind of the file, inlined when it read another file
+async function compileSource (source, url, name, chain) {
   const kind = kindOf(url);
   if (kind === 'html') return { code: `import { raw } from '@rat/runtime';\nconst source = ${JSON.stringify(source)};\nexport default () => raw(source);\n` };
 
@@ -209,8 +218,8 @@ async function compileSource (source, url, name) {
       return fetch(new URL(path, url), { cache: 'no-cache' }).then(response => response.ok ? response.text() : Promise.reject(new Error(`[rat] ${new URL(path, url).href}: ${response.status}`)));
     };
     const { compileAsync } = await import('@rat/compiler');
-    const { code, unresolved } = await compileAsync(source, { base: url, filename: name, read });
-    return { code, inlined, unresolved };
+    const { code, comptime, unresolved } = await compileAsync(source, { base: url, comptime: comptimeOf(url, chain), filename: name, read });
+    return { code, comptime, inlined, unresolved };
   }
   catch (error) { error.message = `${url}\n${error.message}`; throw error; }
 }

@@ -17,7 +17,8 @@ a driver is where values live, the same small contract for every kind:
   indexeddb      an object store `table` in the database `name`
   cache          the Cache API cache `name`, keys are urls
 
-a driver of your own is an object of that shape.
+a driver of your own is an object of that shape, or a function of the options
+that makes one (a store hands it name, a database name and table).
 */
 
 // :::::: MEMORY
@@ -172,7 +173,9 @@ function cache ({ name = 'bunker' } = {}) {
 
 const drivers = { cache, cookie, indexeddb, local, memory, session };
 
-// a name and options, or a driver object as it is
-const driverOf = (driver, options) => typeof driver === 'string' ? drivers[driver]?.(options) ?? null : driver;
+// a name and options, a function of the options, or a driver object as it is
+const driverOf = (driver, options) => typeof driver === 'string' ? drivers[driver]?.(options) ?? null
+  : typeof driver === 'function' ? driver(options)
+  : driver;
 
 export { driverOf, drivers };

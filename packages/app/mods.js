@@ -6,29 +6,35 @@ config.rat.js names the ones it wants by their name, beside its other keys. each
 on the app (RAT.app.<name>), in the order written:
 
   export default {
-    name       : 'podcasts',
-    clipboard  : true,                     // the same in the browser, on android, on the desktop (drivers.js)
-    database   : { schema: { podcasts: { id: Id, title: String }, folders: FOLDERS } },
-    files      : true,                     // the origin private file system
-    folders    : { accept: 'md, epub' },   // folders the user grants, in the database's table folders
-    hotkeys    : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
-    offline    : true,                     // a service worker: offline once open, installable (sw.js)
-    store      : { driver: 'local' },      // keys and values
-    thumbnails : { proxy: '…{url}' },      // small copies of images in opfs
+    name          : 'podcasts',
+    clipboard     : true,                     // the same in the browser, on android, on the desktop (drivers.js)
+    database      : { schema: { podcasts: { id: Id, title: String }, folders: FOLDERS } },
+    dialogs       : true,                     // alert, confirm, prompt
+    external      : true,                     // open a url outside the app
+    files         : true,                     // the origin private file system, the app's data folder natively
+    folders       : { accept: 'md, epub' },   // folders the user grants, in the database's table folders
+    hotkeys       : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
+    notifications : true,                     // the system's notifications
+    offline       : true,                     // a service worker: offline once open, installable (sw.js)
+    store         : { driver: 'local' },      // keys and values
+    thumbnails    : { proxy: '…{url}' },      // small copies of images in files
   };
 
 true takes the defaults. a module is loaded only when an app names it.
 */
 
 const MODS = {
-  clipboard  : () => import('./modules/clipboard.js'),
-  database   : () => import('./modules/database.js'),
-  files      : () => import('./modules/files.js'),
-  folders    : () => import('./modules/folders.js'),
-  hotkeys    : () => import('./modules/hotkeys.js'),
-  offline    : () => import('./offline.js'),
-  store      : () => import('./store.js'),
-  thumbnails : () => import('./modules/thumbnails.js'),
+  clipboard     : () => import('./modules/clipboard.js'),
+  database      : () => import('./modules/database.js'),
+  dialogs       : () => import('./modules/dialogs.js'),
+  external      : () => import('./modules/external.js'),
+  files         : () => import('./modules/files.js'),
+  folders       : () => import('./modules/folders.js'),
+  hotkeys       : () => import('./modules/hotkeys.js'),
+  notifications : () => import('./modules/notifications.js'),
+  offline       : () => import('./offline.js'),
+  store         : () => import('./modules/store.js'),
+  thumbnails    : () => import('./modules/thumbnails.js'),
 };
 
 // every key of the config that names a mod onto the app, in order. one the app has already is left out

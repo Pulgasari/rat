@@ -31,5 +31,8 @@ export { Color, $Color }   from './Color.js';
 // match
 export { NONE, any, either, is, match, part, pass, pattern, rest, which } from './match.js';
 
+// the query vocabulary of a list, data last: rows |> where({ album }) |> toSortedBy('track')
+export { by, has, keyBy, one, pluck, sortBy, toSortedBy, where, without } from './query.js';
+
 // Quatsch
 export { Id, Ref } from './id.js';

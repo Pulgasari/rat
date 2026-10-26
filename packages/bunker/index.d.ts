@@ -23,7 +23,7 @@ export interface Codec { encode (value: unknown): unknown; decode (stored: unkno
 export type DriverName = 'cache' | 'cookie' | 'indexeddb' | 'local' | 'memory' | 'session';
 
 export interface StoreOptions {
-  driver? : DriverName | Driver;
+  driver? : DriverName | Driver | ((options: Record<string, unknown>) => Driver);
   /** The key prefix, the database or the cache. */
   name?   : string;
   /** indexeddb: the object store. */
@@ -85,7 +85,7 @@ export declare class DatabaseTable<R extends Record<string, any> = Record<string
 
 export interface DatabaseOptions {
   name?   : string;
-  driver? : DriverName | Driver;
+  driver? : DriverName | Driver | ((options: Record<string, unknown>) => Driver);
   /** table -> its fields. */
   schema? : Record<string, Record<string, Field> | null>;
 }
@@ -121,7 +121,7 @@ export declare class Entry {
 export interface TreeNode { entry: Entry; children: TreeNode[] | null; }
 
 export declare class Files {
-  constructor (options?: { driver?: 'opfs', root?: FileSystemDirectoryHandle | null });
+  constructor (options?: { driver?: 'opfs' | (() => FileSystemDirectoryHandle | Promise<FileSystemDirectoryHandle>), root?: FileSystemDirectoryHandle | null });
   /** A folder the user grants, inside a click. null when cancelled. */
   static pick (options?: { id?: string, mode?: 'read' | 'readwrite', startIn?: string }): Promise<Files | null>;
   root (): Promise<Entry>;
@@ -136,7 +136,7 @@ export declare class Files {
   on (type: 'change', fn: (change: { type: 'write' | 'remove', paths: string[] }) => void): () => void;
 }
 
-export declare function createFiles (options?: { driver?: 'opfs', root?: FileSystemDirectoryHandle | null }): Files;
+export declare function createFiles (options?: { driver?: 'opfs' | (() => FileSystemDirectoryHandle | Promise<FileSystemDirectoryHandle>), root?: FileSystemDirectoryHandle | null }): Files;
 
 export interface Memo<V = any> {
   readonly store: Store<{ at: number, value: V }>;

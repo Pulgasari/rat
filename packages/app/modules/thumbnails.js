@@ -22,10 +22,13 @@ come through its native http plugin, which knows no cors.
 
 options: dir ('thumbs'), width (250), quality (0.8), concurrency (3),
 maxBytes (64 mb, the oldest go past it), proxy (a template with {url}, or a
-function returning one), resizer.
+function returning one), resizer, files (where they live: opfs, in the mod the
+shell's files driver).
 */
 
 import { createFiles } from '@rat/bunker';
+
+import { bunkerDriverOf } from '../drivers.js';
 
 const nativeHttp = () => globalThis.Capacitor?.isNativePlatform?.() ? globalThis.Capacitor.Plugins?.CapacitorHttp ?? null : null;
 const fromBase64 = (data, type) => new Blob([Uint8Array.from(atob(data), char => char.charCodeAt(0))], { type });
@@ -66,8 +69,7 @@ function limiter (max) {
   return fn => new Promise((resolve, reject) => { queue.push({ fn, reject, resolve }); pump(); });
 }
 
-function createThumbs ({ concurrency = 3, dir = 'thumbs', maxBytes = 64 * 1024 * 1024, proxy = '', quality = 0.8, resizer = null, width = 250 } = {}) {
-  const files    = createFiles({ driver: 'opfs' });
+function createThumbs ({ concurrency = 3, dir = 'thumbs', files = createFiles({ driver: 'opfs' }), maxBytes = 64 * 1024 * 1024, proxy = '', quality = 0.8, resizer = null, width = 250 } = {}) {
   const native   = nativeHttp();
   const memory   = new Map;   // key -> object url, this session
   const inflight = new Map;   // key -> promise of an object url or null
@@ -249,8 +251,8 @@ function createThumbs ({ concurrency = 3, dir = 'thumbs', maxBytes = 64 * 1024 *
   return thumbs;
 }
 
-// the mod: RAT.app.thumbnails
-const thumbnails = options => createThumbs(options);
+// the mod: RAT.app.thumbnails, in the shell's files
+const thumbnails = async ({ driver, ...options }) => createThumbs({ ...options, files: createFiles({ driver: await bunkerDriverOf('files', driver) }) });
 
 // :::::: EXPORT
 

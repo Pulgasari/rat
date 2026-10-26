@@ -44,7 +44,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
   const errors   = [];
   const slips    = [];   // closing tags that closed another element than they name
   const warnings = [];
-  const scripts  = { instance: [], module: [] };
+  const scripts  = { comptime: [], instance: [], module: [] };
   const styles   = [];
 
   // ::: helpers
@@ -516,7 +516,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     return { end: end + offset, kind: 'template', parts, start: start + offset };
   }
 
-  // <script>, <script module>, <style>: raw text, top level only
+  // <script>, <script module>, <script comptime>, <style>: raw text, top level only
   function raw (name, start, context) {
     const misplaced = !blocks || context.depth;
     // no closing tag after it: a closing tag was forgotten above, and that element is named. the
@@ -543,6 +543,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
 
     const content = { attributes: attrs.trim(), code: source.slice(open + 1, close), end: close + offset, range: { end: close + name.length + 3 + offset, start: start + offset }, start: open + 1 + offset };
     if (name === 'style')                  styles.push(content);
+    else if (/\bcomptime\b/.test(attrs))   scripts.comptime.push(content);
     else if (/\bmodule\b/.test(attrs))     scripts.module.push(content);
     else                                   scripts.instance.push(content);
 
