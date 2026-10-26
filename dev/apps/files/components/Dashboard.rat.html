@@ -1,0 +1,124 @@
+<script>
+  // <Dashboard />: recent files, bookmarks, categories, the folder; a search over the whole folder
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { SORTED, category, categoryFiles, folderName, goTo, hits, open, places, query, rootHandle, scan, settings } from '../state.js';
+
+  const library = at => { goTo(at); RAT.app.router.go('/library'); };
+
+  const $ready     = Boolean(rootHandle());
+  const $top       = settings.searchbar.value === 'top';
+  const $query     = query.value.trim();
+  const $category  = category.value;
+  const $index     = scan.index.value;
+  const $bookmarks = places.bookmarks();
+  const $label     = SORTED.find(item => item.id === $category)?.label ?? $category;
+
+  // places outside the granted folder: tiles that say what each would need
+  const PLANNED = [
+    { icon: 'lucide:cloud',      label: 'WebDAV, Nextcloud', note: 'not ported to rat yet' },
+    { icon: 'lucide:hard-drive', label: 'Google Drive',      note: 'its own api, sign in with oauth' },
+    { icon: 'lucide:terminal',   label: '(S)FTP',            note: 'not from a browser, only in the android app' },
+    { icon: 'lucide:network',    label: 'LAN',               note: 'smb shares, only in the android app' },
+  ];
+</script>
+
+<Bar title='Files' />
+
+@if ($ready && $top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={text => query.value = text} />
+
+<div.scroll>
+  @if (!$ready)
+    <Welcome />
+  @else if ($query)
+    <section>
+      <h2>{hits.value.length ? 'Found ' + (hits.value.length >= 100 ? '100+' : hits.value.length) : 'Nothing found'}</h2>
+      <ul.rows>
+        @for (entry of hits.value): <FileRow entry={entry} />
+      </ul.rows>
+    </section>
+  @else if ($category)
+    <section>
+      <div-x.section-head>
+        <btn-icon icon='lucide:arrow-left' label='back' onclick={() => category.value = null} />
+        <h2>{$label}</h2>
+      </div-x.section-head>
+      <ul.rows>
+        @for (entry of categoryFiles.value): <FileRow entry={entry} />
+      </ul.rows>
+    </section>
+  @else
+    @if ($index?.recent?.length)
+      <section>
+        <h2>Recent</h2>
+        <div-x.cards scrollable>
+          @for (entry of $index.recent)
+            <button.card type='button' onclick={() => open(entry)}>
+              <Thumb entry={entry} at={entry.path} />
+              <span.name>{entry.name}</span.name>
+              <small>{fmt.date(entry.lastModified)}</small>
+            </button.card>
+        </div-x.cards>
+      </section>
+
+    <section>
+      <h2>Bookmarks</h2>
+      @if ($bookmarks.length)
+        <ul.tiles>
+          @for (bookmark of $bookmarks)
+            <li>
+              <button.tile type='button' onclick={() => library(bookmark.path)}>
+                <svg-icon icon={places.typeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
+                <span.text><span.name>{bookmark.name}</span.name><small>/{bookmark.path.join('/')}</small></span.text>
+              </button.tile>
+            </li>
+        </ul.tiles>
+      @else
+        <p.hint>Folders you bookmark show up here, from their details below.</p.hint>
+    </section>
+
+    <section>
+      <h2>Categories</h2>
+      <ul.tiles>
+        @for (item of SORTED)
+          <li>
+            <button.tile type='button' disabled={!$index?.categories?.[item.id]?.count} onclick={() => category.value = item.id}>
+              <svg-icon icon={item.icon} />
+              <span.text>
+                <span.name>{item.label}</span.name>
+                <small>{$index?.categories?.[item.id] ? $index.categories[item.id].count + ' · ' + fmt.bytes($index.categories[item.id].size) : '…'}</small>
+              </span.text>
+            </button.tile>
+          </li>
+      </ul.tiles>
+    </section>
+
+    <section>
+      <h2>Folder</h2>
+      <ul.tiles>
+        <li>
+          <button.tile type='button' onclick={() => library([])}>
+            <svg-icon icon='lucide:folder-open' />
+            <span.text><span.name>{folderName()}</span.name><small>{$index ? fmt.bytes($index.size) : 'the granted folder'}</small></span.text>
+          </button.tile>
+        </li>
+      </ul.tiles>
+      <Status />
+    </section>
+
+    <section>
+      <h2>Remote</h2>
+      <ul.tiles>
+        @for (remote of PLANNED)
+          <li>
+            <button.tile type='button' disabled title={remote.note}>
+              <svg-icon icon={remote.icon} />
+              <span.text><span.name>{remote.label}</span.name><small>soon · {remote.note}</small></span.text>
+            </button.tile>
+          </li>
+      </ul.tiles>
+    </section>
+</div.scroll>
+
+@if ($ready && !$top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={text => query.value = text} />

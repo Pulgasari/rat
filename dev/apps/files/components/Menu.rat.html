@@ -1,0 +1,33 @@
+<script>
+  // <Menu />: the views, what is coming back, the settings
+
+  const MENU = [
+    { icon: 'lucide:layout-dashboard', label: 'Dashboard', route: '/'        },
+    { icon: 'lucide:folder',           label: 'Library',   route: '/library' },
+  ];
+
+  // the tools the app had before, and sending files, coming back one by one
+  const SOON = [
+    { icon: 'lucide:send',      label: 'Send'         },
+    { icon: 'lucide:image',     label: 'Image editor' },
+    { icon: 'lucide:file-pen',  label: 'Text editor'  },
+  ];
+
+  const $route = RAT.app.router.$path.value;
+
+  function go (route) {
+    RAT.app.router.go(route);
+    const menu = RAT.app.area('menu');
+    if (menu?.isOverlay) menu.hide();
+  }
+</script>
+
+<nav.menu>
+  <Brand name='Files' icon='./app.svg' />
+  @for (item of MENU)
+    <button type='button' aria-current={$route === item.route ? 'page' : null} onclick={() => go(item.route)}><svg-icon icon={item.icon} /> {item.label}</button>
+  <hr />
+  @for (item of SOON): <button type='button' disabled><svg-icon icon={item.icon} /> {item.label} <small>soon</small></button>
+  <hr />
+  <button type='button' onclick={() => RAT.app.area('config')?.show()}><svg-icon icon='lucide:settings' /> Settings</button>
+</nav.menu>

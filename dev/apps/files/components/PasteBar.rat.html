@@ -1,0 +1,16 @@
+<script>
+  // <PasteBar />: what waits on the clipboard, and the button that puts it here
+
+  import { paste, transfer } from '../state.js';
+
+  const $board = transfer.clipboard.value;
+  const $what  = $board ? ($board.items.length === 1 ? $board.items[0].name : `${$board.items.length} items`) : '';
+</script>
+
+@if ($board)
+  <div-x.pastebar>
+    <svg-icon icon={$board.mode === 'move' ? 'lucide:scissors' : 'lucide:copy'} />
+    <span.text><span.name>{$what}</span.name><small>{$board.mode === 'move' ? 'to move' : 'to copy'}</small></span.text>
+    <button.action type='button' onclick={paste}><svg-icon icon='lucide:clipboard-paste' /> here</button.action>
+    <btn-icon icon='lucide:x' label='empty the clipboard' onclick={transfer.clear} />
+  </div-x.pastebar>

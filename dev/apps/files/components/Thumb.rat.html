@@ -1,0 +1,32 @@
+<script>
+  // <Thumb entry={entry} at={path} />: an image's thumbnail once it is on screen, the icon of its kind until then
+
+  import { fs, iconOf, isImage, rootHandle, root } from '../state.js';
+
+  const entry  = props.entry;
+  const at     = props.at ?? [];
+  const thumbs = RAT.app.thumbnails;
+  const id     = isImage(entry) ? `${root.folder.value?.addedAt}/${at.join('/')}/${entry.name}:${entry.size}:${entry.lastModified}` : null;
+
+  let $url = id ? thumbs.peekFile(id) : null;
+
+  // asked for when it scrolls near the screen, once
+  function watch (element) {
+    if (!id || $url) return;
+    let alive = true;
+    const observer = new IntersectionObserver(([hit]) => {
+      if (!hit.isIntersecting) return;
+      observer.disconnect();
+      thumbs.requestFile(id, () => fs.readFile(rootHandle(), at, entry.name)).then(made => { if (alive && made) $url = made; });
+    }, { rootMargin: '200px' });
+    observer.observe(element);
+    return () => { alive = false; observer.disconnect(); };
+  }
+</script>
+
+<span.thumb @watch>
+  @if ($url)
+    <img src={$url} alt='' loading='lazy' />
+  @else
+    <svg-icon icon={iconOf(entry, props.at)} />
+</span.thumb>

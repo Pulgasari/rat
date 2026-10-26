@@ -1,0 +1,15 @@
+<script>
+  // <Status />: the index of the folder, or how far a walk is
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { scan } from '../state.js';
+
+  const $scanning = scan.scanning.value;
+  const $index    = scan.index.value;
+</script>
+
+@if ($scanning)
+  <p.status><svg-icon icon='lucide:loader' /> Reading the folder … {$scanning.files} files</p.status>
+@else if ($index)
+  <p.status>{$index.total} files · {fmt.bytes($index.size)} · read {fmt.date($index.scannedAt)}</p.status>

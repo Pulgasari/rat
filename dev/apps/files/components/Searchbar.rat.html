@@ -1,0 +1,16 @@
+<script>
+  // <Searchbar placeholder='…' value={text} onsearch={query => …} />: the search field and the tasks beside it
+
+  import { openTasks, tasks } from '../state.js';
+
+  const $busy  = tasks.busy.value;
+  const $count = tasks.queue.value.length;
+</script>
+
+<div.searchbar>
+  <input-search placeholder={props.placeholder} value={props.value ?? ''} onsearch={event => props.onsearch?.(event.detail.query)} />
+  <button type='button' class={$busy ? 'tasks-button busy' : 'tasks-button'} aria-label={$count ? `${$count} tasks` : 'tasks'} title={$count ? `${$count} tasks` : 'tasks'} onclick={openTasks}>
+    <svg-icon icon={$busy ? 'lucide:loader' : 'lucide:list-checks'} />
+    @if ($count): <span.badge>{$count}</span.badge>
+  </button>
+</div.searchbar>

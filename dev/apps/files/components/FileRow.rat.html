@@ -1,0 +1,20 @@
+<script>
+  // <FileRow entry={entry} />: a file of the index (it carries its path), on the dashboard
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { about, open } from '../state.js';
+
+  const entry = props.entry;
+</script>
+
+<li.row>
+  <button.entry type='button' onclick={() => open(entry)}>
+    <Thumb entry={entry} at={entry.path} />
+    <span.text>
+      <span.name>{entry.name}</span>
+      <small>{'/' + entry.path.join('/') + ' · ' + fmt.bytes(entry.size)}</small>
+    </span.text>
+  </button.entry>
+  <btn-icon icon='lucide:ellipsis-vertical' label='more' onclick={() => about({ ...entry, kind: 'file' })} />
+</li.row>

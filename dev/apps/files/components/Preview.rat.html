@@ -1,0 +1,39 @@
+<script>
+  // <Preview />: one file, an image inline, the rest as its icon. its details are in the context area
+
+  import { effect } from '@rat/signals';
+
+  import { file, fs, iconOf, isImage, rootHandle, selected, size } from '../state.js';
+
+  const $entry = file.value;
+
+  let $src = null;
+
+  // the image off disk, its object url gone with the next file
+  effect(() => {
+    const entry = file.value;
+    size.value = null;
+    $src = null;
+    if (!entry || !isImage(entry)) return;
+    let url = null, alive = true;
+    fs.readFile(rootHandle(), entry.path, entry.name).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
+    return () => { alive = false; if (url) URL.revokeObjectURL(url); };
+  });
+
+  const loaded = event => size.value = { height: event.target.naturalHeight, width: event.target.naturalWidth };
+  const info   = () => { selected.value = null; RAT.app.toggle('context'); };
+</script>
+
+@if (!$entry)
+  <Bar title='Preview' back={() => history.back()} />
+  <p.empty>no file open</p.empty>
+@else
+  <Bar title={$entry.name} back={() => history.back()}>
+    <btn-icon icon='lucide:info' label='details' onclick={info} />
+  </Bar>
+  <div.stage>
+    @if (isImage($entry))
+      @if ($src): <img src={$src} alt={$entry.name} onload={loaded} />
+    @else
+      <svg-icon icon={iconOf($entry)} />
+  </div.stage>
