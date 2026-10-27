@@ -23,7 +23,7 @@
 
 <data-item>
   <div.row class:selected={$picked}>
-    <button.entry type='button' aria-pressed={String($picked)} onclick={() => onEntryClick(entry)} ondblclick={() => open(entry)} onkeydown={onkeydown}>
+    <button.entry type='button' aria-pressed={$picked} onclick={() => onEntryClick(entry)} ondblclick={() => open(entry)} onkeydown={onkeydown}>
       <Thumb entry={entry} at={at} from={from} />
       <span.text>
         <span.name>{entry.name}</span.name>

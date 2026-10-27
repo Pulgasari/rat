@@ -1081,6 +1081,8 @@ found while cleaning `dev/apps/files/components`. each is a proposal, not decide
 
 ### 26 the loop index follows the row
 
+**status:** done: `@for (item, $index of list)` compiles to `$$.indexed(…)`, the index a signal per row. a plain `index` stays as it was. the tabs use it.
+
 `rat` · `@for (tab, index of $tabs)` compiles to `each(…, item => item, (tab, index) => …)`: rows are kept by
 identity, the index is a number from the time the row was made. close the first tab and the second row still
 says 1. so the index is only safe in a list that never reorders.
@@ -1115,6 +1117,8 @@ could be: what the component does not read lands on its root element (vue's `$at
 ```
 
 ### 28 aria booleans
+
+**status:** done: the compiler wraps an `aria-*` expression in `$$.aria()`, a boolean becomes `"true"` / `"false"`.
 
 `rat` · `aria-pressed`, `aria-selected`, `aria-expanded` want the strings `"true"` and `"false"`, a boolean attribute
 would drop `false`. so every one is wrapped.

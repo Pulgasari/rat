@@ -133,11 +133,14 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
   }
 
   // rows are keyed by the item itself, a duplicate gets a row per occurrence
+  // a $index follows its row (indexed), a plain index is the one the row was made with
   function forBlock ({ children, fallback, index, item, list }, depth, root) {
     const params = index ? `(${item}, ${index})` : `(${item})`;
-    const args   = [live(expression(list)), 'item => item', `${params} => ${view(children, depth + 1, root)}`];
+    const follow = index?.startsWith('$');
+    const body   = follow ? within([index], () => view(children, depth + 1, root)) : view(children, depth + 1, root);
+    const args   = follow ? [live(expression(list)), `${params} => ${body}`] : [live(expression(list)), 'item => item', `${params} => ${body}`];
     if (fallback) args.push(`() => ${view(fallback, depth + 1, root)}`);
-    return call($('each'), args, depth);
+    return call($(follow ? 'indexed' : 'each'), args, depth);
   }
 
   /*
@@ -209,10 +212,12 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     return list.map(name => special(name, value));
   }
 
+  // an aria-* state takes "true" / "false": a boolean goes through aria()
   function plainProp (name, value) {
     if (value.kind === 'true')   return name;
     if (value.kind === 'string') return `${name}=${attribute(value.value)}`;
-    return `${name}=${hole(live(valueOf(value)[0]))}`;
+    const [code] = valueOf(value);
+    return `${name}=${hole(live(/(^|\|)aria-/.test(name) ? `${$('aria')}(${code})` : code))}`;
   }
 
   function special (name, value) {

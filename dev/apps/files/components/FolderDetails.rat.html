@@ -34,6 +34,6 @@
     <p.hint>Looks like {BUILTIN[$suggested].label}. <button.link type='button' onclick={() => setFolderType($path, $suggested)}>Make it one</button.link></p.hint>
   <div-x.actions>
     @for ([id, folderType] of Object.entries($folderTypes))
-      <button.action type='button' aria-pressed={String($folderTypeId === id)} onclick={() => toggleFolderType(id)}><svg-icon icon={folderType.icon} /> {folderType.label}</button.action>
+      <button.action type='button' aria-pressed={$folderTypeId === id} onclick={() => toggleFolderType(id)}><svg-icon icon={folderType.icon} /> {folderType.label}</button.action>
     <Action icon='lucide:plus' label='new foldertype' onclick={() => newFolderType($path)} />
   </div-x.actions>

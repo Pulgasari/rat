@@ -56,7 +56,7 @@
 
 @fragment receiver (target, icon, removable)
   <li.row class:selected={isChosen(target)}>
-    <button.entry type='button' aria-pressed={String(isChosen(target))} onclick={() => choose(target)}>
+    <button.entry type='button' aria-pressed={isChosen(target)} onclick={() => choose(target)}>
       <span.thumb><svg-icon icon={icon} /></span.thumb>
       <span.text>
         <span.name>{sync.labelOf(target)}</span.name>

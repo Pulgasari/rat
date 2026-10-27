@@ -52,6 +52,7 @@ a literal `{` in text: `{'{'}`.
 | `ref={fn}` / `ref={$el}` | the element, to a function or a signal |
 | `{...obj}` | spread (at creation). on an element `class` and `style` add up, everything else: later wins |
 | `{name}` | short for `name={name}` |
+| `aria-pressed={$on}` | an `aria-*` value: a boolean is written as `"true"` / `"false"`, not dropped like a boolean attribute |
 
 ## control flow
 
@@ -126,6 +127,13 @@ rules (v0):
 
 - `@else` applies to an empty list.
 - elements are reused by item identity (keyed by identity).
+- `index` is the position the row was made with. a row is kept when the list changes, so after a
+  reorder or a removal before it, it is stale. `$index` is a signal that follows the row:
+
+  ```html
+  @for (tab, $index of $tabs)
+    <button class:active={$index === $current} onclick={() => close($index)}>{tab.name}</button>
+  ```
 - *(planned)* an explicit key: `@for (todo of $todos; key todo.id)`.
 
 ### `@match`
