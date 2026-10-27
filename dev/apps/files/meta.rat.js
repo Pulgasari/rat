@@ -9,7 +9,9 @@ const ICON = {
   document : 'lucide:file-text',
   image    : 'lucide:image',
   video    : 'lucide:film',
+  
   file     : 'lucide:file',
+  folder   : 'lucide:folder',
 };
 
 
