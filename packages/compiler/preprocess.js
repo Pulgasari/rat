@@ -9,9 +9,11 @@ a loader tries the bare specifier first (an import map, node_modules), then
 a pinned url, so it works in a build and in a plain browser page.
 
   scss, sass   sass (dart sass compiled to js), the same version @aufbau/import pins
+  gestalt      @gestalt/syntax: css with @spread, @val, @mixin and @apply
 */
 
-const SASS = 'https://esm.sh/sass@1.70.0';
+const GESTALT = 'https://code.pulgasari.dev/gestalt/packages/syntax/index.js';
+const SASS    = 'https://esm.sh/sass@1.70.0';
 
 async function first (specifiers) {
   let failure;
@@ -29,8 +31,9 @@ const sass = syntax => async () => {
 };
 
 const loaders = {
-  sass : sass('indented'),
-  scss : sass('scss'),
+  gestalt : async () => (await first(['@gestalt/syntax', GESTALT])).compile,
+  sass    : sass('indented'),
+  scss    : sass('scss'),
 };
 
 const ready   = new Map;

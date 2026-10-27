@@ -8,7 +8,9 @@ import { parse } from 'acorn';
 
 import { compileAsync } from '@rat/compiler';
 
-export const COMPTIME = /<script\b[^>]*\bcomptime\b/;
+// what only the page compiles in rat dev: comptime runs its imports through the page's import map, so does
+// the gestalt style language
+export const COMPTIME = /<script\b[^>]*\bcomptime\b|<style\b[^>]*\blang=["']?gestalt\b/;
 export const RAT      = /\.rat(\.html|\.js)?$/;
 export const jsOf     = file => file.replace(RAT, '.js');
 

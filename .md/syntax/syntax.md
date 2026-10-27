@@ -465,7 +465,8 @@ const pattern = (element, { id, ...options }) => {
 
 ## styles
 
-`<style>` is css. `scss` and `sass` are built in ([d-20](ideas/styles.md#d-20)):
+`<style>` is css. `scss`, `sass` and `gestalt` ([`@gestalt/syntax`](https://github.com/pulgasari/gestalt/tree/main/packages/syntax):
+`@spread`, `@val`, `@mixin` / `@apply`) are built in ([d-20](ideas/styles.md#d-20)):
 
 ```html
 <style lang="scss">

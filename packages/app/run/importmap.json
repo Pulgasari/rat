@@ -19,6 +19,7 @@
     "@domina/verbs/"          : "../../../../domina/packages/verbs/",
     "@gestalt/core"           : "../../../../gestalt/packages/core/index.js",
     "@gestalt/patterns"       : "../../../../gestalt/packages/patterns/index.js",
+    "@gestalt/syntax"         : "../../../../gestalt/packages/syntax/index.js",
     "@gestalt/webfonts"       : "../../../../gestalt/packages/webfonts/index.js",
     "@htx/compiler"           : "../../../../htx/packages/compiler/index.js",
     "@htx/htx"                : "../../../../htx/packages/htx/index.js",
