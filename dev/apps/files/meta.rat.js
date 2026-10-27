@@ -1,6 +1,6 @@
 // only parked here for noe
 
-export const CATEGORIES = [
+export const FILETYPES = [
   { icon: 'lucide:image',        id: 'images',    label: 'Images'    },
   { icon: 'lucide:music',        id: 'audio',     label: 'Audio'     },
   { icon: 'lucide:film',         id: 'video',     label: 'Videos'    },
@@ -8,6 +8,13 @@ export const CATEGORIES = [
   { icon: 'lucide:file-archive', id: 'archives',  label: 'Archives'  },
   { icon: 'lucide:file',         id: 'other',     label: 'Other'     },
 ];
+
+export const FOLDERTYPES = {
+  audio     : { icon: 'lucide:music',     label: 'Audio'     },
+  documents : { icon: 'lucide:file-text', label: 'Documents' },
+  images    : { icon: 'lucide:image',     label: 'Images'    },
+  video     : { icon: 'lucide:film',      label: 'Videos'    },
+};
 
 const DOCUMENTS = /^(pdf|txt|md|rtf|odt|doc|docx|xls|xlsx|ods|ppt|pptx|odp|csv|epub|html?|json|xml)$/;
 const ARCHIVES  = /^(zip|rar|7z|tar|gz|bz2|xz|zst)$/;
