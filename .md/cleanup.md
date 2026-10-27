@@ -1,10 +1,431 @@
 # cleanup
 
-the codebase as it is, step by step towards nice code. per spot: the code as it is now, and a direction
-it could go. a direction is no decision, each one is discussed first.
+the codebase as it is, step by step towards nice code. two parts:
+
+- **[the code itself](#part-1-the-code-itself)**: how it is written. dense expressions, data that does not know
+  itself, tuples instead of names. fixable with plain js, no new building block needed.
+- **[building blocks](#part-2-building-blocks)**: what is missing in rat or a library, so the apps build it by hand.
+
+per spot: the code as it is now, and how it could read. a direction is no decision, each one is discussed first.
 
 `rat` framework, runtime, compiler · `lib` bunker, types, aufbau, .shared · `app` the app's own code ·
 `quick` needs no concept
+
+## part 1: the code itself
+
+- [A1 one expression does everything](#a1-one-expression-does-everything)
+- [A2 data that does not know itself](#a2-data-that-does-not-know-itself)
+- [A3 lookups by id through find](#a3-lookups-by-id-through-find)
+- [A4 several things in one line](#a4-several-things-in-one-line)
+- [A5 return as a jump](#a5-return-as-a-jump)
+- [A6 tuples instead of names](#a6-tuples-instead-of-names)
+- [A7 the same string built in several places](#a7-the-same-string-built-in-several-places)
+- [A8 derived values as functions](#a8-derived-values-as-functions)
+- [A9 long positional parameters](#a9-long-positional-parameters)
+- [A10 nested awaits, walking from the root](#a10-nested-awaits-walking-from-the-root)
+- [A11 null as the default, ?. everywhere](#a11-null-as-the-default--everywhere)
+- [A12 logic in markup the syntax already has](#a12-logic-in-markup-the-syntax-already-has)
+
+### A1 one expression does everything
+
+ternaries in ternaries, `&&` and `||` as control flow, `?.` and `??` mixed in. the reader evaluates it in
+the head to find out what comes back.
+
+```js
+// files/state.rat.js
+export const iconOf = (entry, at) => entry.kind === 'directory'
+  ? (at && places.typeOf([...at, entry.name])?.icon) || 'lucide:folder'
+  : CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'lucide:file';
+
+// files/state.rat.js, writable()
+const state = handle?.requestPermission ? await handle.requestPermission({ mode: 'readwrite' }).catch(() => 'denied') : handle ? 'granted' : 'denied';
+
+// files/components/TaskList.rat.html
+return task.state === 'running' && done != null ? (total ? `${Math.round(done / total * 100)}%` : `${done}`) : STATES[task.state];
+```
+
+```html
+<!-- files/components/Dashboard.rat.html -->
+<h2>{$hits.length ? 'Found ' + ($hits.length >= 100 ? '100+' : $hits.length) : 'Nothing found'}</h2>
+
+<!-- files/components/Context.rat.html -->
+['kind', $selected.kind === 'directory' ? 'folder' : $selected.type || 'file'],
+```
+
+elsewhere:
+
+```js
+// noisy/browse.js
+export const modeOf = event => event?.shiftKey ? 'range' : event?.ctrlKey || event?.metaKey ? 'toggle' : 'one';
+
+// .shared/components/Picker.rat.html
+const normalize = option => Array.isArray(option) ? { label: String(option[1] ?? option[0]), title: String(option[1] ?? option[0]), value: option[0] }
+  : isObject(option) ? { icon: option.icon, label: option.label ?? (option.icon ? '' : String(option.value)), title: option.title ?? option.label ?? String(option.value), value: option.value }
+  : …;
+
+// packages/bunker/codecs.js
+decode : async stored => !stored ? undefined : (stored.headers.get('content-type') ?? '').includes('json') ? stored.json() : stored.text(),
+```
+
+could read: one case per line, early returns, the fallback where the data is made (A2, A3)
+
+```js
+export function iconOf (entry) {
+  if (isFile(entry)) return CATEGORY[categoryOf(entry)].icon;
+  return places.typeOf(entry)?.icon ?? 'lucide:folder';
+}
+
+async function writable () {
+  const handle = rootHandle();
+  if (!handle) return null;
+  if (await permission(handle, 'readwrite') === 'granted') return handle;
+  toast.error('No permission to change this folder');
+  return null;
+}
+
+export function modeOf (event) {
+  if (event?.shiftKey) return 'range';
+  if (event?.ctrlKey || event?.metaKey) return 'toggle';
+  return 'one';
+}
+```
+
+### A2 data that does not know itself
+
+`app` · an entry of a listing does not know where it lies or which source it comes from. so every use
+puts it together again: `entry.path ?? at`, `sourceOf(entry)`, `[...at, entry.name]`, an `at` parameter and
+`at`/`from` props passed along, `{ ...entry, kind: 'file' }` to fix up an index entry. `entry.kind ===
+'directory'` 21 times.
+
+```js
+// files/state.rat.js
+export function open (entry, at = $path) {
+  if (entry.kind === 'directory') { goTo([...at, entry.name]); return router.go('/library'); }
+  $file = { ...entry, kind: 'file', path: entry.path ?? at, source: sourceOf(entry) };
+  router.go('/preview');
+}
+
+export const sourceOf = entry => entry.source !== undefined ? entry.source : entry.path ? null : $source;
+
+const at = entry.path ?? $path;   // renameEntry, deleteEntry, pick, download, sendEntry
+
+// files/components/FileRow.rat.html
+onclick={() => about({ ...entry, kind: 'file' })}
+
+// files/components/Entry.rat.html, Thumb.rat.html
+const at   = untrack(() => $path);
+const from = untrack(() => $source);
+<Thumb entry={entry} at={at} from={from} />
+```
+
+could read: an entry is complete when it is made (in `fs.list` and the scan): its folder, its source, its
+kind. then nothing needs `at`, `from` or a fix-up
+
+```js
+// { kind, name, folder: ['a', 'b'], source: null, size, … }
+export const isFolder = entry => entry.kind === 'directory';
+export const pathOf   = entry => [...entry.folder, entry.name];
+
+export function open (entry) {
+  if (isFolder(entry)) return browse(entry);
+  $file = entry;
+  router.go('/preview');
+}
+```
+
+```html
+<Thumb entry={entry} />
+```
+
+### A3 lookups by id through find
+
+`app` · lists searched by id, then `?.`, then a fallback for "not found" that cannot happen.
+
+```js
+// files/state.rat.js
+CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'lucide:file'
+CATEGORIES.find(item => item.id === mostly[0])?.label
+
+// files/components/Dashboard.rat.html
+const $label = SORTED.find(item => item.id === $category)?.label ?? $category;
+
+// files/modules/places.rat.js
+return id ? types().find(type => type.id === id) ?? null : null;
+return … ? BUILTIN.find(type => type.id === id) ?? null : null;
+```
+
+could read: an object by id, the list where an order is needed
+
+```js
+export const CATEGORY = {
+  archives  : { icon: 'lucide:file-archive', label: 'Archives'  },
+  audio     : { icon: 'lucide:music',        label: 'Audio'     },
+  …
+};
+
+CATEGORY[categoryOf(entry)].icon
+CATEGORY[$category].label
+```
+
+### A4 several things in one line
+
+`app` · a branch that does two things, a callback with a declaration and a condition inside, an
+assignment chain. one-liners are fine for one thing (code.md), not for three.
+
+```js
+// files/state.rat.js
+if (entry.kind === 'directory') { goTo([...at, entry.name]); return router.go('/library'); }
+requestAnimationFrame(() => { const element = scroller(); if (element) element.scrollTop = scrollTop.get(untrack(() => $tabIndex)) ?? 0; });
+
+// files/modules/scan.rat.js
+finally { if (running === controller) { running = null; $scanning = null; } }
+
+// files/components/Preview.rat.html
+fs.readFile(…).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
+```
+
+```html
+<!-- icons/app.rat.js -->
+<button.linkish onclick={() => { const [prefix] = $detail.split(':'); closeDetail(); openSet(prefix); }}>{$detail.split(':')[0]}</button.linkish>
+<rat-area … on:toggle={event => { if (!event.detail?.open) $detail = null; }}>
+
+<!-- files/components/Sync.rat.html -->
+<input-text … oninput={event => { $address = event.target.value ?? ''; $chosen = null; }} />
+```
+
+could read: a named function for anything with more than one step
+
+```js
+function restoreScroll () {
+  const element = scroller();
+  if (element) element.scrollTop = scrollTop.get($tabIndex) ?? 0;
+}
+
+requestAnimationFrame(restoreScroll);
+```
+
+```html
+<button.linkish onclick={openDetailSet}>{setOf($detail)}</button.linkish>
+```
+
+### A5 return as a jump
+
+`app` · `return something()` in a function that returns nothing: the value is meaningless, `return` is
+used to save a line.
+
+```js
+// files/state.rat.js
+if (entry.kind === 'directory') { goTo([...at, entry.name]); return router.go('/library'); }
+if ($tabs.length === 1) return goTo([]);
+if (!root.supported()) return toast.error('This browser can’t open folders: …');
+if (!granted) return chooseFolder();
+if (opensOnTap()) return open(entry);
+```
+
+could read: the call, then the return, or an else
+
+```js
+if (!root.supported()) {
+  toast.error('This browser can’t open folders: …');
+  return;
+}
+
+if (opensOnTap()) open(entry);
+else $selected = entry;
+```
+
+### A6 tuples instead of names
+
+`app` `lib` · arrays where an object with names belongs, read back by index.
+
+```js
+// files/state.rat.js factsOf, places.rat.js suggest
+const mostly = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+mostly && mostly[1] / files.length >= 0.6 ? … mostly[0] …
+
+// files/components/Preferences.rat.html
+values: [['auto', 'auto'], ['single', 'a tap'], ['double', 'a double click']]
+<input-option value={choice[0]}>{choice[1]}</input-option>
+
+// files/components/Context.rat.html, Facts.rat.html
+<Facts rows={[['name', $selected.name], ['kind', …], …]} />
+<dt>{row[0]}</dt> <dd>{row[1]}</dd>
+
+// icons/app.rat.js
+$detail.split(':')[0]                          // twice
+// noisy/browse.js
+key => key.split('\u0000')[1]
+```
+
+could read: names
+
+```js
+const [top] = Object.entries(counts).map(([id, count]) => ({ count, id })).sort(byCount);
+if (top && top.count / files.length >= 0.6) …
+
+values: { auto: 'auto', single: 'a tap', double: 'a double click' }
+@for ([value, label] of Object.entries(CHOICES[name].values)) …
+
+<Facts rows={{ name: $selected.name, kind: kindOf($selected), … }} />
+```
+
+### A7 the same string built in several places
+
+`app` · each place builds it again, slightly differently.
+
+```js
+// "a.txt" or "3 items": state.rat.js paste, PasteBar, sync.rat.js send
+const what = count === 1 ? board.items[0].name : `${count} items`;
+const what = files.length === 1 ? files[0].name : `${files.length} files`;
+
+// a path for people: FileRow, Context (three), state.rat.js labels
+'/' + entry.path.join('/')
+'/' + (entry.path ?? $path).join('/')
+
+// host:port: sync.rat.js labelOf, Sync.rat.html keyOf, the device row
+`${target.host}:${target.port}`
+```
+
+could read: one function each, next to the data
+
+```js
+export const describe = (items, noun = 'items') => items.length === 1 ? items[0].name : `${items.length} ${noun}`;
+export const shown    = entry => '/' + entry.folder.join('/');
+```
+
+### A8 derived values as functions
+
+`app` · some derived values are `$computed`, others functions called in the markup, some constants written
+as functions. which one a name is, the reader has to look up.
+
+```js
+// files/state.rat.js
+export const localRoot  = () => $perm === 'granted' ? $folder?.handle ?? null : null;
+export const rootHandle = () => rootOfSource($source);
+export const folderName = () => sourceName($source);
+export const $visible   = matches($entries, $filter);      // a computed, next to them
+
+// files/modules/places.rat.js
+export const types     = () => [...BUILTIN, ...$folderTypes];
+export const bookmarks = () => $bookmarked.filter(…);
+
+// files/modules/root.rat.js: never changes after the page loaded
+export const supported = () => RAT.platform !== 'web' || typeof globalThis.showDirectoryPicker === 'function';
+```
+
+```html
+@if ($route === '/library' && rootHandle()) …
+<h2>{sourceName(null)}</h2>
+```
+
+could read: state that changes is a `$computed`, what never changes a constant, functions take arguments
+
+```js
+export const $root       = $perm === 'granted' ? $folder?.handle ?? null : null;
+export const $folderName = sourceName($source);
+export const $types      = [...BUILTIN, ...$folderTypes];
+export const supported   = RAT.platform !== 'web' || typeof globalThis.showDirectoryPicker === 'function';
+```
+
+### A9 long positional parameters
+
+`app` · four or five arguments by position, several of them only there because the entry does not know
+itself (A2).
+
+```js
+transfer.pick(mode, entry, entry.path ?? $path, rootOfSource(sourceOf(entry)));
+fs.rename(handle, at, entry.name, name, entry.kind);
+copyTree(handle, targetDir, name, signal, onFile);
+transfer.transfer(handle, board.items, board.mode, target, { onProgress: progress, signal });
+writeTask({ … }, at, () => …);
+sync.send(target(), $files, $pin);
+```
+
+could read: with complete entries (A2)
+
+```js
+transfer.pick(mode, entry);
+fs.rename(entry, name);
+transfer.run(board, $path, { onProgress, signal });
+```
+
+### A10 nested awaits, walking from the root
+
+`app` · `(await (await …).x()).y()` reads inside out. and every operation walks the path from the root
+again: one `getDirectoryHandle` per level, each a request on a webdav server (`dav.stat`, a PROPFIND).
+renaming a file five folders deep costs five requests before the rename. **performance**.
+
+```js
+// files/modules/fs.js
+return (await (await dirAt(root, path)).getFileHandle(name)).getFile();
+await (await dirAt(root, path)).getDirectoryHandle(name, { create: true });
+await (await dirAt(root, path)).removeEntry(name, { recursive: true });
+
+// files/modules/sync.rat.js
+const handle = await (await dirAt(root, path)).getFileHandle(entry.name);
+```
+
+could read: one step per line; the listing keeps the folder handle it read, its entries refer to it
+
+```js
+const folder = await dirAt(root, path);
+const handle = await folder.getFileHandle(name);
+return handle.getFile();
+
+// or with the handle kept: entry.handle.getFile(), entry.parent.removeEntry(entry.name)
+```
+
+### A11 null as the default, ?. everywhere
+
+`app` · state starts as `null`, so every read guards. an empty value of the right shape would need none.
+
+```js
+// files/components/Dashboard.rat.html
+$index?.categories?.[item.id]?.count
+$index?.categories?.[item.id] ? $index.categories[item.id].count + ' · ' + … : '…'
+$index?.recent?.length
+
+// files/components/Sync.rat.html, TaskList.rat.html
+const $auto = $autoSync ?? {};
+const { done, total } = task.progress ?? {};
+
+// files/modules/sync.rat.js
+const plugin = () => globalThis.Capacitor?.Plugins?.FileSync ?? null;
+```
+
+could read: an empty index that has every category at zero, read without guards
+
+```js
+export let $index = EMPTY_INDEX;   // { categories: { images: { count: 0, size: 0 }, … }, files: [], recent: [], … }
+
+$index.categories[item.id].count
+```
+
+### A12 logic in markup the syntax already has
+
+`app` `quick` · class strings by ternary while `class:` exists, `indexOf` while `@for` has the index.
+
+```html
+<!-- files/components/Tabs.rat.html -->
+<div class={$tabs.indexOf(tab) === $index ? 'tab active' : 'tab'}>
+<!-- files/components/Searchbar.rat.html -->
+<button class={$busy ? 'tasks-button busy' : 'tasks-button'} …>
+<!-- files/components/Sync.rat.html -->
+<li class={isChosen(device) ? 'row selected' : 'row'}>
+<!-- icons/app.rat.js -->
+<btn-push class={isFav(props.name) ? 'heart on' : 'heart'} …>
+```
+
+could read:
+
+```html
+<div.tab class:active={index === $tabIndex}>
+<button.tasks-button class:busy={$busy} …>
+<li.row class:selected={isChosen(device)}>
+<btn-push.heart class:on={isFav(props.name)} …>
+```
+
+## part 2: building blocks
 
 - [files](#files-devappsfiles)
   - [1 persistence by hand](#1-persistence-by-hand)
