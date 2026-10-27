@@ -23,7 +23,7 @@ import * as scan     from './modules/scan.rat.js';
 import * as sync     from './modules/sync.rat.js';
 import * as transfer from './modules/transfer.rat.js';
 
-import { $folder, $perm }                           from './modules/root.rat.js';
+import { $folder, $handle }                         from './modules/root.rat.js';
 import { $index, $scanning, CATEGORIES, categoryOf } from './modules/scan.rat.js';
 import { run }                                      from './modules/tasks.rat.js';
 import { $clipboard }                               from './modules/transfer.rat.js';
@@ -135,9 +135,8 @@ export const tabName = tab => tab.path.at(-1) ?? sourceName(tab.source ?? null);
 
 // :::::: THE FOLDER AND THE SERVERS
 
-export const // the granted folder, and the root of a source: null for the folder, a server's id
-localRoot    = () => $perm === 'granted' ? $folder?.handle ?? null : null,
-rootOfSource = from => from ? remotes.rootOf(from) : localRoot(),
+export const // the root of a source: null for the granted folder, a server's id
+rootOfSource = from => from ? remotes.rootOf(from) : $handle,
 sourceName   = from => from ? remotes.byId(from)?.name ?? 'remote' : $folder?.name ?? 'folder';
 
 export const // the root of the tab on screen
@@ -172,7 +171,7 @@ effect(() => {
 // the index of the whole folder: the stored one at once, a fresh walk behind it
 let scanned = null;
 effect(() => {
-  const handle = localRoot();
+  const handle = $handle;
   const folder = $folder;
   if (!handle || !folder || scanned === folder) return;
   scanned = folder;
@@ -188,7 +187,7 @@ function indexFolder (handle, folder) {
   }).catch(error => console.warn('[files] scan failed', error));
 }
 
-export const rescan = () => { const handle = localRoot(); if (handle) indexFolder(handle, $folder); };
+export const rescan = () => { if ($handle) indexFolder($handle, $folder); };
 
 // :::::: ENTRIES
 
@@ -328,7 +327,7 @@ export async function download (entry) {
 // :::::: THE FOLDER, granted and let go
 
 export async function chooseFolder () {
-  if (!root.supported()) return toast.error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
+  if (!root.supported) return toast.error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
   try {
     if (!await root.grant()) return;
     setTabs([{ path: [] }], 0);
@@ -374,7 +373,7 @@ export async function forgetRemote (connection) {
 // :::::: SEND, a file of the folder into the outbox, the view opens
 
 export function sendEntry (entry) {
-  sync.addEntry(localRoot(), entry.path ?? $path, entry)
+  sync.addEntry($handle, entry.path ?? $path, entry)
     .then(() => { RAT.app.toggle('context', false); router.go('/sync'); })
     .catch(toast.error);
 }

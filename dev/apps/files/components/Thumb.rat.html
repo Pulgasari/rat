@@ -13,7 +13,7 @@
   const at     = props.at ?? [];
   const from   = props.from ?? null;
   const thumbs = RAT.app.thumbnails;
-  const id     = isImage(entry) ? `${from ?? untrack(() => $folder)?.addedAt}/${at.join('/')}/${entry.name}:${entry.size}:${entry.lastModified}` : null;
+  const id     = isImage(entry) ? `${from ?? untrack(() => $folder)?.id}/${at.join('/')}/${entry.name}:${entry.size}:${entry.lastModified}` : null;
 
   let $url = id ? thumbs.peekFile(id) : null;
 

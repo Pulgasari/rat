@@ -35,7 +35,7 @@ effect(() => write('files:bookmarks',   $bookmarks));
 effect(() => write('files:folderTyped', $folderTyped));
 effect(() => write('files:folderTypes', $ownFolderTypes));
 
-const $folderId = String($folder?.addedAt ?? $folder?.name ?? '');
+const $folderId = String($folder?.id ?? '');
 
 const keyOf = (path) => `${$folderId}:${path.join('/')}`;
 

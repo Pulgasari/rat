@@ -5,17 +5,18 @@
 
   import {
     $entries, $facts, $file, $path, $selected, $sheet, $size, $source,
-    deleteEntry, download, folderName, localRoot, newFolder, newFolderType, open, pick, renameEntry, rescan, rootHandle,
+    deleteEntry, download, folderName, newFolder, newFolderType, open, pick, renameEntry, rescan, rootHandle,
     sendEntry, showInFolder, sourceName, sourceOf,
   } from '../state.rat.js';
 
   import { $folderTypes, BUILTIN, folderTypeIdOf, isBookmarked, setFolderType, suggestFolderType, toggleBookmark } from '../modules/places.rat.js';
-  import { $scanning, categoryOf }                                                                                   from '../modules/scan.rat.js';
+  import { $handle }                                                                                               from '../modules/root.rat.js';
+  import { $scanning, categoryOf }                                                                                 from '../modules/scan.rat.js';
   import { available }                                                                                             from '../modules/sync.rat.js';
 
   const { $path: $route } = RAT.app.router;
 
-  const $local     = !$source;
+  const $local        = !$source;
   const $folderTypeId = $path.length ? folderTypeIdOf($path) : null;
   const $suggested    = $path.length && !$folderTypeId ? suggestFolderType($entries, categoryOf) : null;
 
@@ -91,5 +92,5 @@
   <h2>{sourceName(null)}</h2>
   <Status />
   <div-x.actions>
-    <Action icon='lucide:refresh-cw' label='read again' disabled={!localRoot() || Boolean($scanning)} onclick={rescan} />
+    <Action icon='lucide:refresh-cw' label='read again' disabled={!$handle || Boolean($scanning)} onclick={rescan} />
   </div-x.actions>
