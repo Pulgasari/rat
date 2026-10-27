@@ -16,8 +16,9 @@ export const FOLDERTYPES = {
   video     : { icon: 'lucide:film',      label: 'Videos'    },
 };
 
-const DOCUMENTS = /^(pdf|txt|md|rtf|odt|doc|docx|xls|xlsx|ods|ppt|pptx|odp|csv|epub|html?|json|xml)$/;
-const ARCHIVES  = /^(zip|rar|7z|tar|gz|bz2|xz|zst)$/;
+const EXT = {};
+EXT.DOCUMENTS = /^(pdf|txt|md|rtf|odt|doc|docx|xls|xlsx|ods|ppt|pptx|odp|csv|epub|html?|json|xml)$/;
+EXT.ARCHIVES  = /^(zip|rar|7z|tar|gz|bz2|xz|zst)$/;
 
 const extOf = name => { const dot = name.lastIndexOf('.'); return dot > 0 ? name.slice(dot + 1).toLowerCase() : ''; };
 
