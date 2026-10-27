@@ -14,7 +14,6 @@ keys and values named after the app.
 import { createStore } from '@rat/bunker';
 import '../vendor/bunker.js'; // what is this good for ???
 import { bunkerDriverOf } from '../drivers.js';
-//import { nameOf } from '../_shared.js';
 
 // ::::::
 
