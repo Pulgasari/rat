@@ -2,14 +2,17 @@
   // <Library />: the folder in tabs: crumbs, filter, list or grid, a new folder. the tabs and the search bar
   // sit on top or at the bottom by the settings, app.css orders them
 
-  import { $filter, $loading, $path, $settings, $visible, folderName, goTo, newFolder, rootHandle, setting } from '../state.rat.js';
+  import {
+    $filter, $loading, $path, $settings, $visible,
+    folderName, goTo, newFolder, rootHandle, setting
+  } from '../state.rat.js';
 
   const $ready = Boolean(rootHandle());
   const $grid  = $settings.viewmode === 'grid';
 
-  const crumb      = event => goTo(event.detail.path.split('/').filter(Boolean));
-  const search     = text  => $filter = text;
-  const toggleView = ()    => setting('viewmode', $grid ? 'list' : 'grid');
+  const crumb      = (event) => goTo(event.detail.path.split('/').filter(Boolean));
+  const search     = (text)  => $filter = text;
+  const toggleView = ()      => setting('viewmode', $grid ? 'list' : 'grid');
 
   function up () {
     if ($path.length) goTo($path.slice(0, -1));
@@ -22,7 +25,11 @@
   <div.scroll><Welcome /></div.scroll>
 @else
   <Bar title={$path.at(-1) ?? folderName()} back={up}>
-    <btn-icon icon={$grid ? 'lucide:list' : 'lucide:layout-grid'} label={$grid ? 'show as list' : 'show as grid'} onclick={toggleView} />
+    <btn-icon
+      icon={$grid ? 'lucide:list' : 'lucide:layout-grid'}
+      label={$grid ? 'show as list' : 'show as grid'}
+      onclick={toggleView}
+    />
   </Bar>
 
   <nav-crumbs root={folderName()} path={'/' + $path.join('/')} on:nav-crumbs={crumb} />
@@ -38,7 +45,9 @@
       @else
         <p.empty>{$filter ? 'nothing matches the filter' : 'this folder is empty'}</p.empty>
     </div.listing>
-    <button.fab type='button' aria-label='new folder' title='new folder' onclick={newFolder}><svg-icon icon='lucide:folder-plus' /></button.fab>
+    <button.fab type='button' aria-label|title='new folder' onclick={newFolder}>
+      <svg-icon icon='lucide:folder-plus' />
+    </button.fab>
   </div.pane>
 
   <PasteBar />

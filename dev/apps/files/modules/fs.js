@@ -13,6 +13,7 @@ root, [] the root itself.
 */
 
 const byName = (a, b) => a.kind !== b.kind ? (a.kind === 'directory' ? -1 : 1) : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+const isFn = (sth) => typeof sth === 'function';
 
 export async function dirAt (root, path = []) {
   let dir = root;
@@ -36,11 +37,15 @@ export async function list (root, path = []) {
 }
 
 export async function readFile (root, path, name) {
-  return (await (await dirAt(root, path)).getFileHandle(name)).getFile();
+  const dir    = await dirAt(root, path);
+  const handle = await dir.getFileHandle(name);
+  
+  return handle.getFile();
 }
 
 export async function mkdir (root, path, name) {
-  await (await dirAt(root, path)).getDirectoryHandle(name, { create: true });
+  const dir = await dirAt (root, path);
+  await dir.getDirectoryHandle(name, { create: true });
 }
 
 export async function remove (root, path, name) {

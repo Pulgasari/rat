@@ -17,7 +17,6 @@ and delete. files are copied as streams.
 // :::::: IMPORT
 
 import { $List, $Record } from '@rat/types';
-
 import { copyFile, copyTree, dirAt } from './fs.js';
 
 // ::::::
@@ -35,14 +34,15 @@ export function pick (mode, entry, path, root) {
   $pickboard.items.push({ kind: entry.kind, name: entry.name, path, root });
 }
 
-export const placed = () => { if ($pickboard) $pickboard.placed = true; };
-export const clear  = () => { $pickboard = null; };
+export const
+placed = () => { if ($pickboard) $pickboard.placed = true; },
+clear  = () => { $pickboard = null; };
 
 // :::::: NAMES
 
 async function exists (dir, name) {
-  try { await dir.getFileHandle(name);      return true; } catch {}
-  try { await dir.getDirectoryHandle(name); return true; } catch {}
+  try { await dir.getFileHandle      (name); return true; } catch {}
+  try { await dir.getDirectoryHandle (name); return true; } catch {}
   return false;
 }
 
@@ -99,8 +99,8 @@ export async function transfer (root, picked, mode, target, { onProgress = () =>
   for (const [position, item] of items.entries()) {
     signal?.throwIfAborted();
 
-    const handle = handles[position];
-    const count  = counts[position];
+    const handle = handles [position];
+    const count  = counts  [position];
 
     // a move within the same folder changes nothing
     if (mode === 'move' && samePath(item.path, target)) {

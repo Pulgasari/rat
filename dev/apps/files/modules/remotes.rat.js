@@ -21,22 +21,19 @@ import { $Table, Str } from '@rat/types';
 import { test }    from '../../.shared/webdav/client.js';
 import { davRoot } from '../../.shared/webdav/handles.js';
 
+const { files } = RAT.app;
+
 // ::::::
 
 const FILE  = 'remotes.json';
 const roots = new Map;   // id -> its root handle
-
-const { files } = RAT.app;
-
 const Connection = { id: Str, name: Str, password: Str, url: Str, username: Str };
-
 const $rows = $Table(Connection).create(await files.read(FILE, 'json').catch(() => []));
 
 effect(() => files.write(FILE, JSON.stringify($rows)));
 
 // what the views read: a signal, as every $name another module imports
 export const $connections = $rows.toArray();
-
 export const byId = id => $rows.one({ id }) ?? null;
 
 export async function add ({ name, password = '', url, username = '' }) {

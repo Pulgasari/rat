@@ -9,6 +9,8 @@ places, transfer, sending (sync). the views import their $values straight from t
 a tab is { path, source }: source null is the granted folder, else the id of a server.
 */
 
+// :::::: IMPORT
+
 import dom from '@domina/dom';
 import { effect, untrack } from '@rat/signals';
 
@@ -30,10 +32,14 @@ import { $pickboard }                               from './modules/transfer.rat
 
 const { dialogs, router } = RAT.app;
 
+// :::::: CONSTANTS
+
 const ICON = {
   copy : 'lucide:copy',
   move : 'lucide:scissors',
 };
+
+export const PATTERNS = ['pattern-bg', 'pattern-tile'];
 
 // :::::: SETTINGS, kept across visits, each under files:<name>
 
@@ -46,15 +52,19 @@ const DEFAULTS = {
   viewmode       : 'list',     // list, grid
 };
 
+/*
+const
+fromEntries = Object.fromEntries,
+  toEntries = Object.entries;
+
+export let $settings = fromEntries <| toEntries(DEFAULTS).map :: ([name, fallback]) => [name, read(`files:${name}`, fallback)];
+*/
+
 export let $settings = Object.fromEntries(Object.entries(DEFAULTS).map(([name, fallback]) => [name, read(`files:${name}`, fallback)]));
 
 effect(() => { for (const [name, value] of Object.entries($settings)) write(`files:${name}`, value); });
 
 export const setting = (name, value) => { $settings = { ...$settings, [name]: value }; };
-
-// the patterns as custom properties on the root, app.css paints them (--pattern-bg-image, --pattern-bg-opacity).
-// a late answer for a value that changed meanwhile is dropped
-export const PATTERNS = ['pattern-bg', 'pattern-tile'];
 
 effect(() => {
   const element = document.documentElement;

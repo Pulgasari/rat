@@ -61,10 +61,12 @@ const DRIVERS = {
   },
 };
 
-function driverOf (mod, named) {
-  const drivers = DRIVERS[mod];
-  if (!drivers) throw new Error(`[rat] no drivers for "${mod}"`);
-  if (named && !drivers[named]) throw new Error(`[rat] ${mod}: no driver "${named}", ${Object.keys(drivers).filter(key => drivers[key]).join(', ')} are`);
+function driverOf (module, named) {
+  const drivers = DRIVERS[module];
+  
+  if (!drivers)                 throw new Error(`[rat] no drivers for "${module}"`);
+  if (named && !drivers[named]) throw new Error(`[rat] ${module}: no driver "${named}", ${Object.keys(drivers).filter(key => drivers[key]).join(', ')} are`);
+  
   return (drivers[named] || drivers[shell] || drivers.web)();
 }
 
