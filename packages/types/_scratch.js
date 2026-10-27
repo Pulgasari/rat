@@ -43,6 +43,11 @@ class Path extends Segments {
   join (sep) { return this.segments.join(sep || this.#separator);
 }
 
+class List {
+  ...
+  asRegExp () { return /^(zip|rar|7z|tar|gz|bz2|xz|zst)$/; }
+}
+
 /*
 just some syntax ideas:
 
