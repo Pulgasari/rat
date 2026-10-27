@@ -1,3 +1,14 @@
+// scratchfile
+
+/*
+ich spiele mit dem gedanken weitere data types zu erstellen.
+teilweise "standards" für den core (zb Segments)
+teilweise speziellere die dann als einzelfiles in unterordner liegen und einzelen importiert werden
+
+import FileExt from '@rat/types/FileExt';
+import Path    from '@rat/types/Path';
+*/
+
 /*
 Path
 Segments
