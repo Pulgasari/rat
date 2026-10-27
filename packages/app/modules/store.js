@@ -23,6 +23,14 @@ const store = async (options, { config }) => createStore ({
   name   : options.name ?? config.id ?? config.name ?? 'rat',
 });
 
+/*
+const store = async (options) => createStore ({
+  ...options,
+  driver : await bunkerDriverOf ('store', options.driver),
+  key    : options.key ?? RAT.config.id ?? 'rat',
+});
+*/
+
 // :::::: EXPORT
 
 export default store;
