@@ -1,35 +1,42 @@
 // files :: modules/transfer.rat.js
 
 /*
-copying and moving inside the granted folder. a clipboard holds what was picked (copy or cut),
-transfer() runs it into the folder on screen.
+copying and moving inside the granted folder and between it and the servers. the pickboard holds what
+was picked to copy or to move (not the system's clipboard, that is RAT.app.clipboard), transfer() puts
+it into the folder on screen.
 
-  $clipboard  null, or { mode: 'copy' | 'move', items: [{ kind, name, path, root }], pasted }
+  $pickboard   null, or a $Record { items: $List of { kind, name, path, root }, mode: 'copy' | 'move', placed }
   pick(mode, entry, path, root)   puts an entry on it, the same mode adds to it
+  placed()                        a copy was put somewhere: it stays to put again, the next pick starts anew
 
 a name that is taken in the target gets a number: 'a.txt' -> 'a (2).txt'. a folder can not go into
 itself or below itself. a move uses the handle's own move() where it has one and falls back to copy
 and delete. files are copied as streams.
 */
 
+// :::::: IMPORT
+
+import { $List, $Record } from '@rat/types';
+
 import { copyFile, copyTree, dirAt } from './fs.js';
 
-export let $clipboard = null;
+// ::::::
+
+export let $pickboard = null;
 
 const samePath = (a, b) => a.join('/') === b.join('/');
 const isInside = (inner, outer) => inner.length >= outer.length && samePath(inner.slice(0, outer.length), outer);
 
-// :::::: CLIPBOARD
+// :::::: PICKBOARD
 
-// once pasted, a copy stays to paste again, but the next pick starts anew
 export function pick (mode, entry, path, root) {
-  const item    = { kind: entry.kind, name: entry.name, path: entry.path ?? path, root };
-  const known = $clipboard?.mode === mode && !$clipboard.pasted ? $clipboard.items.filter(other => !(other.name === item.name && samePath(other.path, item.path))) : [];
-  $clipboard = { items: [...known, item], mode };
+  if ($pickboard?.mode !== mode || $pickboard.placed) $pickboard = new $Record({ items: new $List, mode, placed: false });
+  $pickboard.items.drop({ name: entry.name, path });
+  $pickboard.items.push({ kind: entry.kind, name: entry.name, path, root });
 }
 
-export const pasted = () => { if ($clipboard) $clipboard = { ...$clipboard, pasted: true }; };
-export const clear  = () => { $clipboard = null; };
+export const placed = () => { if ($pickboard) $pickboard.placed = true; };
+export const clear  = () => { $pickboard = null; };
 
 // :::::: NAMES
 
@@ -63,47 +70,60 @@ async function countFiles (handle) {
   return count;
 }
 
-const handleOf = async (root, item) => {
+async function handleOf (root, item) {
   const dir = await dirAt(root, item.path);
   return item.kind === 'directory' ? dir.getDirectoryHandle(item.name) : dir.getFileHandle(item.name);
-};
+}
 
-export async function transfer (root, items, mode, target, { onProgress = () => {}, signal } = {}) {
-  for (const item of items) {
-    if (item.kind === 'directory' && isInside(target, [...item.path, item.name])) throw new Error(`“${item.name}” can not go into itself`);
-  }
+// the handle's own move, false where it has none or it fails for this handle
+async function moved (handle, targetDir, name) {
+  if (typeof handle.move !== 'function') return false;
+  try   { await handle.move(targetDir, name); return true; }
+  catch { return false; }
+}
+
+export async function transfer (root, picked, mode, target, { onProgress = () => {}, signal } = {}) {
+  const items = [...picked];
+  const into  = items.find(item => item.kind === 'directory' && isInside(target, [...item.path, item.name]));
+  if (into) throw new Error(`“${into.name}” can not go into itself`);
 
   const targetDir = await dirAt(root, target);
   const handles   = await Promise.all(items.map(item => handleOf(item.root ?? root, item)));
-  const total     = (await Promise.all(handles.map(countFiles))).reduce((sum, count) => sum + count, 0);
-  let   done      = 0;
-  const onFile    = () => onProgress(++done, total);
+  const counts    = await Promise.all(handles.map(countFiles));
+  const total     = counts.reduce((sum, count) => sum + count, 0);
+
+  let done = 0;
+  const report = (count = 1) => onProgress(done += count, total);
   onProgress(0, total);
 
   for (const [position, item] of items.entries()) {
-    if (signal?.aborted) throw new DOMException('transfer aborted', 'AbortError');
+    signal?.throwIfAborted();
 
     const handle = handles[position];
-    const source = await dirAt(item.root ?? root, item.path);
+    const count  = counts[position];
 
     // a move within the same folder changes nothing
-    if (mode === 'move' && samePath(item.path, target)) { done += await countFiles(handle); onProgress(done, total); continue; }
+    if (mode === 'move' && samePath(item.path, target)) {
+      report(count);
+      continue;
+    }
 
     const name = await freeName(targetDir, item.name, item.kind);
 
-    if (mode === 'move' && typeof handle.move === 'function') {
-      try {
-        await handle.move(targetDir, name);
-        done += await countFiles(handle);
-        onProgress(done, total);
-        continue;
-      }
-      catch { /* not for this handle: copy and delete below */ }
+    if (mode === 'move' && await moved(handle, targetDir, name)) {
+      report(count);
+      continue;
     }
 
-    if (item.kind === 'directory') await copyTree(handle, targetDir, name, signal, onFile);
-    else { await copyFile(handle, targetDir, name, signal); onFile(); }
+    if (item.kind === 'directory') await copyTree(handle, targetDir, name, signal, report);
+    else {
+      await copyFile(handle, targetDir, name, signal);
+      report();
+    }
 
-    if (mode === 'move') await source.removeEntry(item.name, { recursive: true });
+    if (mode === 'move') {
+      const source = await dirAt(item.root ?? root, item.path);
+      await source.removeEntry(item.name, { recursive: true });
+    }
   }
 }

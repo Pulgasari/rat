@@ -28,7 +28,7 @@ import * as transfer from './modules/transfer.rat.js';
 import { $folder, $handle }                         from './modules/root.rat.js';
 import { $index, $scanning, CATEGORIES, categoryOf } from './modules/scan.rat.js';
 import { run }                                      from './modules/tasks.rat.js';
-import { $clipboard }                               from './modules/transfer.rat.js';
+import { $pickboard }                               from './modules/transfer.rat.js';
 
 const { dialogs, router } = RAT.app;
 
@@ -308,21 +308,21 @@ export function pick (mode, entry) {
   RAT.app.toggle('context', false);
 }
 
-// what the clipboard holds goes into the folder on screen, as one task
+// what the pickboard holds goes into the folder on screen, as one task
 export async function paste () {
-  const board  = $clipboard;       if (!board)  return;
+  const board  = $pickboard;       if (!board)  return;
   const handle = await writable(); if (!handle) return;
+  const items  = board.items.toArray();
   const target = [...$path];
-  const count  = board.items.length;
-  const what   = count === 1 ? board.items[0].name : `${count} items`;
+  const what   = items.length === 1 ? items[0].name : `${items.length} items`;
   const verb   = board.mode === 'move' ? 'move' : 'copy';
   const icon   = ICON[verb];
   if (board.mode === 'move') transfer.clear();
-  else transfer.pasted();
+  else transfer.placed();
 
   const done = () => { if (target.join('/') === $path.join('/')) goTo([...target]); };
   run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
-    ({ progress, signal }) => transfer.transfer(handle, board.items, board.mode, target, { onProgress: progress, signal }))
+    ({ progress, signal }) => transfer.transfer(handle, items, board.mode, target, { onProgress: progress, signal }))
     .then(done)
     .catch(error => { if (error?.name !== 'AbortError') toast.error(error); done(); });
 }

@@ -23,7 +23,7 @@
       <small>{noteOf(task)}</small>
       @if (task.state === 'running' && task.progress?.total): <progress max={task.progress.total} value={task.progress.done} />
     </span.text>
-    @if (isOpen(task)): <btn-icon icon='lucide:x' label={'cancel ' + task.label} onclick={() => cancel(task.id)} />
+    @if (isOpen(task)): <btn-icon icon='lucide:x' label={'cancel ' + task.label} onclick={() => cancel(task)} />
   </li>
 
 @if ($queue.length)
