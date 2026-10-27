@@ -1,11 +1,11 @@
 <script>
-  // <PasteBar />: what waits on the clipboard, and the button that puts it here
+  // <PasteBar />: what waits on the pickboard, and the button that puts it here
 
   import { paste } from '../state.rat.js';
 
-  import { $clipboard as $board, clear } from '../modules/transfer.rat.js';
+  import { $pickboard as $board, clear } from '../modules/transfer.rat.js';
 
-  const $what = $board ? ($board.items.length === 1 ? $board.items[0].name : `${$board.items.length} items`) : '';
+  const $what = $board ? ($board.items.length === 1 ? $board.items.at(0).name : `${$board.items.length} items`) : '';
 </script>
 
 @if ($board)
@@ -13,5 +13,5 @@
     <svg-icon icon={$board.mode === 'move' ? 'lucide:scissors' : 'lucide:copy'} />
     <span.text><span.name>{$what}</span.name><small>{$board.mode === 'move' ? 'to move' : 'to copy'}</small></span.text>
     <button.action type='button' onclick={paste}><svg-icon icon='lucide:clipboard-paste' /> here</button.action>
-    <btn-icon icon='lucide:x' label='empty the clipboard' onclick={clear} />
+    <btn-icon icon='lucide:x' label='empty the pickboard' onclick={clear} />
   </div-x.pastebar>

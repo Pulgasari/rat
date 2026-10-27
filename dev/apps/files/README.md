@@ -19,7 +19,7 @@ folder comes from the shell's folders driver of `@rat/app`.
 | view        | route        | what it is |
 |-------------|--------------|------------|
 | `dashboard` | `#/`         | recent files, bookmarks, categories, the folder; a search over the whole folder |
-| `library`   | `#/library`  | the folder in tabs: crumbs, filter, list or grid, a new-folder button, the clipboard |
+| `library`   | `#/library`  | the folder in tabs: crumbs, filter, list or grid, a new-folder button, the pickboard |
 | `preview`   | `#/preview`  | one file, an image inline. its details are in the context area |
 
 ## how it's built
@@ -35,7 +35,7 @@ folder comes from the shell's folders driver of `@rat/app`.
 | `modules/scan.rat.js` | the index of the whole folder, kept in `RAT.app.files` |
 | `modules/sync.rat.js` | sending over the lan (LocalSend v2) through the native FileSync plugin |
 | `modules/tasks.rat.js` | the task lanes and their history |
-| `modules/transfer.rat.js` | the clipboard, copying and moving |
+| `modules/transfer.rat.js` | the pickboard, copying and moving |
 | `components/` | the views and their parts |
 
 state and modules are `.rat.js`: their signals are exported `$names` (`$folder`, `$index`, `$queue` …), a view

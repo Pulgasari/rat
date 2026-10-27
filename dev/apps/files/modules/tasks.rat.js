@@ -10,7 +10,7 @@ index.
     progress(1, 3);   // done, total
   });
 
-  task      { id, label, icon, lane, state, progress: { done, total } | null, error, queuedAt, startedAt, endedAt }
+  task      a $Record { id, label, icon, lane, state, progress: { done, total } | null, error, queuedAt, startedAt, endedAt }
   state     queued, running, done, failed, cancelled
 
   $queue     the tasks not ended yet, in the order they came
@@ -18,59 +18,80 @@ index.
   $busy      a task is running
 */
 
-import { untrack } from '@rat/signals';
+// :::::: IMPORT
+
+import { effect } from '@rat/signals';
+import { $List, $Record } from '@rat/types';
 
 import { read, write } from '../../.shared/storage.js';
+
+// ::::::
 
 const HISTORY = 50;
 const STORAGE = 'files:tasks';
 
-export let   $queue   = [];
-export let   $history = read(STORAGE, []);
-export const $busy    = $queue.some(task => task.state === 'running');
+const // ::: the lists, changed in place
+$open  = new $List,
+$ended = new $List(read(STORAGE, []));
 
-const controllers = new Map;   // id -> AbortController
-const lanes       = new Map;   // lane -> promise of the last task in it
-let   counter     = 0;
+effect(() => write(STORAGE, $ended));
 
-// untracked: progress is often reported from inside an effect, which would otherwise subscribe to the
-// queue it writes
-const tasks = () => untrack(() => $queue);
+export const // ::: what the views read: signals, as every $name another module imports
+$queue   = $open.toArray(),
+$history = $ended.toArray(),
+$busy    = $open.has({ state: 'running' });
 
-// a task is replaced, never changed in place
-function patch (id, changes) {
-  $queue = tasks().map(task => task.id === id ? { ...task, ...changes } : task);
-}
+const controllers = new WeakMap;   // task -> AbortController
+const lanes       = new Map;       // lane -> promise of the last task in it
 
-function finish (id, changes) {
-  const task    = { ...tasks().find(item => item.id === id), ...changes, endedAt: Date.now() };
-  const history = [task, ...untrack(() => $history)].slice(0, HISTORY);
-  $queue   = tasks().filter(item => item.id !== id);
-  $history = history;
-  controllers.delete(id);
-  write(STORAGE, history);
+const isAbort = error => error?.name === 'AbortError';
+
+// the last task of the lane, settled either way
+const after = lane => (lanes.get(lane) ?? Promise.resolve()).catch(() => {});
+
+function finish (task, changes) {
+  Object.assign(task, changes, { endedAt: Date.now() });
+  $open.remove(task);
+  $ended.unshift(task.toJSON());
+  $ended.splice(HISTORY);
 }
 
 export function run ({ icon = 'lucide:loader', label, lane = 'default' }, work) {
-  const id         = `task-${Date.now().toString(36)}-${++counter}`;
   const controller = new AbortController;
-  controllers.set(id, controller);
+  const { signal } = controller;
+  const task       = new $Record({
+    endedAt   : null,
+    error     : null,
+    icon,
+    id        : crypto.randomUUID(),
+    label,
+    lane,
+    progress  : null,
+    queuedAt  : Date.now(),
+    startedAt : null,
+    state     : 'queued',
+  });
 
-  $queue = [...tasks(), { error: null, icon, id, label, lane, progress: null, queuedAt: Date.now(), state: 'queued' }];
+  controllers.set(task, controller);
+  $open.push(task);
 
-  const job = (lanes.get(lane) ?? Promise.resolve()).catch(() => {}).then(async () => {
-    if (controller.signal.aborted) { finish(id, { state: 'cancelled' }); return null; }
+  const progress = (done, total) => { task.progress = { done, total }; };
 
-    patch(id, { startedAt: Date.now(), state: 'running' });
-    const progress = (done, total) => patch(id, { progress: { done, total } });
+  const job = after(lane).then(async () => {
+    if (signal.aborted) {
+      finish(task, { state: 'cancelled' });
+      return null;
+    }
+
+    Object.assign(task, { startedAt: Date.now(), state: 'running' });
 
     try {
-      const result = await work({ progress, signal: controller.signal });
-      finish(id, { state: controller.signal.aborted ? 'cancelled' : 'done' });
+      const result = await work({ progress, signal });
+      finish(task, { state: signal.aborted ? 'cancelled' : 'done' });
       return result;
     }
     catch (error) {
-      finish(id, error?.name === 'AbortError' ? { state: 'cancelled' } : { error: String(error?.message ?? error), state: 'failed' });
+      finish(task, isAbort(error) ? { state: 'cancelled' } : { error: String(error?.message ?? error), state: 'failed' });
       throw error;
     }
   });
@@ -80,9 +101,6 @@ export function run ({ icon = 'lucide:loader', label, lane = 'default' }, work) 
 }
 
 // a queued task never starts, a running one is asked to stop through its signal
-export const cancel = id => controllers.get(id)?.abort();
+export const cancel = task => controllers.get(task)?.abort();
 
-export function clearHistory () {
-  $history = [];
-  write(STORAGE, []);
-}
+export const clearHistory = () => $ended.clear();
