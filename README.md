@@ -18,10 +18,6 @@ official:
 [docs](http://code.pulgasari.dev/rat/docs/) ·
 [playground](https://code.pulgasari.dev/rat/demos/playground/)
 
-demos: 
-[app](https://code.pulgasari.dev/rat/demos/app/) ·
-[app2](https://code.pulgasari.dev/rat/demos/app2/)
-
 playground:
 [blocks](https://code.pulgasari.dev/rat/demos/playground/#blocks.rat) ·
 [commands](https://code.pulgasari.dev/rat/demos/playground/#commands.rat) ·
@@ -29,6 +25,9 @@ playground:
 [pipes](https://code.pulgasari.dev/rat/demos/playground/#pipes.rat.js) ·
 [syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat) ·
 [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
+
+apps (demos): 
+[noisy](https://code.pulgasari.dev/rat/apps/noisy/)
 
 ## packages
 
@@ -48,10 +47,3 @@ playground:
 | `@rat/language-server` | [`packages/language-server`](packages/language-server) | v0 |
 | `@rat/syntax`   | [`packages/syntax`](packages/syntax)     | v0     |
 | `@rat/vscode`   | [`packages/vscode`](packages/vscode)     | v0     |
-
-## repo
-
-dir: 
-[demos](demos/) ·
-[docs](docs/) ·
-[packages](packages/)

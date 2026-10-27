@@ -1,1 +1,0 @@
-var t=Object.defineProperty;var n=(e,r)=>t(e,"name",{value:r,configurable:!0});async function c(e,{app:r}){if(!navigator.serviceWorker)return null;const s=new URL(e.src??"sw.js",new URL(r.src??location.href,r.baseURI));return navigator.serviceWorker.register(s).catch(o=>(console.warn("[rat] offline:",o.message),null))}n(c,"offline");export{c as default};

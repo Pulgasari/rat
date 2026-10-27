@@ -9,6 +9,7 @@ places, transfer, sending (sync). the views import their $values straight from t
 a tab is { path, source }: source null is the granted folder, else the id of a server.
 */
 
+import dom from '@domina/dom';
 import { effect, untrack } from '@rat/signals';
 
 import { read, write } from '../.shared/storage.js';
@@ -28,6 +29,11 @@ import { run }                                      from './modules/tasks.rat.js
 import { $clipboard }                               from './modules/transfer.rat.js';
 
 const { dialogs, router } = RAT.app;
+
+const ICON = {
+  copy : 'lucide:copy',
+  move : 'lucide:scissors',
+};
 
 // :::::: SETTINGS, kept across visits, each under files:<name>
 
@@ -71,15 +77,16 @@ export const opensOnTap = () => $settings.open === 'single' || ($settings.open =
 
 // :::::: STATE
 
-export let $category = null;    // the category the dashboard lists, or null
-export let $entries  = [];      // the listing of the current tab's path
-export let $file     = null;    // the entry in the preview
-export let $filter   = '';      // the library's filter
-export let $loading  = false;   // a listing is on its way, the old one is gone already
-export let $query    = '';      // the dashboard's search over the index
-export let $selected = null;    // the entry the context area is about
-export let $sheet    = null;    // what the context area shows instead: 'tasks', 'remotes'
-export let $size     = null;    // { width, height } of the image in the preview
+export let
+$category = null,    // the category the dashboard lists, or null
+$entries  = [],      // the listing of the current tab's path
+$file     = null,    // the entry in the preview
+$filter   = '',      // the library's filter
+$loading  = false,   // a listing is on its way, the old one is gone already
+$query    = '',      // the dashboard's search over the index
+$selected = null,    // the entry the context area is about
+$sheet    = null,    // what the context area shows instead: 'tasks', 'remotes'
+$size     = null;    // { width, height } of the image in the preview
 
 // :::::: TABS, each { path, source }
 
@@ -87,10 +94,11 @@ let $tabState = read('files:tabs', { index: 0, list: [{ path: [] }] });
 
 effect(() => write('files:tabs', $tabState));
 
-export const $tabs     = $tabState.list?.length ? $tabState.list : [{ path: [] }];
-export const $tabIndex = Math.min(Math.max(0, $tabState.index ?? 0), $tabs.length - 1);
-export const $path     = $tabs[$tabIndex].path;
-export const $source   = $tabs[$tabIndex].source ?? null;
+export const
+$tabs     = $tabState.list?.length ? $tabState.list : [{ path: [] }],
+$tabIndex = Math.min(Math.max(0, $tabState.index ?? 0), $tabs.length - 1),
+$path     = $tabs[$tabIndex].path,
+$source   = $tabs[$tabIndex].source ?? null;
 
 const scrollTop = new Map;   // per tab, for the session
 const scroller  = () => document.querySelector('rat-view[name="library"] .listing');
@@ -127,14 +135,14 @@ export const tabName = tab => tab.path.at(-1) ?? sourceName(tab.source ?? null);
 
 // :::::: THE FOLDER AND THE SERVERS
 
-// the granted folder, and the root of a source: null for the folder, a server's id
-export const localRoot    = () => $perm === 'granted' ? $folder?.handle ?? null : null;
-export const rootOfSource = from => from ? remotes.rootOf(from) : localRoot();
-export const sourceName   = from => from ? remotes.byId(from)?.name ?? 'remote' : $folder?.name ?? 'folder';
+export const // the granted folder, and the root of a source: null for the folder, a server's id
+localRoot    = () => $perm === 'granted' ? $folder?.handle ?? null : null,
+rootOfSource = from => from ? remotes.rootOf(from) : localRoot(),
+sourceName   = from => from ? remotes.byId(from)?.name ?? 'remote' : $folder?.name ?? 'folder';
 
-// the root of the tab on screen
-export const rootHandle = () => rootOfSource($source);
-export const folderName = () => sourceName($source);
+export const // the root of the tab on screen
+rootHandle = () => rootOfSource ($source),
+folderName = () => sourceName   ($source);
 
 // an entry of the index carries its path and lies in the folder, one of a listing in the tab's source
 export const sourceOf = entry => entry.source !== undefined ? entry.source : entry.path ? null : $source;
@@ -266,7 +274,14 @@ export async function renameEntry (entry) {
   if (!handle) return;
   const at = entry.path ?? $path;
   $selected = null;
-  writeTask({ icon: 'lucide:pencil', label: `Rename ${entry.name} to ${name}` }, at, () => fs.rename(handle, at, entry.name, name, entry.kind));
+  writeTask(
+    {
+      icon  : 'lucide:pencil',
+      label : `Rename ${entry.name} to ${name}`,
+    },
+    at,
+    () => fs.rename(handle, at, entry.name, name, entry.kind)
+  );
 }
 
 export async function deleteEntry (entry) {
@@ -286,20 +301,18 @@ export function pick (mode, entry) {
 
 // what the clipboard holds goes into the folder on screen, as one task
 export async function paste () {
-  const board = $clipboard;
-  if (!board) return;
-  const handle = await writable();
-  if (!handle) return;
-
+  const board  = $clipboard;       if (!board)  return;
+  const handle = await writable(); if (!handle) return;
   const target = [...$path];
   const count  = board.items.length;
   const what   = count === 1 ? board.items[0].name : `${count} items`;
-  const move   = board.mode === 'move';
-  if (move) transfer.clear();
+  const verb   = board.mode === 'move' ? 'move' : 'copy';
+  const icon   = ICON[verb];
+  if (board.mode === 'move') transfer.clear();
   else transfer.pasted();
 
   const done = () => { if (target.join('/') === $path.join('/')) goTo([...target]); };
-  run({ icon: move ? 'lucide:scissors' : 'lucide:copy', label: `${move ? 'Move' : 'Copy'} ${what} to /${target.join('/')}`, lane: 'write' },
+  run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
     ({ progress, signal }) => transfer.transfer(handle, board.items, board.mode, target, { onProgress: progress, signal }))
     .then(done)
     .catch(error => { if (error?.name !== 'AbortError') toast.error(error); done(); });

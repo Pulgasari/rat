@@ -1,7 +1,4 @@
 <script>
-  // files: a file manager over one folder the user grants. the state and what can be done with it is
-  // state.rat.js, the folder, the index, tasks, places and copying are modules/. the views are components/
-
   import { $sheet } from './state.rat.js';
 
   import { load as loadRemotes } from './modules/remotes.rat.js';
@@ -19,7 +16,7 @@
   let sending = false;
   RAT.app.router.on('change', ({ path }) => {
     if (path === '/sync' && !sending) start();
-    if (path !== '/sync' && sending) stop();
+    if (path !== '/sync' &&  sending) stop();
     sending = path === '/sync';
   });
 
@@ -29,13 +26,17 @@
 
 <rat-area name='menu' dock='start'><Menu /></rat-area>
 
-<rat-view route='/' name='dashboard'><Dashboard /></rat-view>
-<rat-view route='/library' name='library'><Library /></rat-view>
-<rat-view route='/preview' name='preview' transition='slide'><Preview /></rat-view>
-<rat-view route='/sync' name='sync'><Sync /></rat-view>
+<rat-view name='dashboard' route='/'><Dashboard /></rat-view>
+<rat-view name|route='library'><Library /></rat-view>
+<rat-view name|route='preview' transition='slide'><Preview /></rat-view>
+<rat-view name|route='sync'><Sync /></rat-view>
 
-<rat-area name='context' dock='bottom' peek ontoggle={ontoggle}><div.context><Context /></div.context></rat-area>
+<rat-area name='context' dock='bottom' peek ontoggle={ontoggle}>
+  <div.context><Context /></div.context>
+</rat-area>
 
 <rat-area name='config' dock='end'>
-  <Settings name='Files'><Preferences /></Settings>
+  <Settings name='Files'>
+    <Preferences />
+  </Settings>
 </rat-area>
