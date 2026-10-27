@@ -9,6 +9,7 @@ places, transfer, sending (sync).
 a tab is { path, source }: source null is the granted folder, else the id of a server.
 */
 
+import dom from '@domina/dom';
 import { computed, effect, signal } from '@rat/signals';
 
 import { read, write }  from '../.shared/storage.js';
@@ -27,9 +28,14 @@ export { fs, places, remotes, root, scan, sync, tasks, transfer };
 
 const { CATEGORIES, categoryOf } = scan;
 
-const dialogs = () => RAT.app.dialogs;
-const area    = name => RAT.app.area(name);
+const dialogs = ()    => RAT.app.dialogs;
+const area    = name  => RAT.app.area(name);
 const go      = route => RAT.app.router.go(route);
+
+const ICON = {
+  copy : 'lucide:copy',
+  move : 'lucide:scissors',
+};
 
 // :::::: SETTINGS, kept across visits
 
@@ -73,24 +79,26 @@ export const opensOnTap = () => settings.open.value === 'single' || (settings.op
 
 // :::::: STATE
 
-export const entries  = signal([]);      // the listing of the current tab's path
-export const loading  = signal(false);   // a listing is on its way, the old one is gone already
-export const filter   = signal('');      // the library's filter
-export const query    = signal('');      // the dashboard's search over the index
-export const category = signal(null);    // the category the dashboard lists, or null
-export const selected = signal(null);    // the entry the context area is about
-export const file     = signal(null);    // the entry in the preview
-export const sheet    = signal(null);    // what the context area shows instead: 'tasks', 'remotes'
-export const size     = signal(null);    // { width, height } of the image in the preview
+export const
+entries  = signal ([]),      // the listing of the current tab's path
+loading  = signal (false),   // a listing is on its way, the old one is gone already
+filter   = signal (''),      // the library's filter
+query    = signal (''),      // the dashboard's search over the index
+category = signal (null),    // the category the dashboard lists, or null
+selected = signal (null),    // the entry the context area is about
+file     = signal (null),    // the entry in the preview
+sheet    = signal (null),    // what the context area shows instead: 'tasks', 'remotes'
+size     = signal (null);    // { width, height } of the image in the preview
 
 // :::::: TABS, each { path, source }
 
 const tabState = stored('tabs', { index: 0, list: [{ path: [] }] });
 
-export const tabs     = computed(() => tabState.value.list?.length ? tabState.value.list : [{ path: [] }]);
-export const tabIndex = computed(() => Math.min(Math.max(0, tabState.value.index ?? 0), tabs.value.length - 1));
-export const path     = computed(() => tabs.value[tabIndex.value].path);
-export const source   = computed(() => tabs.value[tabIndex.value].source ?? null);
+export const
+tabs     = computed(() => tabState.value.list?.length ? tabState.value.list : [{ path: [] }]),
+tabIndex = computed(() => Math.min(Math.max(0, tabState.value.index ?? 0), tabs.value.length - 1)),
+path     = computed(() => tabs.value[tabIndex.value].path),
+source   = computed(() => tabs.value[tabIndex.value].source ?? null);
 
 const scrollTop = new Map;   // per tab, for the session
 const scroller  = () => document.querySelector('rat-view[name="library"] .listing');
@@ -127,14 +135,15 @@ export const tabName = tab => tab.path.at(-1) ?? sourceName(tab.source ?? null);
 
 // :::::: THE FOLDER AND THE SERVERS
 
-// the granted folder, and the root of a source: null for the folder, a server's id
-export const localRoot    = () => root.perm.value === 'granted' ? root.folder.value?.handle ?? null : null;
-export const rootOfSource = from => from ? remotes.rootOf(from) : localRoot();
-export const sourceName   = from => from ? remotes.byId(from)?.name ?? 'remote' : root.folder.value?.name ?? 'folder';
+export const // the granted folder, and the root of a source: null for the folder, a server's id
+localRoot    = () => root.perm.value === 'granted' ? root.folder.value?.handle ?? null : null,
+rootOfSource = from => from ? remotes.rootOf(from) : localRoot(),
+sourceName   = from => from ? remotes.byId(from)?.name ?? 'remote' : root.folder.value?.name ?? 'folder';
 
-// the root of the tab on screen
-export const rootHandle = () => rootOfSource(source.value);
-export const folderName = () => sourceName(source.value);
+
+export const // the root of the tab on screen
+rootHandle = () => rootOfSource (source.value),
+folderName = () => sourceName   (source.value);
 
 // an entry of the index carries its path and lies in the folder, one of a listing in the tab's source
 export const sourceOf = entry => entry.source !== undefined ? entry.source : entry.path ? null : source.value;
@@ -264,7 +273,14 @@ export async function renameEntry (entry) {
   if (!handle) return;
   const at = entry.path ?? path.value;
   selected.value = null;
-  writeTask({ icon: 'lucide:pencil', label: `Rename ${entry.name} to ${name}` }, at, () => fs.rename(handle, at, entry.name, name, entry.kind));
+  writeTask(
+    {
+      icon: 'lucide:pencil', 
+      label: `Rename ${entry.name} to ${name}` 
+    },
+    at,
+    () => fs.rename(handle, at, entry.name, name, entry.kind)
+  );
 }
 
 export async function deleteEntry (entry) {
@@ -284,20 +300,18 @@ export function pick (mode, entry) {
 
 // what the clipboard holds goes into the folder on screen, as one task
 export async function paste () {
-  const board = transfer.clipboard.value;
-  if (!board) return;
-  const handle = await writable();
-  if (!handle) return;
-
+  const board  = transfer.clipboard.value; if (!board)  return;
+  const handle = await writable();         if (!handle) return;
   const target = [...path.value];
   const count  = board.items.length;
   const what   = count === 1 ? board.items[0].name : `${count} items`;
-  const verb   = board.mode === 'move' ? 'Move' : 'Copy';
+  const verb   = board.mode === 'move' ? 'move' : 'copy';
+  const icon   = ICON[verb];
   if (board.mode === 'move') transfer.clear();
   else transfer.pasted();
 
   const done = () => { if (target.join('/') === path.value.join('/')) goTo([...target]); };
-  tasks.run({ icon: board.mode === 'move' ? 'lucide:scissors' : 'lucide:copy', label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
+  tasks.run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
     ({ progress, signal }) => transfer.transfer(handle, board.items, board.mode, target, { onProgress: progress, signal }))
     .then(done)
     .catch(error => { if (error?.name !== 'AbortError') toast.error(error); done(); });
