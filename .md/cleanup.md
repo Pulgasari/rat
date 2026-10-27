@@ -36,8 +36,12 @@ it could go. a direction is no decision, each one is discussed first.
 
 ### 1 persistence by hand
 
-`rat` `lib` · six places store something, each by hand: a prefix per key, an effect per value, a `persist()`
-to remember to call. `RAT.app.store` exists, is named after the app, and is unused.
+`rat` `lib` · six places store something, each by hand:
+- a prefix per key,
+- an effect per value,
+- a `persist()`to remember to call.
+
+`RAT.app.store` exists, is named after the app, and is unused.
 
 ```js
 // state.rat.js
