@@ -1,0 +1,21 @@
+<script>
+  // <FileDetails />: the file in the preview
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { $file, $size, download, showInFolder } from '../state.rat.js';
+</script>
+
+<h2>Details</h2>
+<Facts rows={{
+  name       : $file.name,
+  type       : $file.type || 'unknown',
+  size       : fmt.bytes($file.size),
+  dimensions : $size && `${$size.width} × ${$size.height}`,
+  modified   : fmt.date($file.lastModified),
+  in         : '/' + $file.path.join('/'),
+}} />
+<div-x.actions>
+  <Action icon='lucide:download' label='download' onclick={() => download($file)} />
+  <Action icon='lucide:folder' label='show in folder' onclick={() => showInFolder($file)} />
+</div-x.actions>

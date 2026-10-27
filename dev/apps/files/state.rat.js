@@ -71,6 +71,13 @@ effect(() => {
   }
 });
 
+// where the tabs and the search bar sit: app.css orders them by these
+effect(() => {
+  const { dataset } = document.documentElement;
+  dataset.searchbar = $settings.searchbar;
+  dataset.tabbar    = $settings.tabbar;
+});
+
 const touch = () => globalThis.matchMedia?.('(pointer: coarse)').matches;
 
 export const opensOnTap = () => $settings.open === 'single' || ($settings.open === 'auto' && touch());

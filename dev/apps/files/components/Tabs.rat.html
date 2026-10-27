@@ -1,14 +1,18 @@
 <script>
   // <Tabs />: the folders open side by side in the library
 
-  import { $tabIndex as $index, $tabs, closeTab, openTab, switchTab, tabName } from '../state.rat.js';
+  import { $tabIndex, $tabs, closeTab, openTab, switchTab, tabName } from '../state.rat.js';
+
+  // at the moment of the click: a row keeps its tab, not its position
+  const positionOf = tab => $tabs.indexOf(tab);
+  const isActive   = tab => positionOf(tab) === $tabIndex;
 </script>
 
 <div-x.tabs role='tablist' scrollable>
   @for (tab of $tabs)
-    <div class={$tabs.indexOf(tab) === $index ? 'tab active' : 'tab'}>
-      <button type='button' role='tab' aria-selected={String($tabs.indexOf(tab) === $index)} onclick={() => switchTab($tabs.indexOf(tab))}>{tabName(tab)}</button>
-      @if ($tabs.length > 1): <btn-icon icon='lucide:x' label={'close ' + tabName(tab)} onclick={() => closeTab($tabs.indexOf(tab))} />
-    </div>
+    <div.tab class:active={isActive(tab)}>
+      <button type='button' role='tab' aria-selected={String(isActive(tab))} onclick={() => switchTab(positionOf(tab))}>{tabName(tab)}</button>
+      @if ($tabs.length > 1): <btn-icon icon='lucide:x' label={'close ' + tabName(tab)} onclick={() => closeTab(positionOf(tab))} />
+    </div.tab>
   <btn-icon icon='lucide:plus' label='new tab' onclick={() => openTab()} />
 </div-x.tabs>

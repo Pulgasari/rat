@@ -6,12 +6,15 @@
   import { $busy, $queue } from '../modules/tasks.rat.js';
 
   const $count = $queue.length;
+  const $label = $count ? `${$count} tasks` : 'tasks';
+
+  const search = event => props.onsearch?.(event.detail.query);
 </script>
 
 <div.searchbar>
-  <input-search placeholder={props.placeholder} value={props.value ?? ''} onsearch={event => props.onsearch?.(event.detail.query)} />
-  <button type='button' class={$busy ? 'tasks-button busy' : 'tasks-button'} aria-label={$count ? `${$count} tasks` : 'tasks'} title={$count ? `${$count} tasks` : 'tasks'} onclick={openTasks}>
+  <input-search placeholder={props.placeholder} value={props.value ?? ''} onsearch={search} />
+  <button.tasks-button type='button' class:busy={$busy} aria-label={$label} title={$label} onclick={openTasks}>
     <svg-icon icon={$busy ? 'lucide:loader' : 'lucide:list-checks'} />
     @if ($count): <span.badge>{$count}</span.badge>
-  </button>
+  </button.tasks-button>
 </div.searchbar>

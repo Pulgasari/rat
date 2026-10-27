@@ -24,7 +24,7 @@ export default {
   ],
 
   autoImport : [
-    { './components/': ['Action', 'Bar', 'Context', 'Dashboard', 'Entry', 'Facts', 'FileRow', 'Library', 'Menu', 'PasteBar', 'Preferences', 'Preview', 'RemoteManager', 'Searchbar', 'Status', 'Sync', 'TaskList', 'Tabs', 'Thumb', 'Welcome'] },
+    { './components/': ['Action', 'Bar', 'BookmarkAction', 'Context', 'Dashboard', 'Entry', 'EntryDetails', 'Facts', 'FileDetails', 'FileRow', 'FolderDetails', 'Library', 'Menu', 'PasteBar', 'Preferences', 'Preview', 'RemoteManager', 'RootDetails', 'Searchbar', 'Status', 'Sync', 'TaskList', 'Tabs', 'Thumb', 'Tile', 'Welcome'] },
     '../.shared/components/',
   ],
 

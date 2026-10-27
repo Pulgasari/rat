@@ -1,0 +1,14 @@
+<script>
+  // <RootDetails />: the granted folder as a whole, its index
+
+  import { rescan, sourceName } from '../state.rat.js';
+
+  import { $handle }   from '../modules/root.rat.js';
+  import { $scanning } from '../modules/scan.rat.js';
+</script>
+
+<h2>{sourceName(null)}</h2>
+<Status />
+<div-x.actions>
+  <Action icon='lucide:refresh-cw' label='read again' disabled={!$handle || Boolean($scanning)} onclick={rescan} />
+</div-x.actions>

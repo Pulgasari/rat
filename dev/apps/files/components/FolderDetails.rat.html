@@ -1,0 +1,39 @@
+<script>
+  // <FolderDetails />: the folder on screen in the library: what it holds, its bookmark, its foldertype
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { $entries, $facts, $path, $source, folderName, newFolder, newFolderType } from '../state.rat.js';
+
+  import { $folderTypes, BUILTIN, folderTypeIdOf, setFolderType, suggestFolderType } from '../modules/places.rat.js';
+  import { categoryOf }                                                            from '../modules/scan.rat.js';
+
+  // the root has no bookmark and no foldertype, a server's folders neither
+  const $markable     = $path.length > 0 && !$source;
+  const $folderTypeId = $markable ? folderTypeIdOf($path) : null;
+  const $suggested    = $markable && !$folderTypeId ? suggestFolderType($entries, categoryOf) : null;
+
+  const toggleFolderType = id => setFolderType($path, $folderTypeId === id ? null : id);
+</script>
+
+<h2>This folder</h2>
+<Facts rows={{
+  folder   : $path.at(-1) ?? folderName(),
+  contains : `${$facts.folders} folders, ${$facts.files} files`,
+  size     : fmt.bytes($facts.size),
+  mostly   : $facts.mostly,
+}} />
+<div-x.actions>
+  <Action icon='lucide:folder-plus' label='new folder' onclick={newFolder} />
+  @if ($markable): <BookmarkAction path={$path} />
+</div-x.actions>
+
+@if ($markable)
+  <h3>Foldertype</h3>
+  @if ($suggested)
+    <p.hint>Looks like {BUILTIN[$suggested].label}. <button.link type='button' onclick={() => setFolderType($path, $suggested)}>Make it one</button.link></p.hint>
+  <div-x.actions>
+    @for ([id, folderType] of Object.entries($folderTypes))
+      <button.action type='button' aria-pressed={String($folderTypeId === id)} onclick={() => toggleFolderType(id)}><svg-icon icon={folderType.icon} /> {folderType.label}</button.action>
+    <Action icon='lucide:plus' label='new foldertype' onclick={() => newFolderType($path)} />
+  </div-x.actions>

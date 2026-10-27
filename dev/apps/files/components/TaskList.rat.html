@@ -7,16 +7,22 @@
 
   const STATES = { cancelled: 'cancelled', done: 'done', failed: 'failed', queued: 'waiting', running: 'running' };
 
-  const isOpen  = task => task.state === 'queued' || task.state === 'running';
-  const stateOf = task => {
-    const { done, total } = task.progress ?? {};
-    return task.state === 'running' && done != null ? (total ? `${Math.round(done / total * 100)}%` : `${done}`) : STATES[task.state];
-  };
-  const noteOf  = task => task.error ?? [stateOf(task), task.endedAt && fmt.date(task.endedAt)].filter(Boolean).join(' · ');
+  const isOpen = task => task.state === 'queued' || task.state === 'running';
+
+  // how far a running task is: a share of its total, or a count without one
+  function stateOf ({ progress, state }) {
+    if (state !== 'running' || progress?.done == null) return STATES[state];
+    return progress.total ? `${Math.round(progress.done / progress.total * 100)}%` : String(progress.done);
+  }
+
+  function noteOf (task) {
+    if (task.error) return task.error;
+    return task.endedAt ? `${stateOf(task)} · ${fmt.date(task.endedAt)}` : stateOf(task);
+  }
 </script>
 
 @fragment row (task)
-  <li class={'task ' + task.state}>
+  <li class='task {task.state}'>
     <svg-icon icon={task.icon} />
     <span.text>
       <span.name>{task.label}</span.name>

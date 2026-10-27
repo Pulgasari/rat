@@ -1,17 +1,20 @@
 <script>
-  // <Library />: the folder in tabs: crumbs, filter, list or grid, a new folder
+  // <Library />: the folder in tabs: crumbs, filter, list or grid, a new folder. the tabs and the search bar
+  // sit on top or at the bottom by the settings, app.css orders them
 
   import { $filter, $loading, $path, $settings, $visible, folderName, goTo, newFolder, rootHandle, setting } from '../state.rat.js';
 
-  const $ready     = Boolean(rootHandle());
-  const $viewmode  = $settings.viewmode;
-  const $tabsTop   = $settings.tabbar === 'top';
-  const $searchTop = $settings.searchbar === 'top';
+  const $ready = Boolean(rootHandle());
+  const $grid  = $settings.viewmode === 'grid';
 
-  const up     = () => $path.length ? goTo($path.slice(0, -1)) : RAT.app.router.go('/');
-  const toggle = () => setting('viewmode', $viewmode === 'grid' ? 'list' : 'grid');
-  const crumb  = event => goTo(event.detail.path.split('/').filter(Boolean));
-  const search = text => $filter = text;
+  const crumb      = event => goTo(event.detail.path.split('/').filter(Boolean));
+  const search     = text  => $filter = text;
+  const toggleView = ()    => setting('viewmode', $grid ? 'list' : 'grid');
+
+  function up () {
+    if ($path.length) goTo($path.slice(0, -1));
+    else RAT.app.router.go('/');
+  }
 </script>
 
 @if (!$ready)
@@ -19,11 +22,8 @@
   <div.scroll><Welcome /></div.scroll>
 @else
   <Bar title={$path.at(-1) ?? folderName()} back={up}>
-    <btn-icon icon={$viewmode === 'grid' ? 'lucide:list' : 'lucide:layout-grid'} label={$viewmode === 'grid' ? 'show as list' : 'show as grid'} onclick={toggle} />
+    <btn-icon icon={$grid ? 'lucide:list' : 'lucide:layout-grid'} label={$grid ? 'show as list' : 'show as grid'} onclick={toggleView} />
   </Bar>
-
-  @if ($tabsTop): <Tabs />
-  @if ($searchTop): <Searchbar placeholder='Filter this folder' value={$filter} onsearch={search} />
 
   <nav-crumbs root={folderName()} path={'/' + $path.join('/')} on:nav-crumbs={crumb} />
 
@@ -32,7 +32,7 @@
       @if ($loading)
         <svg-icon icon='lucide:loader' />
       @else if ($visible.length)
-        <data-index viewmode={$viewmode} item-size='128px' item-size-min='80px' item-size-max='320px'>
+        <data-index viewmode={$settings.viewmode} item-size='128px' item-size-min='80px' item-size-max='320px'>
           @for (entry of $visible): <Entry entry={entry} />
         </data-index>
       @else
@@ -42,6 +42,5 @@
   </div.pane>
 
   <PasteBar />
-
-  @if (!$searchTop): <Searchbar placeholder='Filter this folder' value={$filter} onsearch={search} />
-  @if (!$tabsTop): <Tabs />
+  <Searchbar placeholder='Filter this folder' value={$filter} onsearch={search} />
+  <Tabs />

@@ -15,6 +15,7 @@
 
   const { $path: $route } = RAT.app.router;
 
+  // an overlaid menu goes once a view is picked
   function go (route) {
     RAT.app.router.go(route);
     const menu = RAT.app.area('menu');
@@ -29,5 +30,5 @@
   <hr />
   @for (item of SOON): <button type='button' disabled><svg-icon icon={item.icon} /> {item.label} <small>soon</small></button>
   <hr />
-  <button type='button' onclick={() => RAT.app.area('config')?.show()}><svg-icon icon='lucide:settings' /> Settings</button>
+  <button type='button' onclick={() => RAT.app.toggle('config', true)}><svg-icon icon='lucide:settings' /> Settings</button>
 </nav.menu>

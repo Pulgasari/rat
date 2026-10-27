@@ -8,15 +8,15 @@
   let $error = null;
   let $busy  = false;
 
+  // the fields by their names: url, username, password, name
   async function add (event) {
     event.preventDefault();
-    const form  = event.target;
-    const field = name => form.querySelector(`[name="${name}"]`)?.value ?? '';
+    const form = event.target;
     $busy  = true;
     $error = null;
     try {
-      const connection = await connect({ name: field('name'), password: field('password'), url: field('url'), username: field('username') });
-      form.reset?.();
+      const connection = await connect(Object.fromEntries(new FormData(form)));
+      form.reset();
       openRemote(connection.id);
       RAT.app.toggle('context', false);
     }
