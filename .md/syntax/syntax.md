@@ -222,6 +222,23 @@ let { $sources } = lib;                              // lib.sources is a signal:
 - compiles to `let { "filter": $filter, … } = $$.signalsOf(this.props, { filter: null, … })`.
   names without `$` read the object as it is.
 
+an imported `$name` (lowercase after the `$`) is a signal of another module, read and written
+like one of the file's own. `$Names` stay as written, they are classes (`$List`, `$Map`):
+
+```js
+// tasks.rat.js
+export let   $queue = [];
+export const $busy  = $queue.some(task => task.state === 'running');
+
+// Searchbar.rat.html
+import { $busy, $queue as $tasks } from './tasks.rat.js';
+const $count = $tasks.length;   // $tasks.value.length
+$tasks = [];                    // $tasks.value = []
+```
+
+a namespace import (`tasks.$queue`) is the signal itself. `peek()` has no sugar: `untrack(() => $queue)`
+of `@rat/signals`.
+
 ### typed signals
 
 a schema as the initial value ([d-14 a](ideas/types.md#d-14), [`@rat/types`](../packages/types)):

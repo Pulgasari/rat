@@ -1,10 +1,7 @@
 <script>
   // <Tabs />: the folders open side by side in the library
 
-  import { closeTab, openTab, switchTab, tabIndex, tabName, tabs } from '../state.js';
-
-  const $tabs  = tabs.value;
-  const $index = tabIndex.value;
+  import { $tabIndex as $index, $tabs, closeTab, openTab, switchTab, tabName } from '../state.rat.js';
 </script>
 
 <div-x.tabs role='tablist' scrollable>

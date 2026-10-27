@@ -1,12 +1,14 @@
 <script>
-  // <Sync />: send files to a device on the local network (modules/sync.js). pick a receiver (found, typed or
+  // <Sync />: send files to a device on the local network (modules/sync.rat.js). pick a receiver (found, typed or
   // one sent to before), collect files (picked, or sent here from the library), send. the transfer is a task.
   // auto sync keeps a folder sent in the background. outside the android app the view says why it is empty
 
   import fmt   from '../../.shared/fmt.js';
   import toast from '../../.shared/toast.js';
 
-  import { sync } from '../state.js';
+  import * as sync from '../modules/sync.rat.js';
+
+  import { $autoSync, $devices as $found, $identity, $outbox as $files, $targets } from '../modules/sync.rat.js';
 
   let $chosen   = null;     // the receiver the files go to
   let $address  = '';       // what was typed instead
@@ -17,11 +19,9 @@
   const keyOf  = target => `${target.host}:${target.port}`;
   const target = () => $chosen ?? sync.parseTarget($address, $protocol);
 
-  const $found   = sync.devices.value;
-  const $before  = sync.targets.value.filter(other => !$found.some(device => keyOf({ host: device.ip, port: device.port }) === keyOf(other)));
-  const $files   = sync.outbox.value;
+  const $before  = $targets.filter(other => !$found.some(device => keyOf({ host: device.ip, port: device.port }) === keyOf(other)));
   const $size    = $files.reduce((sum, file) => sum + Math.max(0, file.size), 0);
-  const $auto    = sync.autoSync.value ?? {};
+  const $auto    = $autoSync ?? {};
   const $current = target();
 
   const hostOf     = device => device.ip ?? device.host;
@@ -63,7 +63,7 @@
   </div.scroll>
 @else
   <Bar title='Send'>
-    @if (sync.identity.value): <small.identity>{sync.identity.value.alias}</small.identity>
+    @if ($identity): <small.identity>{$identity.alias}</small.identity>
   </Bar>
   <div.scroll>
     <section>

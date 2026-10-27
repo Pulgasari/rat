@@ -1,10 +1,10 @@
-// files :: modules/transfer.js
+// files :: modules/transfer.rat.js
 
 /*
 copying and moving inside the granted folder. a clipboard holds what was picked (copy or cut),
 transfer() runs it into the folder on screen.
 
-  clipboard   null, or { mode: 'copy' | 'move', items: [{ kind, name, path, root }], pasted }
+  $clipboard  null, or { mode: 'copy' | 'move', items: [{ kind, name, path, root }], pasted }
   pick(mode, entry, path, root)   puts an entry on it, the same mode adds to it
 
 a name that is taken in the target gets a number: 'a.txt' -> 'a (2).txt'. a folder can not go into
@@ -12,11 +12,9 @@ itself or below itself. a move uses the handle's own move() where it has one and
 and delete. files are copied as streams.
 */
 
-import { signal } from '@rat/signals';
-
 import { copyFile, copyTree, dirAt } from './fs.js';
 
-export const clipboard = signal(null);
+export let $clipboard = null;
 
 const samePath = (a, b) => a.join('/') === b.join('/');
 const isInside = (inner, outer) => inner.length >= outer.length && samePath(inner.slice(0, outer.length), outer);
@@ -26,13 +24,12 @@ const isInside = (inner, outer) => inner.length >= outer.length && samePath(inne
 // once pasted, a copy stays to paste again, but the next pick starts anew
 export function pick (mode, entry, path, root) {
   const item    = { kind: entry.kind, name: entry.name, path: entry.path ?? path, root };
-  const current = clipboard.value;
-  const known   = current?.mode === mode && !current.pasted ? current.items.filter(other => !(other.name === item.name && samePath(other.path, item.path))) : [];
-  clipboard.value = { items: [...known, item], mode };
+  const known = $clipboard?.mode === mode && !$clipboard.pasted ? $clipboard.items.filter(other => !(other.name === item.name && samePath(other.path, item.path))) : [];
+  $clipboard = { items: [...known, item], mode };
 }
 
-export const pasted = () => { if (clipboard.value) clipboard.value = { ...clipboard.value, pasted: true }; };
-export const clear  = () => { clipboard.value = null; };
+export const pasted = () => { if ($clipboard) $clipboard = { ...$clipboard, pasted: true }; };
+export const clear  = () => { $clipboard = null; };
 
 // :::::: NAMES
 

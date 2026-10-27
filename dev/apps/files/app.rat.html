@@ -1,26 +1,30 @@
 <script>
   // files: a file manager over one folder the user grants. the state and what can be done with it is
-  // state.js, the folder, the index, tasks, places and copying are modules/. the views are components/
+  // state.rat.js, the folder, the index, tasks, places and copying are modules/. the views are components/
 
-  import { remotes, root, sheet, sync } from './state.js';
+  import { $sheet } from './state.rat.js';
+
+  import { load as loadRemotes } from './modules/remotes.rat.js';
+  import { load as loadRoot }    from './modules/root.rat.js';
+  import { start, stop }         from './modules/sync.rat.js';
 
   import { hint }  from '../.shared/install.js';
   import { toast } from '../.shared/toast.js';
 
   // the splash stays until the folder is known
-  RAT.app.hold <| Promise.all([root.load(), remotes.load()]).catch <| toast.error;
+  RAT.app.hold <| Promise.all([loadRoot(), loadRemotes()]).catch <| toast.error;
   hint('Files');
 
   // discovery runs while the send view is on screen, it costs battery
   let sending = false;
   RAT.app.router.on('change', ({ path }) => {
-    if (path === '/sync' && !sending) sync.start();
-    if (path !== '/sync' && sending) sync.stop();
+    if (path === '/sync' && !sending) start();
+    if (path !== '/sync' && sending) stop();
     sending = path === '/sync';
   });
 
   // the context area forgets the tasks when it closes
-  const ontoggle = event => { if (!event.detail?.open) sheet.value = null; };
+  const ontoggle = event => { if (!event.detail?.open) $sheet = null; };
 </script>
 
 <rat-area name='menu' dock='start'><Menu /></rat-area>

@@ -1,4 +1,4 @@
-// files :: modules/remotes.js
+// files :: modules/remotes.rat.js
 
 /*
 the servers the app reaches besides the granted folder. webdav for now (nextcloud and owncloud speak
@@ -8,12 +8,10 @@ folder, and copy, move, preview and thumbnails work across both.
 the connections, password included, stay on the device (RAT.app.files), sent only to their own server.
 an app password is the better choice where the server has one.
 
-  connections   [{ id, name, password, url, username }]
+  $connections  [{ id, name, password, url, username }]
   add(fields)   tests the connection with a listing, then keeps it
   rootOf(id)    the root handle, one per connection
 */
-
-import { signal } from '@rat/signals';
 
 import { test }    from '../../.shared/webdav/client.js';
 import { davRoot } from '../../.shared/webdav/handles.js';
@@ -21,13 +19,15 @@ import { davRoot } from '../../.shared/webdav/handles.js';
 const FILE  = 'remotes.json';
 const roots = new Map;
 
-export const connections = signal([]);
+const { files } = RAT.app;
 
-export async function load () { connections.value = await RAT.app.files.read(FILE, 'json').catch(() => []); }
+export let $connections = [];
 
-const persist = () => RAT.app.files.write(FILE, JSON.stringify(connections.value));
+export async function load () { $connections = await files.read(FILE, 'json').catch(() => []); }
 
-export const byId = id => connections.value.find(connection => connection.id === id) ?? null;
+const persist = () => files.write(FILE, JSON.stringify($connections));
+
+export const byId = id => $connections.find(connection => connection.id === id) ?? null;
 
 export async function add ({ name, password = '', url, username = '' }) {
   const trimmed = String(url ?? '').trim();
@@ -42,13 +42,13 @@ export async function add ({ name, password = '', url, username = '' }) {
   };
 
   await test(connection);
-  connections.value = [...connections.value, connection];
+  $connections = [...$connections, connection];
   await persist();
   return connection;
 }
 
 export async function remove (id) {
-  connections.value = connections.value.filter(connection => connection.id !== id);
+  $connections = $connections.filter(connection => connection.id !== id);
   roots.delete(id);
   await persist();
 }

@@ -1,4 +1,4 @@
-// files :: modules/tasks.js
+// files :: modules/tasks.rat.js
 
 /*
 work that takes a while runs here, never in front of the user: reading the folder, writing to it,
@@ -13,46 +13,50 @@ index.
   task      { id, label, icon, lane, state, progress: { done, total } | null, error, queuedAt, startedAt, endedAt }
   state     queued, running, done, failed, cancelled
 
-  queue     the tasks not ended yet, in the order they came
-  history   the ended ones, newest first, kept across visits (HISTORY of them)
-  busy      a task is running
+  $queue     the tasks not ended yet, in the order they came
+  $history   the ended ones, newest first, kept across visits (HISTORY of them)
+  $busy      a task is running
 */
 
-import { computed, signal } from '@rat/signals';
+import { untrack } from '@rat/signals';
 
 import { read, write } from '../../.shared/storage.js';
 
 const HISTORY = 50;
 const STORAGE = 'files:tasks';
 
-export const queue   = signal([]);
-export const history = signal(read(STORAGE, []));
-export const busy    = computed(() => queue.value.some(task => task.state === 'running'));
+export let   $queue   = [];
+export let   $history = read(STORAGE, []);
+export const $busy    = $queue.some(task => task.state === 'running');
 
 const controllers = new Map;   // id -> AbortController
 const lanes       = new Map;   // lane -> promise of the last task in it
 let   counter     = 0;
 
-// a task is replaced, never changed in place. peek(): progress is often reported from inside an
-// effect, which would otherwise subscribe to the queue it writes
+// untracked: progress is often reported from inside an effect, which would otherwise subscribe to the
+// queue it writes
+const tasks = () => untrack(() => $queue);
+
+// a task is replaced, never changed in place
 function patch (id, changes) {
-  queue.value = queue.peek().map(task => task.id === id ? { ...task, ...changes } : task);
+  $queue = tasks().map(task => task.id === id ? { ...task, ...changes } : task);
 }
 
 function finish (id, changes) {
-  const task = { ...queue.peek().find(item => item.id === id), ...changes, endedAt: Date.now() };
-  queue.value   = queue.peek().filter(item => item.id !== id);
-  history.value = [task, ...history.peek()].slice(0, HISTORY);
+  const task    = { ...tasks().find(item => item.id === id), ...changes, endedAt: Date.now() };
+  const history = [task, ...untrack(() => $history)].slice(0, HISTORY);
+  $queue   = tasks().filter(item => item.id !== id);
+  $history = history;
   controllers.delete(id);
-  write(STORAGE, history.peek());
+  write(STORAGE, history);
 }
 
 export function run ({ icon = 'lucide:loader', label, lane = 'default' }, work) {
   const id         = `task-${Date.now().toString(36)}-${++counter}`;
-  const controller = new AbortController();
+  const controller = new AbortController;
   controllers.set(id, controller);
 
-  queue.value = [...queue.peek(), { error: null, icon, id, label, lane, progress: null, queuedAt: Date.now(), state: 'queued' }];
+  $queue = [...tasks(), { error: null, icon, id, label, lane, progress: null, queuedAt: Date.now(), state: 'queued' }];
 
   const job = (lanes.get(lane) ?? Promise.resolve()).catch(() => {}).then(async () => {
     if (controller.signal.aborted) { finish(id, { state: 'cancelled' }); return null; }
@@ -79,6 +83,6 @@ export function run ({ icon = 'lucide:loader', label, lane = 'default' }, work) 
 export const cancel = id => controllers.get(id)?.abort();
 
 export function clearHistory () {
-  history.value = [];
+  $history = [];
   write(STORAGE, []);
 }

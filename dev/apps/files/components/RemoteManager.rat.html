@@ -1,12 +1,12 @@
 <script>
   // <RemoteManager />: the servers, and a form for one more. adding tests it with a listing first
 
-  import { forgetRemote, openRemote, remotes } from '../state.js';
+  import { forgetRemote, openRemote } from '../state.rat.js';
+
+  import { $connections as $servers, add as connect } from '../modules/remotes.rat.js';
 
   let $error = null;
   let $busy  = false;
-
-  const $servers = remotes.connections.value;
 
   async function add (event) {
     event.preventDefault();
@@ -15,10 +15,10 @@
     $busy  = true;
     $error = null;
     try {
-      const connection = await remotes.add({ name: field('name'), password: field('password'), url: field('url'), username: field('username') });
+      const connection = await connect({ name: field('name'), password: field('password'), url: field('url'), username: field('username') });
       form.reset?.();
       openRemote(connection.id);
-      RAT.app.area('context')?.hide();
+      RAT.app.toggle('context', false);
     }
     catch (error) { $error = error.message ?? String(error); }
     finally { $busy = false; }

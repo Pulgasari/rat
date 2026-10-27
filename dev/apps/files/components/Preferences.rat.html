@@ -1,7 +1,9 @@
 <script>
   // <Preferences />: the app's own settings and its folder, above the shared ones in <Settings>
 
-  import { chooseFolder, closeFolder, root, settings } from '../state.js';
+  import { $settings, chooseFolder, closeFolder, setting } from '../state.rat.js';
+
+  import { $folder } from '../modules/root.rat.js';
 
   const PATTERNS = { 'pattern-bg': 'Background', 'pattern-tile': 'Tiles' };
 
@@ -11,9 +13,7 @@
     tabbar    : { label: 'Tabs',       values: [['bottom', 'bottom'], ['top', 'top']] },
   };
 
-  const $folder = root.folder.value;
-
-  const change = (name, event) => settings[name].value = event.detail?.value ?? event.target.value;
+  const change = (name, event) => setting(name, event.detail?.value ?? event.target.value);
 </script>
 
 <section>
@@ -21,14 +21,14 @@
   @for (name of Object.keys(CHOICES))
     <label>
       <span>{CHOICES[name].label}</span>
-      <input-value look='segments' value={settings[name].value} onchange={event => change(name, event)}>
+      <input-value look='segments' value={$settings[name]} onchange={event => change(name, event)}>
         @for (choice of CHOICES[name].values): <input-option value={choice[0]}>{choice[1]}</input-option>
       </input-value>
     </label>
   @for (name of Object.keys(PATTERNS))
     <label>
       <span>{PATTERNS[name]}</span>
-      <input-pattern opacity value={settings[name].value} onchange={event => change(name, event)} />
+      <input-pattern opacity value={$settings[name]} onchange={event => change(name, event)} />
     </label>
 </section>
 

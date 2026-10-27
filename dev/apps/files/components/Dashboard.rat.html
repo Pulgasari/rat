@@ -3,19 +3,21 @@
 
   import fmt from '../../.shared/fmt.js';
 
-  import { SORTED, category, categoryFiles, goTo, hits, localRoot, manageRemotes, open, openRemote, places, query, remotes, scan, settings, sourceName } from '../state.js';
+  import { $category, $categoryFiles, $hits, $query, $settings, SORTED, goTo, localRoot, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
+
+  import { bookmarks, typeOf } from '../modules/places.rat.js';
+  import { $connections }      from '../modules/remotes.rat.js';
+  import { $index }            from '../modules/scan.rat.js';
 
   const library    = at => { goTo(at, null); RAT.app.router.go('/library'); };
   const folderName = () => sourceName(null);
+  const search     = text => $query = text;
 
   const $ready     = Boolean(localRoot());
-  const $top       = settings.searchbar.value === 'top';
-  const $query     = query.value.trim();
-  const $category  = category.value;
-  const $index     = scan.index.value;
-  const $bookmarks = places.bookmarks();
+  const $top       = $settings.searchbar === 'top';
+  const $searching = Boolean($query.trim());
+  const $bookmarks = bookmarks();
   const $label     = SORTED.find(item => item.id === $category)?.label ?? $category;
-  const $servers   = remotes.connections.value;
 
   const hostOf = url => { try { return new URL(url).host; } catch { return url; } };
 
@@ -29,26 +31,26 @@
 
 <Bar title='Files' />
 
-@if ($ready && $top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={text => query.value = text} />
+@if ($ready && $top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={search} />
 
 <div.scroll>
   @if (!$ready)
     <Welcome />
-  @else if ($query)
+  @else if ($searching)
     <section>
-      <h2>{hits.value.length ? 'Found ' + (hits.value.length >= 100 ? '100+' : hits.value.length) : 'Nothing found'}</h2>
+      <h2>{$hits.length ? 'Found ' + ($hits.length >= 100 ? '100+' : $hits.length) : 'Nothing found'}</h2>
       <ul.rows>
-        @for (entry of hits.value): <FileRow entry={entry} />
+        @for (entry of $hits): <FileRow entry={entry} />
       </ul.rows>
     </section>
   @else if ($category)
     <section>
       <div-x.section-head>
-        <btn-icon icon='lucide:arrow-left' label='back' onclick={() => category.value = null} />
+        <btn-icon icon='lucide:arrow-left' label='back' onclick={() => $category = null} />
         <h2>{$label}</h2>
       </div-x.section-head>
       <ul.rows>
-        @for (entry of categoryFiles.value): <FileRow entry={entry} />
+        @for (entry of $categoryFiles): <FileRow entry={entry} />
       </ul.rows>
     </section>
   @else
@@ -72,7 +74,7 @@
           @for (bookmark of $bookmarks)
             <li>
               <button.tile type='button' onclick={() => library(bookmark.path)}>
-                <svg-icon icon={places.typeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
+                <svg-icon icon={typeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
                 <span.text><span.name>{bookmark.name}</span.name><small>/{bookmark.path.join('/')}</small></span.text>
               </button.tile>
             </li>
@@ -86,7 +88,7 @@
       <ul.tiles>
         @for (item of SORTED)
           <li>
-            <button.tile type='button' disabled={!$index?.categories?.[item.id]?.count} onclick={() => category.value = item.id}>
+            <button.tile type='button' disabled={!$index?.categories?.[item.id]?.count} onclick={() => $category = item.id}>
               <svg-icon icon={item.icon} />
               <span.text>
                 <span.name>{item.label}</span.name>
@@ -113,7 +115,7 @@
     <section>
       <h2>Remote</h2>
       <ul.tiles>
-        @for (server of $servers)
+        @for (server of $connections)
           <li>
             <button.tile type='button' onclick={() => openRemote(server.id)}>
               <svg-icon icon='lucide:cloud' />
@@ -123,7 +125,7 @@
         <li>
           <button.tile type='button' onclick={manageRemotes}>
             <svg-icon icon='lucide:cloud-cog' />
-            <span.text><span.name>WebDAV, Nextcloud</span.name><small>{$servers.length ? 'add or remove' : 'connect a server'}</small></span.text>
+            <span.text><span.name>WebDAV, Nextcloud</span.name><small>{$connections.length ? 'add or remove' : 'connect a server'}</small></span.text>
           </button.tile>
         </li>
         @for (remote of PLANNED)
@@ -137,4 +139,4 @@
     </section>
 </div.scroll>
 
-@if ($ready && !$top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={text => query.value = text} />
+@if ($ready && !$top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={search} />

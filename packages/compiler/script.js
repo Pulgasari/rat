@@ -884,6 +884,13 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
 
   for (const name of declared.names) names.add(name);
 
+  // an imported $name is a signal of another module, read and written the same way ($List and the other
+  // $Names are classes and stay as written)
+  for (const node of program.body) {
+    if (node.type !== 'ImportDeclaration') continue;
+    for (const { local } of node.specifiers) if (/^\$[a-z_]/.test(local.name)) names.add(local.name);
+  }
+
   const target = reassigned(program, declared.variants);
   if (target) throw new CompileError(`${target.name} is a reactive variant, it changes through its methods and is not reassigned`, { filename, index: offset + target.start, source });
 

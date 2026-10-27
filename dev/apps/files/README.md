@@ -27,16 +27,19 @@ folder comes from the shell's folders driver of `@rat/app`.
 | file | what it is |
 |---|---|
 | `app.rat.html` | the areas and the views |
-| `state.js` | the state (tabs, listing, selection, settings) and the actions (open, write, paste, the folder) |
-| `modules/root.js` | the granted folder: picked and kept through `@rat/app`'s folders driver |
+| `state.rat.js` | the state (tabs, listing, selection, settings) and the actions (open, write, paste, the folder) |
 | `modules/fs.js` | listing, reading, a new folder, rename, delete, copy over any root handle |
-| `modules/scan.js` | the index of the whole folder, kept in `RAT.app.files` |
-| `modules/tasks.js` | the task lanes and their history |
-| `modules/places.js` | bookmarks and folder types |
-| `modules/transfer.js` | the clipboard, copying and moving |
+| `modules/places.rat.js` | bookmarks and folder types |
+| `modules/remotes.rat.js` | the webdav servers, each a root handle (`.shared/webdav/`), kept in `RAT.app.files` |
+| `modules/root.rat.js` | the granted folder: picked and kept through `@rat/app`'s folders driver |
+| `modules/scan.rat.js` | the index of the whole folder, kept in `RAT.app.files` |
+| `modules/sync.rat.js` | sending over the lan (LocalSend v2) through the native FileSync plugin |
+| `modules/tasks.rat.js` | the task lanes and their history |
+| `modules/transfer.rat.js` | the clipboard, copying and moving |
 | `components/` | the views and their parts |
-| `modules/remotes.js` | the webdav servers, each a root handle (`.shared/webdav/`), kept in `RAT.app.files` |
-| `modules/sync.js` | sending over the lan (LocalSend v2) through the native FileSync plugin |
+
+state and modules are `.rat.js`: their signals are exported `$names` (`$folder`, `$index`, `$queue` …), a view
+imports them by name and reads and writes them like its own (`$category = null`), no `.value`.
 
 mods: `database` (the handle), `dialogs` (new folder, rename, delete), `files` (the index, the servers),
 `thumbnails`, `offline`.

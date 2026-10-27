@@ -1,13 +1,12 @@
 <script>
   // <Welcome />: what the views show without a folder: none picked, one to reconnect, no folders in this browser
 
-  import { chooseFolder, folderName, reconnect, root } from '../state.js';
+  import { chooseFolder, folderName, reconnect } from '../state.rat.js';
 
-  const $ready  = root.ready.value;
-  const $folder = root.folder.value;
+  import { $folder, $ready, supported } from '../modules/root.rat.js';
 </script>
 
-@if (!root.supported())
+@if (!supported())
   <div-y.hero>
     <svg-icon icon='lucide:triangle-alert' />
     <h2>Can't open folders here</h2>

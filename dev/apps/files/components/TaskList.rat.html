@@ -3,12 +3,9 @@
 
   import fmt from '../../.shared/fmt.js';
 
-  import { tasks } from '../state.js';
+  import { $history, $queue, cancel, clearHistory } from '../modules/tasks.rat.js';
 
   const STATES = { cancelled: 'cancelled', done: 'done', failed: 'failed', queued: 'waiting', running: 'running' };
-
-  const $queue   = tasks.queue.value;
-  const $history = tasks.history.value;
 
   const isOpen  = task => task.state === 'queued' || task.state === 'running';
   const stateOf = task => {
@@ -26,7 +23,7 @@
       <small>{noteOf(task)}</small>
       @if (task.state === 'running' && task.progress?.total): <progress max={task.progress.total} value={task.progress.done} />
     </span.text>
-    @if (isOpen(task)): <btn-icon icon='lucide:x' label={'cancel ' + task.label} onclick={() => tasks.cancel(task.id)} />
+    @if (isOpen(task)): <btn-icon icon='lucide:x' label={'cancel ' + task.label} onclick={() => cancel(task.id)} />
   </li>
 
 @if ($queue.length)
@@ -39,7 +36,7 @@
 @if ($history.length)
   <div-x.section-head>
     <h3>History</h3>
-    <btn-icon icon='lucide:trash' label='clear the history' onclick={tasks.clearHistory} />
+    <btn-icon icon='lucide:trash' label='clear the history' onclick={clearHistory} />
   </div-x.section-head>
   <ul.tasks>
     @for (task of $history): {row(task)}

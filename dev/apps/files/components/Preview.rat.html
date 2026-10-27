@@ -3,25 +3,25 @@
 
   import { effect } from '@rat/signals';
 
-  import { file, fs, iconOf, isImage, rootOfSource, selected, size } from '../state.js';
+  import { $file as $entry, $selected, $size, iconOf, isImage, rootOfSource } from '../state.rat.js';
 
-  const $entry = file.value;
+  import { readFile } from '../modules/fs.js';
 
   let $src = null;
 
   // the image off disk, its object url gone with the next file
   effect(() => {
-    const entry = file.value;
-    size.value = null;
-    $src = null;
+    const entry = $entry;
+    $size = null;
+    $src  = null;
     if (!entry || !isImage(entry)) return;
     let url = null, alive = true;
-    fs.readFile(rootOfSource(entry.source), entry.path, entry.name).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
+    readFile(rootOfSource(entry.source), entry.path, entry.name).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
     return () => { alive = false; if (url) URL.revokeObjectURL(url); };
   });
 
-  const loaded = event => size.value = { height: event.target.naturalHeight, width: event.target.naturalWidth };
-  const info   = () => { selected.value = null; RAT.app.toggle('context'); };
+  const loaded = event => $size = { height: event.target.naturalHeight, width: event.target.naturalWidth };
+  const info   = () => { $selected = null; RAT.app.toggle('context'); };
 </script>
 
 @if (!$entry)

@@ -1,4 +1,4 @@
-// files :: modules/scan.js
+// files :: modules/scan.rat.js
 
 /*
 the whole granted folder, walked in the background: what the dashboard shows (categories, recent
@@ -11,12 +11,10 @@ running one. dot folders and node_modules are skipped.
   scan(root, folder)     walks, then stores and publishes the new index
   search(query, limit)   the indexed files whose name contains the query
 
-  index      { scannedAt, total, size, categories: { [id]: { count, size } }, recent: [entry], files: [entry] }
-  entry      { name, path: ['a', 'b'], size, lastModified, type }
-  scanning   null, or { files } while a walk runs
+  $index      { scannedAt, total, size, categories: { [id]: { count, size } }, recent: [entry], files: [entry] }
+  $scanning   null, or { files } while a walk runs
+  entry       { name, path: ['a', 'b'], size, lastModified, type }
 */
-
-import { signal } from '@rat/signals';
 
 // :::::: CATEGORIES
 
@@ -47,8 +45,10 @@ export function categoryOf ({ name, type = '' }) {
 
 // :::::: STATE
 
-export const index    = signal(null);
-export const scanning = signal(null);
+export let $index    = null;
+export let $scanning = null;
+
+const { files } = RAT.app;
 
 const RECENT = 24;
 const SKIP   = name => name.startsWith('.') || name === 'node_modules';
@@ -59,7 +59,7 @@ let running = null;
 
 // :::::: WALK
 
-async function walk (handle, path, files, signal) {
+async function walk (handle, path, found, signal) {
   const dirs  = [];
   const reads = [];
 
@@ -74,10 +74,10 @@ async function walk (handle, path, files, signal) {
   }
 
   // the files of one folder side by side, the folders one after the other
-  for (const entry of await Promise.all(reads)) if (entry) files.push(entry);
-  scanning.value = { files: files.length };
+  for (const entry of await Promise.all(reads)) if (entry) found.push(entry);
+  $scanning = { files: found.length };
 
-  for (const dir of dirs) await walk(dir, [...path, dir.name], files, signal);
+  for (const dir of dirs) await walk(dir, [...path, dir.name], found, signal);
 }
 
 function summarize (files) {
@@ -98,10 +98,8 @@ function summarize (files) {
 // :::::: API
 
 export async function restore (folder) {
-  if (!folder) { index.value = null; return null; }
-  const stored = await RAT.app.files.read(pathOf(folder), 'json').catch(() => null);
-  index.value = stored;
-  return stored;
+  $index = folder ? await files.read(pathOf(folder), 'json').catch(() => null) : null;
+  return $index;
 }
 
 export async function scan (root, folder) {
@@ -109,22 +107,21 @@ export async function scan (root, folder) {
   const controller = new AbortController();
   running = controller;
 
-  const files = [];
-  scanning.value = { files: 0 };
+  const found = [];
+  $scanning = { files: 0 };
 
   try {
-    await walk(root, [], files, controller.signal);
-    const next = summarize(files);
-    index.value = next;
-    await RAT.app.files.write(pathOf(folder), JSON.stringify(next));
-    return next;
+    await walk(root, [], found, controller.signal);
+    $index = summarize(found);
+    await files.write(pathOf(folder), JSON.stringify($index));
+    return $index;
   }
   catch (error) {
     if (error?.name !== 'AbortError') throw error;
     return null;
   }
   finally {
-    if (running === controller) { running = null; scanning.value = null; }
+    if (running === controller) { running = null; $scanning = null; }
   }
 }
 
@@ -132,8 +129,8 @@ export const stop = () => running?.abort();
 
 export async function forget (folder) {
   stop();
-  index.value = null;
-  if (folder) await RAT.app.files.remove(pathOf(folder)).catch(() => {});
+  $index = null;
+  if (folder) await files.remove(pathOf(folder)).catch(() => {});
 }
 
 export function search (query, limit = 100) {
@@ -141,7 +138,7 @@ export function search (query, limit = 100) {
   if (!needle) return [];
 
   const hits = [];
-  for (const file of index.value?.files ?? []) {
+  for (const file of $index?.files ?? []) {
     if (file.name.toLowerCase().includes(needle)) hits.push(file);
     if (hits.length >= limit) break;
   }

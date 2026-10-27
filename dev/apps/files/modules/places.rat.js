@@ -1,4 +1,4 @@
-// files :: modules/places.js
+// files :: modules/places.rat.js
 
 /*
 what the user marks in the folder: bookmarks, and the type a folder is given. both belong to the
@@ -10,20 +10,18 @@ a folder has one type or none; suggest() reads a listing and names the category 
 belong to. a type changes the folder's icon for now, a default view per type comes later.
 */
 
-import { effect, signal } from '@rat/signals';
+import { effect } from '@rat/signals';
 
 import { read, write } from '../../.shared/storage.js';
-import { folder }      from './root.js';
+import { $folder }     from './root.rat.js';
 
-const stored = (key, fallback) => {
-  const value = signal(read(key, fallback));
-  effect(() => write(key, value.value));
-  return value;
-};
+let $bookmarked  = read('files:bookmarks',   []);   // [{ folder, name, path }]
+let $folderTyped = read('files:folderTyped', {});   // { 'folder:a/b': typeId }
+let $folderTypes = read('files:folderTypes', []);   // the user's own, [{ icon, id, label }]
 
-const bookmarked  = stored('files:bookmarks',   []);   // [{ folder, name, path }]
-const folderTyped = stored('files:folderTyped', {});   // { 'folder:a/b': typeId }
-const folderTypes = stored('files:folderTypes', []);   // the user's own, [{ icon, id, label }]
+effect(() => write('files:bookmarks',   $bookmarked));
+effect(() => write('files:folderTyped', $folderTyped));
+effect(() => write('files:folderTypes', $folderTypes));
 
 // :::::: TYPES
 
@@ -35,27 +33,27 @@ export const BUILTIN = [
   { icon: 'lucide:film',      id: 'video',     label: 'Videos'    },
 ];
 
-const folderId = () => folder.value?.addedAt ?? folder.value?.name ?? '';
+const folderId = () => $folder?.addedAt ?? $folder?.name ?? '';
 const keyOf    = path => `${folderId()}:${path.join('/')}`;
 const samePath = (a, b) => a.join('/') === b.join('/');
 
-export const types = () => [...BUILTIN, ...folderTypes.value];
+export const types = () => [...BUILTIN, ...$folderTypes];
 
 export function typeOf (path) {
-  const id = folderTyped.value[keyOf(path)];
+  const id = $folderTyped[keyOf(path)];
   return id ? types().find(type => type.id === id) ?? null : null;
 }
 
 export function setType (path, id) {
-  const typed = { ...folderTyped.value };
+  const typed = { ...$folderTyped };
   if (id) typed[keyOf(path)] = id;
   else delete typed[keyOf(path)];
-  folderTyped.value = typed;
+  $folderTyped = typed;
 }
 
 export function addType ({ icon = 'lucide:folder', label }) {
   const id = `custom-${Date.now().toString(36)}`;
-  folderTypes.value = [...folderTypes.value, { icon, id, label }];
+  $folderTypes = [...$folderTypes, { icon, id, label }];
   return id;
 }
 
@@ -71,11 +69,11 @@ export function suggest (entries, categoryOf) {
 
 // :::::: BOOKMARKS
 
-export const bookmarks    = () => bookmarked.value.filter(bookmark => bookmark.folder === folderId());
+export const bookmarks    = () => $bookmarked.filter(bookmark => bookmark.folder === folderId());
 export const isBookmarked = path => bookmarks().some(bookmark => samePath(bookmark.path, path));
 
 export function toggleBookmark (path, name) {
-  bookmarked.value = isBookmarked(path)
-    ? bookmarked.value.filter(bookmark => !(bookmark.folder === folderId() && samePath(bookmark.path, path)))
-    : [...bookmarked.value, { folder: folderId(), name, path }];
+  $bookmarked = isBookmarked(path)
+    ? $bookmarked.filter(bookmark => !(bookmark.folder === folderId() && samePath(bookmark.path, path)))
+    : [...$bookmarked, { folder: folderId(), name, path }];
 }
