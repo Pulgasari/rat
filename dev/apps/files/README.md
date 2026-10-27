@@ -29,7 +29,7 @@ folder comes from the shell's folders driver of `@rat/app`.
 | `app.rat.html` | the areas and the views |
 | `state.rat.js` | the state (tabs, listing, selection, settings) and the actions (open, write, paste, the folder) |
 | `modules/fs.js` | listing, reading, a new folder, rename, delete, copy over any root handle |
-| `modules/places.rat.js` | bookmarks and folder types |
+| `modules/places.rat.js` | bookmarks and foldertypes |
 | `modules/remotes.rat.js` | the webdav servers, each a root handle (`.shared/webdav/`), kept in `RAT.app.files` |
 | `modules/root.rat.js` | the granted folder: picked and kept through `@rat/app`'s folders driver |
 | `modules/scan.rat.js` | the index of the whole folder, kept in `RAT.app.files` |

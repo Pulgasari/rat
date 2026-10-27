@@ -203,7 +203,7 @@ export const isImage = entry => entry.kind !== 'directory' && Boolean(entry.type
 
 // a folder with a type shows the type's icon, at is the path the entry lies in
 export const iconOf = (entry, at) => entry.kind === 'directory'
-  ? (at && places.typeOf([...at, entry.name])?.icon) || 'lucide:folder'
+  ? (at && places.folderTypeOf([...at, entry.name])?.icon) || 'lucide:folder'
   : CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'lucide:file';
 
 export const keyOf = entry => `${(entry.path ?? []).join('/')}/${entry.name}`;
@@ -379,13 +379,13 @@ export function sendEntry (entry) {
     .catch(toast.error);
 }
 
-// :::::: FOLDER TYPES
+// :::::: FOLDERTYPES
 
-export async function newType (at) {
-  const label = await dialogs.prompt({ message: 'Name of the new folder type', ok: 'Next', title: 'Folder type' });
+export async function newFolderType (at) {
+  const label = await dialogs.prompt({ message: 'Name of the new foldertype', ok: 'Next', title: 'Foldertype' });
   if (!label) return;
   const icon = await dialogs.prompt({ message: 'Its icon (an iconify id)', ok: 'Create', title: label, value: 'lucide:folder' }) || 'lucide:folder';
-  places.setType(at, places.addType({ icon, label }));
+  places.setFolderType(at, places.addFolderType({ icon, label }));
 }
 
 // what a listing is mostly made of

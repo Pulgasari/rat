@@ -157,6 +157,10 @@ export interface List<T> extends Iterable<T> {
   reverse (): this;
   set (index: number, value: T): this;
   remove (value: T): boolean;
+  /** Removes every item the test (of match) lets through: how many. */
+  drop (test: unknown): number;
+  /** Removes what the test lets through, else adds value: true when it was added. */
+  toggle (value: T, test?: unknown): boolean;
   replace (items: Iterable<T>): this;
   clear (): this;
 }

@@ -5,19 +5,21 @@
 
   import {
     $entries, $facts, $file, $path, $selected, $sheet, $size, $source,
-    deleteEntry, download, folderName, localRoot, newFolder, newType, open, pick, renameEntry, rescan, rootHandle,
+    deleteEntry, download, folderName, localRoot, newFolder, newFolderType, open, pick, renameEntry, rescan, rootHandle,
     sendEntry, showInFolder, sourceName, sourceOf,
   } from '../state.rat.js';
 
-  import { isBookmarked, setType, suggest, toggleBookmark, typeOf, types } from '../modules/places.rat.js';
-  import { $scanning, categoryOf }                                         from '../modules/scan.rat.js';
-  import { available }                                                   from '../modules/sync.rat.js';
+  import { $folderTypes, BUILTIN, folderTypeIdOf, isBookmarked, setFolderType, suggestFolderType, toggleBookmark } from '../modules/places.rat.js';
+  import { $scanning, categoryOf }                                                                                   from '../modules/scan.rat.js';
+  import { available }                                                                                             from '../modules/sync.rat.js';
 
   const { $path: $route } = RAT.app.router;
 
   const $local     = !$source;
-  const $type      = $path.length ? typeOf($path) : null;
-  const $suggested = $path.length && !$type ? suggest($entries, categoryOf) : null;
+  const $folderTypeId = $path.length ? folderTypeIdOf($path) : null;
+  const $suggested    = $path.length && !$folderTypeId ? suggestFolderType($entries, categoryOf) : null;
+
+  const toggleFolderType = id => setFolderType($path, $folderTypeId === id ? null : id);
 
   const where = entry => '/' + (entry.path ?? $path).join('/');
 </script>
@@ -77,13 +79,13 @@
       <Action icon={isBookmarked($path) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isBookmarked($path) ? 'remove bookmark' : 'bookmark'} onclick={() => toggleBookmark($path, $path.at(-1))} />
   </div-x.actions>
   @if ($path.length && $local)
-    <h3>Type</h3>
+    <h3>Foldertype</h3>
     @if ($suggested)
-      <p.hint>Looks like {$suggested.label}. <button.link type='button' onclick={() => setType($path, $suggested.id)}>Make it one</button.link></p.hint>
+      <p.hint>Looks like {BUILTIN[$suggested].label}. <button.link type='button' onclick={() => setFolderType($path, $suggested)}>Make it one</button.link></p.hint>
     <div-x.actions>
-      @for (type of types())
-        <button.action type='button' aria-pressed={String($type?.id === type.id)} onclick={() => setType($path, $type?.id === type.id ? null : type.id)}><svg-icon icon={type.icon} /> {type.label}</button.action>
-      <Action icon='lucide:plus' label='new type' onclick={() => newType($path)} />
+      @for (id of Object.keys($folderTypes))
+        <button.action type='button' aria-pressed={String($folderTypeId === id)} onclick={() => toggleFolderType(id)}><svg-icon icon={$folderTypes[id].icon} /> {$folderTypes[id].label}</button.action>
+      <Action icon='lucide:plus' label='new foldertype' onclick={() => newFolderType($path)} />
     </div-x.actions>
 @else
   <h2>{sourceName(null)}</h2>

@@ -5,7 +5,7 @@
 
   import { $category, $categoryFiles, $hits, $query, $settings, SORTED, goTo, localRoot, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
 
-  import { bookmarks, typeOf } from '../modules/places.rat.js';
+  import { bookmarks, folderTypeOf } from '../modules/places.rat.js';
   import { $connections }      from '../modules/remotes.rat.js';
   import { $index }            from '../modules/scan.rat.js';
 
@@ -74,7 +74,7 @@
           @for (bookmark of $bookmarks)
             <li>
               <button.tile type='button' onclick={() => library(bookmark.path)}>
-                <svg-icon icon={typeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
+                <svg-icon icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
                 <span.text><span.name>{bookmark.name}</span.name><small>/{bookmark.path.join('/')}</small></span.text>
               </button.tile>
             </li>
