@@ -26,11 +26,12 @@ const // ::: schemas
 Bookmark   = { folder: Str, name: Str, path: List(Str) },
 Foldertype = { icon: Str, label: Str };
 
-const // ::: stored
+const // ::: signals (stored)
 $bookmarks      = $Table (Bookmark)        .create(read('files:bookmarks',   [])),   // [{ folder, name, path }]
 $folderTyped    = $Dict  (Str, Str)        .create(read('files:folderTyped', {})),   // 'folder:a/b' -> foldertype id
 $ownFolderTypes = $Dict  (Str, Foldertype) .create(read('files:folderTypes', {}));   // id -> { icon, label }
 
+// ::: effects
 effect(() => write('files:bookmarks',   $bookmarks));
 effect(() => write('files:folderTyped', $folderTyped));
 effect(() => write('files:folderTypes', $ownFolderTypes));
