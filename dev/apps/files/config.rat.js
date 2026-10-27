@@ -36,4 +36,9 @@ export default {
   android : { id: 'dev.pulgasari.files', name: 'Files', plugins: ['filesync'] },
 
   build : { emptyOutDir: true, outDir: '../../../apps/files' },   // rat build -> apps/files
+
+  icons: {
+    copy : 'lucide:copy',
+    move : 'lucide:scissors',
+  },
 };
