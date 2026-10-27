@@ -17,8 +17,8 @@ its files belong to. a foldertype changes the folder's icon for now, a default v
 import { effect } from '@rat/signals';
 import { $Dict, $Table, List, Str } from '@rat/types';
 
-import { read, write } from '../../.shared/storage.js';
-import { $folder }     from './root.rat.js';
+import * as storage from '../../.shared/storage.js';
+import { $folder }  from './root.rat.js';
 
 // ::::::
 
@@ -27,14 +27,14 @@ Bookmark   = { folder: Str, name: Str, path: List(Str) },
 Foldertype = { icon: Str, label: Str };
 
 const // ::: signals (stored)
-$bookmarks      = $Table (Bookmark)        .create(read('files:bookmarks',   [])),   // [{ folder, name, path }]
-$folderTyped    = $Dict  (Str, Str)        .create(read('files:folderTyped', {})),   // 'folder:a/b' -> foldertype id
-$ownFolderTypes = $Dict  (Str, Foldertype) .create(read('files:folderTypes', {}));   // id -> { icon, label }
+$bookmarks      = $Table (Bookmark)        .create :: storage.read('files:bookmarks',   []),   // [{ folder, name, path }]
+$folderTyped    = $Dict  (Str, Str)        .create :: storage.read('files:folderTyped', {}),   // 'folder:a/b' -> foldertype id
+$ownFolderTypes = $Dict  (Str, Foldertype) .create :: storage.read('files:folderTypes', {});   // id -> { icon, label }
 
 // ::: effects
-effect(() => write('files:bookmarks',   $bookmarks));
-effect(() => write('files:folderTyped', $folderTyped));
-effect(() => write('files:folderTypes', $ownFolderTypes));
+effect(() => storage.write('files:bookmarks',   $bookmarks));
+effect(() => storage.write('files:folderTyped', $folderTyped));
+effect(() => storage.write('files:folderTypes', $ownFolderTypes));
 
 const $folderId = String($folder?.id ?? '');
 
@@ -81,7 +81,8 @@ export function suggestFolderType (entries, categoryOf) {
 // :::::: BOOKMARKS
 
 export const
-bookmarks    = ()     => $bookmarks.where ({ folder: $folderId }),
-isBookmarked = (path) => $bookmarks.has   ({ folder: $folderId, path });
+bookmarks      = ()           => $bookmarks.where  ({ folder: $folderId }),
+isBookmarked   = (path)       => $bookmarks.has    ({ folder: $folderId, path }),
+toggleBookmark = (path, name) => $bookmarks.toggle ({ folder: $folderId, name, path }, { folder: $folderId, path });
 
-export const toggleBookmark = (path, name) => $bookmarks.toggle({ folder: $folderId, name, path }, { folder: $folderId, path });
+
