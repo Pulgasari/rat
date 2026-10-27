@@ -52,6 +52,14 @@ const DEFAULTS = {
   viewmode       : 'list',     // list, grid
 };
 
+/*
+const
+fromEntries = Object.fromEntries,
+  toEntries = Object.entries;
+
+export let $settings = fromEntries <| toEntries(DEFAULTS).map :: ([name, fallback]) => [name, read(`files:${name}`, fallback)];
+*/
+
 export let $settings = Object.fromEntries(Object.entries(DEFAULTS).map(([name, fallback]) => [name, read(`files:${name}`, fallback)]));
 
 effect(() => { for (const [name, value] of Object.entries($settings)) write(`files:${name}`, value); });
