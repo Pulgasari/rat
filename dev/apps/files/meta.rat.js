@@ -1,19 +1,32 @@
 // only parked here for noe
 
+const ICON = {
+  copy : 'lucide:copy',
+  move : 'lucide:scissors',
+
+  archive  : 'lucide:file-archive',
+  audio    : 'lucide:music',
+  document : 'lucide:file-text',
+  image    : 'lucide:image',
+  video    : 'lucide:film',
+  file     : 'lucide:file',
+};
+
+
 export const FILETYPES = [
-  { icon: 'lucide:image',        id: 'images',    label: 'Images'    },
-  { icon: 'lucide:music',        id: 'audio',     label: 'Audio'     },
-  { icon: 'lucide:film',         id: 'video',     label: 'Videos'    },
-  { icon: 'lucide:file-text',    id: 'documents', label: 'Documents' },
-  { icon: 'lucide:file-archive', id: 'archives',  label: 'Archives'  },
-  { icon: 'lucide:file',         id: 'other',     label: 'Other'     },
+  { icon: ICON.image,    id: 'images',    label: 'Images'    },
+  { icon: ICON.audio,    id: 'audio',     label: 'Audio'     },
+  { icon: ICON.video,    id: 'video',     label: 'Videos'    },
+  { icon: ICON.document, id: 'documents', label: 'Documents' },
+  { icon: ICON.archive,  id: 'archives',  label: 'Archives'  },
+  { icon: ICON.file,     id: 'other',     label: 'Other'     },
 ];
 
 export const FOLDERTYPES = {
-  audio     : { icon: 'lucide:music',     label: 'Audio'     },
-  documents : { icon: 'lucide:file-text', label: 'Documents' },
-  images    : { icon: 'lucide:image',     label: 'Images'    },
-  video     : { icon: 'lucide:film',      label: 'Videos'    },
+  audio     : { icon: ICON.audio,    label: 'Audio'     },
+  documents : { icon: ICON.document, label: 'Documents' },
+  images    : { icon: ICON.image',   label: 'Images'    },
+  video     : { icon: ICON.video,    label: 'Videos'    },
 };
 
 const EXT = {};
