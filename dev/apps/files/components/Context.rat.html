@@ -4,25 +4,22 @@
   import fmt from '../../.shared/fmt.js';
 
   import {
-    deleteEntry, download, entries, file, folderFacts, folderName, localRoot, newFolder, newType, open, path, pick, places,
-    renameEntry, rescan, rootHandle, scan, selected, sendEntry, sheet, showInFolder, size, source, sourceName, sourceOf, sync,
-  } from '../state.js';
+    $entries, $facts, $file, $path, $selected, $sheet, $size, $source,
+    deleteEntry, download, folderName, localRoot, newFolder, newType, open, pick, renameEntry, rescan, rootHandle,
+    sendEntry, showInFolder, sourceName, sourceOf,
+  } from '../state.rat.js';
 
-  import { categoryOf } from '../modules/scan.js';
+  import { isBookmarked, setType, suggest, toggleBookmark, typeOf, types } from '../modules/places.rat.js';
+  import { $scanning, categoryOf }                                         from '../modules/scan.rat.js';
+  import { available }                                                   from '../modules/sync.rat.js';
 
-  const $sheet    = sheet.value;
-  const $selected = selected.value;
-  const $file     = file.value;
-  const $route    = RAT.app.router.$path.value;
-  const $path     = path.value;
-  const $facts    = folderFacts.value;
-  const $local    = !source.value;
+  const { $path: $route } = RAT.app.router;
 
-  const where      = entry => '/' + (entry.path ?? $path).join('/');
-  const isMarked   = at => places.isBookmarked(at);
-  const bookmark   = (at, name) => places.toggleBookmark(at, name);
-  const $type      = $path.length ? places.typeOf($path) : null;
-  const $suggested = $path.length && !$type ? places.suggest(entries.value, categoryOf) : null;
+  const $local     = !$source;
+  const $type      = $path.length ? typeOf($path) : null;
+  const $suggested = $path.length && !$type ? suggest($entries, categoryOf) : null;
+
+  const where = entry => '/' + (entry.path ?? $path).join('/');
 </script>
 
 @if ($sheet === 'tasks')
@@ -44,9 +41,9 @@
     <Action icon='lucide:arrow-up-right' label='open' onclick={() => open($selected, $selected.path ?? $path)} />
     @if ($selected.path): <Action icon='lucide:folder' label='show in folder' onclick={() => showInFolder($selected)} />
     @if ($selected.kind === 'file'): <Action icon='lucide:download' label='download' onclick={() => download($selected)} />
-    @if ($selected.kind === 'file' && !sourceOf($selected) && sync.available()): <Action icon='lucide:send' label='send' onclick={() => sendEntry($selected)} />
+    @if ($selected.kind === 'file' && !sourceOf($selected) && available()): <Action icon='lucide:send' label='send' onclick={() => sendEntry($selected)} />
     @if ($selected.kind === 'directory' && !sourceOf($selected))
-      <Action icon={isMarked([...$path, $selected.name]) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isMarked([...$path, $selected.name]) ? 'remove bookmark' : 'bookmark'} onclick={() => bookmark([...$path, $selected.name], $selected.name)} />
+      <Action icon={isBookmarked([...$path, $selected.name]) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isBookmarked([...$path, $selected.name]) ? 'remove bookmark' : 'bookmark'} onclick={() => toggleBookmark([...$path, $selected.name], $selected.name)} />
     <Action icon='lucide:copy' label='copy' onclick={() => pick('copy', $selected)} />
     <Action icon='lucide:scissors' label='move' onclick={() => pick('move', $selected)} />
     <Action icon='lucide:pencil' label='rename' onclick={() => renameEntry($selected)} />
@@ -58,7 +55,7 @@
     ['name',       $file.name],
     ['type',       $file.type || 'unknown'],
     ['size',       fmt.bytes($file.size)],
-    ['dimensions', size.value ? size.value.width + ' × ' + size.value.height : null],
+    ['dimensions', $size ? $size.width + ' × ' + $size.height : null],
     ['modified',   fmt.date($file.lastModified)],
     ['in',         '/' + $file.path.join('/')],
   ]} />
@@ -77,20 +74,20 @@
   <div-x.actions>
     <Action icon='lucide:folder-plus' label='new folder' onclick={newFolder} />
     @if ($path.length && $local)
-      <Action icon={isMarked($path) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isMarked($path) ? 'remove bookmark' : 'bookmark'} onclick={() => bookmark($path, $path.at(-1))} />
+      <Action icon={isBookmarked($path) ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={isBookmarked($path) ? 'remove bookmark' : 'bookmark'} onclick={() => toggleBookmark($path, $path.at(-1))} />
   </div-x.actions>
   @if ($path.length && $local)
     <h3>Type</h3>
     @if ($suggested)
-      <p.hint>Looks like {$suggested.label}. <button.link type='button' onclick={() => places.setType($path, $suggested.id)}>Make it one</button.link></p.hint>
+      <p.hint>Looks like {$suggested.label}. <button.link type='button' onclick={() => setType($path, $suggested.id)}>Make it one</button.link></p.hint>
     <div-x.actions>
-      @for (type of places.types())
-        <button.action type='button' aria-pressed={String($type?.id === type.id)} onclick={() => places.setType($path, $type?.id === type.id ? null : type.id)}><svg-icon icon={type.icon} /> {type.label}</button.action>
+      @for (type of types())
+        <button.action type='button' aria-pressed={String($type?.id === type.id)} onclick={() => setType($path, $type?.id === type.id ? null : type.id)}><svg-icon icon={type.icon} /> {type.label}</button.action>
       <Action icon='lucide:plus' label='new type' onclick={() => newType($path)} />
     </div-x.actions>
 @else
   <h2>{sourceName(null)}</h2>
   <Status />
   <div-x.actions>
-    <Action icon='lucide:refresh-cw' label='read again' disabled={!localRoot() || Boolean(scan.scanning.value)} onclick={rescan} />
+    <Action icon='lucide:refresh-cw' label='read again' disabled={!localRoot() || Boolean($scanning)} onclick={rescan} />
   </div-x.actions>

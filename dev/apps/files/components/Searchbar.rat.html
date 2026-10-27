@@ -1,10 +1,11 @@
 <script>
   // <Searchbar placeholder='…' value={text} onsearch={query => …} />: the search field and the tasks beside it
 
-  import { openTasks, tasks } from '../state.js';
+  import { openTasks } from '../state.rat.js';
 
-  const $busy  = tasks.busy.value;
-  const $count = tasks.queue.value.length;
+  import { $busy, $queue } from '../modules/tasks.rat.js';
+
+  const $count = $queue.length;
 </script>
 
 <div.searchbar>

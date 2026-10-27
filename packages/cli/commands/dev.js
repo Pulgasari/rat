@@ -68,7 +68,7 @@ export async function run ([page = '.'], { port, root }) {
     if (!file) { response.writeHead(404).end('not found'); return; }
 
     // a .rat file as a module, compiled here: the page loads no compiler (as middleware.js). one with a
-    // <script comptime> is compiled in the page: its imports go through the page's import map
+    // <script comptime> or a <style lang="gestalt"> is compiled in the page: through the page's import map
     if (RAT.test(file) && request.headers['sec-fetch-dest'] !== 'document' && !COMPTIME.test(await readFile(file, 'utf8'))) {
       try {
         const { code, unresolved } = await compileFile(file, { base: `http://${request.headers.host}${url.pathname}`, point: false });

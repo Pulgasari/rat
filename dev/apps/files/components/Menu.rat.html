@@ -13,7 +13,7 @@
     { icon: 'lucide:file-pen', label: 'Text editor'  },
   ];
 
-  const $route = RAT.app.router.$path.value;
+  const { $path: $route } = RAT.app.router;
 
   function go (route) {
     RAT.app.router.go(route);

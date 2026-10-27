@@ -7,6 +7,7 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   export default { plugins: [rat.vite()] };   // vite.config.js
 
   .rat, .rat.html, .rat.js   compiled to es modules (compileAsync: style languages, style inline)
+  <style lang="gestalt">     @gestalt/syntax, found through the import maps like any import
   <style> of a component     through vite's css pipeline (vite only): the project's postcss config
                              (postcss.config.js, css.postcss) runs on it, @gestalt/postcss among others
   <script comptime>          run in a vite server of its own (vite only), its imports resolved as in the
@@ -35,7 +36,7 @@ config: rat build --target android puts the web build into the capacitor project
 import { existsSync }                  from 'node:fs';
 import { readFile }                    from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath }    from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse }            from 'acorn';
 import { createUnplugin }   from 'unplugin';
 import { compileAsync }     from '@rat/compiler';
@@ -143,6 +144,19 @@ function resolveMap (entries, specifier) {
 // <script comptime> in a vite server of its own, as a module beside the file: relative imports resolve from
 // there, bare ones through the import maps. open until the values are there (a lazy import inside needs it).
 // { dependencies, values }
+// <style lang="gestalt">: the compile of @gestalt/syntax, where the import maps say it is
+const GESTALT = /<style\b[^>]*\blang=["']?gestalt\b/;
+
+let gestalt = null;
+
+async function gestaltOf (resolveBare) {
+  if (gestalt) return gestalt;
+  const target = resolveBare('@gestalt/syntax');
+  if (!target) throw new Error('[rat] <style lang="gestalt">: no @gestalt/syntax in the import maps');
+  gestalt = (await import(/^https?:/.test(target) ? target : pathToFileURL(target).href)).compile;
+  return gestalt;
+}
+
 // the css of a component through vite's css pipeline, as if it were a .css file of the project
 async function preprocessCSS (code, filename, config) {
   const vite = await import('vite');
@@ -227,7 +241,13 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, outDir, target = proce
 
       const css = resolved ? async text => (await preprocessCSS(text, `${file}.css`, resolved)).code : undefined;
 
-      const { code, unresolved = [] } = await compileAsync(source, { ...options, comptime, css, filename: file, read });
+      let styles = options.styles;
+      if (GESTALT.test(source)) {
+        const map = [...own, ...await (entries ??= readMap(importmap))];
+        styles = { ...styles, gestalt: await gestaltOf(specifier => resolveMap(map, specifier)) };
+      }
+
+      const { code, unresolved = [] } = await compileAsync(source, { ...options, comptime, css, filename: file, read, styles });
       return { code: unresolved.length && folders.length ? `${code}\n${importsOf(unresolved, file, folders)}\n` : code };
     },
 

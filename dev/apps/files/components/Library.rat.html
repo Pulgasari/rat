@@ -1,17 +1,17 @@
 <script>
   // <Library />: the folder in tabs: crumbs, filter, list or grid, a new folder
 
-  import { filter, folderName, goTo, loading, newFolder, path, rootHandle, settings, visible } from '../state.js';
+  import { $filter, $loading, $path, $settings, $visible, folderName, goTo, newFolder, rootHandle, setting } from '../state.rat.js';
 
   const $ready     = Boolean(rootHandle());
-  const $path      = path.value;
-  const $viewmode  = settings.viewmode.value;
-  const $tabsTop   = settings.tabbar.value === 'top';
-  const $searchTop = settings.searchbar.value === 'top';
+  const $viewmode  = $settings.viewmode;
+  const $tabsTop   = $settings.tabbar === 'top';
+  const $searchTop = $settings.searchbar === 'top';
 
   const up     = () => $path.length ? goTo($path.slice(0, -1)) : RAT.app.router.go('/');
-  const toggle = () => settings.viewmode.value = $viewmode === 'grid' ? 'list' : 'grid';
+  const toggle = () => setting('viewmode', $viewmode === 'grid' ? 'list' : 'grid');
   const crumb  = event => goTo(event.detail.path.split('/').filter(Boolean));
+  const search = text => $filter = text;
 </script>
 
 @if (!$ready)
@@ -23,25 +23,25 @@
   </Bar>
 
   @if ($tabsTop): <Tabs />
-  @if ($searchTop): <Searchbar placeholder='Filter this folder' value={filter.value} onsearch={text => filter.value = text} />
+  @if ($searchTop): <Searchbar placeholder='Filter this folder' value={$filter} onsearch={search} />
 
   <nav-crumbs root={folderName()} path={'/' + $path.join('/')} on:nav-crumbs={crumb} />
 
   <div.pane>
     <div.listing>
-      @if (loading.value)
+      @if ($loading)
         <svg-icon icon='lucide:loader' />
-      @else if (visible.value.length)
+      @else if ($visible.length)
         <data-index viewmode={$viewmode} item-size='128px' item-size-min='80px' item-size-max='320px'>
-          @for (entry of visible.value): <Entry entry={entry} />
+          @for (entry of $visible): <Entry entry={entry} />
         </data-index>
       @else
-        <p.empty>{filter.value ? 'nothing matches the filter' : 'this folder is empty'}</p.empty>
+        <p.empty>{$filter ? 'nothing matches the filter' : 'this folder is empty'}</p.empty>
     </div.listing>
     <button.fab type='button' aria-label='new folder' title='new folder' onclick={newFolder}><svg-icon icon='lucide:folder-plus' /></button.fab>
   </div.pane>
 
   <PasteBar />
 
-  @if (!$searchTop): <Searchbar placeholder='Filter this folder' value={filter.value} onsearch={text => filter.value = text} />
+  @if (!$searchTop): <Searchbar placeholder='Filter this folder' value={$filter} onsearch={search} />
   @if (!$tabsTop): <Tabs />
