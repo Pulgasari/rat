@@ -1,65 +1,45 @@
 // files :: modules/root.rat.js
 
 /*
-the one folder the user grants, the root of the app. its handle is kept in the database (table root),
-a returning visit asks for permission again instead of picking anew. nothing on disk is copied.
-picking and keeping a handle are the shell's (@rat/app's folders driver): chromium's picker in the
-browser, the system's on android and the desktop, with real paths there.
+the one folder the user grants, the root of the app: the folders mod of @rat/app (RAT.app.folders) with
+one source. it keeps the handle, asks for permission again on a returning visit and picks through the
+shell (chromium's picker in the browser, the system's on android and the desktop). it reads nothing
+itself (scan: false), the app walks the folder (scan.rat.js).
 
-  $folder   { addedAt, handle, name } | null
+  $folder   { id, name } | null
   $perm     'granted' | 'prompt' | 'denied' | null
+  $handle   the folder's directory handle once it is granted, else null
   $ready    true once load() knows the folder
 */
 
-import { driverOf } from '@rat/app/drivers.js';
+const { folders } = RAT.app;
+const { $perms, $ready, $sources } = folders;
 
-const KEY = 'root';
+export const
+$folder = $sources.at(-1) ?? null,
+$perm   = $folder ? $perms[$folder.id] ?? null : null,
+$handle = $perm === 'granted' ? folders.handleOf($folder.id) : null;
 
-const { database } = RAT.app;
-const folders      = await driverOf('folders');
+export { $ready };
 
-export let $folder = null;
-export let $perm   = null;
-export let $ready  = false;
+export const supported = RAT.platform !== 'web' || typeof globalThis.showDirectoryPicker === 'function';
 
-// without a permission api (a native root) there is nothing to ask
-async function ask (handle, method, mode) {
-  try   { return handle[method] ? await handle[method]({ mode }) : 'granted'; }
-  catch { return 'denied'; }
-}
+export const load = () => folders.load();
 
-export const supported = () => RAT.platform !== 'web' || typeof globalThis.showDirectoryPicker === 'function';
-
-export async function load () {
-  const row = await database.root.get(KEY);
-  if (row) {
-    const handle = folders.revive(row.handle);
-    $folder = { addedAt: row.addedAt, handle, name: row.name };
-    $perm   = await ask(handle, 'queryPermission', 'read');
-  }
-  $ready = true;
-}
-
-// the picker, inside a click. null when cancelled
+// the picker, inside a click: the new folder replaces the old one. null when cancelled
 export async function grant () {
-  const handle = await folders.pick({ id: 'files' });
-  if (!handle) return null;
-  const row = { addedAt: Date.now(), handle: folders.keep(handle), name: handle.name };
-  await database.root.set(KEY, row);
-  $folder = { addedAt: row.addedAt, handle, name: row.name };
-  $perm   = 'granted';
-  return $folder;
+  const before = $sources.map(source => source.id);
+  const row    = await folders.add();
+  if (row) for (const id of before) await folders.remove(id);
+  return row;
 }
 
 export async function reconnect () {
   if (!$folder) return { granted: false };
-  $perm = await ask($folder.handle, 'requestPermission', 'read');
-  return { granted: $perm === 'granted' };
+  return folders.reconnect($folder.id);
 }
 
 // the handle only, never the files on disk
 export async function forget () {
-  await database.root.delete(KEY);
-  $folder = null;
-  $perm   = null;
+  if ($folder) await folders.remove($folder.id);
 }

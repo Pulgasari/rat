@@ -1,10 +1,10 @@
 <script>
   // <Facts rows={[['name', value], …]} />: the rows with a value, as a list of terms
-  const rows = (props.rows ?? []).filter(([, value]) => value != null && value !== '');
+  const $rows = (props.rows ?? []).filter(([, value]) => value != null && value !== '');
 </script>
 
 <dl.facts>
-  @for (row of rows)
+  @for (row of $rows)
     <dt>{row[0]}</dt>
     <dd>{row[1]}</dd>
 </dl.facts>

@@ -13,28 +13,38 @@ an app password is the better choice where the server has one.
   rootOf(id)    the root handle, one per connection
 */
 
+// :::::: IMPORT
+
+import { effect } from '@rat/signals';
+import { $Table, Str } from '@rat/types';
+
 import { test }    from '../../.shared/webdav/client.js';
 import { davRoot } from '../../.shared/webdav/handles.js';
 
+// ::::::
+
 const FILE  = 'remotes.json';
-const roots = new Map;
+const roots = new Map;   // id -> its root handle
 
 const { files } = RAT.app;
 
-export let $connections = [];
+const Connection = { id: Str, name: Str, password: Str, url: Str, username: Str };
 
-export async function load () { $connections = await files.read(FILE, 'json').catch(() => []); }
+const $rows = $Table(Connection).create(await files.read(FILE, 'json').catch(() => []));
 
-const persist = () => files.write(FILE, JSON.stringify($connections));
+effect(() => files.write(FILE, JSON.stringify($rows)));
 
-export const byId = id => $connections.find(connection => connection.id === id) ?? null;
+// what the views read: a signal, as every $name another module imports
+export const $connections = $rows.toArray();
+
+export const byId = id => $rows.one({ id }) ?? null;
 
 export async function add ({ name, password = '', url, username = '' }) {
   const trimmed = String(url ?? '').trim();
   if (!/^https?:\/\//i.test(trimmed)) throw new Error('The url has to start with http:// or https://');
 
   const connection = {
-    id       : `dav-${Date.now().toString(36)}`,
+    id       : crypto.randomUUID(),
     name     : String(name ?? '').trim() || new URL(trimmed).host,
     password,
     url      : trimmed,
@@ -42,15 +52,13 @@ export async function add ({ name, password = '', url, username = '' }) {
   };
 
   await test(connection);
-  $connections = [...$connections, connection];
-  await persist();
+  $rows.push(connection);
   return connection;
 }
 
-export async function remove (id) {
-  $connections = $connections.filter(connection => connection.id !== id);
+export function remove (id) {
+  $rows.drop({ id });
   roots.delete(id);
-  await persist();
 }
 
 export function rootOf (id) {

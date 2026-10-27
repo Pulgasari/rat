@@ -21,6 +21,12 @@ an array. the query vocabulary of query.js as methods:
 as with the array methods, the short name changes the list, to… gives a copy:
 sort / toSorted, sortBy / toSortedBy, reverse / toReversed, splice / toSpliced,
 set / with. on a $List the first ones are writes.
+
+drop and toggle change the list by a test, like where and without read it:
+
+  tags.drop('old')                              // every item the test lets through, gone: how many
+  bookmarks.toggle({ folder, name, path })      // gone where there was one, else added: there now?
+  bookmarks.toggle(bookmark, { folder, path })  // a test of its own, the value is what is added
 */
 
 import { reactive, register } from '@rat/signals';
@@ -84,6 +90,19 @@ class ListType {
   set     (index, value) { this.#items[index < 0 ? this.#items.length + index : index] = value; return this; }
   remove  (value)        { const index = this.#items.indexOf(value); if (index > -1) this.#items.splice(index, 1); return index > -1; }
   replace (items)        { this.#items = [...items]; return this; }
+
+  drop (test) {
+    const kept    = without(test)(this.#items);
+    const dropped = this.#items.length - kept.length;
+    this.#items = kept;
+    return dropped;
+  }
+
+  toggle (value, test = value) {
+    if (this.drop(test)) return false;
+    this.push(value);
+    return true;
+  }
   clear   ()             { this.#items.length = 0; return this; }
 }
 
@@ -128,6 +147,7 @@ const LIST_READS = [
 
 const LIST_WRITES = {
   clear   : list => list.length > 0,
+  drop    : (list, test) => list.has(test),
   pop     : list => list.length > 0,
   push    : (list, ...items) => items.length > 0,
   remove  : (list, value) => list.includes(value),
@@ -138,6 +158,7 @@ const LIST_WRITES = {
   sort    : list => list.length > 1,
   sortBy  : list => list.length > 1,
   splice  : true,
+  toggle  : true,
   unshift : (list, ...items) => items.length > 0,
 };
 

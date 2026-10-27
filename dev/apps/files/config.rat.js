@@ -1,5 +1,7 @@
 // files :: config.rat.js
 
+import { FOLDERS } from '@rat/app/modules/folders.js';
+
 import config from './../zugriff.config.js';
 
 export default {
@@ -26,9 +28,10 @@ export default {
     '../.shared/components/',
   ],
 
-  database   : { schema: { root: null } },   // the granted folder's handle, key 'root'
-  dialogs    : true,                         // prompt and confirm: new folder, rename, delete
-  files      : true,                         // the index of the folder, kept between visits
+  database   : { schema: { folders: FOLDERS } },   // the granted folder's handle (modules/root.rat.js)
+  dialogs    : true,                               // prompt and confirm: new folder, rename, delete
+  files      : true,                               // the index of the folder, kept between visits
+  folders    : { id: 'files', scan: false },       // one folder, walked by the app itself (modules/scan.rat.js)
   offline    : true,
   thumbnails : { maxBytes: 128 * 1024 * 1024, width: 256 },
 

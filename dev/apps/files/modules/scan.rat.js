@@ -53,7 +53,7 @@ const { files } = RAT.app;
 const RECENT = 24;
 const SKIP   = name => name.startsWith('.') || name === 'node_modules';
 
-const pathOf = folder => `index/${folder.addedAt ?? folder.name}.json`;
+const pathOf = folder => `index/${folder.id}.json`;
 
 let running = null;
 

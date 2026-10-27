@@ -3,17 +3,18 @@
 
   import fmt from '../../.shared/fmt.js';
 
-  import { $category, $categoryFiles, $hits, $query, $settings, SORTED, goTo, localRoot, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
+  import { $category, $categoryFiles, $hits, $query, $settings, SORTED, goTo, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
 
-  import { bookmarks, typeOf } from '../modules/places.rat.js';
+  import { bookmarks, folderTypeOf } from '../modules/places.rat.js';
   import { $connections }      from '../modules/remotes.rat.js';
+  import { $handle }           from '../modules/root.rat.js';
   import { $index }            from '../modules/scan.rat.js';
 
   const library    = at => { goTo(at, null); RAT.app.router.go('/library'); };
   const folderName = () => sourceName(null);
   const search     = text => $query = text;
 
-  const $ready     = Boolean(localRoot());
+  const $ready     = Boolean($handle);
   const $top       = $settings.searchbar === 'top';
   const $searching = Boolean($query.trim());
   const $bookmarks = bookmarks();
@@ -74,7 +75,7 @@
           @for (bookmark of $bookmarks)
             <li>
               <button.tile type='button' onclick={() => library(bookmark.path)}>
-                <svg-icon icon={typeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
+                <svg-icon icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
                 <span.text><span.name>{bookmark.name}</span.name><small>/{bookmark.path.join('/')}</small></span.text>
               </button.tile>
             </li>

@@ -18,6 +18,7 @@ reads the signals.
   await folders.scan(id);
   folders.nodeAt(id, path);          // a file node of a tree, or null
   await folders.read(node);          // its text, fresh off disk
+  folders.handleOf(id);              // the folder's directory handle, for an app that reads it itself
 
   folders.sources    signal [{ id, name }], in the order they were added
   folders.perms      signal { id: 'granted' | 'prompt' | 'denied' }
@@ -26,6 +27,8 @@ reads the signals.
   folders.ready      signal: true once load() knows the folders
 
 accept: extensions ('md, markdown', ['md']), a function of the name, or nothing for every file.
+scan: false keeps the trees empty, load, add, reconnect and repick read nothing: an app that walks the
+folder itself (files) does not read it twice. scan(id) still works when called.
 
 the picker and the way a folder is kept come from the shell's driver (drivers/folders/): chromium's
 picker in the browser, the system's on android, ios and the desktop, with real paths there.
@@ -59,12 +62,19 @@ function patch (target, key, value) {
   target.value = next;
 }
 
-function createFolders ({ accept, driver = web, id = 'folders', table }) {
-  const test  = acceptOf(accept);
-  const files = new Map;   // id -> Files
+function createFolders ({ accept, driver = web, id = 'folders', scan = true, table }) {
+  const test    = acceptOf(accept);
+  const files   = new Map;   // id -> Files
+  const handles = new Map;   // id -> its directory handle
 
   const rootOf = async sourceId => (await files.get(sourceId).root());
   const pick   = async () => { const handle = await driver.pick({ id }); return handle ? new Files({ root: handle }) : null; };
+  const auto   = sourceId => scan ? folders.scan(sourceId) : Promise.resolve();
+
+  const open = (sourceId, handle) => {
+    files.set(sourceId, new Files({ root: handle }));
+    handles.set(sourceId, handle);
+  };
 
   const folders = {
     perms    : signal({}),
@@ -75,11 +85,11 @@ function createFolders ({ accept, driver = web, id = 'folders', table }) {
 
     async load () {
       const rows = (await table.values()).sort((a, b) => a.added - b.added);
-      for (const row of rows) files.set(row.id, new Files({ root: driver.revive(row.handle) }));
+      for (const row of rows) open(row.id, driver.revive(row.handle));
       folders.sources.value = rows.map(({ id, name }) => ({ id, name }));
       for (const row of rows) patch(folders.perms, row.id, await (await rootOf(row.id)).permission());
       folders.ready.value = true;
-      for (const row of rows) if (folders.perms.value[row.id] === 'granted') folders.scan(row.id).catch(() => {});
+      for (const row of rows) if (folders.perms.value[row.id] === 'granted') auto(row.id).catch(() => {});
     },
 
     async add () {
@@ -90,17 +100,17 @@ function createFolders ({ accept, driver = web, id = 'folders', table }) {
         if (await (await rootOf(sourceId)).handle.isSameEntry?.(root.handle)) throw new Error('That folder is open already.');
       }
       const row = await table.add({ added: Date.now(), handle: driver.keep(root.handle), name: root.name });
-      files.set(row.id, picked);
+      open(row.id, root.handle);
       folders.sources.value = [...folders.sources.value, { id: row.id, name: row.name }];
       patch(folders.perms, row.id, 'granted');
-      await folders.scan(row.id);
+      await auto(row.id);
       return row;
     },
 
     async reconnect (sourceId) {
       const state = await (await rootOf(sourceId)).request();
       patch(folders.perms, sourceId, state);
-      if (state === 'granted') await folders.scan(sourceId);
+      if (state === 'granted') await auto(sourceId);
       return { granted: state === 'granted', state };
     },
 
@@ -109,16 +119,17 @@ function createFolders ({ accept, driver = web, id = 'folders', table }) {
       if (!picked) return false;
       const root = await picked.root();
       await table.update(sourceId, { handle: driver.keep(root.handle), name: root.name });
-      files.set(sourceId, picked);
+      open(sourceId, root.handle);
       folders.sources.value = folders.sources.value.map(source => source.id === sourceId ? { id: sourceId, name: root.name } : source);
       patch(folders.perms, sourceId, 'granted');
-      await folders.scan(sourceId);
+      await auto(sourceId);
       return true;
     },
 
     async remove (sourceId) {
       await table.delete(sourceId);
       files.delete(sourceId);
+      handles.delete(sourceId);
       folders.sources.value = folders.sources.value.filter(source => source.id !== sourceId);
       for (const target of [folders.perms, folders.scanning, folders.trees]) patch(target, sourceId, undefined);
     },
@@ -141,6 +152,8 @@ function createFolders ({ accept, driver = web, id = 'folders', table }) {
       return find(folders.trees.value[sourceId]);
     },
 
+    handleOf : sourceId => handles.get(sourceId) ?? null,
+
     read : node => node.entry.read('text'),
   };
 
@@ -148,9 +161,9 @@ function createFolders ({ accept, driver = web, id = 'folders', table }) {
 }
 
 // the mod: RAT.app.folders, over the table of the database (options.table, 'folders')
-async function folders ({ accept, driver, id, table = 'folders' }, { app, config }) {
+async function folders ({ accept, driver, id, scan, table = 'folders' }, { app, config }) {
   if (!app.database?.[table]) throw new Error(`[rat] mod folders: the database needs a table "${table}" (schema: { ${table}: FOLDERS }), before folders`);
-  return createFolders({ accept, driver: await driverOf('folders', driver), id: id ?? config.id ?? 'folders', table: app.database[table] });
+  return createFolders({ accept, driver: await driverOf('folders', driver), id: id ?? config.id ?? 'folders', scan, table: app.database[table] });
 }
 
 // :::::: EXPORT

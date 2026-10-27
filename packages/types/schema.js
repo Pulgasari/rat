@@ -19,9 +19,9 @@ class Schema {
   // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
   // parts: the schemas a structure is made of (record fields, tuple items, union cases).
   // transform: how a value is made into this schema's form, for from() (a case of Str).
-  // make: (schema, value) -> a value of the data type, for create() (typed sets it)
-  constructor ({ checks = [], describe = {}, initial, kind, make = null, nullable = false, parts = null, run, transform = null }) {
-    Object.assign(this, { checks, describe: { kind, ...describe }, initial, kind, make, nullable, parts, run, transform });
+  // factory: (schema, value) -> a value of the data type, for create() (typed sets it). not make: Id.make() makes a key
+  constructor ({ checks = [], describe = {}, factory = null, initial, kind, nullable = false, parts = null, run, transform = null }) {
+    Object.assign(this, { checks, describe: { kind, ...describe }, factory, initial, kind, nullable, parts, run, transform });
     Object.freeze(this);
   }
 
@@ -46,8 +46,8 @@ class Schema {
 
   // a value of the data type this schema was made by: $Dict(Key, Value).create({ … }) is a $Dict with it
   create (value) {
-    if (!this.make) throw new TypeError(`[rat] ${this.kind} is no data type, there is nothing to create: its values are plain js`);
-    return this.make(this, value);
+    if (!this.factory) throw new TypeError(`[rat] ${this.kind} is no data type, there is nothing to create: its values are plain js`);
+    return this.factory(this, value);
   }
 
   // a value in this schema's form: KebabCase.from('togglePlay') -> 'toggle-play'
@@ -108,7 +108,7 @@ const isSchema = value => value instanceof Schema;
 const byConstructor = (Type, schema, value) => new Type(schema, value);
 
 function typed (Class, toSchema, make = byConstructor) {
-  const Type = new Proxy(Class, { apply: (target, self, args) => toSchema(...args).derive({ make: (schema, value) => make(Type, schema, value) }) });
+  const Type = new Proxy(Class, { apply: (target, self, args) => toSchema(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
   return Type;
 }
 

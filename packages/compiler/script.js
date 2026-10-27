@@ -698,8 +698,12 @@ function reads (root, names, skip = new Set) {
   return edits;
 }
 
-// `new $Map`, `new $List(items)`: an instance of a reactive variant
-const isVariant = init => init?.type === 'NewExpression' && init.callee.type === 'Identifier' && /^\$[A-Z]/.test(init.callee.name);
+// `new $Map`, `new $List(items)`, `$Dict(Str, Str).create(…)` (a schema's create() makes the variant it was
+// called on): an instance of a reactive variant
+const isVariantName = node => node?.type === 'Identifier' && /^\$[A-Z]/.test(node.name);
+const isVariant     = init => init?.type === 'NewExpression' ? isVariantName(init.callee)
+  : init?.type === 'CallExpression' && init.callee.type === 'MemberExpression' && init.callee.property.name === 'create'
+    && init.callee.object.type === 'CallExpression' && isVariantName(init.callee.object.callee);
 
 // top level `let $x = …` / `const $x = …`, as { edits, names, variants }. a let goes through $(),
 // which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded).
@@ -779,6 +783,13 @@ server): [{ name, kind, start, end, statement }], kind 'signal' (let, var),
 the sugar pass, so it reads code with |>, # and .. and code that does not parse
 yet. offsets count from offset.
 */
+// $Dict(…).create at index: the tokens of a schema's create()
+function created (list, index) {
+  if (!/^\$[A-Z]/.test(list[index]?.value ?? '') || list[index + 1]?.type !== tt.parenL) return false;
+  const close = closing(list, index + 1);
+  return list[close + 1]?.type === tt.dot && list[close + 2]?.value === 'create';
+}
+
 function declared (code, offset = 0) {
   let list;
   try { list = tokens(code.replace(/#(?![\w$\\])/g, '_')); } catch { return []; }
@@ -816,7 +827,7 @@ function declared (code, offset = 0) {
           continue;
         }
         if (item.type === tt.name && item.value[0] === '$' && item.value.length > 1) {
-          const variant = list[next + 1]?.type === tt.eq && list[next + 2]?.type === tt._new && /^\$[A-Z]/.test(list[next + 3]?.value ?? '');
+          const variant = list[next + 1]?.type === tt.eq && (list[next + 2]?.type === tt._new ? /^\$[A-Z]/.test(list[next + 3]?.value ?? '') : created(list, next + 2));
           out.push({ end: item.end + offset, kind: variant ? 'variant' : kind, name: item.value, start: item.start + offset, statement: token.start + offset });
         }
         expectName = false;

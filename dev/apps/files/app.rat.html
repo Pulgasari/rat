@@ -1,15 +1,14 @@
 <script>
   import { $sheet } from './state.rat.js';
 
-  import { load as loadRemotes } from './modules/remotes.rat.js';
-  import { load as loadRoot }    from './modules/root.rat.js';
-  import { start, stop }         from './modules/sync.rat.js';
+  import { load }        from './modules/root.rat.js';
+  import { start, stop } from './modules/sync.rat.js';
 
   import { hint }  from '../.shared/install.js';
   import { toast } from '../.shared/toast.js';
 
   // the splash stays until the folder is known
-  RAT.app.hold <| Promise.all([loadRoot(), loadRemotes()]).catch <| toast.error;
+  RAT.app.hold <| load().catch <| toast.error;
   hint('Files');
 
   // discovery runs while the send view is on screen, it costs battery

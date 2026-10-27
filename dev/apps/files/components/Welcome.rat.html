@@ -6,7 +6,7 @@
   import { $folder, $ready, supported } from '../modules/root.rat.js';
 </script>
 
-@if (!supported())
+@if (!supported)
   <div-y.hero>
     <svg-icon icon='lucide:triangle-alert' />
     <h2>Can't open folders here</h2>

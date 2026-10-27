@@ -1040,3 +1040,21 @@ import dom from '@domina/dom';
 // Thumb.rat.html: the thumbnail id inline, from five parts
 const id = isImage(entry) ? `${from ?? …?.addedAt}/${at.join('/')}/${entry.name}:${entry.size}:${entry.lastModified}` : null;
 ```
+
+### 25 an imported variant gets .value
+
+`rat` · an imported `$name` is read as a signal (`$x.value`). a `$Table`, `$Dict` … exported from a module
+is no signal, so the module that imports it reads `.value` of it. for now `remotes.rat.js` keeps its
+`$Table` to itself and exports a computed of it.
+
+```js
+// remotes.rat.js
+const $rows = $Table(Connection).create(…);
+
+// what the views read: a signal, as every $name another module imports
+export const $connections = $rows.toArray();
+```
+
+could be: the importer asks at runtime instead of assuming, `$$.read($x)` (a signal's value, a variant as it
+is) and `$$.write($x, value)`; or the compiler reads the exporting module's declarations where it has it
+(a build, the dev server), and falls back to the runtime check.
