@@ -3,17 +3,21 @@
 /*
 ich spiele mit dem gedanken weitere data types zu erstellen.
 teilweise "standards" für den core (zb Segments)
-teilweise speziellere die dann als einzelfiles in unterordner liegen und einzelen importiert werden
+teilweise "special" die dann als einzelfiles in unterordner liegen und einzelen importiert werden
 
 import FileExt from '@rat/types/FileExt';
 import Path    from '@rat/types/Path';
-*/
 
-/*
-Path
+::: core | basic
 Segments
+
+::: special
 FileExt
 MimeType
+Path
+
+::: notiz
+Segments wäre zb für so zusammengesetzte keys gut wie `rat:noisy:theme`
 */
 
 const ext  = FileExt.from (path);
