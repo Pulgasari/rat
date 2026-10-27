@@ -1,17 +1,20 @@
 <script>
   // <Library />: the folder in tabs: crumbs, filter, list or grid, a new folder
 
-  import { $filter, $loading, $path, $settings, $visible, folderName, goTo, newFolder, rootHandle, setting } from '../state.rat.js';
+  import {
+    $filter, $loading, $path, $settings, $visible,
+    folderName, goTo, newFolder, rootHandle, setting
+  } from '../state.rat.js';
 
   const $ready     = Boolean(rootHandle());
   const $viewmode  = $settings.viewmode;
   const $tabsTop   = $settings.tabbar === 'top';
   const $searchTop = $settings.searchbar === 'top';
 
-  const up     = () => $path.length ? goTo($path.slice(0, -1)) : RAT.app.router.go('/');
-  const toggle = () => setting('viewmode', $viewmode === 'grid' ? 'list' : 'grid');
-  const crumb  = event => goTo(event.detail.path.split('/').filter(Boolean));
-  const search = text => $filter = text;
+  const up     = ()      => $path.length ? goTo($path.slice(0, -1)) : RAT.app.router.go('/');
+  const toggle = ()      => setting('viewmode', $viewmode === 'grid' ? 'list' : 'grid');
+  const crumb  = (event) => goTo(event.detail.path.split('/').filter(Boolean));
+  const search = (text)  => $filter = text;
 </script>
 
 @if (!$ready)
@@ -19,7 +22,11 @@
   <div.scroll><Welcome /></div.scroll>
 @else
   <Bar title={$path.at(-1) ?? folderName()} back={up}>
-    <btn-icon icon={$viewmode === 'grid' ? 'lucide:list' : 'lucide:layout-grid'} label={$viewmode === 'grid' ? 'show as list' : 'show as grid'} onclick={toggle} />
+    <btn-icon
+      icon={$viewmode === 'grid' ? 'lucide:list' : 'lucide:layout-grid'} 
+      label={$viewmode === 'grid' ? 'show as list' : 'show as grid'}
+      onclick={toggle}
+    />
   </Bar>
 
   @if ($tabsTop): <Tabs />
@@ -38,7 +45,9 @@
       @else
         <p.empty>{$filter ? 'nothing matches the filter' : 'this folder is empty'}</p.empty>
     </div.listing>
-    <button.fab type='button' aria-label='new folder' title='new folder' onclick={newFolder}><svg-icon icon='lucide:folder-plus' /></button.fab>
+    <button.fab type='button' aria-label|title='new folder' onclick={newFolder}>
+      <svg-icon icon='lucide:folder-plus' />
+    </button.fab>
   </div.pane>
 
   <PasteBar />
