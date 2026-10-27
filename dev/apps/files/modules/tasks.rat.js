@@ -101,6 +101,6 @@ export function run ({ icon = 'lucide:loader', label, lane = 'default' }, work) 
 }
 
 // a queued task never starts, a running one is asked to stop through its signal
-export const cancel = task => controllers.get(task)?.abort();
-
-export const clearHistory = () => $ended.clear();
+export const
+cancel = (task) => controllers.get(task)?.abort(),
+clearHistory = () => $ended.clear();
