@@ -5,30 +5,30 @@
 
   import { $folder } from '../modules/root.rat.js';
 
-  const PATTERNS = { 'pattern-bg': 'Background', 'pattern-tile': 'Tiles' };
-
   const CHOICES = {
-    open      : { label: 'Open with',  values: [['auto', 'auto'], ['single', 'a tap'], ['double', 'a double click']] },
-    searchbar : { label: 'Search bar', values: [['bottom', 'bottom'], ['top', 'top']] },
-    tabbar    : { label: 'Tabs',       values: [['bottom', 'bottom'], ['top', 'top']] },
+    open      : { label: 'Open with',  values: { auto: 'auto', single: 'a tap', double: 'a double click' } },
+    searchbar : { label: 'Search bar', values: { bottom: 'bottom', top: 'top' } },
+    tabbar    : { label: 'Tabs',       values: { bottom: 'bottom', top: 'top' } },
   };
 
-  const change = (name, event) => setting(name, event.detail?.value ?? event.target.value);
+  const PATTERNS = { 'pattern-bg': 'Background', 'pattern-tile': 'Tiles' };
+
+  const change = name => event => setting(name, event.target.value);
 </script>
 
 <section>
   <h3>files</h3>
-  @for (name of Object.keys(CHOICES))
+  @for ([name, { label, values }] of Object.entries(CHOICES))
     <label>
-      <span>{CHOICES[name].label}</span>
-      <input-value look='segments' value={$settings[name]} onchange={event => change(name, event)}>
-        @for (choice of CHOICES[name].values): <input-option value={choice[0]}>{choice[1]}</input-option>
+      <span>{label}</span>
+      <input-value look='segments' value={$settings[name]} onchange={change(name)}>
+        @for ([value, text] of Object.entries(values)): <input-option value={value}>{text}</input-option>
       </input-value>
     </label>
-  @for (name of Object.keys(PATTERNS))
+  @for ([name, label] of Object.entries(PATTERNS))
     <label>
-      <span>{PATTERNS[name]}</span>
-      <input-pattern opacity value={$settings[name]} onchange={event => change(name, event)} />
+      <span>{label}</span>
+      <input-pattern opacity value={$settings[name]} onchange={change(name)} />
     </label>
 </section>
 

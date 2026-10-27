@@ -10,19 +10,24 @@
   const entry = props.entry;
   const at    = untrack(() => $path);
   const from  = untrack(() => $source);
+  const note  = entry.kind === 'file' ? `${fmt.date(entry.lastModified)} · ${fmt.bytes(entry.size)}` : 'folder';
 
   const $picked = $selected?.name === entry.name && !$selected?.path;
 
-  const onkeydown = event => { if (event.key === 'Enter' && !opensOnTap()) { event.preventDefault(); open(entry); } };
+  function onkeydown (event) {
+    if (event.key !== 'Enter' || opensOnTap()) return;
+    event.preventDefault();
+    open(entry);
+  }
 </script>
 
 <data-item>
   <div.row class:selected={$picked}>
-    <button.entry type='button' aria-pressed={$picked ? 'true' : null} onclick={() => onEntryClick(entry)} ondblclick={() => open(entry)} onkeydown={onkeydown}>
+    <button.entry type='button' aria-pressed={$picked} onclick={() => onEntryClick(entry)} ondblclick={() => open(entry)} onkeydown={onkeydown}>
       <Thumb entry={entry} at={at} from={from} />
       <span.text>
-        <span.name>{entry.name}</span>
-        <small>{entry.kind === 'file' ? fmt.date(entry.lastModified) + ' · ' + fmt.bytes(entry.size) : 'folder'}</small>
+        <span.name>{entry.name}</span.name>
+        <small>{note}</small>
       </span.text>
     </button.entry>
     <btn-icon icon='lucide:ellipsis-vertical' label='more' onclick={() => about(entry)} />

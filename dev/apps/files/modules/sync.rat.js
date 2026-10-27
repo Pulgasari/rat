@@ -67,9 +67,18 @@ export function parseTarget (raw, protocol = 'https') {
   return { fingerprint: '', host, port: Number(port) || PORT, protocol };
 }
 
-export const labelOf = target => target.alias ?? `${target.host}:${target.port}`;
+export const labelOf    = target => target.alias ?? `${target.host}:${target.port}`;
+export const sameTarget = (a, b) => a.host === b.host && a.port === b.port;
 
-const sameTarget = (a, b) => a.host === b.host && a.port === b.port;
+// a device discovery found, as a target to send to
+export const targetOf = device => ({
+  alias       : device.alias,
+  deviceType  : device.deviceType,
+  fingerprint : device.fingerprint ?? '',
+  host        : device.ip ?? device.host,
+  port        : device.port ?? PORT,
+  protocol    : device.protocol ?? 'https',
+});
 
 function remember (target) {
   const rest = $targets.filter(other => !sameTarget(other, target));

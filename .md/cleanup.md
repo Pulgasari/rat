@@ -403,6 +403,8 @@ $index.categories[item.id].count
 
 ### A12 logic in markup the syntax already has
 
+**status:** done in the components: `class:` everywhere, the tabs through `positionOf` (the loop index is no option yet, see 26).
+
 `app` `quick` · class strings by ternary while `class:` exists, `indexOf` while `@for` has the index.
 
 ```html
@@ -515,6 +517,8 @@ let $bookmarks = [] @stored('bookmarks');
 ```
 
 ### 2 objects in signals, changed by copying
+
+**status:** partly: places (`$Table`, `$Dict`), tasks (`$Record`s in `$List`s) and the pickboard are done. the settings and the tabs are left.
 
 `rat` `lib` · a signal only notices a new object, so changing one field means copying the whole.
 
@@ -896,6 +900,8 @@ await files.write(FILE, $connections, 'json');
 
 ### 18 reading inputs
 
+**status:** done: `bind:value` for the pin and the ssid, `event.target.value` elsewhere (aufbau inputs fire `input` and `change` and have `.value`), `RemoteManager` reads its form through `FormData` (they are form-associated).
+
 `app` `rat` · the value out of the event, by hand. the form by `querySelector`.
 
 ```js
@@ -920,6 +926,8 @@ await connect(Object.fromEntries(new FormData(event.target)));
 ```
 
 ### 19 the loop index
+
+**status:** the index is no option: rows are kept by identity, their index is the one they were made with (26). the tabs use `positionOf(tab)` at the moment of the click.
 
 `app` `quick` · `indexOf` four times, while `@for` has the index.
 
@@ -981,6 +989,8 @@ could be: a binding local to the loop body, or a fragment with the stats as its 
 
 ### 22 Context does five things
 
+**status:** done: `Context` only picks, `EntryDetails`, `FileDetails`, `FolderDetails` and `RootDetails` do the rest. the bookmark button is `BookmarkAction`, the dashboard tiles `Tile`.
+
 `app` · one chain: the tasks, the servers, an entry, the open file, the folder.
 
 ```html
@@ -1004,6 +1014,8 @@ could be: a component each, `Context` only picks
 ```
 
 ### 23 Sync knows the protocol
+
+**status:** done: `targetOf(device)` and `sameTarget` in sync.rat.js, the view works with targets only.
 
 `app` `quick` · the view normalizes devices itself, the port three times (the module has `PORT`).
 
@@ -1030,7 +1042,7 @@ $chosen = sync.targetOf(device);
 { './components/': ['Action', 'Bar', 'Context', … 20 names] },
 '../.shared/components/',
 
-// two ways to import the toast
+// two ways to import the toast (done: all named now)
 import toast from '../../.shared/toast.js';     // Sync
 import { toast } from '../.shared/toast.js';    // the rest
 
@@ -1058,3 +1070,129 @@ export const $connections = $rows.toArray();
 could be: the importer asks at runtime instead of assuming, `$$.read($x)` (a signal's value, a variant as it
 is) and `$$.write($x, value)`; or the compiler reads the exporting module's declarations where it has it
 (a build, the dev server), and falls back to the runtime check.
+
+## part 3: what the components ask of rat
+
+found while cleaning `dev/apps/files/components`. each is a proposal, not decided.
+
+- [26 the loop index follows the row](#26-the-loop-index-follows-the-row)
+- [27 attributes fall through to the root element](#27-attributes-fall-through-to-the-root-element)
+- [28 aria booleans](#28-aria-booleans)
+- [29 the library's place in the url](#29-the-librarys-place-in-the-url)
+- [30 a component's events](#30-a-components-events)
+- [31 bind to a field](#31-bind-to-a-field)
+- [32 a fixed bug: holes in an attribute string](#32-a-fixed-bug-holes-in-an-attribute-string)
+
+### 26 the loop index follows the row
+
+**status:** done: `@for (item, $index of list)` compiles to `$$.indexed(…)`, the index a signal per row. a plain `index` stays as it was. the tabs use it.
+
+`rat` · `@for (tab, index of $tabs)` compiles to `each(…, item => item, (tab, index) => …)`: rows are kept by
+identity, the index is a number from the time the row was made. close the first tab and the second row still
+says 1. so the index is only safe in a list that never reorders.
+
+```html
+<!-- Tabs.rat.html, now -->
+const positionOf = tab => $tabs.indexOf(tab);
+<button onclick={() => switchTab(positionOf(tab))}>
+```
+
+could be: the index as a signal of the row, read like any `$name`
+
+```html
+@for (tab, $index of $tabs)
+  <div.tab class:active={$index === $tabIndex}>
+    <button onclick={() => switchTab($index)}>
+```
+
+### 27 attributes fall through to the root element
+
+`rat` · a small component hands every attribute on by hand, and the ones it forgets are gone.
+
+```html
+<!-- Tile.rat.html, Action.rat.html -->
+<button.tile type='button' disabled={props.disabled} title={props.title} onclick={props.onclick}>
+```
+
+could be: what the component does not read lands on its root element (vue's `$attrs`), or an explicit spread
+
+```html
+<button.tile type='button' {...props.rest}>
+```
+
+### 28 aria booleans
+
+**status:** done: the compiler wraps an `aria-*` expression in `$$.aria()`, a boolean becomes `"true"` / `"false"`.
+
+`rat` · `aria-pressed`, `aria-selected`, `aria-expanded` want the strings `"true"` and `"false"`, a boolean attribute
+would drop `false`. so every one is wrapped.
+
+```html
+<button aria-pressed={String($picked)}>
+<button role='tab' aria-selected={String(isActive(tab))}>
+```
+
+could be: on an `aria-*` attribute a boolean is written as `"true"` / `"false"`
+
+```html
+<button aria-pressed={$picked}>
+```
+
+### 29 the library's place in the url
+
+`rat` `app` · the path of the library lives in a stored signal, the route is only `/library`. every way into a
+folder sets both: `goTo(path)` and `router.go('/library')`. the back button does not go up, a folder can not
+be linked.
+
+```js
+// Dashboard.rat.html, state.rat.js open(), showInFolder(), openRemote()
+goTo(path, null);
+RAT.app.router.go('/library');
+```
+
+could be: the path in the route, the tabs keep their paths as routes
+
+```js
+router.go(`/library/${path.join('/')}`);   // <rat-view route='/library/*'>, router.params the rest
+```
+
+### 30 a component's events
+
+`rat` · a component that reports something takes a callback prop and calls it by hand, with `?.` because it may
+not be there.
+
+```html
+<!-- Searchbar.rat.html -->
+const search = event => props.onsearch?.(event.detail.query);
+
+<!-- Library.rat.html -->
+<Searchbar … onsearch={search} />
+```
+
+could be: a component dispatches an event on its root, the parent listens like on an element
+
+```js
+emit('search', query);                     // in the component
+<Searchbar on:search={event => …} />       // the same on:… as on an element, with its modifiers
+```
+
+### 31 bind to a field
+
+`rat` · `bind:value` takes a signal. a setting is a field of `$settings`, so it is written by hand.
+
+```html
+<!-- Preferences.rat.html -->
+const change = name => event => setting(name, event.target.value);
+<input-value value={$settings[name]} onchange={change(name)}>
+```
+
+could be: with the settings a `$Record` (2), a field of a reactive variant can be bound
+
+```html
+<input-value bind:value={$settings[name]}>
+```
+
+### 32 a fixed bug: holes in an attribute string
+
+`rat` · **fixed**. the syntax has `class="card {size}"`, the generator turned its holes into text: `card size`.
+`literal()` took a hole's code for a string, the holes are `{ code }` now (compiler/generate.js).

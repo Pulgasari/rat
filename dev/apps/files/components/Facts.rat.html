@@ -1,10 +1,13 @@
 <script>
-  // <Facts rows={[['name', value], …]} />: the rows with a value, as a list of terms
-  const $rows = (props.rows ?? []).filter(([, value]) => value != null && value !== '');
+  // <Facts rows={{ name: value, … }} />: the rows with a value, as a list of terms. null, '' and false leave a row out
+
+  const isEmpty = value => value == null || value === '' || value === false;
+
+  const $rows = Object.entries(props.rows ?? {}).filter(([, value]) => !isEmpty(value));
 </script>
 
 <dl.facts>
-  @for (row of $rows)
-    <dt>{row[0]}</dt>
-    <dd>{row[1]}</dd>
+  @for ([term, value] of $rows)
+    <dt>{term}</dt>
+    <dd>{value}</dd>
 </dl.facts>

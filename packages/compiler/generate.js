@@ -34,9 +34,10 @@ function call (name, args, depth) {
   return `${name}(\n${args.map(arg => pad(depth + 1) + arg).join(',\n')},\n${pad(depth)})`;
 }
 
+// texts and { code } of the holes: an expression is code as well, so a hole has to say it is one
 const literal = parts => '`' + parts.map(part => typeof part === 'string'
   ? part.replace(/[\\`]/g, '\\$&').replace(/\$\{/g, '\\${')
-  : '${' + part + '}').join('') + '`';
+  : '${' + part.code + '}').join('') + '`';
 
 // htx reads `<` as a tag and trims whitespace with a newline at the edges of a
 // text, the template literal needs ` \ ${ escaped: such a text goes in a hole
@@ -82,7 +83,7 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     switch (value.kind) {
       case 'true'       : return ['true', false];
       case 'string'     : return [JSON.stringify(value.value), false];
-      case 'template'   : return [literal(value.parts.map(part => typeof part === 'string' ? part : expression(part))), true];
+      case 'template'   : return [literal(value.parts.map(part => typeof part === 'string' ? part : { code: expression(part) })), true];
       case 'expression' : return [expression(value), true];
     }
   }
@@ -132,11 +133,14 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
   }
 
   // rows are keyed by the item itself, a duplicate gets a row per occurrence
+  // a $index follows its row (indexed), a plain index is the one the row was made with
   function forBlock ({ children, fallback, index, item, list }, depth, root) {
     const params = index ? `(${item}, ${index})` : `(${item})`;
-    const args   = [live(expression(list)), 'item => item', `${params} => ${view(children, depth + 1, root)}`];
+    const follow = index?.startsWith('$');
+    const body   = follow ? within([index], () => view(children, depth + 1, root)) : view(children, depth + 1, root);
+    const args   = follow ? [live(expression(list)), `${params} => ${body}`] : [live(expression(list)), 'item => item', `${params} => ${body}`];
     if (fallback) args.push(`() => ${view(fallback, depth + 1, root)}`);
-    return call($('each'), args, depth);
+    return call($(follow ? 'indexed' : 'each'), args, depth);
   }
 
   /*
@@ -208,10 +212,12 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     return list.map(name => special(name, value));
   }
 
+  // an aria-* state takes "true" / "false": a boolean goes through aria()
   function plainProp (name, value) {
     if (value.kind === 'true')   return name;
     if (value.kind === 'string') return `${name}=${attribute(value.value)}`;
-    return `${name}=${hole(live(valueOf(value)[0]))}`;
+    const [code] = valueOf(value);
+    return `${name}=${hole(live(/(^|\|)aria-/.test(name) ? `${$('aria')}(${code})` : code))}`;
   }
 
   function special (name, value) {

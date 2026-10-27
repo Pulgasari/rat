@@ -57,6 +57,12 @@ div ( gap: small; padding: small; } // perfekte form, aber braucht js oder build
 
 rat-view         { flex-direction: column; overflow: hidden; }
 rat-view[active] { display: flex; }
+
+/* the head first, then what the settings put on top: the tabs, the search bar (state.rat.js sets
+   data-tabbar and data-searchbar on the root). at the bottom they keep their place in the markup */
+rat-view > .bar                                   { order: -3; }
+:root[data-tabbar="top"]    rat-view > .tabs      { order: -2; }
+:root[data-searchbar="top"] rat-view > .searchbar { order: -1; }
 .context h3      { font-size: 1rem; font-weight: 500; }
 
 

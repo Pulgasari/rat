@@ -3,54 +3,68 @@
   // one sent to before), collect files (picked, or sent here from the library), send. the transfer is a task.
   // auto sync keeps a folder sent in the background. outside the android app the view says why it is empty
 
-  import fmt   from '../../.shared/fmt.js';
-  import toast from '../../.shared/toast.js';
+  import fmt       from '../../.shared/fmt.js';
+  import { toast } from '../../.shared/toast.js';
 
   import * as sync from '../modules/sync.rat.js';
 
-  import { $autoSync, $devices as $found, $identity, $outbox as $files, $targets } from '../modules/sync.rat.js';
+  import { $autoSync, $devices, $identity, $outbox as $files, $targets } from '../modules/sync.rat.js';
 
-  let $chosen   = null;     // the receiver the files go to
-  let $address  = '';       // what was typed instead
+  let $chosen   = null;   // the receiver the files go to
+  let $address  = '';     // what was typed instead
   let $protocol = 'https';
   let $pin      = '';
   let $ssid     = '';
 
-  const keyOf  = target => `${target.host}:${target.port}`;
-  const target = () => $chosen ?? sync.parseTarget($address, $protocol);
-
-  const $before  = $targets.filter(other => !$found.some(device => keyOf({ host: device.ip, port: device.port }) === keyOf(other)));
+  const $found   = $devices.map(sync.targetOf);
+  const $before  = $targets.filter(target => !$found.some(found => sync.sameTarget(found, target)));
+  const $current = $chosen ?? sync.parseTarget($address, $protocol);
   const $size    = $files.reduce((sum, file) => sum + Math.max(0, file.size), 0);
   const $auto    = $autoSync ?? {};
-  const $current = target();
 
-  const hostOf     = device => device.ip ?? device.host;
-  const isChosen   = device => Boolean($current) && keyOf($current) === keyOf({ host: hostOf(device), port: device.port ?? 53317 });
-  const iconOf     = device => device.deviceType === 'mobile' ? 'lucide:smartphone' : 'lucide:monitor';
-  const run        = work => Promise.resolve().then(work).catch(toast.error);
+  const isChosen = target => Boolean($current) && sync.sameTarget($current, target);
+  const iconOf   = target => target.deviceType === 'mobile' ? 'lucide:smartphone' : 'lucide:monitor';
+  const run      = work   => Promise.resolve().then(work).catch(toast.error);
 
-  function choose (device) {
-    $chosen  = { alias: device.alias, fingerprint: device.fingerprint ?? '', host: hostOf(device), port: device.port ?? 53317, protocol: device.protocol ?? 'https' };
+  function choose (target) {
+    $chosen  = target;
     $address = '';
   }
 
+  function type (event) {
+    $address = event.target.value;
+    $chosen  = null;
+  }
+
   function protocol (event) {
-    $protocol = event.detail?.value ?? event.target.value;
+    $protocol = event.target.value;
     if ($chosen) $chosen = { ...$chosen, protocol: $protocol };
   }
+
+  function folderOf (auto) {
+    if (auto.name) return auto.name;
+    return auto.tree ? 'chosen' : 'none yet';
+  }
+
+  function stateOf (auto) {
+    if (!auto.enabled) return 'off';
+    return auto.lastSync ? `on · last ${fmt.date(auto.lastSync)}` : 'on';
+  }
+
+  const sendLabel = (files, size) => files.length ? `send ${files.length} · ${fmt.bytes(size)}` : 'send';
 </script>
 
-@fragment receiver (device, icon, removable)
-  <li class={isChosen(device) ? 'row selected' : 'row'}>
-    <button.entry type='button' aria-pressed={String(isChosen(device))} onclick={() => choose(device)}>
+@fragment receiver (target, icon, removable)
+  <li.row class:selected={isChosen(target)}>
+    <button.entry type='button' aria-pressed={isChosen(target)} onclick={() => choose(target)}>
       <span.thumb><svg-icon icon={icon} /></span.thumb>
       <span.text>
-        <span.name>{device.alias ?? hostOf(device)}</span.name>
-        <small>{hostOf(device)}:{device.port ?? 53317} · {device.protocol ?? 'https'}</small>
+        <span.name>{sync.labelOf(target)}</span.name>
+        <small>{target.host}:{target.port} · {target.protocol}</small>
       </span.text>
     </button.entry>
-    @if (removable): <btn-icon icon='lucide:x' label={'forget ' + (device.alias ?? hostOf(device))} onclick={() => sync.forget(device)} />
-  </li>
+    @if (removable): <btn-icon icon='lucide:x' label={'forget ' + sync.labelOf(target)} onclick={() => sync.forget(target)} />
+  </li.row>
 
 @if (!sync.available())
   <Bar title='Send' />
@@ -73,17 +87,17 @@
       </div-x.section-head>
       @if ($found.length || $before.length)
         <ul.rows>
-          @for (device of $found): {receiver(device, iconOf(device), false)}
-          @for (device of $before): {receiver(device, 'lucide:history', true)}
+          @for (target of $found): {receiver(target, iconOf(target), false)}
+          @for (target of $before): {receiver(target, 'lucide:history', true)}
         </ul.rows>
       @else
         <p.hint>Looking for devices on this network. A LocalSend app on the other side is enough.</p.hint>
       <div.address>
-        <input-text placeholder='address, ip:port or filesync://…' value={$address} oninput={event => { $address = event.target.value ?? ''; $chosen = null; }} />
+        <input-text placeholder='address, ip:port or filesync://…' value={$address} oninput={type} />
         <input-value look='segments' value={$current?.protocol ?? $protocol} onchange={protocol}>
           @for (name of sync.PROTOCOLS): <input-option value={name}>{name}</input-option>
         </input-value>
-        <input-password placeholder='pin, if the receiver wants one' value={$pin} oninput={event => $pin = event.target.value ?? ''} />
+        <input-password placeholder='pin, if the receiver wants one' bind:value={$pin} />
       </div.address>
     </section>
 
@@ -104,8 +118,8 @@
         <p.hint>Pick files, or send them from the library: their details have a "send" button.</p.hint>
       <div-x.actions>
         <Action icon='lucide:file-plus' label='pick files' onclick={() => run(sync.pickFiles)} />
-        <button.action.primary type='button' disabled={!$files.length || !$current} onclick={() => run(() => sync.send(target(), $files, $pin))}>
-          <svg-icon icon='lucide:send' /> send{$files.length ? ` ${$files.length} · ${fmt.bytes($size)}` : ''}
+        <button.action.primary type='button' disabled={!$files.length || !$current} onclick={() => run(() => sync.send($current, $files, $pin))}>
+          <svg-icon icon='lucide:send' /> {sendLabel($files, $size)}
         </button.action.primary>
       </div-x.actions>
     </section>
@@ -113,19 +127,19 @@
     <section>
       <h2>Auto sync</h2>
       <p.hint>A folder of this device goes to the receiver above on its own, whenever new files show up and the phone is on wi-fi. Subfolders included.</p.hint>
-      <Facts rows={[
-        ['folder', $auto.name || ($auto.tree ? 'chosen' : 'none yet')],
-        ['state',  $auto.enabled ? 'on' + ($auto.lastSync ? ' · last ' + fmt.date($auto.lastSync) : '') : 'off'],
-        ['to',     $auto.enabled ? $auto.host + ':' + $auto.port : null],
-      ]} />
-      @if (!$auto.enabled): <input-text placeholder='only on this wi-fi (ssid), optional' value={$ssid} oninput={event => $ssid = event.target.value ?? ''} />
+      <Facts rows={{
+        folder : folderOf($auto),
+        state  : stateOf($auto),
+        to     : $auto.enabled && `${$auto.host}:${$auto.port}`,
+      }} />
+      @if (!$auto.enabled): <input-text placeholder='only on this wi-fi (ssid), optional' bind:value={$ssid} />
       <div-x.actions>
         <Action icon='lucide:folder-search' label='folder' onclick={() => run(sync.pickSyncFolder)} />
         @if ($auto.enabled)
           <Action icon='lucide:refresh-cw' label='now' onclick={() => run(sync.syncNow)} />
           <Action icon='lucide:pause' label='turn off' onclick={() => run(sync.stopAutoSync)} />
         @else
-          <Action icon='lucide:play' label='turn on' disabled={!$auto.tree || !$current} onclick={() => run(() => sync.startAutoSync(target(), { pin: $pin, ssid: $ssid }))} />
+          <Action icon='lucide:play' label='turn on' disabled={!$auto.tree || !$current} onclick={() => run(() => sync.startAutoSync($current, { pin: $pin, ssid: $ssid }))} />
       </div-x.actions>
     </section>
   </div.scroll>

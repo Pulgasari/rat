@@ -1,14 +1,14 @@
 <script>
   // <Tabs />: the folders open side by side in the library
 
-  import { $tabIndex as $index, $tabs, closeTab, openTab, switchTab, tabName } from '../state.rat.js';
+  import { $tabIndex, $tabs, closeTab, openTab, switchTab, tabName } from '../state.rat.js';
 </script>
 
 <div-x.tabs role='tablist' scrollable>
-  @for (tab of $tabs)
-    <div class={$tabs.indexOf(tab) === $index ? 'tab active' : 'tab'}>
-      <button type='button' role='tab' aria-selected={String($tabs.indexOf(tab) === $index)} onclick={() => switchTab($tabs.indexOf(tab))}>{tabName(tab)}</button>
-      @if ($tabs.length > 1): <btn-icon icon='lucide:x' label={'close ' + tabName(tab)} onclick={() => closeTab($tabs.indexOf(tab))} />
-    </div>
+  @for (tab, $index of $tabs)
+    <div.tab class:active={$index === $tabIndex}>
+      <button type='button' role='tab' aria-selected={$index === $tabIndex} onclick={() => switchTab($index)}>{tabName(tab)}</button>
+      @if ($tabs.length > 1): <btn-icon icon='lucide:x' label={'close ' + tabName(tab)} onclick={() => closeTab($index)} />
+    </div.tab>
   <btn-icon icon='lucide:plus' label='new tab' onclick={() => openTab()} />
 </div-x.tabs>

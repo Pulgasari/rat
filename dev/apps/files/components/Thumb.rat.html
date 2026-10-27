@@ -13,9 +13,15 @@
   const at     = props.at ?? [];
   const from   = props.from ?? null;
   const thumbs = RAT.app.thumbnails;
-  const id     = isImage(entry) ? `${from ?? untrack(() => $folder)?.id}/${at.join('/')}/${entry.name}:${entry.size}:${entry.lastModified}` : null;
+  const id     = isImage(entry) ? idOf(entry) : null;
 
   let $url = id ? thumbs.peekFile(id) : null;
+
+  // the source, the path and what changes with the file's content
+  function idOf ({ lastModified, name, size }) {
+    const source = from ?? untrack(() => $folder)?.id;
+    return `${source}/${at.join('/')}/${name}:${size}:${lastModified}`;
+  }
 
   // asked for when it scrolls near the screen, once
   function watch (element) {

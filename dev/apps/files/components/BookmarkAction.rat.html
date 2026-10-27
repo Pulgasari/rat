@@ -1,0 +1,11 @@
+<script>
+  // <BookmarkAction path={['a', 'b']} />: bookmarks the folder at path, or takes its bookmark away
+
+  import { isBookmarked, toggleBookmark } from '../modules/places.rat.js';
+
+  const { $path } = props;
+
+  const $marked = isBookmarked($path);
+</script>
+
+<Action icon={$marked ? 'lucide:bookmark-minus' : 'lucide:bookmark-plus'} label={$marked ? 'remove bookmark' : 'bookmark'} onclick={() => toggleBookmark($path, $path.at(-1))} />

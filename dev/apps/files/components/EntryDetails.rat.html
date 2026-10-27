@@ -1,0 +1,37 @@
+<script>
+  // <EntryDetails entry={entry} />: a file or a folder picked in a listing or on the dashboard, and what can be done with it
+
+  import fmt from '../../.shared/fmt.js';
+
+  import { $path, deleteEntry, download, open, pick, renameEntry, sendEntry, showInFolder, sourceOf } from '../state.rat.js';
+
+  import { available } from '../modules/sync.rat.js';
+
+  const { $entry } = props;
+
+  const $at     = $entry.path ?? $path;
+  const $folder = $entry.kind === 'directory';
+  const $local  = !sourceOf($entry);
+
+  const kindOf = entry => entry.kind === 'directory' ? 'folder' : entry.type || 'file';
+</script>
+
+<h2>{$entry.name}</h2>
+<Facts rows={{
+  name     : $entry.name,
+  kind     : kindOf($entry),
+  size     : $folder ? null : fmt.bytes($entry.size),
+  modified : $entry.lastModified && fmt.date($entry.lastModified),
+  in       : '/' + $at.join('/'),
+}} />
+<div-x.actions>
+  <Action icon='lucide:arrow-up-right' label='open' onclick={() => open($entry, $at)} />
+  @if ($entry.path): <Action icon='lucide:folder' label='show in folder' onclick={() => showInFolder($entry)} />
+  @if (!$folder): <Action icon='lucide:download' label='download' onclick={() => download($entry)} />
+  @if (!$folder && $local && available()): <Action icon='lucide:send' label='send' onclick={() => sendEntry($entry)} />
+  @if ($folder && $local): <BookmarkAction path={[...$at, $entry.name]} />
+  <Action icon='lucide:copy' label='copy' onclick={() => pick('copy', $entry)} />
+  <Action icon='lucide:scissors' label='move' onclick={() => pick('move', $entry)} />
+  <Action icon='lucide:pencil' label='rename' onclick={() => renameEntry($entry)} />
+  <Action icon='lucide:trash-2' label='delete' onclick={() => deleteEntry($entry)} />
+</div-x.actions>

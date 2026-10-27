@@ -5,13 +5,15 @@
 
   import { $pickboard as $board, clear } from '../modules/transfer.rat.js';
 
-  const $what = $board ? ($board.items.length === 1 ? $board.items.at(0).name : `${$board.items.length} items`) : '';
+  const $moving = $board?.mode === 'move';
+
+  const describe = items => items.length === 1 ? items.at(0).name : `${items.length} items`;
 </script>
 
 @if ($board)
   <div-x.pastebar>
-    <svg-icon icon={$board.mode === 'move' ? 'lucide:scissors' : 'lucide:copy'} />
-    <span.text><span.name>{$what}</span.name><small>{$board.mode === 'move' ? 'to move' : 'to copy'}</small></span.text>
+    <svg-icon icon={$moving ? 'lucide:scissors' : 'lucide:copy'} />
+    <span.text><span.name>{describe($board.items)}</span.name><small>{$moving ? 'to move' : 'to copy'}</small></span.text>
     <button.action type='button' onclick={paste}><svg-icon icon='lucide:clipboard-paste' /> here</button.action>
     <btn-icon icon='lucide:x' label='empty the pickboard' onclick={clear} />
   </div-x.pastebar>

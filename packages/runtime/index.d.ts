@@ -24,6 +24,10 @@ export function render   (target: Element | DocumentFragment, value: unknown, op
 export function unrender (target: Element | DocumentFragment): void;
 
 export function each<T> (items: Iterable<T> | (() => Iterable<T>), key: (item: T, index: number) => unknown, row: (item: T, index: number) => unknown, otherwise?: (() => unknown) | null): unknown;
+/** each() keyed by the item, its index a signal that follows the row: @for (item, $index of list). */
+export function indexed<T> (items: Iterable<T> | (() => Iterable<T>), row: (item: T, index: Signal<number>) => unknown, otherwise?: (() => unknown) | null): unknown;
+/** An aria-* value: a boolean as "true" / "false", anything else as it is. */
+export function aria (value: unknown): unknown;
 export function when    (condition: unknown, then: () => unknown, otherwise?: (() => unknown) | null): unknown;
 export function raw     (html: string | null | undefined): unknown;
 

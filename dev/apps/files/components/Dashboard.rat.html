@@ -1,45 +1,58 @@
 <script>
-  // <Dashboard />: recent files, bookmarks, categories, the folder; a search over the whole folder
+  // <Dashboard />: recent files, bookmarks, categories, the folder, the servers; a search over the whole folder
 
   import fmt from '../../.shared/fmt.js';
 
-  import { $category, $categoryFiles, $hits, $query, $settings, SORTED, goTo, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
+  import { $category, $categoryFiles, $hits, $query, SORTED, goTo, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
 
   import { bookmarks, folderTypeOf } from '../modules/places.rat.js';
-  import { $connections }      from '../modules/remotes.rat.js';
-  import { $handle }           from '../modules/root.rat.js';
-  import { $index }            from '../modules/scan.rat.js';
-
-  const library    = at => { goTo(at, null); RAT.app.router.go('/library'); };
-  const folderName = () => sourceName(null);
-  const search     = text => $query = text;
-
-  const $ready     = Boolean($handle);
-  const $top       = $settings.searchbar === 'top';
-  const $searching = Boolean($query.trim());
-  const $bookmarks = bookmarks();
-  const $label     = SORTED.find(item => item.id === $category)?.label ?? $category;
-
-  const hostOf = url => { try { return new URL(url).host; } catch { return url; } };
+  import { $connections }            from '../modules/remotes.rat.js';
+  import { $handle }                 from '../modules/root.rat.js';
+  import { $index }                  from '../modules/scan.rat.js';
 
   // places outside the granted folder: tiles that say what each would need
   const PLANNED = [
-    { icon: 'lucide:hard-drive', label: 'Google Drive',      note: 'its own api, sign in with oauth' },
-    { icon: 'lucide:terminal',   label: '(S)FTP',            note: 'not from a browser, only in the android app' },
-    { icon: 'lucide:network',    label: 'LAN',               note: 'smb shares, only in the android app' },
+    { icon: 'lucide:hard-drive', label: 'Google Drive', note: 'its own api, sign in with oauth' },
+    { icon: 'lucide:terminal',   label: '(S)FTP',       note: 'not from a browser, only in the android app' },
+    { icon: 'lucide:network',    label: 'LAN',          note: 'smb shares, only in the android app' },
   ];
+
+  const $searching = $query.trim() !== '';
+  const $bookmarks = bookmarks();
+  const $label     = SORTED.find(item => item.id === $category)?.label ?? $category;
+
+  const folderName = () => sourceName(null);
+  const search     = text => $query = text;
+  const statsOf    = id   => $index?.categories?.[id] ?? null;
+
+  function foundOf (count) {
+    if (!count) return 'Nothing found';
+    return count >= 100 ? 'Found 100+' : `Found ${count}`;
+  }
+
+  function hostOf (url) {
+    try   { return new URL(url).host; }
+    catch { return url; }
+  }
+
+  function library (path) {
+    goTo(path, null);
+    RAT.app.router.go('/library');
+  }
+
+  function noteOf (stats) {
+    return stats ? `${stats.count} · ${fmt.bytes(stats.size)}` : '…';
+  }
 </script>
 
 <Bar title='Files' />
 
-@if ($ready && $top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={search} />
-
 <div.scroll>
-  @if (!$ready)
+  @if (!$handle)
     <Welcome />
   @else if ($searching)
     <section>
-      <h2>{$hits.length ? 'Found ' + ($hits.length >= 100 ? '100+' : $hits.length) : 'Nothing found'}</h2>
+      <h2>{foundOf($hits.length)}</h2>
       <ul.rows>
         @for (entry of $hits): <FileRow entry={entry} />
       </ul.rows>
@@ -55,7 +68,7 @@
       </ul.rows>
     </section>
   @else
-    @if ($index?.recent?.length)
+    @if ($index?.recent.length)
       <section>
         <h2>Recent</h2>
         <div-x.cards scrollable>
@@ -73,12 +86,7 @@
       @if ($bookmarks.length)
         <ul.tiles>
           @for (bookmark of $bookmarks)
-            <li>
-              <button.tile type='button' onclick={() => library(bookmark.path)}>
-                <svg-icon icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} />
-                <span.text><span.name>{bookmark.name}</span.name><small>/{bookmark.path.join('/')}</small></span.text>
-              </button.tile>
-            </li>
+            <Tile icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} name={bookmark.name} note={'/' + bookmark.path.join('/')} onclick={() => library(bookmark.path)} />
         </ul.tiles>
       @else
         <p.hint>Folders you bookmark show up here, from their details below.</p.hint>
@@ -87,28 +95,15 @@
     <section>
       <h2>Categories</h2>
       <ul.tiles>
-        @for (item of SORTED)
-          <li>
-            <button.tile type='button' disabled={!$index?.categories?.[item.id]?.count} onclick={() => $category = item.id}>
-              <svg-icon icon={item.icon} />
-              <span.text>
-                <span.name>{item.label}</span.name>
-                <small>{$index?.categories?.[item.id] ? $index.categories[item.id].count + ' · ' + fmt.bytes($index.categories[item.id].size) : '…'}</small>
-              </span.text>
-            </button.tile>
-          </li>
+        @for ({ icon, id, label } of SORTED)
+          <Tile icon={icon} name={label} note={noteOf(statsOf(id))} disabled={!statsOf(id)?.count} onclick={() => $category = id} />
       </ul.tiles>
     </section>
 
     <section>
       <h2>Folder</h2>
       <ul.tiles>
-        <li>
-          <button.tile type='button' onclick={() => library([])}>
-            <svg-icon icon='lucide:folder-open' />
-            <span.text><span.name>{folderName()}</span.name><small>{$index ? fmt.bytes($index.size) : 'the granted folder'}</small></span.text>
-          </button.tile>
-        </li>
+        <Tile icon='lucide:folder-open' name={folderName()} note={$index ? fmt.bytes($index.size) : 'the granted folder'} onclick={() => library([])} />
       </ul.tiles>
       <Status />
     </section>
@@ -117,27 +112,12 @@
       <h2>Remote</h2>
       <ul.tiles>
         @for (server of $connections)
-          <li>
-            <button.tile type='button' onclick={() => openRemote(server.id)}>
-              <svg-icon icon='lucide:cloud' />
-              <span.text><span.name>{server.name}</span.name><small>{hostOf(server.url)}</small></span.text>
-            </button.tile>
-          </li>
-        <li>
-          <button.tile type='button' onclick={manageRemotes}>
-            <svg-icon icon='lucide:cloud-cog' />
-            <span.text><span.name>WebDAV, Nextcloud</span.name><small>{$connections.length ? 'add or remove' : 'connect a server'}</small></span.text>
-          </button.tile>
-        </li>
+          <Tile icon='lucide:cloud' name={server.name} note={hostOf(server.url)} onclick={() => openRemote(server.id)} />
+        <Tile icon='lucide:cloud-cog' name='WebDAV, Nextcloud' note={$connections.length ? 'add or remove' : 'connect a server'} onclick={manageRemotes} />
         @for (remote of PLANNED)
-          <li>
-            <button.tile type='button' disabled title={remote.note}>
-              <svg-icon icon={remote.icon} />
-              <span.text><span.name>{remote.label}</span.name><small>soon · {remote.note}</small></span.text>
-            </button.tile>
-          </li>
+          <Tile icon={remote.icon} name={remote.label} note={'soon · ' + remote.note} title={remote.note} disabled />
       </ul.tiles>
     </section>
 </div.scroll>
 
-@if ($ready && !$top): <Searchbar placeholder={'Search in ' + folderName()} onsearch={search} />
+@if ($handle): <Searchbar placeholder={'Search in ' + folderName()} onsearch={search} />

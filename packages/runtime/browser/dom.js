@@ -17,8 +17,8 @@ calls with the element once its children are in place.
 // :::::: IMPORT
 
 import { each, html, raw, render as renderInto, unrender, when } from '@htx/js/render';
-import { effect, isFn, isSignal, isString, onCleanup, scope, untrack } from '../common/shared.js';
-import { guard }                                                       from './errors.js';
+import { effect, isFn, isSignal, isString, onCleanup, scope, signal, untrack } from '../common/shared.js';
+import { guard }                                                               from './errors.js';
 
 // effects belong to no owner, the renderer disposes them. scopes neither: the
 // renderer disposes them with their part
@@ -142,4 +142,31 @@ function sheet (mode, url) {
   return done;
 }
 
-export { bind, each, html, mount, raw, ref, render, sheet, style, unrender, use, when };
+// an aria-* state is the string "true" or "false": a boolean is written as one, anything else as it is
+const aria = value => typeof value === 'boolean' ? String(value) : value;
+
+/*
+@for (item, $index of list): rows kept by their item like each(), their index a signal that follows the
+row when the list is reordered (a plain index is the one the row was made with). a duplicate item shares
+the index of its first occurrence.
+*/
+function indexed (items, row, otherwise = null) {
+  let indexes = new Map;   // item -> signal of its position
+
+  const source = () => {
+    const list = [...(isFn(items) ? items() : items)];
+    const next = new Map;
+    for (const [at, item] of list.entries()) {
+      if (next.has(item)) continue;
+      const index = indexes.get(item) ?? signal(at);
+      index.value = at;
+      next.set(item, index);
+    }
+    indexes = next;
+    return list;
+  };
+
+  return each(source, item => item, item => row(item, indexes.get(item)), otherwise);
+}
+
+export { aria, bind, each, html, indexed, mount, raw, ref, render, sheet, style, unrender, use, when };

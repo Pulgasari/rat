@@ -1,0 +1,10 @@
+<script>
+  // <Tile icon='lucide:cloud' name='…' note='…' onclick={fn} />: a tile of the dashboard, disabled and title as on a button
+</script>
+
+<li>
+  <button.tile type='button' disabled={props.disabled} title={props.title} onclick={props.onclick}>
+    <svg-icon icon={props.icon} />
+    <span.text><span.name>{props.name}</span.name><small>{props.note}</small></span.text>
+  </button.tile>
+</li>

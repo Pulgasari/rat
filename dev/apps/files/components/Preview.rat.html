@@ -9,19 +9,35 @@
 
   let $src = null;
 
-  // the image off disk, its object url gone with the next file
+  // the image off disk; the cleanup drops a late answer and revokes the object url
+  function show (entry) {
+    let url   = null;
+    let alive = true;
+
+    readFile(rootOfSource(entry.source), entry.path, entry.name).then(blob => {
+      if (!alive) return;
+      url  = URL.createObjectURL(blob);
+      $src = url;
+    });
+
+    return () => {
+      alive = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }
+
   effect(() => {
-    const entry = $entry;
     $size = null;
     $src  = null;
-    if (!entry || !isImage(entry)) return;
-    let url = null, alive = true;
-    readFile(rootOfSource(entry.source), entry.path, entry.name).then(blob => { if (alive) $src = url = URL.createObjectURL(blob); });
-    return () => { alive = false; if (url) URL.revokeObjectURL(url); };
+    if ($entry && isImage($entry)) return show($entry);
   });
 
   const loaded = event => $size = { height: event.target.naturalHeight, width: event.target.naturalWidth };
-  const info   = () => { $selected = null; RAT.app.toggle('context'); };
+
+  function info () {
+    $selected = null;
+    RAT.app.toggle('context');
+  }
 </script>
 
 @if (!$entry)

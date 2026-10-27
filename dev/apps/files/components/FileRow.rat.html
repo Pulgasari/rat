@@ -6,15 +6,16 @@
   import { about, open } from '../state.rat.js';
 
   const entry = props.entry;
+  const note  = `/${entry.path.join('/')} · ${fmt.bytes(entry.size)}`;
 </script>
 
 <li.row>
   <button.entry type='button' onclick={() => open(entry)}>
     <Thumb entry={entry} at={entry.path} />
     <span.text>
-      <span.name>{entry.name}</span>
-      <small>{'/' + entry.path.join('/') + ' · ' + fmt.bytes(entry.size)}</small>
+      <span.name>{entry.name}</span.name>
+      <small>{note}</small>
     </span.text>
   </button.entry>
-  <btn-icon icon='lucide:ellipsis-vertical' label='more' onclick={() => about({ ...entry, kind: 'file' })} />
+  <btn-icon icon='lucide:ellipsis-vertical' label='more' onclick={() => about(entry)} />
 </li.row>
