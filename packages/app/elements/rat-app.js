@@ -146,7 +146,7 @@ export class RatApp extends DominaElement {
           "start main   end" minmax(0, 1fr)
           "start bottom end" auto
           / auto minmax(0, 1fr) auto;
-        min-block-size: 100dvh;
+        block-size    : 100dvh;   /* a tall area scrolls in itself, it never stretches the app */
 
         & > :not(rat-area) { grid-area: main; min-inline-size: 0; }
       }

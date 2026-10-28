@@ -1,0 +1,19 @@
+<script>
+  // <Tabs />: the open documents, a dot on the changed ones
+
+  import { $current, $documents, close, show } from '../modules/documents.rat.js';
+</script>
+
+<nav.tabs>
+  @for (document of $documents)
+    <div.tab class:active={document === $current}>
+      <button.name onclick={() => show(document)}>
+        <svg-icon icon='file' />
+        <span>{document.name}</span>
+        @if (document.dirty): <span.dirty>●</span>
+      </button>
+      <btn-icon icon='close' label='close' onclick={() => close(document)} />
+    </div.tab>
+  @else
+    <p.none>No files open</p.none>
+</nav.tabs>

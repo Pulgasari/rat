@@ -1,0 +1,35 @@
+<script>
+  // <Preferences />: the app's settings and the editor's, above the shared ones in <Settings>. both are
+  // $Records of a schema, so the fields come from it: a Bool is on or off, an Enum one of its values
+
+  import { $config } from '../state.rat.js';
+
+  import { $options } from '../modules/editor.rat.js';
+
+  const BOOL = [['true', 'on'], ['false', 'off']];   // the element compares strings
+
+  const fieldsOf = record => Object.entries(record.schema.parts).map(([key, schema]) => ({ key, values: schema.kind === 'bool' ? null : schema.describe.values }));
+  const labelOf  = key => key.replace(/[A-Z]/g, char => ` ${char.toLowerCase()}`);
+
+  // what the element hands over is a string: the value of the schema it stands for
+  function set (record, field, value) {
+    record[field.key] = field.values ? field.values.find(option => String(option) === String(value)) : String(value) === 'true';
+  }
+</script>
+
+@fragment fields (record)
+  @for (field of fieldsOf(record))
+    <label>
+      <span>{labelOf(field.key)}</span>
+      <Picker look={field.values?.length > 4 ? 'combobox' : 'segments'} options={field.values ?? BOOL} value={String(record[field.key])} onchange={value => set(record, field, value)} />
+    </label>
+
+<section>
+  <h3>code</h3>
+  {fields($config)}
+</section>
+
+<section>
+  <h3>editor</h3>
+  {fields($options)}
+</section>

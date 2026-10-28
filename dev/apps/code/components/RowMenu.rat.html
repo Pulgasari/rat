@@ -1,0 +1,18 @@
+<script>
+  // <RowMenu items={[{ icon, label, onclick }]} />: the actions of a row behind its "more". a <details>:
+  // it opens and closes by itself, a pick closes it
+
+  function run (event, item) {
+    event.currentTarget.closest('details').open = false;
+    item.onclick();
+  }
+</script>
+
+@if (props.items?.length)
+  <details.row-menu>
+    <summary aria-label='actions'><svg-icon icon='more' /></summary>
+    <div.pop>
+      @for (item of props.items)
+        <button onclick={event => run(event, item)}><svg-icon icon={item.icon} /> {item.label}</button>
+    </div.pop>
+  </details.row-menu>

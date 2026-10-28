@@ -1,0 +1,45 @@
+<script>
+  import { $config, closed } from './state.rat.js';
+
+  import './modules/commands.rat.js';
+  import { load as loadGitHub } from './modules/github.rat.js';
+  import { load }               from './modules/sources.rat.js';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  // what fails in an action ends here, the actions catch nothing themselves
+  RAT.app.on('error', toast.error);
+
+  // the splash stays until the folders are known, github checks its token behind it
+  RAT.app.hold <| load();
+  loadGitHub();
+  hint('Code');
+
+  // an area closed by hand (the scrim, escape) closes its panel
+  const ontoggle = name => event => { if (!event.detail?.open) closed(name); };
+</script>
+
+<rat-area name='main'>
+  <div.workspace>
+    @if ($config.showBrowser): <Browser />
+    @if ($config.showStatusbar): <Statusbar />
+    <Tabs />
+    <Editor />
+    @if ($config.showToolbar): <Toolbar />
+  </div.workspace>
+  <div.underdock>
+    @if ($config.showKeyboard): <Keyboard />
+    <Taps />
+  </div.underdock>
+</rat-area>
+
+<rat-area name='files' dock='start' ontoggle={ontoggle('files')}><Sources /></rat-area>
+
+<rat-area name='config' dock='end' ontoggle={ontoggle('config')}>
+  <Settings name='Code'>
+    <Preferences />
+  </Settings>
+</rat-area>
+
+<rat-area name='commands' dock='bottom' ontoggle={ontoggle('commands')}><Commands /></rat-area>

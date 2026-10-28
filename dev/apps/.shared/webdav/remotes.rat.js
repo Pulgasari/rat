@@ -1,9 +1,9 @@
-// files :: modules/remotes.rat.js
+// apps/.shared/webdav/remotes.rat.js
 
 /*
-the servers the app reaches besides the granted folder. webdav for now (nextcloud and owncloud speak
-it): a connection becomes a root handle (.shared/webdav/handles.js), so a tab browses it like the
-folder, and copy, move, preview and thumbnails work across both.
+the servers an app reaches besides the granted folder (files, code). webdav for now (nextcloud and
+owncloud speak it): a connection becomes a root handle (handles.js), so everything written against a
+folder's handles (.shared/fs.js) works on a server as well.
 
 the connections, password included, stay on the device (RAT.app.files), sent only to their own server.
 an app password is the better choice where the server has one.
@@ -18,8 +18,8 @@ an app password is the better choice where the server has one.
 import { effect } from '@rat/signals';
 import { $Table, Str } from '@rat/types';
 
-import { test }    from '../../.shared/webdav/client.js';
-import { davRoot } from '../../.shared/webdav/handles.js';
+import { test }    from './client.js';
+import { davRoot } from './handles.js';
 
 const { files } = RAT.app;
 

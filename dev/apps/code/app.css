@@ -1,0 +1,278 @@
+/* code :: app.css, the editor's chrome. monaco brings its own sheet */
+
+:root { --font-size: 12px; }   /* state.rat.js writes it */
+
+body {
+  --zebra : color-mix(in oklch, var(--color-bg, #282a36), black 8%);
+}
+
+/* a code app wants a monospace face */
+rat-app, rat-app * { font-family: var(--font-code, ui-monospace, monospace); }
+rat-app { font-size: var(--font-size); }
+
+/* :::::: MAIN */
+
+rat-area[name='main'] {
+  display        : flex;
+  flex-direction : column;
+  overflow       : hidden;
+}
+
+.workspace {
+  display        : flex;
+  flex           : 1 1 auto;
+  flex-direction : column;
+  min-block-size : 0;
+}
+
+.editor {
+  flex           : 1 1 auto;
+  min-block-size : 0;
+  position       : relative;
+
+  > .monaco { block-size: 100%; inline-size: 100%; }
+}
+
+.welcome {
+  align-content : center;
+  display       : grid;
+  gap           : 1rem;
+  inset         : 0;
+  justify-items : center;
+  position      : absolute;
+
+  > img   { opacity: 0.8; }
+  > .hint { align-items: center; background: none; border: 0; color: inherit; cursor: pointer; display: flex; gap: 0.5rem; opacity: 0.7; }
+}
+
+.browser {
+  block-size    : 40%;
+  border-bottom : 1px solid var(--line);
+
+  > iframe { background: white; block-size: 100%; border: 0; inline-size: 100%; }
+  > .none  { opacity: 0.6; padding: 1rem; }
+}
+
+/* :::::: BARS */
+
+.statusbar, .tabs, .toolbar, .taps {
+  align-items : center;
+  display     : flex;
+  flex        : none;
+}
+
+.statusbar {
+  background    : var(--zebra);
+  border-bottom : 1px solid var(--line);
+  font-size     : 0.85em;
+  gap           : 0.75em;
+  overflow-x    : auto;
+  padding       : 0.25em 0.75em;
+  white-space   : nowrap;
+
+  > .item   { background: none; border: 0; color: inherit; font: inherit; opacity: 0.8; padding: 0; }
+  > button  { cursor: pointer; }
+  > .where  { max-inline-size: 30ch; overflow: hidden; text-overflow: ellipsis; }
+  > .spacer { flex: 1 1 auto; }
+}
+
+.tabs {
+  border-bottom : 1px solid var(--line);
+  overflow-x    : auto;
+
+  > .tab {
+    align-items  : center;
+    border-right : 1px solid var(--line);
+    display      : flex;
+    opacity      : 0.65;
+
+    &.active { opacity: 1; box-shadow: inset 0 -2px 0 currentColor; }
+  }
+
+  .name {
+    align-items : center;
+    background  : none;
+    border      : 0;
+    color       : inherit;
+    cursor      : pointer;
+    display     : flex;
+    font        : inherit;
+    gap         : 0.4em;
+    padding     : 0.5em 0.25em 0.5em 0.75em;
+    white-space : nowrap;
+  }
+
+  .dirty { color: var(--color-ink, orange); }
+  > .none { opacity: 0.5; padding: 0.5em 0.75em; }
+}
+
+.toolbar {
+  border-top      : 1px solid var(--line);
+  justify-content : space-around;
+  overflow-x      : auto;
+}
+
+.underdock { flex: none; }
+
+.taps {
+  border-top      : 1px solid var(--line);
+  justify-content : space-between;
+  padding         : 0.25rem 0.5rem;
+
+  > .section { display: flex; gap: 0.5rem; }
+  btn-icon        { font-size: 1.3em; }
+  btn-icon.active { color: var(--color-ink, orange); }
+}
+
+/* :::::: KEYBOARD */
+
+.keyboard {
+  background  : var(--zebra);
+  border-top  : 1px solid var(--line);
+  display     : grid;
+  gap         : 4px;
+  padding     : 4px;
+  user-select : none;
+
+  .row { display: flex; gap: 3px; }
+
+  .key {
+    align-items     : center;
+    background      : var(--panel, rgb(255 255 255 / 0.06));
+    border          : 0;
+    border-radius   : 4px;
+    color           : inherit;
+    display         : flex;
+    flex            : 1 1 0;
+    font            : inherit;
+    justify-content : center;
+    min-block-size  : 2.4em;
+    min-inline-size : 0;
+    touch-action    : manipulation;
+
+    &.wide   { flex-grow: 1.6; }
+    &.active { background: var(--color-ink, orange); color: var(--color-bg, black); }
+    &:active { filter: brightness(1.4); }
+  }
+
+  .symbols .key { min-block-size: 2em; opacity: 0.85; }
+  .spacer       { flex: 0.5 1 0; }
+}
+
+/* :::::: PANELS */
+
+.sources > btn-push { justify-self: start; }
+
+.sources, .commands {
+  display : grid;
+  gap     : 0.75rem;
+  padding : 0.75rem;
+}
+
+.root > .head {
+  align-items : center;
+  display     : flex;
+  gap         : 0.25rem;
+
+  > .name { align-items: center; background: none; border: 0; color: inherit; cursor: pointer; display: flex; flex: 1 1 auto; font: inherit; font-weight: 600; gap: 0.25rem; justify-content: flex-start; min-inline-size: 0; }
+  > .name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.tree {
+  list-style   : none;
+  margin       : 0;
+  padding-left : 0.9rem;
+
+  .root > & { padding-left: 0.25rem; }
+
+  .row { align-items: center; display: flex; }
+
+  .entry {
+    align-items     : center;
+    background      : none;
+    border          : 0;
+    color           : inherit;
+    cursor          : pointer;
+    display         : flex;
+    flex            : 1 1 auto;
+    font            : inherit;
+    gap             : 0.4em;
+    justify-content : flex-start;
+    min-inline-size : 0;
+    padding         : 0.3em 0.25em;
+    text-align      : start;
+
+    > span    { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    &:hover   { background: var(--hover); }
+  }
+
+  .none, .error { opacity: 0.6; padding: 0.3em 0.25em; }
+  .error        { color: var(--color-error, tomato); opacity: 1; }
+}
+
+.row-menu {
+  position: relative;
+
+  > summary { cursor: pointer; list-style: none; padding: 0.3em; }
+  > summary::-webkit-details-marker { display: none; }
+
+  > .pop {
+    background       : var(--color-bg, #282a36);
+    border           : 1px solid var(--line);
+    border-radius    : 6px;
+    display          : grid;
+    inset-inline-end : 0;
+    min-inline-size  : 10rem;
+    padding          : 0.25rem;
+    position         : absolute;
+    z-index          : 10;
+
+    > button { align-items: center; background: none; border: 0; color: inherit; cursor: pointer; display: flex; font: inherit; gap: 0.5em; padding: 0.4em 0.5em; text-align: start; }
+    > button:hover { background: var(--hover); }
+  }
+}
+
+.connect {
+  display : grid;
+  gap     : 0.5rem;
+
+  > p { margin: 0; opacity: 0.8; }
+}
+
+.account, .repo { align-items: center; display: flex; gap: 0.5rem; }
+.repo > select  { flex: 1 1 auto; }
+.error          { color: var(--color-error, tomato); }
+
+.repos {
+  display    : grid;
+  list-style : none;
+  margin     : 0;
+  padding    : 0;
+
+  > li { align-items: center; display: flex; }
+  button { align-items: center; background: none; border: 0; color: inherit; cursor: pointer; display: flex; flex: 1 1 auto; font: inherit; gap: 0.5em; padding: 0.35em 0.25em; text-align: start; }
+  small  { opacity: 0.6; }
+}
+
+.commands {
+  ul    { display: grid; list-style: none; margin: 0; padding: 0; }
+  li    { align-items: center; display: flex; }
+  h3    { margin: 0.5rem 0 0; opacity: 0.6; text-transform: uppercase; }
+  .none { opacity: 0.6; }
+
+  .run {
+    background    : none;
+    border        : 0;
+    color         : inherit;
+    cursor        : pointer;
+    display       : grid;
+    flex          : 1 1 auto;
+    font          : inherit;
+    justify-items : start;
+    padding       : 0.35em 0.25em;
+    text-align    : start;
+
+    > small { opacity: 0.5; }
+    &:hover { background: var(--hover); }
+  }
+}

@@ -1,7 +1,7 @@
-// files :: modules/fs.js
+// apps/.shared/fs.js
 
 /*
-what the app does with a folder, given its root handle: a browser's FileSystemDirectoryHandle, the one
+what an app does with a folder, given its root handle: a browser's FileSystemDirectoryHandle, the one
 a native folders driver of @rat/app gives (drivers/_fs.js), or a webdav server's (.shared/webdav). a path is a Path (@rat/types/Path) below
 the root, Path.root the root itself; an array or 'a/b' work as well.
 

@@ -44,7 +44,6 @@ export default {
     ...config.icons,
     'bookmark-add'    : 'lucide:bookmark-plus',
     'bookmark-remove' : 'lucide:bookmark-minus',
-    cloud             : 'lucide:cloud',
     'cloud-settings'  : 'lucide:cloud-cog',
     dashboard         : 'lucide:layout-dashboard',
     desktop           : 'lucide:monitor',

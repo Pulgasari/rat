@@ -1,0 +1,16 @@
+<script>
+  // <LocalSource />: the folders of the device, granted one by one. a folder that lost its permission
+  // asks again on a click
+
+  import { $locals, add, forget, reconnect } from '../modules/sources.rat.js';
+</script>
+
+<btn-push icon='folder-add' label='Add a folder' onclick={add} />
+
+@for (local of $locals)
+  <Root handle={local.handle} id={local.id} name={local.name}>
+    @if (!local.granted): <btn-icon icon='folder-key' label='reconnect' onclick={() => reconnect(local)} />
+    <btn-icon icon='close' label='forget' onclick={() => forget(local)} />
+  </Root>
+@else
+  <Empty icon='folder-open' title='No folder yet' hint='A folder of your device: it is edited where it is, nothing is uploaded.' />

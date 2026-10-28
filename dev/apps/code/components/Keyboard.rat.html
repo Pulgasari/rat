@@ -1,0 +1,96 @@
+<script>
+  // <Keyboard />: a keyboard for code on the phone, symbols on top. a key goes to the focused element
+  // as real keyboard events (monaco reacts to them), a character into an input or textarea as well.
+  // the layout is german, where the app comes from. a press never takes the focus (mousedown)
+
+  import { effect } from '@rat/runtime';
+
+  import { $config } from '../state.rat.js';
+
+  import { enableAndroidKeyboard } from '../modules/keyboard.js';
+
+  const LAYOUT = {
+    regular : ['qwertzuiopü', 'asdfghjklöä', '-yxcvbnm-'],
+    shift   : ['QWERTZUIOPÜ', 'ASDFGHJKLÖÄ', '-YXCVBNM-'],
+    symbols : [`([{<?.,'$#=+*12345`, `)]}>!:;"&|_-/67890`],
+  };
+
+  // a special key: the key it sends, or a switch
+  const SPECIAL = {
+    backspace : { key: 'Backspace',  keyCode: 8  },
+    down      : { key: 'ArrowDown',  keyCode: 40 },
+    enter     : { key: 'Enter',      keyCode: 13 },
+    left      : { key: 'ArrowLeft',  keyCode: 37 },
+    right     : { key: 'ArrowRight', keyCode: 39 },
+    space     : { key: ' ',          keyCode: 32 },
+    tab       : { key: 'Tab',        keyCode: 9  },
+    up        : { key: 'ArrowUp',    keyCode: 38 },
+  };
+
+  // the keys left and right of each letter row
+  const EDGES = [['tab', 'tab-rtl'], ['capslock', 'backspace'], ['shift', 'enter']];
+
+  let $caps  = false;
+  let $shift = false;
+
+  const $rows = $caps || $shift ? LAYOUT.shift : LAYOUT.regular;
+
+  function send (key, extra = {}) {
+    const target = document.activeElement;
+    if (!target) return;
+    const init = { bubbles: true, cancelable: true, key, shiftKey: $shift || $caps, ...extra };
+    target.dispatchEvent(new KeyboardEvent('keydown', init));
+    if (key.length === 1 && /^(INPUT|TEXTAREA)$/.test(target.tagName)) {
+      const { selectionEnd: end, selectionStart: start } = target;
+      target.value = target.value.slice(0, start) + key + target.value.slice(end);
+      target.selectionStart = target.selectionEnd = start + key.length;
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    target.dispatchEvent(new KeyboardEvent('keyup', init));
+    if ($shift && !$caps) $shift = false;
+  }
+
+  function press (event, name) {
+    event.preventDefault();
+    if (name === 'shift')    { $shift = !$shift; return; }
+    if (name === 'capslock') { $caps = !$caps; $shift = false; return; }
+    if (name === 'tab-rtl')  return send('Tab', { keyCode: 9, shiftKey: true });
+    if (SPECIAL[name])       return send(SPECIAL[name].key, { keyCode: SPECIAL[name].keyCode });
+    send(name);
+  }
+
+  // gone: the system's keyboard comes back, unless the settings keep it away
+  effect(() => () => { if (!$config.disableAndroidKeyboard) enableAndroidKeyboard(); });
+</script>
+
+@fragment key (name, icon, wide)
+  <button.key class:wide={wide} class:active={(name === 'shift' && $shift) || (name === 'capslock' && $caps)} tabindex='-1' onmousedown={event => press(event, name)}>
+    @if (icon): <svg-icon icon={icon} />
+    @else: {name}
+  </button.key>
+
+<div.keyboard>
+  <div.symbols>
+    @for (row of LAYOUT.symbols)
+      <div.row>
+        @for (char of [...row]): {key(char, null, false)}
+      </div.row>
+  </div.symbols>
+  <div.keys>
+    @for (row, index of $rows)
+      <div.row>
+        {key(EDGES[index][0], EDGES[index][0], true)}
+        @for (char of [...row])
+          @if (char === '-'): <span.spacer></span>
+          @else: {key(char, null, false)}
+        {key(EDGES[index][1], EDGES[index][1], true)}
+      </div.row>
+    <div.row>
+      {key('space', 'space', true)}
+      {key('up', 'arrow-up', false)}
+      {key('down', 'arrow-down', false)}
+      {key('left', 'arrow-left', false)}
+      {key('right', 'arrow-right', false)}
+    </div.row>
+  </div.keys>
+</div.keyboard>

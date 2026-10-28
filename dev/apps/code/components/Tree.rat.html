@@ -1,0 +1,67 @@
+<script>
+  // <Tree dir={handle} id='local:…/src' where='my folder' />: the entries of a folder, a folder opens
+  // into a tree of its own. it lists again whenever something changed ($version)
+
+  import { effect } from '@rat/runtime';
+
+  import { close } from '../state.rat.js';
+
+  import { open } from '../modules/documents.rat.js';
+  import { $clipboard, $version, create, entries, paste, pick, remove, rename } from '../modules/tree.rat.js';
+
+  let $error   = null;
+  let $handles = null;
+  let $opened  = [];   // the names of the folders open here
+
+  effect(() => {
+    const dir = props.dir;
+    let alive = true;
+    $version;   // read, so a change lists again
+    entries(dir).then(list => { if (alive) { $handles = list; $error = null; } }, error => { if (alive) $error = error.message; });
+    return () => { alive = false; };
+  });
+
+  const idOf     = handle => `${props.id}/${handle.name}`;
+  const isFolder = handle => handle.kind === 'directory';
+  const isOpen   = handle => $opened.includes(handle.name);
+
+  async function activate (handle) {
+    if (isFolder(handle)) {
+      $opened = isOpen(handle) ? $opened.filter(name => name !== handle.name) : [...$opened, handle.name];
+      return;
+    }
+    await open(handle, { id: idOf(handle), where: props.where });
+    close();
+  }
+
+  function itemsOf (handle) {
+    const entry = { handle, id: idOf(handle), parent: props.dir };
+    if (props.readOnly) return [];
+    return [
+      isFolder(handle) && { icon: 'file-add',   label: 'New file',   onclick: () => create('file', handle) },
+      isFolder(handle) && { icon: 'folder-add', label: 'New folder', onclick: () => create('directory', handle) },
+      isFolder(handle) && $clipboard && { icon: 'paste', label: 'Paste', onclick: () => paste(handle) },
+      { icon: 'edit',   label: 'Rename', onclick: () => rename(entry) },
+      { icon: 'copy',   label: 'Copy',   onclick: () => pick('copy', entry) },
+      { icon: 'cut',    label: 'Cut',    onclick: () => pick('cut', entry) },
+      { icon: 'delete', label: 'Delete', onclick: () => remove(entry) },
+    ].filter(Boolean);
+  }
+</script>
+
+<ul.tree>
+  @if ($error): <li.error>{$error}</li>
+  @for (handle of $handles ?? [])
+    <li>
+      <div.row>
+        <button.entry onclick={() => activate(handle)}>
+          <svg-icon icon={isFolder(handle) ? (isOpen(handle) ? 'folder-open' : 'folder') : 'file'} />
+          <span>{handle.name}</span>
+        </button.entry>
+        <RowMenu items={itemsOf(handle)} />
+      </div.row>
+      @if (isFolder(handle) && isOpen(handle)): <Tree dir={handle} id={idOf(handle)} where={props.where} readOnly={props.readOnly} />
+    </li>
+  @else
+    @if ($handles): <li.none>Empty</li>
+</ul.tree>
