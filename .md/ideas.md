@@ -93,7 +93,7 @@ cmd | command
 </div>
 ```
 
-## local names in markup: `@let` (from svelte)
+## local names in markup: `@let` (from svelte) · built as `@var`, see syntax.md
 
 ```html
 @for (box of $boxes)
@@ -161,7 +161,7 @@ note: svelte and solidjs both move towards `await` in the reactive graph instead
 - [ ] a) `@await` / `@then` / `@catch`
 - [ ] b) the value in the head, `@pending` and `@catch` as clauses **(rec)**: the main case comes first, and `user of …` reads like `@for`
 - [ ] c) only the short form
-- [ ] d) b, with c as the one-line form
+- [x] d) b, with c as the one-line form · built: `@await` in syntax.md
 
 ---
 

@@ -13,6 +13,8 @@ finds the closing token). the script pass parses and rewrites it later.
   For        { item, index, list, children, fallback }
   Match      { subject, cases: [{ test, children }], fallback }
   FragmentDef { name, params, children }    @fragment name (params), top level only
+  Await      { binding, promise, children, pending, failed: { name, children } }
+  Var        { name, value }                @var name = value, to the end of the line
 
 every node has start and end, offsets in the file. an expression is
 { code, start, end }: the trimmed source text and where it stands, so later
@@ -29,8 +31,8 @@ import { CompileError, scanCase, scanClose, tt } from './util.js';
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 
-const BLOCK_START  = /@(if|for|match|fragment)\b/y;
-const CONTINUATION = /@(else|case|default)(?![\w$])/y;
+const BLOCK_START  = /@(await|if|for|match|fragment|var)\b/y;
+const CONTINUATION = /@(catch|else|case|default|pending)(?![\w$])/y;
 const INLINE_SPACE = /[ \t]*/y;
 const NAME        = /[^\s=/>"'{]+/y;
 const TAG         = /[A-Za-z0-9\-_.#:$]*/y;
@@ -218,7 +220,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     return BLOCK_START.test(source);
   }
 
-  // @else, @case, @default: where a one-line body (@if (…): …) stops
+  // @else, @case, @default, @pending, @catch: where a one-line body (@if (…): …) stops
   function atContinuation () {
     if (before() !== undefined && !/[\s>}]/.test(before())) return false;
     CONTINUATION.lastIndex = i;
@@ -242,7 +244,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
 
   // ::: blocks
 
-  const BLOCKS = { fragment: fragmentBlock, for: forBlock, if: ifBlock, match: matchBlock };
+  const BLOCKS = { await: awaitBlock, fragment: fragmentBlock, for: forBlock, if: ifBlock, match: matchBlock, var: varBlock };
 
   // context.block: inside a block body, where a @fragment would close over the block
   function block (context) {
@@ -315,6 +317,48 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     let fallback   = null;
     if (clause('@else', base)) { elseAt = i + offset; fallback = body(context, base); }
     return { type: 'For', ...forHead(head), children, elseAt, fallback, head };
+  }
+
+  // @await (user of load($id)), then @pending and @catch (error) as clauses, in any order (d-28 d).
+  // without a binding (@await (save())) the value is not handed out
+  function awaitBlock (context, base) {
+    const head     = condition();
+    const of       = /^([A-Za-z_$][\w$]*)\s+of\s+/.exec(head.code);
+    const binding  = of?.[1] ?? null;
+    const promise  = of ? { code: head.code.slice(of[0].length).trim(), end: head.end, start: head.start + of[0].length } : head;
+    const children = body(context, base);
+    let   pending  = null;
+    let   failed   = null;
+
+    while (true) {
+      if (!pending && clause('@pending', base)) { pending = body(context, base); continue; }
+      if (!failed && clause('@catch', base)) {
+        const name = condition().code;
+        if (!/^[A-Za-z_$][\w$]*$/.test(name)) throw fail('expected a name: @catch (error)');
+        failed = { children: body(context, base), name };
+        continue;
+      }
+      break;
+    }
+
+    return { type: 'Await', binding, children, failed, pending, promise };
+  }
+
+  // @var name = value: a name for the rest of the body. $name follows what it reads (a computed), a plain
+  // name is the value at the time the body is made. one line
+  function varBlock () {
+    sticky(INLINE_SPACE);
+    const name = sticky(/[A-Za-z_$][\w$]*/y)?.[0];
+    if (!name) throw fail('expected a name: @var name = value');
+    sticky(INLINE_SPACE);
+    expect('=');
+    sticky(INLINE_SPACE);
+    const start = i;
+    while (i < source.length && !atNewline()) i++;
+    const text  = source.slice(start, i);
+    const code  = text.trim().replace(/;$/, '');
+    if (!code) throw fail('expected a value: @var name = value', start);
+    return { type: 'Var', name, value: { code, end: start + code.length + offset, start: start + offset } };
   }
 
   // @fragment row (item, index): markup with parameters, a function returning a view (d-27)
@@ -580,9 +624,13 @@ function normalize (children, pre = false) {
     if (node.type === 'Element') node.children = normalize(node.children, pre || node.tag === 'pre');
     if (node.type === 'If')      { for (const branch of node.branches) branch.children = normalize(branch.children, pre); }
     if (node.type === 'Match')  { for (const branch of node.cases)    branch.children = normalize(branch.children, pre); }
-    if (node.type === 'For' || node.type === 'If' || node.type === 'Match' || node.type === 'FragmentDef') {
+    if (node.type === 'For' || node.type === 'If' || node.type === 'Match' || node.type === 'FragmentDef' || node.type === 'Await') {
       if (node.children) node.children = normalize(node.children, pre);
       if (node.fallback) node.fallback = normalize(node.fallback, pre);
+    }
+    if (node.type === 'Await') {
+      if (node.pending) node.pending = normalize(node.pending, pre);
+      if (node.failed)  node.failed.children = normalize(node.failed.children, pre);
     }
     out.push(node);
   }

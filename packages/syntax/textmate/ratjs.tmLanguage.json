@@ -190,7 +190,7 @@
           ]
         },
         {
-          "begin": "@(?:else\\s+if|fragment|default|match|case|else|for|if)(?![\\w$])",
+          "begin": "@(?:else\\s+if|fragment|default|pending|await|catch|match|case|else|for|var|if)(?![\\w$])",
           "beginCaptures": {
             "0": {
               "name": "keyword.control.block"
@@ -2141,7 +2141,7 @@
           ]
         },
         {
-          "begin": "@(?:else\\s+if|fragment|default|match|case|else|for|if)(?![\\w$])",
+          "begin": "@(?:else\\s+if|fragment|default|pending|await|catch|match|case|else|for|var|if)(?![\\w$])",
           "beginCaptures": {
             "0": {
               "name": "keyword.control.block"

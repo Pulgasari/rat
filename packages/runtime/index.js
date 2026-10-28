@@ -14,3 +14,4 @@ export * from './browser/dom.js';
 export * from './browser/errors.js';
 export * from './browser/events.js';
 export * from './browser/keys.js';
+export * from './browser/wait.js';
