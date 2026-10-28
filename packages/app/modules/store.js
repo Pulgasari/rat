@@ -12,7 +12,7 @@ keys and values named after the app.
 // :::::: IMPORT
 
 import { createStore } from '@rat/bunker';
-import '../vendor/bunker.js'; // what is this good for ???
+import '../vendor/bunker.js';   // $items and as(List) on the store (a side effect: package.json sideEffects)
 import { bunkerDriverOf } from '../drivers.js';
 
 // ::::::
