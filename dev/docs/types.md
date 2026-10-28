@@ -98,6 +98,8 @@ a field may be called anything but `assign`, `schema` and `toJSON`.
 
 `?` before a field's name makes it optional, short for `.optional()`: `Record({ exec: Fn, '?title': Str })` is `Record({ exec: Fn, title: Str.optional() })`.
 
+# Segments
+
 ## Str
 
 Str is the schema of a string, and the cases of writing one:
@@ -187,5 +189,9 @@ accent.hex;            // '#ffad5c80'
 accent.mix('#000');    // a new color, half way to black
 accent.set('hsl(200 50% 50%)');
 ```
+
+## FileExt
+
+## Path
 
 a gray has no hue: after `s = 0`, `h` reads 0. named css colors (`'red'`) are not read yet.
