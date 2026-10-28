@@ -1,0 +1,85 @@
+<script>
+  // <Preferences />: where the tasks are synced, the reminders, export and import as json or
+  // todo.txt. above the shared settings in <Settings>
+
+  import { toast } from './../../.shared/toast.js';
+
+  import reminders  from './../modules/reminders.js';
+  import * as store from './../modules/store.js';
+  import sync       from './../modules/sync.js';
+
+  const { dialogs } = RAT.app;
+
+  const PERMISSIONS = {
+    default     : 'reminders show while the app is open.',
+    denied      : 'notifications are blocked, reminders show as toasts.',
+    granted     : 'notifications are on.',
+    native      : 'reminders are scheduled on the device.',
+    unsupported : 'this browser has no notifications, reminders show as toasts.',
+  };
+
+  let $file       = null;
+  let $permission = reminders.permission();
+
+  const $place  = sync.place.value;
+  const $status = sync.status.value;
+  const stamp   = new Date().toISOString().slice(0, 10);
+
+  function save (name, text, type) {
+    const url  = URL.createObjectURL(new Blob([text], { type }));
+    const link = Object.assign(document.createElement('a'), { download: name, href: url });
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function importFile (file) {
+    if (!file) return;
+    const text  = await file.text();
+    const count = file.name.endsWith('.json') || text.trimStart().startsWith('{') ? await store.merge(JSON.parse(text)) : await store.fromTodoTxt(text);
+    toast.success(`${count} imported`);
+  }
+
+  async function connectFolder () {
+    if (await sync.connect({ kind: 'folder' })) toast.success('syncing with the folder');
+  }
+
+  async function connectDav () {
+    const ask = (message, value = '') => dialogs.prompt({ message, title: 'webdav', value });
+    const url = await ask('the webdav url of a folder', 'https://');
+    if (!url) return;
+    await sync.connect({ kind: 'webdav', password: await ask('password') ?? '', url, username: await ask('username') ?? '' });
+    toast.success('syncing with webdav');
+  }
+</script>
+
+<section>
+  <h3>sync</h3>
+  @if ($place)
+    <p.hint>{$place.kind}: {$place.name}<br />{$status}</p.hint>
+    <div.actions>
+      <btn-push icon='refresh' label='sync now' onclick={() => sync.pull()} />
+      <btn-push icon='unlink' label='stop' onclick={() => sync.disconnect()} />
+    </div.actions>
+  @else
+    <p.hint>a todo.json in a folder or on a webdav server, merged task by task.</p.hint>
+    <div.actions>
+      <btn-push icon='folder' label='folder' onclick={connectFolder} />
+      <btn-push icon='cloud' label='webdav' onclick={connectDav} />
+    </div.actions>
+</section>
+
+<section>
+  <h3>reminders</h3>
+  <p.hint>{PERMISSIONS[$permission]}</p.hint>
+  @if ($permission === 'default'): <btn-push icon='bell' label='allow notifications' onclick={async () => $permission = await reminders.ask()} />
+</section>
+
+<section>
+  <h3>export and import</h3>
+  <div.actions>
+    <btn-push icon='download' label='json' onclick={() => save(`todo-${stamp}.json`, JSON.stringify(store.snapshot(), null, 2), 'application/json')} />
+    <btn-push icon='download' label='todo.txt' onclick={() => save(`todo-${stamp}.txt`, store.toTodoTxt(), 'text/plain')} />
+    <btn-push icon='upload' label='import' onclick={() => $file?.click()} />
+  </div.actions>
+  <input type='file' accept='.json,.txt,application/json,text/plain' hidden ref={$file} onchange={event => { importFile(event.currentTarget.files[0]); event.currentTarget.value = ''; }} />
+</section>

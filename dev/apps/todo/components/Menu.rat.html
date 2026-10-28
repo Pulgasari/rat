@@ -1,0 +1,52 @@
+<script>
+  // <Menu />: the views, the lists and the tags, the way through the tasks
+
+  import * as store from './../modules/store.js';
+  import {
+    $counts, $filter, $list, $tag, $view,
+    countOfList, countOfTag, deleteList, newList, openList, openTag, openView, renameList, search,
+  } from './../state.rat.js';
+
+  const VIEWS = [
+    { count: 'today',    icon: 'today',    label: 'Today',    name: 'today'    },
+    { count: 'upcoming', icon: 'calendar', label: 'Upcoming', name: 'upcoming' },
+    { count: 'someday',  icon: 'cloud',    label: 'Someday',  name: 'someday'  },
+    { icon: 'done',      label: 'Done',    name: 'done' },
+  ];
+</script>
+
+@fragment item (icon, label, count, active, onclick)
+  <button.nav-link type='button' aria-current={active ? 'page' : null} onclick={onclick}>
+    <svg-icon icon={icon} /><span>{label}</span>
+    @if (count): <span.count>{count}</span>
+  </button.nav-link>
+
+<div.menu>
+  <Brand name='Todo' icon='./app.svg' />
+  <input.search type='search' placeholder='search tasks …' value={$filter} oninput={event => search(event.target.value)} />
+
+  <nav>
+    @for (view of VIEWS)
+      <div.nav-item>{item(view.icon, view.label, view.count ? $counts[view.count] : 0, $view === view.name, () => openView(view.name))}</div.nav-item>
+  </nav>
+
+  <h4.menu-head>lists <btn-icon icon='add' label='new list' onclick={newList} /></h4.menu-head>
+  <nav>
+    @for (list of store.lists.value)
+      <div.nav-item>
+        {item(list.id === store.INBOX ? 'inbox' : 'list', list.name, countOfList(list.id), $view === 'list' && $list === list.id, () => openList(list.id))}
+        @if (list.id !== store.INBOX)
+          <btn-icon icon='edit' label='rename' onclick={() => renameList(list.id)} />
+          <btn-icon icon='delete' label='delete' onclick={() => deleteList(list.id)} />
+      </div.nav-item>
+  </nav>
+
+  @if (store.tags.value.length)
+    <h4.menu-head>tags</h4.menu-head>
+    <nav.tags>
+      @for (name of store.tags.value)
+        <div.nav-item>{item('hash', name, countOfTag(name), $view === 'tag' && $tag === name, () => openTag(name))}</div.nav-item>
+    </nav.tags>
+
+  <div.side-foot><InstallTip /></div.side-foot>
+</div.menu>

@@ -1,0 +1,61 @@
+<script>
+  // <TaskRow task={task} />: a task. swiped right it is ticked, swiped left deleted, both with an
+  // undo in the toast. a pan that moved the row is no click on it
+
+  import { dismissable } from '@aufbau/gestures';
+  import { effect }      from '@rat/runtime';
+
+  import { dayOf, dueDay, dueLabel, repeatLabel } from './../modules/dates.js';
+  import * as store from './../modules/store.js';
+  import { $selected, edit, removeTask, tickTask } from './../state.rat.js';
+
+  let { $task } = this.props;
+
+  let $row = null;
+
+  const $listName = $task.list !== store.INBOX ? store.lists.value.find(list => list.id === $task.list)?.name : null;
+  const $subtasks = store.tasks.value.filter(item => item.parent === $task.id);
+  const $overdue  = !$task.done && $task.due && dueDay($task.due) < dayOf();
+
+  effect(() => {
+    const node = $row;
+    const id   = $task.id;
+    if (!node) return;
+    let moved = false;
+    const handle = dismissable(node, {
+      directions : ['left', 'right'],
+      onDismiss  : async ({ direction }) => {
+        await (direction === 'right' ? tickTask(id) : removeTask(id));
+        requestAnimationFrame(() => { if (node.isConnected) handle.reset(); });
+      },
+      onMove     : ({ offset }) => { if (Math.abs(offset) > 8) moved = true; },
+    });
+    const down  = () => { moved = false; };
+    const click = event => { if (moved) { event.stopPropagation(); event.preventDefault(); moved = false; } };
+    node.addEventListener('pointerdown', down, true);
+    node.addEventListener('click', click, true);
+    return () => {
+      handle.destroy();
+      node.removeEventListener('pointerdown', down, true);
+      node.removeEventListener('click', click, true);
+    };
+  });
+</script>
+
+<div.task ref={$row} data-priority={$task.priority || null} data-done={$task.done ? '' : null} aria-current={$selected === $task.id ? 'true' : null}>
+  <button.check type='button' aria-pressed={$task.done ? 'true' : 'false'} aria-label={$task.done ? 'reopen' : 'tick'} onclick={() => tickTask($task.id)}>
+    <svg-icon icon={$task.done ? 'done' : 'open'} />
+  </button.check>
+  <button.body type='button' onclick={() => edit($task.id)}>
+    <span.title>{$task.title}</span>
+    <span.meta>
+      @if ($task.due): <span class={$overdue ? 'due overdue' : 'due'}><svg-icon icon='calendar' />{dueLabel($task.due)}</span>
+      @if ($task.repeat): <span title={repeatLabel($task.repeat)}><svg-icon icon='repeat' /></span>
+      @if ($task.remind): <span><svg-icon icon='bell' /></span>
+      @if ($task.notes): <span><svg-icon icon='notes' /></span>
+      @if ($subtasks.length): <span><svg-icon icon='subtasks' />{$subtasks.filter(item => item.done).length}/{$subtasks.length}</span>
+      @if ($listName): <span.list>{$listName}</span>
+      @for (name of $task.tags): <span.tag>#{name}</span>
+    </span.meta>
+  </button.body>
+</div.task>

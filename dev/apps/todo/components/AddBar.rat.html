@@ -1,0 +1,41 @@
+<script>
+  // <AddBar defaults={{ due, list, tag }} />: one line, read while it is typed. what was read shows as
+  // chips, a chip removed gives its words back to the title. defaults fill what the line does not say
+
+  import { dayLabel, dueDay } from './../modules/dates.js';
+  import { parse }            from './../modules/parse.js';
+  import * as store           from './../modules/store.js';
+
+  let $ignore = [];
+  let $text   = '';
+
+  const $parsed = parse($text, { ignore: [...$ignore] });
+
+  async function submit (event) {
+    event.preventDefault();
+    const parsed   = parse($text, { ignore: [...$ignore] });
+    const defaults = props.defaults ?? {};
+    if (!parsed.title.trim()) return;
+    const extra = {};
+    if (defaults.list && !parsed.list) extra.list = defaults.list;
+    if (defaults.tag)                  parsed.tags.push(defaults.tag);
+    if (defaults.due && !parsed.due && !parsed.someday) parsed.due = defaults.due;
+    await store.add(parsed, extra);
+    $text   = '';
+    $ignore = [];
+  }
+</script>
+
+<form.add onsubmit={submit}>
+  <div.add-field>
+    <svg-icon icon='add' />
+    <input type='text' enterkeyhint='done' autocomplete='off' placeholder={props.placeholder ?? 'add a task, e.g. call anna tomorrow 9:00 #family !2'} bind:value={$text} />
+  </div.add-field>
+  @if ($parsed.tokens.length)
+    <div.chips>
+      @for (token of $parsed.tokens)
+        <button.chip type='button' data-kind={token.kind} title='keep as text' onclick={() => $ignore = [...$ignore, token.text]}>
+          {token.kind === 'date' && $parsed.due ? dayLabel(dueDay($parsed.due)) : token.label}<svg-icon icon='close' />
+        </button.chip>
+    </div.chips>
+</form.add>

@@ -1,0 +1,25 @@
+<script>
+  // <TaskView name='today' />: every view is this one over its own groups
+
+  import { defaultsOf, sectionsOf, titleOf } from './../state.rat.js';
+
+  let { $name } = this.props;
+
+  const $sections = sectionsOf($name);
+  const $empty    = $sections.every(section => !section.tasks.length) && !$sections.some(section => section.empty);
+</script>
+
+<header>
+  <btn-icon icon='menu' label='lists' onclick={() => RAT.app.toggle('menu')} />
+  <h2>{titleOf($name)}</h2>
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</header>
+
+@if ($name !== 'done' && $name !== 'search'): <AddBar defaults={defaultsOf($name)} />
+
+<main.groups>
+  @if ($empty)
+    <Empty icon='done' title='All clear' hint={$name === 'done' ? 'nothing done yet' : 'nothing here'} />
+  @else
+    @for (section of $sections): <TaskSection {...section} />
+</main.groups>
