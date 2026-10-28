@@ -52,7 +52,7 @@ export class RatApp extends HTMLElement {
   toggle (name: string, force?: boolean): RatArea | null;
   /** The views of a path, the outermost first, and the params of all levels. */
   match (path: string): { params: Record<string, string>; views: RatView[] };
-  /** ready() waits for it too. */
+  /** ready() waits for it too, a failure goes to fail(). */
   hold<T> (promise: Promise<T>): Promise<T>;
   /** Loads src (or the module of the importer handed over) and mounts its component in place of what the app holds. */
   start (importer?: () => Promise<object>, config?: Record<string, any>): Promise<void>;
@@ -60,6 +60,10 @@ export class RatApp extends HTMLElement {
   run (importer: () => Promise<object>, config?: Record<string, any>): Promise<void>;
   /** The last error boundary: shows an error in a popover over the app. */
   report (error: unknown): void;
+  /** Where failed actions go: an event handler or command that threw, a promise nobody awaited. Without one: report(). */
+  catch (fn: (error: unknown) => void): this;
+  /** A failed action: to the function of catch(), else report(). An AbortError goes nowhere. */
+  fail (error: unknown): void;
   /** Loads config.rat.js once (or takes the config handed over): RAT and the mods. */
   configure (config?: Record<string, any>): Promise<Record<string, any>>;
   /** Ends [loading], in a view transition. */

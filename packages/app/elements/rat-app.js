@@ -46,7 +46,11 @@ transition. density, geometry, layout, look, mode, palette and skin go to
 @gestalt/core as they are.
 
 the last error boundary: an error no view or part took shows in a popover over
-the app (see ../boundary.js and errors.js of @rat/runtime).
+the app (see ../boundary.js and errors.js of @rat/runtime). what failed in an
+event handler, or in a promise nobody waited for, goes to catch(fn) instead,
+the views stay as they are. an abort (AbortError) is no error and goes nowhere:
+
+  RAT.app.catch(toast.error);   // app.rat.html, once: the actions catch nothing themselves
 
 events: rat:ready, rat:navigate ({ from, to, path, params }), rat:error.
 */
@@ -60,7 +64,7 @@ import { Enum }           from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '../modules/router.js';
 
-import { RAT, mount } from '@rat/runtime';
+import { ERROR, RAT, mount } from '@rat/runtime';
 
 import { catchErrors, showError }        from '../boundary.js';
 import { autoImport, componentOf, load } from '../run/loader.js';
@@ -212,7 +216,8 @@ export class RatApp extends DominaElement {
 
     this.observe.added('rat-view', () => this.schedule());
     this.observe.removed('rat-view', () => this.schedule());
-    this.track(catchErrors(this, error => this.report(error)));
+    this.track(catchErrors(this, (error, source) => source === 'handler' ? this.fail(error) : this.report(error), { handlers: true }));
+    this.track(this.#strays());
     this.on('rat:toggle', ({ detail }) => this.toggle(...detail.args));
   }
 
@@ -428,6 +433,42 @@ export class RatApp extends DominaElement {
 
   // :::::: ERRORS
 
+  #catcher = null;
+
+  // where the failed actions go: a handler that threw, a promise nobody waited for
+  catch (fn) {
+    this.#catcher = fn;
+    return this;
+  }
+
+  // an action that failed: to catch(), without one the popover
+  fail (error) {
+    if (error?.name === 'AbortError') return;
+    if (this.#catcher) this.#catcher(error);
+    else this.report(error);
+  }
+
+  // failed actions that do not bubble through the app: a handler whose element is gone (raised on the
+  // document), and, once catch() is set, a rejected promise nobody awaited
+  #strays () {
+    const orphan = event => {
+      if (event.defaultPrevented || event.detail.source !== 'handler') return;
+      event.preventDefault();
+      this.fail(event.detail.error);
+    };
+    const rejected = event => {
+      if (!this.#catcher) return;
+      event.preventDefault();
+      this.fail(event.reason);
+    };
+    document.addEventListener(ERROR, orphan);
+    globalThis.addEventListener('unhandledrejection', rejected);
+    return () => {
+      document.removeEventListener(ERROR, orphan);
+      globalThis.removeEventListener('unhandledrejection', rejected);
+    };
+  }
+
   // the last boundary (../boundary.js): what no view or part took, in a popover over the app
   report (error) {
     console.error(error);
@@ -444,9 +485,10 @@ export class RatApp extends DominaElement {
 
   // :::::: LOADING
 
-  // ready() waits for it too
+  // ready() waits for it too. it is awaited with allSettled, so a failure would go unseen: it is reported
   hold (promise) {
     this.#holds.add(promise);
+    promise.catch?.(error => this.fail(error));
     return promise;
   }
 
