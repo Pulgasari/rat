@@ -18,7 +18,7 @@
 
 <h2>This folder</h2>
 <Facts rows={{
-  folder   : $path.at(-1) ?? folderName(),
+  folder   : $path.name || folderName(),
   contains : `${$facts.folders} folders, ${$facts.files} files`,
   size     : fmt.bytes($facts.size),
   mostly   : $facts.mostly,

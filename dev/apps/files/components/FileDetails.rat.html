@@ -13,7 +13,7 @@
   size       : fmt.bytes($file.size),
   dimensions : $size && `${$size.width} × ${$size.height}`,
   modified   : fmt.date($file.lastModified),
-  in         : '/' + $file.path.join('/'),
+  in         : '/' + $file.path,
 }} />
 <div-x.actions>
   <Action icon='lucide:download' label='download' onclick={() => download($file)} />

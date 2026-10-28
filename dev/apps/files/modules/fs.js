@@ -2,8 +2,8 @@
 
 /*
 what the app does with a folder, given its root handle: a browser's FileSystemDirectoryHandle, the one
-a native folders driver of @rat/app gives (drivers/_fs.js), or a webdav server's (.shared/webdav). a path is the array of names below the
-root, [] the root itself.
+a native folders driver of @rat/app gives (drivers/_fs.js), or a webdav server's (.shared/webdav). a path is a Path (@rat/types/Path) below
+the root, Path.root the root itself; an array or 'a/b' work as well.
 
   dirAt(root, path)                 the folder handle at path
   list(root, path)                  [{ kind, name, size, lastModified, type }], folders first, by name
@@ -12,17 +12,19 @@ root, [] the root itself.
   copyFile, copyTree                a file, a folder with everything in it, into another folder
 */
 
+import { Path } from '@rat/types/Path';
+
 const byName = (a, b) => a.kind !== b.kind ? (a.kind === 'directory' ? -1 : 1) : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
 const isFn = (sth) => typeof sth === 'function';
 
-export async function dirAt (root, path = []) {
+export async function dirAt (root, path = Path.root) {
   let dir = root;
-  for (const name of path) dir = await dir.getDirectoryHandle(name);
+  for (const name of Path.from(path)) dir = await dir.getDirectoryHandle(name);
   return dir;
 }
 
 // the files are read side by side: one after the other takes twice as long in a big folder
-export async function list (root, path = []) {
+export async function list (root, path = Path.root) {
   const dir     = await dirAt(root, path);
   const handles = [];
   for await (const handle of dir.values()) handles.push(handle);

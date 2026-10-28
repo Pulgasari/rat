@@ -3,6 +3,7 @@
   // until then. from is the entry's source, null for the granted folder
 
   import { untrack } from '@rat/signals';
+  import { Path }    from '@rat/types/Path';
 
   import { iconOf, isImage, rootOfSource } from '../state.rat.js';
 
@@ -10,7 +11,7 @@
   import { $folder }  from '../modules/root.rat.js';
 
   const entry  = props.entry;
-  const at     = props.at ?? [];
+  const at     = props.at ?? Path.root;
   const from   = props.from ?? null;
   const thumbs = RAT.app.thumbnails;
   const id     = isImage(entry) ? idOf(entry) : null;
@@ -20,7 +21,7 @@
   // the source, the path and what changes with the file's content
   function idOf ({ lastModified, name, size }) {
     const source = from ?? untrack(() => $folder)?.id;
-    return `${source}/${at.join('/')}/${name}:${size}:${lastModified}`;
+    return `${source}/${at}/${name}:${size}:${lastModified}`;
   }
 
   // asked for when it scrolls near the screen, once

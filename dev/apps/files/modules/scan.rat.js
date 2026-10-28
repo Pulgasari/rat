@@ -13,10 +13,11 @@ running one. dot folders and node_modules are skipped.
 
   $index      { scannedAt, total, size, categories: { [id]: { count, size } }, recent: [entry], files: [entry] }
   $scanning   null, or { files } while a walk runs
-  entry       { name, path: ['a', 'b'], size, lastModified, type }
+  entry       { name, path: Path, size, lastModified, type }, the path of the folder it lies in
 */
 
 import { FileExt } from '@rat/types/FileExt';
+import { Path }    from '@rat/types/Path';
 
 // :::::: CATEGORIES
 
@@ -78,7 +79,7 @@ async function walk (handle, path, found, signal) {
   for (const entry of await Promise.all(reads)) if (entry) found.push(entry);
   $scanning = { files: found.length };
 
-  for (const dir of dirs) await walk(dir, [...path, dir.name], found, signal);
+  for (const dir of dirs) await walk(dir, path.child(dir.name), found, signal);
 }
 
 function summarize (files) {
@@ -98,8 +99,12 @@ function summarize (files) {
 
 // :::::: API
 
+// the stored paths are strings ('a/b'), an older index holds arrays: both become a Path again
+const revive = entry => ({ ...entry, path: Path.from(entry.path) });
+
 export async function restore (folder) {
-  $index = folder ? await files.read(pathOf(folder), 'json').catch(() => null) : null;
+  const stored = folder ? await files.read(pathOf(folder), 'json').catch(() => null) : null;
+  $index = stored && { ...stored, files: stored.files.map(revive), recent: stored.recent.map(revive) };
   return $index;
 }
 
@@ -112,7 +117,7 @@ export async function scan (root, folder) {
   $scanning = { files: 0 };
 
   try {
-    await walk(root, [], found, controller.signal);
+    await walk(root, Path.root, found, controller.signal);
     $index = summarize(found);
     await files.write(pathOf(folder), JSON.stringify($index));
     return $index;

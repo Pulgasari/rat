@@ -674,6 +674,8 @@ return run({ … }, ({ progress, signal }) => scan.scan(handle, folder, { onProg
 
 ### 7 the write pattern
 
+**status:** the re-listing is `refresh()` now (a signal the listing effect reads), not `goTo([...at])`: with one instance per path, setting the same path changes nothing.
+
 `app` · four actions, the same steps: ask, permission, guard, a task in the write lane, list again.
 
 ```js
@@ -784,7 +786,7 @@ context.hide();
 
 ### 12 paths
 
-**status:** started: `Segments`, `Path` (`@rat/types/Path`, one instance per path) and `FileExt` (`@rat/types/FileExt`) exist. files uses `FileExt` in scan.rat.js; the paths of the app are still arrays.
+**status:** done: every path in files is a `Path` (`@rat/types/Path`). one instance per path, so `at === $path` compares; `name`, `parent`, `child()`, `startsWith()` replace `at(-1)`, `slice(0, -1)`, `[...at, name]`, `isInside()`. tabs, bookmarks and the index store paths as `'a/b'` and read older arrays as well.
 
 `app` · a path is an array, compared as a string everywhere.
 

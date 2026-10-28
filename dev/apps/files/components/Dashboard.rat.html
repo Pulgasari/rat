@@ -5,6 +5,8 @@
 
   import { $category, $categoryFiles, $hits, $query, SORTED, goTo, manageRemotes, open, openRemote, sourceName } from '../state.rat.js';
 
+  import { Path } from '@rat/types/Path';
+
   import { bookmarks, folderTypeOf } from '../modules/places.rat.js';
   import { $connections }            from '../modules/remotes.rat.js';
   import { $handle }                 from '../modules/root.rat.js';
@@ -86,7 +88,7 @@
       @if ($bookmarks.length)
         <ul.tiles>
           @for (bookmark of $bookmarks)
-            <Tile icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} name={bookmark.name} note={'/' + bookmark.path.join('/')} onclick={() => library(bookmark.path)} />
+            <Tile icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} name={bookmark.name} note={'/' + bookmark.path} onclick={() => library(bookmark.path)} />
         </ul.tiles>
       @else
         <p.hint>Folders you bookmark show up here, from their details below.</p.hint>
@@ -103,7 +105,7 @@
     <section>
       <h2>Folder</h2>
       <ul.tiles>
-        <Tile icon='lucide:folder-open' name={folderName()} note={$index ? fmt.bytes($index.size) : 'the granted folder'} onclick={() => library([])} />
+        <Tile icon='lucide:folder-open' name={folderName()} note={$index ? fmt.bytes($index.size) : 'the granted folder'} onclick={() => library(Path.root)} />
       </ul.tiles>
       <Status />
     </section>

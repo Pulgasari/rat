@@ -2,8 +2,8 @@
 
 /*
 what the user marks in the folder: bookmarks, and the foldertype a folder is given. both belong to the
-granted folder they were made in, a different folder starts empty. a path is the array of names below
-the root, [] the root.
+granted folder they were made in, a different folder starts empty. a path is a Path (@rat/types/Path),
+kept as 'a/b'.
 
 foldertypes: audio, documents, images and videos are built in, more are made with a name and an icon.
 a folder has one foldertype or none; suggestFolderType() reads a listing and names the category most of
@@ -14,8 +14,9 @@ its files belong to. a foldertype changes the folder's icon for now, a default v
 
 // :::::: IMPORT
 
-import { effect } from '@rat/signals';
-import { $Dict, $Table, List, Str } from '@rat/types';
+import { effect }             from '@rat/signals';
+import { $Dict, $Table, Str } from '@rat/types';
+import { Path }               from '@rat/types/Path';
 
 import * as storage from '../../.shared/storage.js';
 import { $folder }  from './root.rat.js';
@@ -23,11 +24,14 @@ import { $folder }  from './root.rat.js';
 // ::::::
 
 const // ::: schemas
-Bookmark   = { folder: Str, name: Str, path: List(Str) },
+Bookmark   = { folder: Str, name: Str, path: Str },
 Foldertype = { icon: Str, label: Str };
 
+// a bookmark keeps its path as 'a/b' (an older one as ['a', 'b'])
+const stored = (bookmark) => ({ ...bookmark, path: String(Path.from(bookmark.path)) });
+
 const // ::: signals (stored)
-$bookmarks      = $Table (Bookmark)        .create :: storage.read('files:bookmarks',   []),   // [{ folder, name, path }]
+$bookmarks      = $Table (Bookmark)        .create :: storage.read('files:bookmarks',   []).map(stored),   // [{ folder, name, path }]
 $folderTyped    = $Dict  (Str, Str)        .create :: storage.read('files:folderTyped', {}),   // 'folder:a/b' -> foldertype id
 $ownFolderTypes = $Dict  (Str, Foldertype) .create :: storage.read('files:folderTypes', {});   // id -> { icon, label }
 
@@ -38,7 +42,7 @@ effect(() => storage.write('files:folderTypes', $ownFolderTypes));
 
 const $folderId = String($folder?.id ?? '');
 
-const keyOf = (path) => `${$folderId}:${path.join('/')}`;
+const keyOf = (path) => `${$folderId}:${path}`;
 
 // :::::: FOLDERTYPES
 
@@ -80,9 +84,10 @@ export function suggestFolderType (entries, categoryOf) {
 
 // :::::: BOOKMARKS
 
+// the bookmarks of the folder, each with its path as a Path
 export const
-bookmarks      = ()           => $bookmarks.where  ({ folder: $folderId }),
-isBookmarked   = (path)       => $bookmarks.has    ({ folder: $folderId, path }),
-toggleBookmark = (path, name) => $bookmarks.toggle ({ folder: $folderId, name, path }, { folder: $folderId, path });
+bookmarks      = ()           => $bookmarks.where  ({ folder: $folderId }).map(bookmark => ({ ...bookmark, path: Path.from(bookmark.path) })),
+isBookmarked   = (path)       => $bookmarks.has    ({ folder: $folderId, path: String(path) }),
+toggleBookmark = (path, name) => $bookmarks.toggle ({ folder: $folderId, name, path: String(path) }, { folder: $folderId, path: String(path) });
 
 

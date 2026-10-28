@@ -2,6 +2,8 @@
   // <Library />: the folder in tabs: crumbs, filter, list or grid, a new folder. the tabs and the search bar
   // sit on top or at the bottom by the settings, app.css orders them
 
+  import { Path } from '@rat/types/Path';
+
   import {
     $filter, $loading, $path, $settings, $visible,
     folderName, goTo, newFolder, rootHandle
@@ -10,12 +12,12 @@
   const $ready = Boolean(rootHandle());
   const $grid  = $settings.viewmode === 'grid';
 
-  const crumb      = (event) => goTo(event.detail.path.split('/').filter(Boolean));
+  const crumb      = (event) => goTo(Path.from(event.detail.path));
   const search     = (text)  => $filter = text;
   const toggleView = ()      => $settings.viewmode = $grid ? 'list' : 'grid';
 
   function up () {
-    if ($path.length) goTo($path.slice(0, -1));
+    if ($path.parent) goTo($path.parent);
     else RAT.app.router.go('/');
   }
 </script>
@@ -24,7 +26,7 @@
   <Bar title='Library' />
   <div.scroll><Welcome /></div.scroll>
 @else
-  <Bar title={$path.at(-1) ?? folderName()} back={up}>
+  <Bar title={$path.name || folderName()} back={up}>
     <btn-icon
       icon={$grid ? 'lucide:list' : 'lucide:layout-grid'}
       label={$grid ? 'show as list' : 'show as grid'}
@@ -32,7 +34,7 @@
     />
   </Bar>
 
-  <nav-crumbs root={folderName()} path={'/' + $path.join('/')} on:nav-crumbs={crumb} />
+  <nav-crumbs root={folderName()} path={'/' + $path} on:nav-crumbs={crumb} />
 
   <div.pane>
     <div.listing>

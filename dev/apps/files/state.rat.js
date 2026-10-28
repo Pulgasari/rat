@@ -6,7 +6,8 @@ selection, the file in the preview, the settings. the views and the context area
 change it. the modules hold the rest: the folder (root), the servers (remotes), the index (scan), tasks,
 places, transfer, sending (sync). the views import their $values straight from there.
 
-a tab is { path, source }: source null is the granted folder, else the id of a server.
+a tab is { path, source }: path a Path (@rat/types/Path), source null for the granted folder, else the id
+of a server.
 */
 
 // :::::: IMPORT
@@ -14,6 +15,7 @@ a tab is { path, source }: source null is the granted folder, else the id of a s
 import dom from '@domina/dom';
 import { effect, untrack }    from '@rat/signals';
 import { $Record, Enum, Str } from '@rat/types';
+import { Path }               from '@rat/types/Path';
 
 import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
@@ -98,12 +100,17 @@ $size     = null;    // { width, height } of the image in the preview
 
 // :::::: TABS, each { path, source }
 
-let $tabState = read('files:tabs', { index: 0, list: [{ path: [] }] });
+const HOME = { path: Path.root, source: null };
+
+// the paths are kept as 'a/b' (an older tab as ['a', 'b'])
+const stored = read('files:tabs', { index: 0, list: [] });
+
+let $tabState = { index: stored.index, list: stored.list.map(tab => ({ path: Path.from(tab.path), source: tab.source ?? null })) };
 
 effect(() => write('files:tabs', $tabState));
 
 export const
-$tabs     = $tabState.list?.length ? $tabState.list : [{ path: [] }],
+$tabs     = $tabState.list?.length ? $tabState.list : [HOME],
 $tabIndex = Math.min(Math.max(0, $tabState.index ?? 0), $tabs.length - 1),
 $path     = $tabs[$tabIndex].path,
 $source   = $tabs[$tabIndex].source ?? null;
@@ -129,7 +136,7 @@ export function openTab (at = $path, from = $source) {
 }
 
 export function closeTab (position) {
-  if ($tabs.length === 1) return goTo([]);
+  if ($tabs.length === 1) return goTo(Path.root);
   setTabs($tabs.filter((_, other) => other !== position), position < $tabIndex ? $tabIndex - 1 : $tabIndex);
 }
 
@@ -139,7 +146,7 @@ export function switchTab (position) {
   $selected = null;
 }
 
-export const tabName = tab => tab.path.at(-1) ?? sourceName(tab.source ?? null);
+export const tabName = tab => tab.path.name || sourceName(tab.source);
 
 // :::::: THE FOLDER AND THE SERVERS
 
@@ -154,13 +161,19 @@ folderName = () => sourceName   ($source);
 // an entry of the index carries its path and lies in the folder, one of a listing in the tab's source
 export const sourceOf = entry => entry.source !== undefined ? entry.source : entry.path ? null : $source;
 
-// the listing follows the folder, its permission and the path by itself. the old one goes at once:
-// its entries would still open against the new path. the last request wins, a late answer is dropped
+// the listing follows the folder, its permission and the path by itself, refresh() asks again. the old one
+// goes at once: its entries would still open against the new path. the last request wins, a late answer is
+// dropped
+let $reload = 0;
 let request = 0;
+
+export const refresh = () => { $reload++; };
+
 effect(() => {
   const handle = rootHandle();
   const at     = $path;
   const mine   = ++request;
+  $reload;   // read, so refresh() runs this again
 
   $entries = [];
   $loading = Boolean(handle);
@@ -210,19 +223,19 @@ export const isImage = entry => entry.kind !== 'directory' && Boolean(entry.type
 
 // a folder with a type shows the type's icon, at is the path the entry lies in
 export const iconOf = (entry, at) => entry.kind === 'directory'
-  ? (at && places.folderTypeOf([...at, entry.name])?.icon) || 'lucide:folder'
+  ? (at && places.folderTypeOf(at.child(entry.name))?.icon) || 'lucide:folder'
   : CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'lucide:file';
 
-export const keyOf = entry => `${(entry.path ?? []).join('/')}/${entry.name}`;
+export const keyOf = entry => String((entry.path ?? Path.root).child(entry.name));
 
 export function open (entry, at = $path) {
-  if (entry.kind === 'directory') { goTo([...at, entry.name]); return router.go('/library'); }
+  if (entry.kind === 'directory') { goTo(at.child(entry.name)); return router.go('/library'); }
   $file = { ...entry, kind: 'file', path: entry.path ?? at, source: sourceOf(entry) };
   router.go('/preview');
 }
 
 export function showInFolder (entry) {
-  goTo(entry.path ?? [], sourceOf(entry));
+  goTo(entry.path ?? Path.root, sourceOf(entry));
   router.go('/library');
 }
 
@@ -261,7 +274,7 @@ async function writable () {
 // a write as a task. once it is done, the folder it changed is listed anew if it is still on screen
 async function writeTask (task, at, work) {
   await run({ ...task, lane: 'write' }, work);
-  if (at.join('/') === $path.join('/')) goTo([...at]);
+  if (at === $path) refresh();
 }
 
 export async function newFolder () {
@@ -308,7 +321,7 @@ export async function paste () {
   if (!board) return;
   const handle = await writable();
   const items  = board.items.toArray();
-  const target = [...$path];
+  const target = $path;
   const what   = items.length === 1 ? items[0].name : `${items.length} items`;
   const verb   = board.mode === 'move' ? 'move' : 'copy';
   const icon   = ICON[verb];
@@ -317,11 +330,11 @@ export async function paste () {
 
   // listed anew whether it worked or not: a part may have arrived
   try {
-    await run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
+    await run({ icon, label: `${verb} ${what} to /${target}`, lane: 'write' },
       ({ progress, signal }) => transfer.transfer(handle, items, board.mode, target, { onProgress: progress, signal }));
   }
   finally {
-    if (target.join('/') === $path.join('/')) goTo([...target]);
+    if (target === $path) refresh();
   }
 }
 
@@ -337,7 +350,7 @@ export async function download (entry) {
 export async function chooseFolder () {
   if (!root.supported) throw new Error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
   if (!await root.grant()) return;
-  setTabs([{ path: [] }], 0);
+  setTabs([HOME], 0);
   router.go('/');
 }
 
@@ -351,13 +364,13 @@ export async function closeFolder () {
   await scan.forget($folder);
   scanned = null;
   await root.forget();
-  setTabs([{ path: [] }], 0);
+  setTabs([HOME], 0);
 }
 
 // :::::: SERVERS, each opens in a tab of its own
 
 export function openRemote (id) {
-  openTab([], id);
+  openTab(Path.root, id);
   router.go('/library');
 }
 
@@ -372,7 +385,7 @@ export async function forgetRemote (connection) {
   if (!await dialogs.confirm({ message: `Forget “${connection.name}”? The files on the server stay.`, ok: 'Forget', title: connection.name })) return;
   await remotes.remove(connection.id);
   const left = $tabs.filter(tab => tab.source !== connection.id);
-  setTabs(left.length ? left : [{ path: [] }], 0);
+  setTabs(left.length ? left : [HOME], 0);
 }
 
 // :::::: SEND, a file of the folder into the outbox, the view opens

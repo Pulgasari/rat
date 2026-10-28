@@ -6,7 +6,7 @@
   import { about, open } from '../state.rat.js';
 
   const entry = props.entry;
-  const note  = `/${entry.path.join('/')} · ${fmt.bytes(entry.size)}`;
+  const note  = `/${entry.path} · ${fmt.bytes(entry.size)}`;
 </script>
 
 <li.row>
