@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "license": "MIT",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.js",
+    "./FileExt": "./special/FileExt.js",
+    "./Path": "./special/Path.js"
   }
 }

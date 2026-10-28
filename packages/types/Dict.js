@@ -31,14 +31,15 @@ import { reactive, register } from '@rat/signals';
 import './Map.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
 
 import { Record }                  from './Record.js';
-import { Schema, isObject, typed } from './schema.js';
+import { Schema, isObject, schemaOf, typed } from './schema.js';
 
 // ::: the schema
 
-const valueOf = value => value instanceof Schema ? value : Record(value);
+const valueOf = value => schemaOf(value) instanceof Schema ? schemaOf(value) : Record(value);
 
 // a Map or a plain object, every key and value checked and coerced, a Map out
-function dictOf (key, value) {
+function dictOf (keyed, value) {
+  const key    = schemaOf(keyed);
   const values = valueOf(value);
   return new Schema({
     describe : { key: key.describe, value: values.describe },

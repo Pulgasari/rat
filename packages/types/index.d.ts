@@ -109,6 +109,10 @@ export const $Dict : DictConstructor;
 export const Schema: new (definition: object) => Schema<unknown>;
 
 export function isSchema (value: unknown): value is Schema<unknown>;
+/** Marks a type whose schema takes nothing (Color, Path …): where a schema is asked, the type stands for it. */
+export function bare<T extends Function> (Type: T): T;
+/** A bare type as its schema (Path -> Path()), anything else as it is. Records, lists, dicts, tuples and unions ask it for their parts. */
+export function schemaOf<T> (value: T): T extends () => infer S ? S : T;
 
 /** A list: length is a getter, at(i) / set(i, v) replace [i]. $List is the same, reactive. */
 export interface List<T> extends Iterable<T> {
@@ -389,3 +393,30 @@ export declare function part (name: string, test?: Test): Test;
 export declare function pattern (test: Test, guard?: ((value: any, parts: Record<string, any>) => boolean) | null): Test;
 /** The end of a tuple: at least as many items, the rest handed out as name. */
 export declare function rest (name?: string | null): Test;
+
+export type SegmentsInput = string | readonly string[] | Segments;
+
+/** Parts with a separator: 'rat:noisy:theme'. A value, a change gives a new one. Empty parts are dropped. */
+export interface Segments extends Iterable<string> {
+  readonly segments  : readonly string[];
+  readonly separator : string;
+  readonly length    : number;
+  at (index: number): string | undefined;
+  slice (start?: number, end?: number): this;
+  with (...parts: SegmentsInput[]): this;
+  equals (other: SegmentsInput): boolean;
+  /** other is the beginning of this one, part by part. */
+  startsWith (other: SegmentsInput): boolean;
+  toArray (): string[];
+  toJSON (): string;
+  toString (): string;
+}
+
+export interface SegmentsConstructor {
+  new (value?: SegmentsInput, separator?: string): Segments;
+  /** The schema: a string, the parts or Segments, made Segments with separator (':' by default). */
+  (separator?: string): TypedSchema<Segments, Segments>;
+  from (value: SegmentsInput, separator?: string): Segments;
+}
+
+export const Segments: SegmentsConstructor;

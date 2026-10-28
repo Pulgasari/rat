@@ -4,7 +4,7 @@ what the prototype compiler understands. anything marked *(planned)* is not buil
 open choices are linked to [ideas/](ideas/README.md).
 
 - [file](#file) · [holes](#holes) · [tags](#tags) · [attributes](#attributes) · [behaviors](#behaviors) · [event modifiers](#event-modifiers)
-- [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@match`](#match), [`@fragment`](#fragment)
+- [control flow](#control-flow): [three body forms](#three-body-forms), [`@if`](#if), [`@for`](#for), [`@match`](#match), [`@await`](#await), [`@var`](#var), [`@fragment`](#fragment)
 - [script sugar](#script-sugar): [signals](#signals), [typed signals](#typed-signals), [named cases](#named-cases), [match](#match-1), [pipe](#pipe), [ranges](#ranges), [`for…of`](#forof-without-a-declaration)
 - [`.rat.js`](#ratjs) · [styles](#styles) · [open](#open)
 
@@ -171,6 +171,46 @@ rules (v0):
 - patterns written into the `@case` itself (`@case { status: 'error' }`) wait for
   [d-30](ideas/pattern-matching.md#d-30) a/b/c.
 
+### `@await`
+
+the states of a promise in markup ([d-28 d](ideas.md#d-28--async-blocks-the-syntax)). the value is named in the
+head like in `@for`, `@pending` and `@catch` follow as clauses, in any order, both optional:
+
+```html
+@await (user of load($id))
+  <p>{user.name}</p>
+@pending
+  <p>loading …</p>
+@catch (error)
+  <p>{error.message}</p>
+
+@await (user of load($id)): <p>{user.name}</p>   <!-- one line: nothing until the value is there -->
+@await (save($note)): <p>saved</p>                <!-- no name: the value is not handed out -->
+```
+
+- the promise is asked again when what it reads changes (`$id`): the new one shows `@pending` and
+  replaces the one before, whose late answer is dropped.
+- `user` and `error` follow the answer: a branch stays and shows the next value.
+- without `@catch` a rejection is not handled here: it goes to `RAT.app.on('error')` (a toast).
+- compiles to `$$.wait(() => load($id.value), ready, pending, failed)` (`@rat/runtime`).
+
+### `@var`
+
+a name for a value in the middle of the markup, for the rest of its body: a value per row of a
+`@for` has no other place to live.
+
+```html
+@for (item of $items)
+  @var label  = item.name.toUpperCase()
+  @var $share = Math.round(item.count / $total * 100)
+  <li>{label} {$share}%</li>
+```
+
+- the rule of the script: `$share` is a computed and follows what it reads, `label` is the value at
+  the time the row is made.
+- one line, to its end. a later `@var` can use an earlier one.
+- compiles to constants in front of the template of the body.
+
 ### `@fragment`
 
 markup with parameters, declared once and used as a function ([d-27](ideas/fragments.md#d-27)):
@@ -194,7 +234,7 @@ markup with parameters, declared once and used as a function ([d-27](ideas/fragm
 
 ### recognition
 
-`@if`, `@for`, `@match`, `@fragment` are recognized only at the start of a line, after whitespace,
+`@if`, `@for`, `@match`, `@await`, `@var`, `@fragment` are recognized only at the start of a line, after whitespace,
 after a tag or after `}`. `mail@for.example` stays text. a `}` closes only while a
 block is open; otherwise it is text.
 
@@ -243,6 +283,22 @@ import { $busy, $queue as $tasks } from './tasks.rat.js';
 const $count = $tasks.length;   // $tasks.value.length
 $tasks = [];                    // $tasks.value = []
 ```
+
+an exported reactive variant (`$Record`, `$List` …) is imported the same way and used as it is, no
+`.value`, changed through its methods:
+
+```js
+// state.rat.js
+export const $settings = $Record(Settings).create(stored);
+
+// Library.rat.html
+import { $settings } from './state.rat.js';
+$settings.viewmode = 'grid';
+```
+
+the compiler renames the import (`$settings as $settings$import`) and reads it through
+`$$.imported(() => $settings$import)`: a signal gives its value, a variant itself, asked on the first read
+(a cycle of imports finds the module initialized).
 
 a namespace import (`tasks.$queue`) is the signal itself. `peek()` has no sugar: `untrack(() => $queue)`
 of `@rat/signals`.
@@ -549,5 +605,3 @@ compile(source, { styles: { less: code => … } }); // any other language: pass 
   is kept as is.
 - positional values and shorthand tags from htx (`<$icon 'bx:search' />`), see your
   todo on redesigning `<$xyz>`.
-- `@await`: three variants in [d-28](ideas/async-blocks.md#d-28).
-- `@let name = expr` in markup for local derivations.

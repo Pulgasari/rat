@@ -1,6 +1,6 @@
 // @rat/types :: Union
 
-import { Schema, isSchema } from './schema.js';
+import { Schema, isSchema, schemaOf } from './schema.js';
 
 class UnionSchema extends Schema {
   // the name (or index) of the first case the value fits, null for none
@@ -11,9 +11,10 @@ class UnionSchema extends Schema {
 }
 
 // Union(a, b, …) or Union({ name: a, … }), the first case's initial value is the initial one
-function Union (...cases) {
+function Union (...given) {
+  const cases   = given.map(schemaOf);
   const named   = cases.length === 1 && !isSchema(cases[0]);
-  const entries = named ? Object.entries(cases[0]) : cases.map((schema, index) => [index, schema]);
+  const entries = named ? Object.entries(cases[0]).map(([name, schema]) => [name, schemaOf(schema)]) : cases.map((schema, index) => [index, schema]);
   if (!entries.length) throw new TypeError('[rat] a Union needs at least one case');
 
   return new UnionSchema({

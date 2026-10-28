@@ -90,11 +90,26 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
 
   // ::: views
 
-  // children as a template, or null for none
+  // children as a template, or null for none. its @var lines become constants in front of it
   function view (children, depth, root = false) {
+    const vars = children.filter(child => child.type === 'Var');
+    if (vars.length) return declared(vars, children.filter(child => child.type !== 'Var'), depth, root);
     if (!children.length) return 'null';
     const body = content(children, depth, root);
     return `${$('html')}\`${body.block ? `\n${body.items.map(item => pad(depth + 1) + item).join('\n')}\n${pad(depth)}` : body.items.join('')}\``;
+  }
+
+  // @var name = value: a constant, @var $name = value a computed, read as $name.value from then on
+  function declared (vars, children, depth, root) {
+    const lines = [];
+    const names = [];
+    for (const { name, value } of vars) {
+      const code = within(names, () => expression(value));
+      lines.push(name.startsWith('$') ? `const ${name} = ${$('computed')}(() => ${code});` : `const ${name} = ${code};`);
+      if (name.startsWith('$')) names.push(name);
+    }
+    const template = within(names, () => view(children, depth + 1, root));
+    return `(() => {\n${lines.map(line => pad(depth + 1) + line).join('\n')}\n${pad(depth + 1)}return ${template};\n${pad(depth)}})()`;
   }
 
   // the children of an element or a view. one per line, unless a text sits
@@ -114,6 +129,7 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
       case 'If'         : return hole(ifBlock(child, depth, root));
       case 'For'        : return hole(forBlock(child, depth, root));
       case 'Match'      : return hole(matchBlock(child, depth, root));
+      case 'Await'      : return hole(awaitBlock(child, depth, root));
       case 'FragmentDef': throw fail('@fragment is only allowed at the top level of a .rat file, in a .rat.js file write a function', child.start);
     }
     throw new Error(`[rat] unknown node ${child.type}`);
@@ -166,6 +182,19 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     const args = [live(expression(subject)), bracket(tests), bracket(views)];
     if (fallback) args.push(`() => ${view(fallback, depth + 1, root)}`);
     return call($('cases'), args, depth);
+  }
+
+  // @await: $$.wait(promise, ready, pending, failed). the value and the error are handed out as computeds,
+  // so their branch stays and follows the next answer
+  function awaitBlock ({ binding, children, failed, pending, promise }, depth, root) {
+    const handed = (name, param, nodes) => name
+      ? within([name], () => `(${param}) => { const ${name} = ${$('computed')}(${param}); return ${view(nodes, depth + 2, root)}; }`)
+      : `() => ${view(nodes, depth + 1, root)}`;
+
+    const args = [live(expression(promise)), handed(binding, '$$value', children)];
+    if (pending || failed) args.push(pending ? `() => ${view(pending, depth + 1, root)}` : 'null');
+    if (failed) args.push(handed(failed.name, '$$error', failed.children));
+    return call($('wait'), args, depth);
   }
 
   // @fragment row (item) -> function row (item) { return $$.html`…`; }

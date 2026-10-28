@@ -41,6 +41,8 @@
     "@rat/signals"            : "../../signals/index.js",
     "@rat/syntax/"            : "../../syntax/",
     "@rat/types"              : "../../types/index.js",
+    "@rat/types/FileExt"      : "../../types/special/FileExt.js",
+    "@rat/types/Path"         : "../../types/special/Path.js",
     "@rat/types/"             : "../../types/",
     "acorn"                   : "https://esm.sh/acorn@8.14.0",
     "hljs"                    : "https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/+esm"

@@ -21,7 +21,7 @@ $Color, its reactive variant, is below.
 // :::::: IMPORT
 
 import { reactive, register } from '@rat/signals';
-import { Schema, isObject, typed } from './schema.js';
+import { Schema, bare, isObject, typed } from './schema.js';
 
 // :::::: HELPERS
 
@@ -159,9 +159,9 @@ const differs = name => (color, value) => !Object.is(color[name], value);
 
 const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
 
-const Color = typed(ColorType, colorOf, ofValue);
+const Color = bare(typed(ColorType, colorOf, ofValue));
 
-const $Color = typed(reactive(Color, {
+const $Color = bare(typed(reactive(Color, {
   reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
   writes : {
     a   : differs('a'),
@@ -174,7 +174,7 @@ const $Color = typed(reactive(Color, {
     s   : differs('s'),
     set : (color, input) => !color.equals(input),
   },
-}), colorOf, ofValue);
+}), colorOf, ofValue));
 
 register(Color,  $Color);
 

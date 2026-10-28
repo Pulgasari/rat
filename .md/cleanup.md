@@ -518,7 +518,7 @@ let $bookmarks = [] @stored('bookmarks');
 
 ### 2 objects in signals, changed by copying
 
-**status:** partly: places (`$Table`, `$Dict`), tasks (`$Record`s in `$List`s) and the pickboard are done. the settings and the tabs are left.
+**status:** partly: places (`$Table`, `$Dict`), tasks (`$Record`s in `$List`s), the pickboard, the settings (`$Record`) and the tabs (`$List` of `$Record`s) are done. sync's `$autoSync` is left.
 
 `rat` `lib` · a signal only notices a new object, so changing one field means copying the whole.
 
@@ -674,6 +674,8 @@ return run({ … }, ({ progress, signal }) => scan.scan(handle, folder, { onProg
 
 ### 7 the write pattern
 
+**status:** the re-listing is `refresh()` now (a signal the listing effect reads), not `goTo([...at])`: with one instance per path, setting the same path changes nothing.
+
 `app` · four actions, the same steps: ask, permission, guard, a task in the write lane, list again.
 
 ```js
@@ -784,6 +786,8 @@ context.hide();
 
 ### 12 paths
 
+**status:** done: every path in files is a `Path` (`@rat/types/Path`). one instance per path, so `at === $path` compares; `name`, `parent`, `child()`, `startsWith()` replace `at(-1)`, `slice(0, -1)`, `[...at, name]`, `isInside()`. tabs, bookmarks and the index store paths as `'a/b'` and read older arrays as well.
+
 `app` · a path is an array, compared as a string everywhere.
 
 ```js
@@ -829,6 +833,8 @@ const facts = { files: files.length, mostly: mostly(files)?.label, … };
 ```
 
 ### 14 tabs
+
+**status:** done. a tab is a `$Record` `{ path: Path(), '?source': Str }`, the tabs a `$List`, the one on screen `$tab` the tab itself: no `setTabs`, no clamping, `goTo` writes `$tab.path`, the views hand tabs over instead of positions. `HOME` is gone, `resetTabs()` covers the fresh start.
 
 `app` · the clamp twice, the home tab four times.
 
@@ -1056,6 +1062,8 @@ const id = isImage(entry) ? `${from ?? …?.addedAt}/${at.join('/')}/${entry.nam
 ```
 
 ### 25 an imported variant gets .value
+
+**status:** done: an imported `$name` is renamed in the import and read through `$$.imported()`: a signal as before, a reactive variant as itself. `$settings` (a `$Record`) is imported by the views that way. remotes and tasks still export a computed of their lists, they could export the lists now.
 
 `rat` · an imported `$name` is read as a signal (`$x.value`). a `$Table`, `$Dict` … exported from a module
 is no signal, so the module that imports it reads `.value` of it. for now `remotes.rat.js` keeps its

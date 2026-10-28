@@ -8,9 +8,14 @@
 [Enum](#enum) ·
 [List](#list) ·
 [Point](#point) ·
+[Segments](#segments) ·
 [Str](#str) ·
 [Tree](#tree) ·
 [Union](#union)
+
+### Special (one import each)
+[FileExt](#fileext) ·
+[Path](#path)
 
 ### Data Types (reactive)
 [$Array](#) ·
@@ -148,6 +153,60 @@ todos.columns;                                         // ['title', 'done']
 ```
 
 every `List` method works, the ones that add or replace rows (`push`, `unshift`, `set`, `splice`, `replace`, `update`) check them. `$Table` has one version for the whole table: any write updates whatever read the table.
+
+## Segments
+
+a value made of parts with a separator: a key like `rat:noisy:theme`, a version, a path. never changed,
+a change gives a new one. empty parts are dropped.
+
+```js
+const key = Segments.from('rat:noisy:theme');   // ':' by default, Segments.from('1.4.2', '.')
+
+key.segments           // ['rat', 'noisy', 'theme'], frozen
+key.separator          // ':'
+key.at(-1)             // 'theme'
+key.slice(0, 2)        // rat:noisy
+key.with('dark')       // rat:noisy:theme:dark
+key.startsWith('rat')  // true, part by part: 'ra' is no start
+key.equals('rat:noisy:theme')
+String(key)            // 'rat:noisy:theme', JSON as well
+
+const Key = Segments(':');   // called, the schema: a string, the parts or Segments, made Segments
+```
+
+## Path
+
+`import { Path } from '@rat/types/Path'`. `Segments` with `/` and names for what a path is asked. one
+instance per path: `Path.from('a/b') === Path.from(['a', 'b'])`, so `===` compares paths and a computed of a
+path only reports a real change.
+
+```js
+const path = Path.from('photos/2024/beach.jpg');
+
+path.name              // 'beach.jpg', '' for the root
+path.parent            // photos/2024, null for the root
+path.child('raw')      // photos/2024/beach.jpg/raw
+path.ext               // FileExt jpg
+String(path)           // 'photos/2024/beach.jpg', no leading slash
+Path.root              // ''
+
+const Bookmark = { name: Str, path: Path };   // as a field the schema (Path()): it holds a Path, stored as 'a/b'
+```
+
+## FileExt
+
+`import { FileExt } from '@rat/types/FileExt'`. the extension of a file name, lowercase, without the dot.
+a dot file (`.env`) and a name without a dot have none.
+
+```js
+const ext = FileExt.from('Beach.JPG');   // or a Path, or 'a/b/beach.jpg'
+
+ext.value              // 'jpg'
+ext.mimeType           // 'image/jpeg', 'application/octet-stream' when unknown
+ext.is('jpg', 'jpeg')  // true
+
+const Upload = { name: Str, ext: FileExt };   // as a field the schema (FileExt()): 'jpg' or '.JPG' made a FileExt
+```
 
 ## Tree
 

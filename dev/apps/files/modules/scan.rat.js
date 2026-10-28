@@ -13,8 +13,11 @@ running one. dot folders and node_modules are skipped.
 
   $index      { scannedAt, total, size, categories: { [id]: { count, size } }, recent: [entry], files: [entry] }
   $scanning   null, or { files } while a walk runs
-  entry       { name, path: ['a', 'b'], size, lastModified, type }
+  entry       { name, path: Path, size, lastModified, type }, the path of the folder it lies in
 */
+
+import { FileExt } from '@rat/types/FileExt';
+import { Path }    from '@rat/types/Path';
 
 // :::::: CATEGORIES
 
@@ -27,19 +30,18 @@ export const CATEGORIES = [
   { icon: 'lucide:file',         id: 'other',     label: 'Other'     },
 ];
 
-const DOCUMENTS = /^(pdf|txt|md|rtf|odt|doc|docx|xls|xlsx|ods|ppt|pptx|odp|csv|epub|html?|json|xml)$/;
-const ARCHIVES  = /^(zip|rar|7z|tar|gz|bz2|xz|zst)$/;
+const DOCUMENTS = ['csv', 'doc', 'docx', 'epub', 'htm', 'html', 'json', 'md', 'odp', 'ods', 'odt', 'pdf', 'ppt', 'pptx', 'rtf', 'txt', 'xls', 'xlsx', 'xml'];
+const ARCHIVES  = ['7z', 'bz2', 'gz', 'rar', 'tar', 'xz', 'zip', 'zst'];
 
-const extOf = name => { const dot = name.lastIndexOf('.'); return dot > 0 ? name.slice(dot + 1).toLowerCase() : ''; };
-
-// by its mime type and, where that is empty, its extension
-export function categoryOf ({ name, type = '' }) {
-  const ext = extOf(name);
-  if (type.startsWith('image/')) return 'images';
-  if (type.startsWith('audio/')) return 'audio';
-  if (type.startsWith('video/')) return 'video';
-  if (type.startsWith('text/') || DOCUMENTS.test(ext)) return 'documents';
-  if (ARCHIVES.test(ext)) return 'archives';
+// by its mime type and, where the file has none, the one of its extension
+export function categoryOf ({ name, type }) {
+  const ext  = FileExt.from(name);
+  const mime = type || ext.mimeType;
+  if (mime.startsWith('image/')) return 'images';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('text/') || ext.is(...DOCUMENTS)) return 'documents';
+  if (ext.is(...ARCHIVES)) return 'archives';
   return 'other';
 }
 
@@ -77,7 +79,7 @@ async function walk (handle, path, found, signal) {
   for (const entry of await Promise.all(reads)) if (entry) found.push(entry);
   $scanning = { files: found.length };
 
-  for (const dir of dirs) await walk(dir, [...path, dir.name], found, signal);
+  for (const dir of dirs) await walk(dir, path.child(dir.name), found, signal);
 }
 
 function summarize (files) {
@@ -97,8 +99,12 @@ function summarize (files) {
 
 // :::::: API
 
+// the stored paths are strings ('a/b'), an older index holds arrays: both become a Path again
+const revive = entry => ({ ...entry, path: Path.from(entry.path) });
+
 export async function restore (folder) {
-  $index = folder ? await files.read(pathOf(folder), 'json').catch(() => null) : null;
+  const stored = folder ? await files.read(pathOf(folder), 'json').catch(() => null) : null;
+  $index = stored && { ...stored, files: stored.files.map(revive), recent: stored.recent.map(revive) };
   return $index;
 }
 
@@ -111,7 +117,7 @@ export async function scan (root, folder) {
   $scanning = { files: 0 };
 
   try {
-    await walk(root, [], found, controller.signal);
+    await walk(root, Path.root, found, controller.signal);
     $index = summarize(found);
     await files.write(pathOf(folder), JSON.stringify($index));
     return $index;

@@ -30,7 +30,7 @@ the keys under `name:table`. a driver given as a function gets name and table
 both, it keeps the tables apart itself (one sqlite file, a table each).
 */
 
-import { Bool, Id, Num, Record, Schema, Str } from '@rat/types';
+import { Bool, Id, Num, Record, Schema, Str, schemaOf } from '@rat/types';
 import { Store } from './store.js';
 
 const isUrl = value => { try { return Boolean(new URL(value)); } catch { return false; } };
@@ -46,7 +46,8 @@ const PLAIN = new Map([
   [URL,     Str.check(isUrl, 'a url', { url: true })],
 ]);
 
-const fieldOf = (name, spec) => {
+const fieldOf = (name, given) => {
+  const spec = schemaOf(given);   // a bare type of @rat/types (Path) is its schema
   if (spec?.['~standard']) return spec;
   if (PLAIN.has(spec))     return PLAIN.get(spec);
   throw new TypeError(`[bunker] field ${name}: a schema, or String, Number, Boolean, URL, Object, Array`);

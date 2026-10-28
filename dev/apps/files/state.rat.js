@@ -6,13 +6,16 @@ selection, the file in the preview, the settings. the views and the context area
 change it. the modules hold the rest: the folder (root), the servers (remotes), the index (scan), tasks,
 places, transfer, sending (sync). the views import their $values straight from there.
 
-a tab is { path, source }: source null is the granted folder, else the id of a server.
+a tab is { path, source }: path a Path (@rat/types/Path), source null for the granted folder, else the id
+of a server.
 */
 
 // :::::: IMPORT
 
 import dom from '@domina/dom';
-import { effect, untrack } from '@rat/signals';
+import { effect, untrack }           from '@rat/signals';
+import { $List, $Record, Enum, Str } from '@rat/types';
+import { Path }                      from '@rat/types/Path';
 
 import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
@@ -41,30 +44,20 @@ const ICON = {
 
 export const PATTERNS = ['pattern-bg', 'pattern-tile'];
 
-// :::::: SETTINGS, kept across visits, each under files:<name>
+// :::::: SETTINGS, kept across visits under files:settings
 
-const DEFAULTS = {
-  open           : 'auto',     // auto, single (a tap), double (a double click)
-  'pattern-bg'   : '',         // a pattern behind the app: 'dots 8%', '' for none
-  'pattern-tile' : '',         // a pattern on the tiles and cards
-  searchbar      : 'bottom',   // bottom, top
-  tabbar         : 'bottom',   // bottom, top
-  viewmode       : 'list',     // list, grid
+const Settings = {
+  open           : Enum('auto', 'single', 'double'),   // a tap opens, a double click, or by the pointer
+  'pattern-bg'   : Str,                                // a pattern behind the app: 'dots 8%', '' for none
+  'pattern-tile' : Str,                                // a pattern on the tiles and cards
+  searchbar      : Enum('bottom', 'top'),
+  tabbar         : Enum('bottom', 'top'),
+  viewmode       : Enum('list', 'grid'),
 };
 
-/*
-const
-fromEntries = Object.fromEntries,
-  toEntries = Object.entries;
+export const $settings = $Record(Settings).create(read('files:settings', {}));
 
-export let $settings = fromEntries <| toEntries(DEFAULTS).map :: ([name, fallback]) => [name, read(`files:${name}`, fallback)];
-*/
-
-export let $settings = Object.fromEntries(Object.entries(DEFAULTS).map(([name, fallback]) => [name, read(`files:${name}`, fallback)]));
-
-effect(() => { for (const [name, value] of Object.entries($settings)) write(`files:${name}`, value); });
-
-export const setting = (name, value) => { $settings = { ...$settings, [name]: value }; };
+effect(() => write('files:settings', $settings));
 
 effect(() => {
   const element = document.documentElement;
@@ -105,50 +98,67 @@ $selected = null,    // the entry the context area is about
 $sheet    = null,    // what the context area shows instead: 'tasks', 'remotes'
 $size     = null;    // { width, height } of the image in the preview
 
-// :::::: TABS, each { path, source }
+// :::::: TABS, each a $Record { path, source }
 
-let $tabState = read('files:tabs', { index: 0, list: [{ path: [] }] });
+const Tab = $Record({ path: Path, '?source': Str });
 
-effect(() => write('files:tabs', $tabState));
+const tabOf = (tab = {}) => Tab.create({ path: tab.path ?? Path.root, source: tab.source ?? null });
+
+// kept as { index, list }, the paths as 'a/b' (an older tab's as ['a', 'b'])
+const stored = read('files:tabs', { index: 0, list: [] });
+
+export const $tabs = new $List(stored.list.map(tabOf));
+if (!$tabs.length) $tabs.push(tabOf());
+
+// the tab on screen, the tab itself: it can not point past the end of the list
+export let $tab = $tabs.at(stored.index) ?? $tabs.at(0);
+
+effect(() => write('files:tabs', { index: $tabs.indexOf($tab), list: $tabs }));
 
 export const
-$tabs     = $tabState.list?.length ? $tabState.list : [{ path: [] }],
-$tabIndex = Math.min(Math.max(0, $tabState.index ?? 0), $tabs.length - 1),
-$path     = $tabs[$tabIndex].path,
-$source   = $tabs[$tabIndex].source ?? null;
+$path   = $tab.path,
+$source = $tab.source;
 
-const scrollTop = new Map;   // per tab, for the session
+const scrollTop = new WeakMap;   // per tab, for the session
 const scroller  = () => document.querySelector('rat-view[name="library"] .listing');
 
-function setTabs (list, index = $tabIndex) {
-  $tabState = { index: Math.min(Math.max(0, index), list.length - 1), list };
-}
-
 // from switches the tab to another source, undefined keeps its own
-export function goTo (next, from) {
-  setTabs($tabs.map((tab, position) => position === $tabIndex ? { path: next, source: from === undefined ? tab.source ?? null : from } : tab));
+export function goTo (path, from) {
+  $tab.path = path;
+  if (from !== undefined) $tab.source = from;
   $selected = null;
   $filter   = '';
 }
 
-export function openTab (at = $path, from = $source) {
-  const list = [...$tabs, { path: at, source: from }];
-  setTabs(list, list.length - 1);
+export function openTab (path = $path, from = $source) {
+  $tab = tabOf({ path, source: from });
+  $tabs.push($tab);
   $selected = null;
 }
 
-export function closeTab (position) {
-  if ($tabs.length === 1) return goTo([]);
-  setTabs($tabs.filter((_, other) => other !== position), position < $tabIndex ? $tabIndex - 1 : $tabIndex);
+// the next tab takes over, the one before at the end. the last one stays and goes home
+export function closeTab (tab) {
+  if ($tabs.length === 1) {
+    goTo(Path.root);
+    return;
+  }
+  if (tab === $tab) $tab = $tabs.at($tabs.indexOf(tab) + 1) ?? $tabs.at(-2);
+  $tabs.remove(tab);
 }
 
-export function switchTab (position) {
-  scrollTop.set($tabIndex, scroller()?.scrollTop ?? 0);
-  setTabs($tabs, position);
+export function switchTab (tab) {
+  scrollTop.set($tab, scroller()?.scrollTop ?? 0);
+  $tab      = tab;
   $selected = null;
 }
 
-export const tabName = tab => tab.path.at(-1) ?? sourceName(tab.source ?? null);
+// these tabs or a fresh one at home, the tab on screen stays where it is among them
+function resetTabs (tabs = []) {
+  $tabs.replace(tabs.length ? tabs : [tabOf()]);
+  if (!$tabs.includes($tab)) $tab = $tabs.at(0);
+}
+
+export const tabName = tab => tab.path.name || sourceName(tab.source);
 
 // :::::: THE FOLDER AND THE SERVERS
 
@@ -163,13 +173,19 @@ folderName = () => sourceName   ($source);
 // an entry of the index carries its path and lies in the folder, one of a listing in the tab's source
 export const sourceOf = entry => entry.source !== undefined ? entry.source : entry.path ? null : $source;
 
-// the listing follows the folder, its permission and the path by itself. the old one goes at once:
-// its entries would still open against the new path. the last request wins, a late answer is dropped
+// the listing follows the folder, its permission and the path by itself, refresh() asks again. the old one
+// goes at once: its entries would still open against the new path. the last request wins, a late answer is
+// dropped
+let $reload = 0;
 let request = 0;
+
+export const refresh = () => { $reload++; };
+
 effect(() => {
   const handle = rootHandle();
   const at     = $path;
   const mine   = ++request;
+  $reload;   // read, so refresh() runs this again
 
   $entries = [];
   $loading = Boolean(handle);
@@ -179,7 +195,7 @@ effect(() => {
     .then(list => {
       if (mine !== request) return;
       $entries = list;
-      requestAnimationFrame(() => { const element = scroller(); if (element) element.scrollTop = scrollTop.get(untrack(() => $tabIndex)) ?? 0; });
+      requestAnimationFrame(() => { const element = scroller(); if (element) element.scrollTop = scrollTop.get(untrack(() => $tab)) ?? 0; });
     })
     .catch(error => { if (mine === request) toast.error(error); })
     .finally(() => { if (mine === request) $loading = false; });
@@ -219,19 +235,19 @@ export const isImage = entry => entry.kind !== 'directory' && Boolean(entry.type
 
 // a folder with a type shows the type's icon, at is the path the entry lies in
 export const iconOf = (entry, at) => entry.kind === 'directory'
-  ? (at && places.folderTypeOf([...at, entry.name])?.icon) || 'lucide:folder'
+  ? (at && places.folderTypeOf(at.child(entry.name))?.icon) || 'lucide:folder'
   : CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'lucide:file';
 
-export const keyOf = entry => `${(entry.path ?? []).join('/')}/${entry.name}`;
+export const keyOf = entry => String((entry.path ?? Path.root).child(entry.name));
 
 export function open (entry, at = $path) {
-  if (entry.kind === 'directory') { goTo([...at, entry.name]); return router.go('/library'); }
+  if (entry.kind === 'directory') { goTo(at.child(entry.name)); return router.go('/library'); }
   $file = { ...entry, kind: 'file', path: entry.path ?? at, source: sourceOf(entry) };
   router.go('/preview');
 }
 
 export function showInFolder (entry) {
-  goTo(entry.path ?? [], sourceOf(entry));
+  goTo(entry.path ?? Path.root, sourceOf(entry));
   router.go('/library');
 }
 
@@ -270,7 +286,7 @@ async function writable () {
 // a write as a task. once it is done, the folder it changed is listed anew if it is still on screen
 async function writeTask (task, at, work) {
   await run({ ...task, lane: 'write' }, work);
-  if (at.join('/') === $path.join('/')) goTo([...at]);
+  if (at === $path) refresh();
 }
 
 export async function newFolder () {
@@ -317,7 +333,7 @@ export async function paste () {
   if (!board) return;
   const handle = await writable();
   const items  = board.items.toArray();
-  const target = [...$path];
+  const target = $path;
   const what   = items.length === 1 ? items[0].name : `${items.length} items`;
   const verb   = board.mode === 'move' ? 'move' : 'copy';
   const icon   = ICON[verb];
@@ -326,11 +342,11 @@ export async function paste () {
 
   // listed anew whether it worked or not: a part may have arrived
   try {
-    await run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
+    await run({ icon, label: `${verb} ${what} to /${target}`, lane: 'write' },
       ({ progress, signal }) => transfer.transfer(handle, items, board.mode, target, { onProgress: progress, signal }));
   }
   finally {
-    if (target.join('/') === $path.join('/')) goTo([...target]);
+    if (target === $path) refresh();
   }
 }
 
@@ -346,7 +362,7 @@ export async function download (entry) {
 export async function chooseFolder () {
   if (!root.supported) throw new Error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
   if (!await root.grant()) return;
-  setTabs([{ path: [] }], 0);
+  resetTabs();
   router.go('/');
 }
 
@@ -360,13 +376,13 @@ export async function closeFolder () {
   await scan.forget($folder);
   scanned = null;
   await root.forget();
-  setTabs([{ path: [] }], 0);
+  resetTabs();
 }
 
 // :::::: SERVERS, each opens in a tab of its own
 
 export function openRemote (id) {
-  openTab([], id);
+  openTab(Path.root, id);
   router.go('/library');
 }
 
@@ -380,8 +396,7 @@ export function manageRemotes () {
 export async function forgetRemote (connection) {
   if (!await dialogs.confirm({ message: `Forget “${connection.name}”? The files on the server stay.`, ok: 'Forget', title: connection.name })) return;
   await remotes.remove(connection.id);
-  const left = $tabs.filter(tab => tab.source !== connection.id);
-  setTabs(left.length ? left : [{ path: [] }], 0);
+  resetTabs($tabs.filter(tab => tab.source !== connection.id).toArray());
 }
 
 // :::::: SEND, a file of the folder into the outbox, the view opens

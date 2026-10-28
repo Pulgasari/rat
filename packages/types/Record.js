@@ -22,7 +22,7 @@ $Record, its reactive variant, is below.
 */
 
 import { reactive, register } from '@rat/signals';
-import { Schema, isObject, typed } from './schema.js';
+import { Schema, isObject, schemaOf, typed } from './schema.js';
 
 const GET = Symbol('rat.record.get');
 const SET = Symbol('rat.record.set');
@@ -32,7 +32,10 @@ const RESERVED = new Set(['assign', 'schema', 'toJSON']);
 // ::: the schema
 
 // '?title': Str is title: Str.optional()
-const shapeOf = fields => Object.fromEntries(Object.entries(fields).map(([key, schema]) => key.startsWith('?') ? [key.slice(1), schema.optional()] : [key, schema]));
+const shapeOf = fields => Object.fromEntries(Object.entries(fields).map(([key, field]) => {
+  const schema = schemaOf(field);
+  return key.startsWith('?') ? [key.slice(1), schema.optional()] : [key, schema];
+}));
 
 // an object with known fields; unknown fields are kept as they are
 function recordOf (fields) {

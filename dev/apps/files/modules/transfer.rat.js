@@ -5,7 +5,7 @@ copying and moving inside the granted folder and between it and the servers. the
 was picked to copy or to move (not the system's clipboard, that is RAT.app.clipboard), transfer() puts
 it into the folder on screen.
 
-  $pickboard   null, or a $Record { items: $List of { kind, name, path, root }, mode: 'copy' | 'move', placed }
+  $pickboard   null, or a $Record { items: $List of { kind, name, path (a Path), root }, mode: 'copy' | 'move', placed }
   pick(mode, entry, path, root)   puts an entry on it, the same mode adds to it
   placed()                        a copy was put somewhere: it stays to put again, the next pick starts anew
 
@@ -23,8 +23,6 @@ import { copyFile, copyTree, dirAt } from './fs.js';
 
 export let $pickboard = null;
 
-const samePath = (a, b) => a.join('/') === b.join('/');
-const isInside = (inner, outer) => inner.length >= outer.length && samePath(inner.slice(0, outer.length), outer);
 
 // :::::: PICKBOARD
 
@@ -84,7 +82,7 @@ async function moved (handle, targetDir, name) {
 
 export async function transfer (root, picked, mode, target, { onProgress = () => {}, signal } = {}) {
   const items = [...picked];
-  const into  = items.find(item => item.kind === 'directory' && isInside(target, [...item.path, item.name]));
+  const into  = items.find(item => item.kind === 'directory' && target.startsWith(item.path.child(item.name)));
   if (into) throw new Error(`“${into.name}” can not go into itself`);
 
   const targetDir = await dirAt(root, target);
@@ -103,7 +101,7 @@ export async function transfer (root, picked, mode, target, { onProgress = () =>
     const count  = counts  [position];
 
     // a move within the same folder changes nothing
-    if (mode === 'move' && samePath(item.path, target)) {
+    if (mode === 'move' && item.path === target) {
       report(count);
       continue;
     }
