@@ -1,0 +1,72 @@
+<script>
+  // new URL('../../packages/types/README.md', import.meta.url).href
+
+  import { autoloader } from '@aufbau/elements';
+  import dom            from '@domina/dom';
+  import { rat, ratjs } from '@rat/syntax/targets/hljs.js';
+
+  autoloader();
+
+  // the languages of rat as modules of this app, not a specifier <write-code> imports by its name: a build has no import map
+  customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
+  
+  const TOPICS = ['welcome', 'config', 'components', 'comptime', 'directives', 'dom', 'htx', 'modules', 'operators', 'schemas', 'signals', 'types'];
+  const PAGES2 = TOPICS.map :: item => ({ name: item, title: item });
+  const $page  = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
+  const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
+
+  // a fenced code block becomes a <write-code> of aufbau, once the page is rendered
+  function codeBlocks (root) {
+    const ctx = root.currentTarget;
+    for (const code of ctx.querySelectorAll('pre > code')) {
+      const lang  = code.className.match(/language-(\S+)/)?.[1] ?? 'plaintext';
+      const block = dom.createElement('write-code', { lang, actions: 'copy' }, code.textContent);
+      code.parentElement.replaceWith(block);
+    }
+  }
+
+  // a narrow screen has the menu as a drawer
+  const menu   = () => RAT.app.area('menu');
+  const picked = () => { if (menu()?.isOverlay) menu().hide(); };
+  const wide   = matchMedia('(min-width: 48rem)').matches;
+</script>
+
+@fragment pageLink (page) {
+  <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
+}
+
+<rat-area id|name='menu' dock='start' open={wide}>
+  <nav>
+    <a.brand href='../../'>RAT</a>
+    @for (page of PAGES2): @fragment pageLink(page)
+    <a href='../../demos/'>Demos</a>
+    <a href='https://github.com/pulgasari/rat'>GitHub</a>
+  </nav>
+</rat-area>
+
+<rat-view route='/*' id|name='page'>
+  <header id='bar'>
+    <button aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
+    <span>RAT docs</span>
+    </header>
+  
+  <main>
+    <output-md
+      src={$src}
+      on:output-md-rendered={codeBlocks}
+    />
+  </main>
+
+  <footer>
+    <div.prev><a href='#'>prev</a></div>
+    <div>{$page}</div>
+    <div.next><a href='#'>next</a></div>
+  </footer>
+</rat-view>
+
+<style>
+  #page footer {
+    display: flex; flex-flow: row nowrap; align-items: center: justify-content: space-between;
+    /*flow: flex row nowrap center space-between;*/
+  }
+</style>
