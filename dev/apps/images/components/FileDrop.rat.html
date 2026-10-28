@@ -1,0 +1,23 @@
+<script>
+  // <FileDrop onfiles={files => …} label='…' />: a field to drop images on or to click for a picker
+
+  let $input = null;
+  let $over  = false;
+
+  function dropped (event) {
+    event.preventDefault();
+    $over = false;
+    if (event.dataTransfer?.files?.length) props.onfiles(event.dataTransfer.files);
+  }
+
+  function picked (event) {
+    props.onfiles(event.currentTarget.files);
+    event.currentTarget.value = '';
+  }
+</script>
+
+<div.file-drop class:over={$over} onclick={() => $input?.click()} ondragover={event => { event.preventDefault(); $over = true; }} ondragleave={event => { if (event.target === event.currentTarget) $over = false; }} ondrop={dropped}>
+  <svg-icon icon='image-add' />
+  <p>{props.label || 'Drop images here, or click to choose'}</p>
+  <input type='file' accept='image/*' multiple hidden ref={$input} onchange={picked} />
+</div.file-drop>

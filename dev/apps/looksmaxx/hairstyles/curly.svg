@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="700" viewBox="0 0 600 700">
+  <!-- placeholder voluminous curly hair: bumpy outline, face cutout -->
+  <g fill="#241a14">
+    <circle cx="300" cy="120" r="120"/>
+    <circle cx="170" cy="200" r="110"/>
+    <circle cx="430" cy="200" r="110"/>
+    <circle cx="130" cy="330" r="95"/>
+    <circle cx="470" cy="330" r="95"/>
+    <circle cx="180" cy="440" r="85"/>
+    <circle cx="420" cy="440" r="85"/>
+  </g>
+  <path fill="#241a14" fill-rule="evenodd" d="
+    M120 250 H480 V470 H120 Z
+    M300 250
+    C252 250 228 300 228 372
+    C228 452 260 512 300 512
+    C340 512 372 452 372 372
+    C372 300 348 250 300 250 Z
+  "/>
+</svg>

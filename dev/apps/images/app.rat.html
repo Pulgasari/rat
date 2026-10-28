@@ -1,0 +1,54 @@
+<script>
+  // images: a viewer for the open images (tray.rat.js), an editor for one of them, convert and batch
+  // for many, a library of the folders the user grants. images opened with the app ("open with") go to
+  // the viewer
+
+  import { gallery }     from './library.js';
+  import { editCurrent } from './editor.rat.js';
+  import { setFiles }    from './tray.rat.js';
+  import { reset }       from './viewer.rat.js';
+
+  import BatchView   from './views/BatchView.rat.html';
+  import ConvertView from './views/ConvertView.rat.html';
+  import EditView    from './views/EditView.rat.html';
+  import LibraryView from './views/LibraryView.rat.html';
+  import ViewerView  from './views/ViewerView.rat.html';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  RAT.app.on('error', toast.error);
+  RAT.app.hold <| gallery.load();
+  hint('Images');
+
+  globalThis.launchQueue?.setConsumer(async params => {
+    if (!params?.files?.length) return;
+    setFiles(await Promise.all(params.files.map(handle => handle.getFile())));
+    reset();
+    RAT.app.router.go('/');
+  });
+
+  // a drop outside a drop zone does not open the file in the tab
+  for (const type of ['dragover', 'drop']) addEventListener(type, event => event.preventDefault());
+
+  const DOCK = [
+    { icon: 'folders',  label: 'Library',  to: '/library' },
+    { icon: 'image',    label: 'View',     to: '/' },
+    { icon: 'edit',     label: 'Edit',     onclick: editCurrent, to: '/edit' },
+    { icon: 'convert',  label: 'Convert',  to: '/convert' },
+    { icon: 'batch',    label: 'Batch',    to: '/batch' },
+    { icon: 'settings', label: 'Settings', onclick: () => RAT.app.toggle('config') },
+  ];
+</script>
+
+<rat-view name='viewer' route='/' component={ViewerView} />
+<rat-view name='library' route='/library' component={LibraryView} />
+<rat-view name='edit' route='/edit' component={EditView} />
+<rat-view name='convert' route='/convert' component={ConvertView} />
+<rat-view name='batch' route='/batch' component={BatchView} />
+
+<rat-area name='dock' dock='bottom' overlay='never' open><Dock items={DOCK} /></rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name='Images'><Folders gallery={gallery} /></Settings>
+</rat-area>

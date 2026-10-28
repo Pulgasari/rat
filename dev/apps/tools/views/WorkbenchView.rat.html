@@ -1,0 +1,71 @@
+<script>
+  // <WorkbenchView />: text in, text out, for the tool its view is named after (specs.js). with formats it
+  // converts to the one picked. live runs a moment after typing stops
+
+  import { effect, untrack } from '@rat/signals';
+
+  import { workbenches } from '../specs.js';
+  import { toolOf }      from '../tools.rat.js';
+
+  const slug = props.view.getAttribute('name');
+  const tool = toolOf(slug);
+  const spec = workbenches[slug];
+
+  let $input!  = '';
+  let $live!   = false;
+  let $format! = spec.formats?.[0].id ?? null;
+
+  let $output  = '';
+  let $error   = '';
+  let $running = false;
+  let $stats   = null;
+
+  const $ext = spec.formats?.find(format => format.id === $format)?.ext ?? spec.ext;
+
+  let ticket = 0;
+
+  async function run () {
+    const src  = $input.trim();
+    const mine = ++ticket;
+    if (!src) { $output = ''; $error = ''; $stats = null; return; }
+    $running = true;
+    $error   = '';
+    try {
+      const out = await spec.execute(src, $format);
+      if (mine !== ticket) return;
+      $output = out;
+      $stats  = spec.formats ? null : { after: out.length, ratio: Math.round((1 - out.length / src.length) * 100) };
+    }
+    catch (error) {
+      if (mine !== ticket) return;
+      $output = '';
+      $stats  = null;
+      $error  = error.message;
+    }
+    finally { if (mine === ticket) $running = false; }
+  }
+
+  // live: a second after the last change. a new format: at once
+  let timer = 0;
+  effect(() => {
+    const live = $live, input = $input;
+    clearTimeout(timer);
+    if (live && input) timer = setTimeout(run, 1000);
+  });
+  effect(() => { $format; if (untrack(() => $input)) run(); });
+</script>
+
+<ViewHeader back='/' title={tool.name} />
+
+<main.tool.workbench>
+  <div.panes>
+    <CodeInput bind:value={$input} placeholder={spec.placeholder} filename={`input.${spec.ext}`} />
+    <CodeOutput value={$output} error={$error} stats={$stats} filename={`output.${$ext}`} />
+  </div.panes>
+
+  <div.tool-actions>
+    @if (spec.formats): <Segments options={spec.formats.map(format => ({ label: format.label, value: format.id }))} value={$format} onchange={value => $format = value} />
+    @if (!$live): <btn-push icon={$running ? 'loading' : 'run'} label={$running ? 'Running …' : spec.action} disabled={$running || !$input} onclick={run} />
+    <label.toggle><input type='checkbox' checked={$live} onchange={event => $live = event.currentTarget.checked} /><span>Live</span></label.toggle>
+  </div.tool-actions>
+</main.tool.workbench>

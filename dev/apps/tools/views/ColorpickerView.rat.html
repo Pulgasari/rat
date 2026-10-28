@@ -1,0 +1,184 @@
+<script>
+  // <ColorpickerView />: one colour, kept as oklch, set and read in rgb, hsl, lch and oklch; two colours
+  // mixed in a colour space; a ramp of shades as css variables
+
+  import { converter, formatHex, interpolate, modeHsl, modeLab, modeLch, modeLrgb, modeOklab, modeOklch, modeRgb, parse, useMode } from 'culori';
+
+  import { $copied, copyShown } from '../modules/copied.rat.js';
+
+  for (const mode of [modeHsl, modeLab, modeLch, modeLrgb, modeOklab, modeOklch, modeRgb]) useMode(mode);
+
+  const toRgb   = converter('rgb');
+  const toHsl   = converter('hsl');
+  const toLch   = converter('lch');
+  const toOklch = converter('oklch');
+
+  const toHex = color => { try { return (color && formatHex(color)) || '#000000'; } catch { return '#000000'; } };
+  const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
+
+  const TABS   = ['RGB', 'HSL', 'LCH', 'OKLCH', 'Mix', 'Shades'];
+  const SPACES = ['rgb', 'hsl', 'oklch', 'lch', 'lab', 'oklab'];
+  const HUES   = 'linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)';
+
+  let $color = toOklch(parse('#3b82f6'));
+  let $tab!  = 'OKLCH';
+
+  let $mixA     = toHex($color);
+  let $mixB     = '#ffffff';
+  let $mixPct   = 50;
+  let $mixSpace = 'oklch';
+  let $steps    = 10;
+  let $name     = 'color';
+
+  const $hex = toHex($color);
+
+  const $rgb   = (({ r = 0, g = 0, b = 0 }) => ({ b: Math.round(b * 255), g: Math.round(g * 255), r: Math.round(r * 255) }))(toRgb($color));
+  const $hsl   = (({ h = 0, s = 0, l = 0 }) => ({ h: Math.round(h || 0), l: Math.round(l * 100), s: Math.round(s * 100) }))(toHsl($color));
+  const $lch   = (({ l = 0, c = 0, h = 0 }) => ({ c: +c.toFixed(2), h: Math.round(h || 0), l: +l.toFixed(1) }))(toLch($color));
+  const $oklch = (({ l = 0, c = 0, h = 0 }) => ({ c: +c.toFixed(4), h: Math.round(h || 0), l: +l.toFixed(4) }))($color);
+
+  // every notation of a colour, as css
+  function notations (color) {
+    const { r = 0, g = 0, b = 0 } = toRgb(color);
+    const hsl = toHsl(color), lch = toLch(color), oklch = toOklch(color);
+    return [
+      ['hex', toHex(color)],
+      ['rgb', `rgb(${Math.round(r * 255)} ${Math.round(g * 255)} ${Math.round(b * 255)})`],
+      ['hsl', `hsl(${Math.round(hsl.h || 0)} ${Math.round((hsl.s ?? 0) * 100)}% ${Math.round((hsl.l ?? 0) * 100)}%)`],
+      ['lch', `lch(${(lch.l ?? 0).toFixed(1)} ${(lch.c ?? 0).toFixed(2)} ${Math.round(lch.h || 0)})`],
+      ['oklch', `oklch(${((oklch.l ?? 0) * 100).toFixed(1)}% ${(oklch.c ?? 0).toFixed(4)} ${Math.round(oklch.h || 0)})`],
+    ];
+  }
+
+  const setRgb   = (channel, value) => { $color = toOklch({ ...toRgb($color), [channel]: value / 255 }); };
+  const setHsl   = (channel, value) => { $color = toOklch({ ...toHsl($color), [channel]: channel === 'h' ? value : value / 100 }); };
+  const setLch   = (channel, value) => { $color = toOklch({ ...toLch($color), [channel]: value }); };
+  const setOklch = (channel, value) => { $color = { ...$color, [channel]: value, mode: 'oklch' }; };
+
+  function fromText (text) {
+    const color = parse(text);
+    if (color) $color = toOklch(color);
+  }
+
+  const $mixed = (() => {
+    const a = parse($mixA), b = parse($mixB);
+    if (!a || !b) return null;
+    try { return interpolate([a, b], $mixSpace)($mixPct / 100); } catch { return null; }
+  })();
+
+  const $shades = Array.from({ length: $steps }, (_, index) => toHex({ ...$color, l: clamp(0.96 - index / ($steps - 1) * 0.88, 0.05, 0.97), mode: 'oklch' }));
+  const $vars   = $shades.map((hex, index) => `--${$name || 'color'}-${(index + 1) * Math.round(1000 / $steps)}: ${hex};`).join('\n');
+</script>
+
+@fragment slider (label, value, min, max, step, gradient, set)
+  <div.slider-row>
+    <span.slider-label>{label}</span.slider-label>
+    <div.slider-track style={gradient ? `--gradient: ${gradient}` : ''}>
+      <input type='range' min={min} max={max} step={step} value={value} oninput={event => set(Number(event.currentTarget.value))} />
+    </div.slider-track>
+    <input.field.num-input type='number' min={min} max={max} step={step} value={value} style={`width: calc(${String(max).replace('.', '').length + (step < 1 ? 4 : 2)}ch + 1rem)`} oninput={event => set(clamp(Number(event.currentTarget.value), min, max))} />
+  </div.slider-row>
+
+@fragment copyRow (label, value)
+  <div.copy-row>
+    <span.copy-label>{label}</span.copy-label>
+    <code.copy-value>{value}</code.copy-value>
+    <button.ghost-btn onclick={() => copyShown(value)}><svg-icon icon={$copied === value ? 'check' : 'copy'} /></button.ghost-btn>
+  </div.copy-row>
+
+@fragment copyRows (color)
+  <div.copy-rows>
+    @for (row of notations(color)): {copyRow(row[0], row[1])}
+  </div.copy-rows>
+
+@fragment colorInput (value, set)
+  <div.mix-color>
+    <div.swatch.swatch-lg style={`background: ${value}`}></div.swatch.swatch-lg>
+    <input.field.hex-input type='text' maxlength='7' value={value} oninput={event => { if (parse(event.currentTarget.value)) set(event.currentTarget.value); }} />
+    <input.native-color type='color' value={value} oninput={event => set(event.currentTarget.value)} />
+  </div.mix-color>
+
+<ViewHeader back='/' title='Colorpicker' />
+
+<main.tool>
+  <div.tool-body>
+    <div.color-header>
+      <div.header-swatch style={`background: ${$hex}`}></div.header-swatch>
+      <code.header-hex onclick={() => copyShown($hex)}>{$hex}</code.header-hex>
+    </div.color-header>
+
+    <Segments options={TABS} value={$tab} onchange={value => $tab = value} />
+
+    <div.tab>
+      <div.tab-content>
+        @match ($tab)
+          @case 'RGB'
+            {slider('R', $rgb.r, 0, 255, 1, `linear-gradient(to right, rgb(0 ${$rgb.g} ${$rgb.b}), rgb(255 ${$rgb.g} ${$rgb.b}))`, value => setRgb('r', value))}
+            {slider('G', $rgb.g, 0, 255, 1, `linear-gradient(to right, rgb(${$rgb.r} 0 ${$rgb.b}), rgb(${$rgb.r} 255 ${$rgb.b}))`, value => setRgb('g', value))}
+            {slider('B', $rgb.b, 0, 255, 1, `linear-gradient(to right, rgb(${$rgb.r} ${$rgb.g} 0), rgb(${$rgb.r} ${$rgb.g} 255))`, value => setRgb('b', value))}
+            <div.hex-row>
+              <span.slider-label>Hex</span.slider-label>
+              <input.field.hex-input type='text' maxlength='7' value={$hex} oninput={event => fromText(event.currentTarget.value)} />
+              <input.native-color type='color' value={$hex} oninput={event => fromText(event.currentTarget.value)} />
+            </div.hex-row>
+            {copyRows($color)}
+          @case 'HSL'
+            {slider('H', $hsl.h, 0, 360, 1, HUES, value => setHsl('h', value))}
+            {slider('S', $hsl.s, 0, 100, 1, `linear-gradient(to right, hsl(${$hsl.h} 0% ${$hsl.l}%), hsl(${$hsl.h} 100% ${$hsl.l}%))`, value => setHsl('s', value))}
+            {slider('L', $hsl.l, 0, 100, 1, `linear-gradient(to right, hsl(${$hsl.h} ${$hsl.s}% 0%), hsl(${$hsl.h} ${$hsl.s}% 50%), hsl(${$hsl.h} ${$hsl.s}% 100%))`, value => setHsl('l', value))}
+            {copyRows($color)}
+          @case 'LCH'
+            {slider('L', $lch.l, 0, 100, 0.1, '', value => setLch('l', value))}
+            {slider('C', $lch.c, 0, 150, 0.1, '', value => setLch('c', value))}
+            {slider('H', $lch.h, 0, 360, 1, HUES, value => setLch('h', value))}
+            {copyRows($color)}
+          @case 'Mix'
+            <div.mix-row>
+              {colorInput($mixA, value => $mixA = value)}
+              <button.swap-btn title='Swap' onclick={() => { const a = $mixA; $mixA = $mixB; $mixB = a; }}><svg-icon icon='swap' /></button.swap-btn>
+              {colorInput($mixB, value => $mixB = value)}
+            </div.mix-row>
+            {slider('Mix', $mixPct, 0, 100, 1, `linear-gradient(to right, ${$mixA}, ${$mixB})`, value => $mixPct = value)}
+            <Segments options={SPACES} value={$mixSpace} onchange={value => $mixSpace = value} />
+            @if ($mixed)
+              <div.mix-result>
+                <div.swatch.swatch-lg style={`background: ${toHex($mixed)}`}></div.swatch.swatch-lg>
+                <div.copy-rows>
+                  {copyRow('color-mix', `color-mix(in ${$mixSpace}, ${$mixA} ${$mixPct}%, ${$mixB})`)}
+                  @for (row of notations($mixed)): {copyRow(row[0], row[1])}
+                </div.copy-rows>
+              </div.mix-result>
+            @else
+              <span.placeholder>Enter two valid hex colors</span.placeholder>
+          @case 'Shades'
+            <div.shade-controls>
+              {slider('Steps', $steps, 3, 20, 1, '', value => $steps = value)}
+              <div.slider-row>
+                <span.slider-label>Name</span.slider-label>
+                <input.field.hex-input type='text' value={$name} oninput={event => $name = event.currentTarget.value} />
+              </div.slider-row>
+            </div.shade-controls>
+            <div.shade-grid>
+              @for (hex, index of $shades)
+                <div.shade-item title='Copy' onclick={() => copyShown(hex)}>
+                  <div.swatch.swatch-shade style={`background: ${hex}`}></div.swatch.swatch-shade>
+                  <span.shade-hex>{hex}</span.shade-hex>
+                  <span.shade-num>{(index + 1) * Math.round(1000 / $steps)}</span.shade-num>
+                </div.shade-item>
+            </div.shade-grid>
+            <div.copy-rows>
+              <div.copy-row.copy-row-vars>
+                <span.copy-label>css</span.copy-label>
+                <textarea.vars-textarea readonly style={`--lines: ${$steps}`} value={$vars}></textarea.vars-textarea>
+                <button.ghost-btn onclick={() => copyShown($vars)}><svg-icon icon={$copied === $vars ? 'check' : 'copy'} /></button.ghost-btn>
+              </div.copy-row.copy-row-vars>
+            </div.copy-rows>
+          @default
+            {slider('L', $oklch.l, 0, 1, 0.001, '', value => setOklch('l', value))}
+            {slider('C', $oklch.c, 0, 0.4, 0.001, '', value => setOklch('c', value))}
+            {slider('H', $oklch.h, 0, 360, 1, HUES, value => setOklch('h', value))}
+            {copyRows($color)}
+      </div.tab-content>
+    </div.tab>
+  </div.tool-body>
+</main.tool>

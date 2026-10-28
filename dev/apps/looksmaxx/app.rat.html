@@ -1,0 +1,43 @@
+<script>
+  // looksmaxx: hair colours and hairstyles tried on a still photo, on the device. mediapipe finds the
+  // hair (a mask to recolour) and the face (where a hairstyle goes), state.rat.js composes the photo
+
+  import { $photo, $status, attach, download, isBusy, labelOf, reset, usePhoto } from './state.rat.js';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  const ICON = new URL('./app.svg', import.meta.url).href;
+
+  RAT.app.on('error', toast.error);
+  hint('looksmaxx');
+</script>
+
+<header.topbar>
+  <svg-icon icon={ICON} mode='image' />
+  <strong>looksmaxx</strong>
+  <span.spacer></span>
+  @if ($photo)
+    <label.ibtn title='New photo'>
+      <svg-icon icon='image-refresh' />
+      <input type='file' accept='image/*' hidden onchange={event => { usePhoto(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
+    </label.ibtn>
+    <btn-icon icon='reset' label='Reset edits' onclick={reset} />
+    <btn-icon icon='download' label='Download' onclick={download} />
+</header.topbar>
+
+<main.stage>
+  @if (!$photo): <Dropzone />
+  @else
+    <div.canvas-wrap>
+      <canvas @attach></canvas>
+      @if (isBusy($status)): <div.overlay-status><span.spin></span>{labelOf($status)}</div>
+    </div.canvas-wrap>
+</main.stage>
+
+@if ($photo)
+  <footer.controls>
+    @if ($status && !isBusy($status)): <div.msg>{$status}</div>
+    <ColorRow />
+    <StyleRow />
+  </footer.controls>

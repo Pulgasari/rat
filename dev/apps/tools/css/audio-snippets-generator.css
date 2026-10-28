@@ -1,0 +1,45 @@
+/* audio-snippets-generator, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='audio-snippets-generator'] {
+  /* ── snippets ── */
+  .snippets { display: flex; flex-direction: column; gap: .75rem; }
+
+  .snippet-pane {
+    border: 1px solid color-mix(in srgb, var(--color-fg) 12%, transparent);
+    border-radius: .6rem; overflow: hidden;
+  }
+
+  .sel-dur     { opacity: .5; font-variant-numeric: tabular-nums; font-size: .78rem; flex-shrink: 0; }
+
+  .pane-controls { display: flex; gap: .1rem; flex-shrink: 0; }
+
+  /* waveform height + margins — the waveform itself is in shared/css/waveform.css */
+  .waveform-wrap { height: 72px; margin-bottom: 1.5rem; background: color-mix(in srgb, var(--color-fg) 3%, transparent); }
+
+  /* ── time row ── */
+  .time-row {
+    display: flex; align-items: center; gap: .35rem; font-size: .8rem; flex-wrap: wrap;
+  }
+
+  .time-row label { opacity: .5; }
+
+  .time-input {
+    width: 4rem; padding: .2rem .35rem; border-radius: .3rem; font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total-dur { opacity: .35; font-size: .75rem; font-variant-numeric: tabular-nums; }
+
+  /* ── preview bar ── */
+  .preview-bar {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .65rem .75rem; border-radius: .5rem;
+    background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+  }
+
+  .preview-info { opacity: .5; font-size: .82rem; font-variant-numeric: tabular-nums; }
+
+  /* ── export bar ── */
+  .export-bar { display: flex; flex-direction: column; gap: .65rem; }
+}

@@ -1,0 +1,15 @@
+/* json-formatter, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='json-formatter'] {
+  .indent-picker {
+    display     : flex;
+    align-items : center;
+    gap         : 0.35rem;
+  }
+
+  .indent-label {
+    font-size : 0.75rem;
+    opacity   : 0.55;
+  }
+}

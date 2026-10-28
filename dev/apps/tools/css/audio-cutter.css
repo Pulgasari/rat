@@ -1,0 +1,36 @@
+/* audio-cutter, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='audio-cutter'] {
+
+  .file-bar .dur { opacity: .5; font-variant-numeric: tabular-nums; font-size: .8rem; }
+
+  .info-row { display: flex; align-items: center; gap: .5rem; opacity: .6; font-size: .875rem; }
+
+  /* waveform height + label room — the waveform itself is in shared/css/waveform.css */
+  .waveform-wrap { height: 96px; margin-bottom: 1.75rem; }
+
+  /* ── time row ── */
+  .time-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+  .time-field { display: flex; align-items: center; gap: .4rem; font-size: .85rem; }
+
+  .time-field label { opacity: .55; min-width: 2.5rem; }
+
+  .time-field input {
+    width: 4.5rem; padding: .3rem .45rem; border-radius: .35rem;
+    border: 1px solid color-mix(in srgb, var(--color-fg) 20%, transparent);
+    background: color-mix(in srgb, var(--color-fg) 6%, transparent);
+    color: var(--color-fg); font-size: .85rem; font-variant-numeric: tabular-nums;
+  }
+
+  .time-field input:focus { outline: none; border-color: var(--color-ink); }
+
+  .time-fmt { opacity: .45; font-size: .78rem; font-variant-numeric: tabular-nums; }
+
+  .sel-dur {
+    flex: 1; text-align: center; font-size: .85rem; opacity: .6;
+    display: flex; align-items: center; justify-content: center; gap: .3rem;
+    font-variant-numeric: tabular-nums;
+  }
+}

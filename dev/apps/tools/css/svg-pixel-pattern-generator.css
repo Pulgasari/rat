@@ -1,0 +1,115 @@
+/* svg-pixel-pattern-generator, scoped to its view.
+   shared rules live in ../tools.css
+   (pixel.css — toolbar + palette chrome — is opt-in, linked from index.html) */
+
+rat-view[name='svg-pixel-pattern-generator'] {
+  .preview {
+    height : 300px;
+    width  : 100%;
+    background: red;
+  }
+
+  /* size field */
+  .size-field { display: flex; align-items: center; gap: .2rem; }
+
+  .size-label { font-size: .72rem; opacity: .5; min-width: .8rem; }
+
+  .sz-btn {
+    background: transparent; border: 1px solid color-mix(in srgb, var(--color-fg) 18%, transparent);
+    color: var(--color-fg); cursor: pointer; padding: .15rem .25rem;
+    border-radius: .3rem; display: flex; align-items: center;
+    opacity: .5; transition: opacity .12s;
+  }
+
+  .sz-btn:hover { opacity: 1; }
+
+  .sz-input {
+    width: 2.8rem; text-align: center; padding: .2rem .25rem;
+    border-radius: .3rem;
+    font-size: .8rem; font-variant-numeric: tabular-nums;
+  }
+
+  /* ── palette swatch (scales on hover/active) ── */
+  .pal-swatch {
+    width: 1.6rem; height: 1.6rem; border-radius: .3rem; cursor: pointer;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-fg) 15%, transparent);
+    transition: transform .1s, box-shadow .1s;
+    position: relative;
+  }
+
+  .pal-swatch:hover  { transform: scale(1.15); }
+
+  .pal-swatch.active {
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-ink);
+    transform: scale(1.15);
+  }
+
+  /* ── canvas ── */
+  .canvas-wrap {
+    flex: 1; overflow: auto;
+    display: flex; align-items: flex-start; justify-content: flex-start;
+    padding: .5rem;
+    background: color-mix(in srgb, var(--color-fg) 3%, transparent);
+    border-radius: .6rem;
+    border: 1px solid color-mix(in srgb, var(--color-fg) 8%, transparent);
+    /* checkerboard */
+    background-image:
+      linear-gradient(45deg, #8882 25%, transparent 25%),
+      linear-gradient(-45deg, #8882 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #8882 75%),
+      linear-gradient(-45deg, transparent 75%, #8882 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    width: 100%;
+  }
+
+  .pixel-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);  /* war: repeat(var(--cols), var(--sz)) */
+    gap: 1px;
+    cursor: crosshair;
+    width: 100%;  /* füllt den wrap */
+  }
+
+  .pixel-cell {
+    aspect-ratio: 1;  /* immer quadratisch */
+    outline: 1px solid color-mix(in srgb, var(--color-fg) 8%, transparent);
+    transition: outline-color .1s;
+  }
+
+  .pixel-cell:hover {
+    outline: 1.5px solid color-mix(in srgb, var(--color-ink) 70%, transparent);
+    z-index: 1; position: relative;
+  }
+
+  .mirror-toggle { position: relative; }
+
+  .mirror-backdrop {
+    position: fixed; inset: 0; z-index: 10;
+  }
+
+  .mirror-popup {
+    position: absolute; bottom: calc(100% + .4rem); left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+    display: flex; flex-direction: column; gap: .15rem;
+    padding: .3rem;
+    background: var(--color-bg);
+    border: 1px solid color-mix(in srgb, var(--color-fg) 15%, transparent);
+    border-radius: .5rem;
+    box-shadow: 0 4px 16px #0003;
+    min-width: 9rem;
+  }
+
+  .mirror-opt {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .3rem .5rem; border-radius: .35rem; border: none;
+    background: transparent; color: var(--color-fg); cursor: pointer;
+    font-size: .82rem; opacity: .6; transition: opacity .1s, background .1s;
+    white-space: nowrap;
+  }
+
+  .mirror-opt:hover  { opacity: 1; background: color-mix(in srgb, var(--color-fg) 8%, transparent); }
+
+  .mirror-opt.active { opacity: 1; color: var(--color-ink); }
+}

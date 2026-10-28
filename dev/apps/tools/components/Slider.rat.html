@@ -1,0 +1,9 @@
+<script>
+  // <Slider label='Count' min={1} max={100} step={1} value={n} onchange={value => …} />
+</script>
+
+<label.slider>
+  <span.slider-label>{props.label}</span.slider-label>
+  <input type='range' min={props.min} max={props.max} step={props.step ?? 1} value={props.value} oninput={event => props.onchange(Number(event.currentTarget.value))} />
+  <span.slider-value>{props.value}{props.unit ?? ''}</span.slider-value>
+</label.slider>

@@ -1,0 +1,42 @@
+<script>
+  // <Folders gallery={gallery} />: the granted folders in the settings, adding, rescanning, reconnecting,
+  // removing (.shared/gallery.js)
+
+  import toast from '../toast.js';
+
+  const folders = RAT.app.folders;
+  const gallery = props.gallery;
+
+  const $sources = folders.sources.value;
+  const $perms   = folders.perms.value;
+
+  async function add () {
+    try {
+      const source = await gallery.add();
+      if (source) toast.success(`Added ${source.name}`);
+    }
+    catch (error) { toast.error(error); }
+  }
+</script>
+
+<section.folders>
+  <h3>folders</h3>
+  @for (source of $sources)
+    <div.folder>
+      <span>{source.name}</span>
+      @if ($perms[source.id] !== 'granted'): <btn-push label='Reconnect' onclick={() => folders.reconnect(source.id)} />
+      <btn-icon icon='delete' label='Remove' onclick={() => gallery.remove(source.id)} />
+    </div.folder>
+  @else
+    <p.hint>No folder yet.</p.hint>
+  <div.folder-actions>
+    <btn-push icon='folder-add' label='Add a folder' onclick={add} />
+    @if ($sources.length): <btn-push icon='refresh' label='Rescan' onclick={() => gallery.rescan()} />
+  </div.folder-actions>
+</section.folders>
+
+<style>
+  .folder         { align-items: center; display: flex; gap: 0.5rem; justify-content: space-between; }
+  .folder > span  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .folder-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+</style>

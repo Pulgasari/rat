@@ -1,0 +1,21 @@
+/* uuid-generator, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='uuid-generator'] {
+  .controls { display: flex; flex-direction: column; gap: .65rem; }
+
+  .uuid-list { display: flex; flex-direction: column; gap: .3rem; }
+
+  .uuid-row {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .5rem .65rem; border-radius: .4rem;
+    background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+    cursor: pointer; transition: background .12s;
+  }
+
+  .uuid-row:hover { background: color-mix(in srgb, var(--color-ink) 10%, transparent); }
+
+  .uuid { font-size: .82rem; flex: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+
+  .uuid-row:hover .copy-icon { opacity: .8; }
+}

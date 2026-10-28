@@ -1,0 +1,36 @@
+<script>
+  // <Stage />: the video, framed by the aspect, cropped or fitted, turned and mirrored. without a clip
+  // a button to open one. a double tap hides the bars
+
+  import { $aspect, $fit, $loop, $src, $transform, attach, load, toggleChrome } from '../player.rat.js';
+
+  let $file = null;
+  let tapped = 0;
+
+  function tap () {
+    if (!$src) return;
+    const now = Date.now();
+    if (now - tapped < 300) { toggleChrome(); tapped = 0; }
+    else tapped = now;
+  }
+
+  function picked (event) {
+    load(event.currentTarget.files?.[0]);
+    event.currentTarget.value = '';
+  }
+</script>
+
+<div.stage onclick={tap}>
+  <div.frame class:framed={$aspect} style={$aspect ? `--aspect: ${$aspect}` : ''}>
+    <video.video playsinline loop={$loop} style={`--fit: ${$fit}; transform: ${$transform}`} @attach></video>
+  </div.frame>
+
+  @if (!$src)
+    <button.open onclick={() => $file?.click()}>
+      <svg-icon icon='video' />
+      <span>Open a video</span>
+      <small>It stays on your device.</small>
+    </button.open>
+
+  <input type='file' accept='video/*' hidden ref={$file} onchange={picked} />
+</div.stage>

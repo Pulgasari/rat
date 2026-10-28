@@ -1,0 +1,172 @@
+/* looksmaxx :: app.css. a bar on top, the photo in the middle, the controls below it */
+
+body {
+  --fg-50  : color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --fg-75  : color-mix(in oklch, var(--color-fg) 75%, transparent);
+  --radius : 0.5rem;
+}
+
+/* ── top bar ─────────────────────────────────────────────────────────────── */
+.topbar {
+  display    : flex;
+  align-items  : center;
+  gap      : 0.5rem;
+  padding    : 0 0.75rem;
+  height     : 3rem;
+  flex     : none;
+  border-bottom: 1px solid var(--line);
+  background   : var(--panel);
+}
+.topbar strong { font-size: 0.95rem; }
+.spacer { flex: 1 1 auto; }
+
+/* icon buttons (reset the base button chrome) */
+.ibtn {
+  display    : inline-flex;
+  align-items  : center;
+  justify-content: center;
+  width    : 2rem;
+  height     : 2rem;
+  padding    : 0;
+  border     : 1px solid transparent;
+  border-radius: var(--radius);
+  background   : transparent;
+  color    : var(--color-fg);
+  cursor     : pointer;
+}
+.ibtn:hover:not(:disabled) { border-color: var(--line); }
+.topbar svg-icon[mode='image'] { font-size: 1.5rem; }
+
+/* ── stage ───────────────────────────────────────────────────────────────── */
+.stage {
+  display       : grid;
+  flex          : 1 1 auto;
+  grid-template : minmax(0, 1fr) / minmax(0, 1fr);
+  min-height    : 0;
+  overflow      : hidden;
+  padding       : 1rem;
+  place-items   : center;
+}
+
+/* the photo fits the room left by the controls, its own ratio kept */
+.canvas-wrap { display: grid; max-block-size: 100%; max-inline-size: 100%; min-block-size: 0; position: relative; }
+.canvas-wrap canvas {
+  border-radius   : var(--radius);
+  box-shadow      : 0 8px 30px rgb(0 0 0 / 0.35);
+  display         : block;
+  max-block-size  : 100%;
+  max-inline-size : 100%;
+  min-block-size  : 0;
+}
+
+.overlay-status {
+  position   : absolute;
+  inset    : 0;
+  display  : flex;
+  align-items: center;
+  justify-content: center;
+  gap    : 0.6rem;
+  border-radius: var(--radius);
+  background : color-mix(in oklch, var(--color-bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+  font-size  : 0.85rem;
+}
+.spin {
+  width : 1.1rem; height: 1.1rem;
+  border: 2px solid var(--line);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── dropzone (empty state) ──────────────────────────────────────────────── */
+.drop {
+  display  : flex;
+  flex-direction: column;
+  align-items: center;
+  gap    : 0.6rem;
+  max-width  : 24rem;
+  padding  : 2.5rem 2rem;
+  border   : 2px dashed var(--line);
+  border-radius: calc(var(--radius) + 6px);
+  background : var(--panel);
+  color    : var(--color-fg);
+  text-align : center;
+  cursor   : pointer;
+}
+.drop:hover { border-color: var(--color-ink); }
+.drop strong { font-size: 1rem; }
+.drop span { font-size: 0.8rem; color: var(--fg-75); line-height: 1.5; }
+
+/* ── controls ────────────────────────────────────────────────────────────── */
+.controls {
+  flex    : none;
+  border-top: 1px solid var(--line);
+  background : var(--panel);
+  padding   : 0.75rem;
+  display   : flex;
+  flex-direction: column;
+  gap     : 0.9rem;
+  max-height: 46dvh;
+  overflow  : auto;
+}
+.msg { font-size: 0.8rem; color: color-mix(in oklch, var(--color-fg) 70%, var(--color-ink)); }
+
+.group { display: flex; flex-direction: column; gap: 0.55rem; }
+.group-head {
+  display  : flex;
+  align-items: baseline;
+  gap    : 0.5rem;
+  font-size  : 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color    : var(--fg-50);
+}
+.link {
+  padding: 0; border: none; background: none; color: var(--color-ink);
+  font-size: 0.75rem; text-transform: none; letter-spacing: 0; cursor: pointer;
+}
+
+/* swatches */
+.swatches { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.swatch {
+  width : 2rem; height: 2rem; padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.swatch.on { border-color: var(--color-fg); box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-ink); }
+.swatch.custom {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--panel-2); color: var(--color-fg); position: relative; overflow: hidden;
+}
+.swatch.custom input[type=color] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* hairstyles */
+.styles { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
+.style {
+  flex   : 0 0 auto;
+  width  : 4.5rem;
+  height : 5rem;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap  : 0.25rem;
+  border : 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color  : var(--color-fg);
+  cursor : pointer;
+}
+.style.on { border-color: var(--color-ink); box-shadow: 0 0 0 1px var(--color-ink); }
+.style img { width: 3rem; height: 3rem; object-fit: contain; }
+.style span { font-size: 0.65rem; color: var(--fg-75); text-align: center; line-height: 1.1; }
+.style.none, .style.upload { color: var(--fg-50); }
+
+/* sliders */
+.slider { display: flex; align-items: center; gap: 0.6rem; font-size: 0.75rem; color: var(--fg-75); }
+.slider span { flex: 0 0 3.5rem; }
+.slider input[type=range] { flex: 1 1 auto; accent-color: var(--color-ink); }

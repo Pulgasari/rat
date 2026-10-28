@@ -1,0 +1,114 @@
+<script>
+  // <IconGeneratorView />: an svg in, the png sizes a web app manifest needs out, padded and on a
+  // background if wanted. the svg is decoded through an <img>, its viewBox stays intact
+
+  import { download } from '../modules/files.js';
+
+  const SIZES = [16, 32, 64, 96, 128, 180, 192, 256, 512, 1024];
+
+  let $sizes!   = [192, 512];
+  let $padding! = 0;    // percent
+  let $bg!      = '';   // '' transparent
+  let $source   = null; // { name, url }
+  let $results  = [];   // { size, url }
+  let $busy     = false;
+  let $error    = '';
+
+  const nameOf = size => `icon-${size}.png`;
+
+  async function use (files) {
+    const file = files.at(-1);
+    $error = '';
+    if (!/svg/i.test(file.type) && !/\.svg$/i.test(file.name)) { $error = `${file.name} is not an svg`; return; }
+    if ($source) URL.revokeObjectURL($source.url);
+    $source  = { name: file.name.replace(/\.svg$/i, ''), url: URL.createObjectURL(new Blob([await file.text()], { type: 'image/svg+xml' })) };
+    $results = [];
+  }
+
+  // centred, never stretched
+  async function render (image, size) {
+    const canvas = Object.assign(document.createElement('canvas'), { height: size, width: size });
+    const ctx    = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    if ($bg) { ctx.fillStyle = $bg; ctx.fillRect(0, 0, size, size); }
+    const box   = size - Math.round(size * $padding / 100) * 2;
+    const scale = Math.min(box / image.width, box / image.height);
+    ctx.drawImage(image, (size - image.width * scale) / 2, (size - image.height * scale) / 2, image.width * scale, image.height * scale);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error(`could not render ${size}px`);
+    return { size, url: URL.createObjectURL(blob) };
+  }
+
+  async function generate () {
+    if (!$source || !$sizes.length) return;
+    $busy  = true;
+    $error = '';
+    for (const result of $results) URL.revokeObjectURL(result.url);
+    $results = [];
+    try {
+      const image = new Image;
+      image.src = $source.url;
+      await image.decode();
+      for (const size of [...$sizes].sort((a, b) => a - b)) $results = [...$results, await render(image, size)];
+    }
+    catch (error) { $error = error.message; }
+    finally { $busy = false; }
+  }
+
+  function downloadAll () {
+    for (const result of $results) download(result.url, nameOf(result.size));
+    download($source.url, 'icon.svg');
+  }
+
+  const toggle = size => { $sizes = $sizes.includes(size) ? $sizes.filter(value => value !== size) : [...$sizes, size].sort((a, b) => a - b); };
+</script>
+
+<ViewHeader back='/' title='Icon Generator' />
+
+<main.tool>
+  <div.tool-body>
+    <Dropzone accept='image/svg+xml,.svg' what='an app.svg' onfiles={use} />
+
+    @if ($error): <div.err-block><svg-icon icon='warning' /> {$error}</div.err-block>
+
+    @if ($source)
+      <div.source>
+        <img.source-preview src={$source.url} alt={$source.name} />
+        <span.source-name>{$source.name}.svg</span.source-name>
+      </div.source>
+
+      <div.size-picker>
+        @for (size of SIZES): <button.chip class:active={$sizes.includes(size)} onclick={() => toggle(size)}>{size}</button.chip>
+      </div.size-picker>
+
+      <div.options>
+        <label.option>
+          <span>Padding</span>
+          <input type='range' min='0' max='25' value={$padding} oninput={event => $padding = Number(event.currentTarget.value)} />
+          <span.option-value>{$padding}%</span.option-value>
+        </label.option>
+        <label.option>
+          <span>Background</span>
+          <input type='color' value={$bg || '#282a36'} oninput={event => $bg = event.currentTarget.value} />
+          <button.chip disabled={!$bg} onclick={() => $bg = ''}>transparent</button.chip>
+        </label.option>
+      </div.options>
+
+      <div.tool-actions>
+        <btn-push icon={$busy ? 'loading' : 'run'} label={$busy ? 'Rendering …' : `Render ${$sizes.length} size${$sizes.length === 1 ? '' : 's'}`} disabled={$busy || !$sizes.length} onclick={generate} />
+        @if ($results.length): <btn-push icon='download' label='Download all' onclick={downloadAll} />
+      </div.tool-actions>
+
+      @if ($results.length)
+        <div.results>
+          @for (result of $results)
+            <figure.result>
+              <img src={result.url} alt={nameOf(result.size)} width={Math.min(result.size, 128)} height={Math.min(result.size, 128)} />
+              <figcaption>
+                <span>{nameOf(result.size)}</span>
+                <btn-icon icon='download' label='Download' onclick={() => download(result.url, nameOf(result.size))} />
+              </figcaption>
+            </figure.result>
+        </div.results>
+  </div.tool-body>
+</main.tool>

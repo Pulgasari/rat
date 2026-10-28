@@ -1,0 +1,150 @@
+<script>
+  // <SvgPixelPatternGeneratorView />: a small grid of pixels as an svg, and as a css background that
+  // repeats it (the preview on top)
+
+  import { download } from '../modules/files.js';
+
+  const PALETTE = ['#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261', '#264653', '#ffffff', '#000000'];
+  const WHITE   = '#ffffff';
+  const CELL    = 10;   // px of a pixel in the svg
+
+  const TOOLS = [
+    { icon: 'edit', label: '', value: 'draw' },
+    { icon: 'fill', label: '', value: 'fill' },
+    { icon: 'eraser', label: '', value: 'erase' },
+  ];
+
+  const filled = (columns, rows, color = WHITE) => Array.from({ length: rows }, () => Array(columns).fill(color));
+
+  let $palette! = PALETTE;
+  let $active!  = '#000000';
+  let $tool!    = 'draw';
+  let $columns! = 9;
+  let $rows!    = 9;
+  let $gap!     = 0;
+  let $size!    = 32;
+  let $grid!    = filled(9, 9);
+
+  const $cells = $grid.flat();
+
+  const $svg = (() => {
+    const step = CELL + $gap, width = $columns * step, height = $rows * step;
+    const rects = $grid.flatMap((line, y) => line.map((color, x) => `<rect x="${x * step}" y="${y * step}" width="${CELL}" height="${CELL}" fill="${color}"/>`)).join('\n  ');
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" shape-rendering="crispEdges">\n  ${rects}\n</svg>`;
+  })();
+
+  const $url = `data:image/svg+xml;base64,${btoa(String.fromCharCode(...new TextEncoder().encode($svg)))}`;
+
+  const css = () => `.pixel-art {\n  width: ${$columns * (CELL + $gap)}px;\n  height: ${$rows * (CELL + $gap)}px;\n  background-image: url("${$url}");\n  background-repeat: no-repeat;\n  background-size: 100% 100%;\n  image-rendering: pixelated;\n}`;
+
+  function resize (columns, rows) {
+    const old = $grid;
+    $columns = columns;
+    $rows    = rows;
+    $grid    = Array.from({ length: rows }, (_, y) => Array.from({ length: columns }, (_, x) => old[y]?.[x] ?? WHITE));
+  }
+
+  function set (index, color) {
+    const y = Math.floor(index / $columns), x = index % $columns;
+    if ($grid[y]?.[x] === color) return;
+    $grid = $grid.map((line, row) => row === y ? line.map((cell, column) => column === x ? color : cell) : line);
+  }
+
+  function flood (index) {
+    const y0 = Math.floor(index / $columns), x0 = index % $columns;
+    const target = $grid[y0][x0];
+    if (target === $active) return;
+    const grid  = $grid.map(line => [...line]);
+    const stack = [[y0, x0]];
+    while (stack.length) {
+      const [y, x] = stack.pop();
+      if (y < 0 || y >= $rows || x < 0 || x >= $columns || grid[y][x] !== target) continue;
+      grid[y][x] = $active;
+      stack.push([y + 1, x], [y - 1, x], [y, x + 1], [y, x - 1]);
+    }
+    $grid = grid;
+  }
+
+  // one listener on the grid: the cell under the pointer by its index
+  let painting = false;
+
+  const indexAt = event => Number(document.elementFromPoint(event.clientX, event.clientY)?.closest('.pixel-cell')?.dataset.index ?? -1);
+
+  function apply (index, first) {
+    if (index < 0) return;
+    if ($tool === 'fill') { if (first) flood(index); return; }
+    set(index, $tool === 'erase' ? WHITE : $active);
+  }
+
+  function down (event) {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    painting = true;
+    apply(indexAt(event), true);
+  }
+
+  const over = event => { if (painting && $tool !== 'fill') apply(indexAt(event), false); };
+
+  function addColor (color) {
+    if (!$palette.includes(color)) $palette = [...$palette, color];
+    $active = color;
+  }
+
+  const invert = () => { $grid = $grid.map(line => line.map(color => `#${(0xffffff ^ parseInt(color.slice(1), 16)).toString(16).padStart(6, '0')}`)); };
+</script>
+
+@fragment toolButton (icon, title, run)
+  <button.tool-btn title={title} onclick={run}><svg-icon icon={icon} /></button.tool-btn>
+
+@fragment sizeField (label, value, set)
+  <div.size-field>
+    <span.size-label>{label}</span.size-label>
+    <button.sz-btn onclick={() => set(Math.max(1, value - 1))}><svg-icon icon='minus' /></button.sz-btn>
+    <input.field.sz-input type='number' min='1' max='64' value={value} oninput={event => set(Math.max(1, Math.min(64, Number(event.currentTarget.value) || 1)))} />
+    <button.sz-btn onclick={() => set(Math.min(64, value + 1))}><svg-icon icon='add' /></button.sz-btn>
+  </div.size-field>
+
+<ViewHeader back='/' title='SVG Pixel Pattern' />
+
+<main.tool>
+  <div.tool-body>
+    <div.preview style={`background-image: url("${$url}"); background-repeat: repeat; background-size: 3px 3px`}></div.preview>
+
+    <div.canvas-wrap>
+      <div.pixel-grid style={`--sz: ${$size}px; --cols: ${$columns}; gap: ${$gap}px`} onpointerdown={down} onpointermove={over} onpointerup={() => painting = false} onpointercancel={() => painting = false}>
+        @for (color, index of $cells): <div.pixel-cell data-index={index} style={`background: ${color}`}></div.pixel-cell>
+      </div.pixel-grid>
+    </div.canvas-wrap>
+
+    <div.palette>
+      @for (color of $palette)
+        <div.pal-swatch class:active={$active === color} style={`background: ${color}`} title={`${color} (right click removes)`} onclick={() => $active = color} oncontextmenu={event => { event.preventDefault(); $palette = $palette.filter(other => other !== color); }}></div.pal-swatch>
+      <label.pal-add title='Add color'>
+        <input type='color' style='opacity: 0; position: absolute; width: 0; height: 0' oninput={event => addColor(event.currentTarget.value)} />
+        <svg-icon icon='add' />
+      </label.pal-add>
+    </div.palette>
+
+    <div.toolbar>
+      <Segments options={TOOLS} value={$tool} onchange={value => $tool = value} />
+      <div.divider></div.divider>
+      <div.tool-group>
+        {toolButton('delete', 'Clear', () => $grid = filled($columns, $rows))}
+        {toolButton('fill-all', 'Fill all with active color', () => $grid = filled($columns, $rows, $active))}
+        {toolButton('invert', 'Invert colors', invert)}
+      </div.tool-group>
+      <div.divider></div.divider>
+      {sizeField('W', $columns, value => resize(value, $rows))}
+      {sizeField('H', $rows, value => resize($columns, value))}
+      <Slider label='Gap' min={0} max={10} unit='px' value={$gap} onchange={value => $gap = value} />
+      <div.divider></div.divider>
+      <div.tool-group>
+        {toolButton('zoom-out', 'Zoom out', () => $size = Math.max(8, $size - 4))}
+        {toolButton('zoom-in', 'Zoom in', () => $size = Math.min(64, $size + 4))}
+      </div.tool-group>
+      <div.divider></div.divider>
+      <button.btn.primary onclick={() => download($svg, 'pattern.svg', 'image/svg+xml')}><svg-icon icon='download' /> SVG</button.btn.primary>
+      <button.btn.secondary onclick={() => navigator.clipboard.writeText(css())}><svg-icon icon='copy' /> CSS</button.btn.secondary>
+    </div.toolbar>
+  </div.tool-body>
+</main.tool>

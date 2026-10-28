@@ -1,0 +1,35 @@
+<script>
+  // <CodeOutput value={text} title='Output' filename='output.json' error={message} stats={{ ratio, after }} />
+  // a read-only text pane: copied, downloaded, selected
+
+  import { download } from '../modules/files.js';
+
+  let $pre = null;
+
+  function select () {
+    const range = document.createRange();
+    range.selectNodeContents($pre);
+    getSelection().removeAllRanges();
+    getSelection().addRange(range);
+  }
+</script>
+
+<div.pane>
+  <div.pane-header>
+    <span.pane-title>{props.title ?? 'Output'}</span.pane-title>
+    <div.pane-actions>
+      @if (props.value)
+        <btn-icon icon='copy' label='Copy' onclick={() => navigator.clipboard.writeText(props.value)} />
+        @if (props.filename): <btn-icon icon='download' label='Download' onclick={() => download(props.value, props.filename)} />
+        <btn-icon icon='select-all' label='Select' onclick={select} />
+    </div.pane-actions>
+  </div.pane-header>
+  <div.output-wrap class:empty={!props.value}>
+    @if (props.error): <div.err-block><svg-icon icon='warning' /><pre>{props.error}</pre></div.err-block>
+    @else if (props.value): <pre.output-pre ref={$pre}>{props.value}</pre.output-pre>
+    @else: <span.placeholder>{props.placeholder ?? 'Output appears here …'}</span.placeholder>
+  </div.output-wrap>
+  <div.pane-footer>
+    @if (props.value && props.stats): <span.stats><span.stat-badge>{props.stats.ratio}% smaller</span.stat-badge> {props.stats.after} chars</span.stats>
+  </div.pane-footer>
+</div.pane>

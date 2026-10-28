@@ -1,0 +1,31 @@
+/* audio-converter, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='audio-converter'] {
+  .dropzone:hover,
+  .dropzone.drag-over {
+    border-color: var(--color-ink);
+    background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+    opacity: 1;
+  }
+
+  .dropzone u { color: var(--color-ink); text-underline-offset: 2px; }
+
+  /* audio files flag decode errors with a red icon */
+  .file-item.error iconify-icon { color: #f66; }
+
+  /* per-file progress */
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: color-mix(in srgb, var(--color-fg) 15%, transparent);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar > div {
+    height: 100%;
+    background: var(--color-ink);
+    transition: width .2s;
+  }
+}

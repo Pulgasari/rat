@@ -1,0 +1,36 @@
+<script>
+  // <ColorRow />: the colour of the hair, a swatch or a custom one, and how much of it
+
+  import { SWATCHES } from '../modules/recolor.js';
+
+  import { $color, $strength } from '../state.rat.js';
+
+  const same = (color, swatch) => color && color.r === swatch.r && color.g === swatch.g && color.b === swatch.b;
+
+  function custom (event) {
+    const match = /^#?([0-9a-f]{6})$/i.exec(event.currentTarget.value);
+    if (!match) return;
+    const value = parseInt(match[1], 16);
+    $color = { b: value & 255, g: (value >> 8) & 255, r: (value >> 16) & 255 };
+  }
+</script>
+
+<div.group>
+  <div.group-head>
+    <span>Hair colour</span>
+    @if ($color): <button.link onclick={() => $color = null}>none</button>
+  </div.group-head>
+  <div.swatches>
+    @for (swatch of SWATCHES)
+      <button.swatch class:on={same($color, swatch)} title={swatch.name} style={`background: rgb(${swatch.r}, ${swatch.g}, ${swatch.b})`} onclick={() => $color = { b: swatch.b, g: swatch.g, r: swatch.r }}></button>
+    <label.swatch.custom title='Custom colour'>
+      <svg-icon icon='pipette' />
+      <input type='color' oninput={custom} />
+    </label.swatch>
+  </div.swatches>
+  @if ($color)
+    <label.slider>
+      <span>Intensity</span>
+      <input type='range' min='0' max='1' step='0.01' value={$strength} oninput={event => $strength = Number(event.currentTarget.value)} />
+    </label.slider>
+</div.group>

@@ -1,0 +1,20 @@
+<script>
+  // tools: a shelf of small tools, each a view of its own, imported when it is first opened (tools.rat.js)
+
+  import { tools } from './tools.rat.js';
+
+  import ShelfView from './views/ShelfView.rat.html';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  RAT.app.on('error', toast.error);
+  hint('Tools');
+
+  const OWN = tools.filter(tool => tool.view);
+</script>
+
+<rat-view name='shelf' route='/' component={ShelfView} />
+@for (tool of OWN): <rat-view name={tool.slug} route={`/${tool.slug}`} lazy={tool.view} />
+
+<rat-area name='config' dock='end'><Settings name='Tools' /></rat-area>

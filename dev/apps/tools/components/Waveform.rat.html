@@ -1,0 +1,84 @@
+<script>
+  // <Waveform peaks={peaks} duration={60} start={0} end={60} position={0} marks={[]} onchange={(which, time) => …} />
+  // the bars of a sound, the part between start and end in the accent, a play head at position (seconds).
+  // with onchange two handles move start and end (the parent clamps). marks: times drawn as thin lines
+
+  import { formatTime } from '../modules/audio.js';
+
+  let $wrap = null;
+
+  const percent = time => `${(time / props.duration * 100).toFixed(3)}%`;
+
+  function paint (canvas, [peaks, start, end, duration, position, marks]) {
+    const width  = canvas.width  = canvas.offsetWidth;
+    const height = canvas.height = canvas.offsetHeight;
+    if (!width || !height || !peaks) return;
+    const ctx    = canvas.getContext('2d');
+    const style  = getComputedStyle(canvas);
+    const accent = style.getPropertyValue('--color-ink').trim() || '#3498db';
+    const fg     = style.getPropertyValue('--color-fg').trim()  || '#fff';
+    const from   = start / duration * width, to = end / duration * width;
+    const bar    = Math.max(1.5, width / peaks.length - 0.5);
+    for (let index = 0; index < peaks.length; index++) {
+      const x = index / peaks.length * width, inside = x >= from && x <= to, size = peaks[index] * height * 0.85;
+      ctx.fillStyle   = inside ? accent : fg;
+      ctx.globalAlpha = inside ? 0.85 : 0.15;
+      ctx.fillRect(x, (height - size) / 2, bar, size);
+    }
+    ctx.fillStyle   = fg;
+    ctx.globalAlpha = 0.5;
+    for (const mark of marks ?? []) ctx.fillRect(mark / duration * width, 0, 1, height);
+    ctx.globalAlpha = 0.85;
+    if (position > 0) ctx.fillRect(position / duration * width - 1, 0, 2, height);
+    ctx.globalAlpha = 1;
+  }
+
+  const timeAt = x => {
+    const bounds = $wrap.getBoundingClientRect();
+    return Math.max(0, Math.min(props.duration, (x - bounds.left) / bounds.width * props.duration));
+  };
+
+  function drag (event, which) {
+    event.preventDefault();
+    const move = moved => props.onchange(which, timeAt(moved.clientX));
+    const up   = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', up);
+  }
+</script>
+
+<div.waveform-wrap ref={$wrap}>
+  <canvas.waveform-canvas @paint={[props.peaks, props.start ?? 0, props.end ?? props.duration, props.duration, props.position ?? 0, props.marks]}></canvas.waveform-canvas>
+  @if (props.onchange)
+    <div.handle.handle-s style={`left: ${percent(props.start)}`} onpointerdown={event => drag(event, 'start')}><div.handle-label>{formatTime(props.start)}</div.handle-label></div.handle.handle-s>
+    <div.handle.handle-e style={`left: ${percent(props.end)}`} onpointerdown={event => drag(event, 'end')}><div.handle-label>{formatTime(props.end)}</div.handle-label></div.handle.handle-e>
+</div.waveform-wrap>
+
+<style>
+  .waveform-wrap   { border-radius: 0.4rem; position: relative; touch-action: none; user-select: none; }
+  .waveform-canvas { block-size: 100%; display: block; inline-size: 100%; }
+
+  .handle {
+    background  : var(--color-ink);
+    cursor      : ew-resize;
+    inset-block : 0;
+    inline-size : 3px;
+    position    : absolute;
+    transform   : translateX(-50%);
+
+    &::before { content: ''; inset: 0 -0.6rem; position: absolute; }   /* a wider grip */
+  }
+
+  .handle-label {
+    background    : var(--color-ink);
+    border-radius : 0.25rem;
+    color         : var(--color-bg);
+    font-size     : 0.7rem;
+    left          : 50%;
+    padding       : 0.05rem 0.3rem;
+    position      : absolute;
+    top           : 100%;
+    transform     : translateX(-50%);
+    white-space   : nowrap;
+  }
+</style>

@@ -1,0 +1,90 @@
+<script>
+  // <InspectorView />: data pasted in, read (specs.js, by the name of the view) and shown as a tree to
+  // fold, filter and copy paths and values out of
+
+  import { inspectors } from '../specs.js';
+  import { toolOf }     from '../tools.rat.js';
+
+  const slug = props.view.getAttribute('name');
+  const tool = toolOf(slug);
+  const spec = inspectors[slug];
+
+  let $input! = '';
+  let $data   = undefined;
+  let $error  = '';
+  let $filter = '';
+
+  const typeOf = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+
+  function count (value, stats = { booleans: 0, depth: 0, keys: 0, nulls: 0, numbers: 0, strings: 0 }, depth = 0) {
+    stats.depth = Math.max(stats.depth, depth);
+    const type = typeOf(value);
+    if (type === 'object' || type === 'array') {
+      if (type === 'object') stats.keys += Object.keys(value).length;
+      for (const item of type === 'array' ? value : Object.values(value)) count(item, stats, depth + 1);
+    }
+    else if (type !== 'undefined') stats[{ boolean: 'booleans', null: 'nulls', number: 'numbers', string: 'strings' }[type]]++;
+    return stats;
+  }
+
+  const $stats = $data === undefined ? [] : Object.entries(count($data)).filter(([, value]) => value > 0);
+  const $match = !$filter || JSON.stringify($data ?? null).toLowerCase().includes($filter.toLowerCase());
+
+  async function inspect () {
+    const src = $input.trim();
+    if (!src) { $data = undefined; $error = ''; return; }
+    try { $data = await spec.parse(src); $error = ''; }
+    catch (error) { $data = undefined; $error = error.message; }
+  }
+
+  async function tidy () {
+    if ($data === undefined) return;
+    $input = await spec.format($data);
+    inspect();
+  }
+
+  function clear () {
+    $input  = '';
+    $data   = undefined;
+    $error  = '';
+    $filter = '';
+  }
+
+  if ($input) inspect();
+</script>
+
+<ViewHeader back='/' title={tool.name} />
+
+<main.tool.inspector>
+  <div.layout>
+    <div.input-col>
+      <CodeInput bind:value={$input} placeholder={`Paste ${spec.label} here …`} />
+      <div.input-actions>
+        <btn-push icon='search' label='Inspect' disabled={!$input} onclick={inspect} />
+        @if (spec.format && $data !== undefined): <btn-push icon='format' label='Format' onclick={tidy} />
+        @if ($input): <btn-push icon='close' label='Clear' onclick={clear} />
+      </div.input-actions>
+      @if ($error): <div.err-block><svg-icon icon='warning' /> {$error}</div.err-block>
+    </div.input-col>
+
+    <div.tree-col>
+      @if ($data !== undefined)
+        <div.stats-bar>
+          @for (stat of $stats): <span.stat>{stat[1]} {stat[0] === 'depth' ? 'max depth' : stat[0]}</span.stat>
+        </div.stats-bar>
+        <div.search-row>
+          <svg-icon.search-icon icon='search' />
+          <input.search-input type='text' placeholder='Filter keys & values …' value={$filter} oninput={event => $filter = event.currentTarget.value} />
+          @if ($filter): <button.act-btn onclick={() => $filter = ''}><svg-icon icon='close' /></button.act-btn>
+        </div.search-row>
+        <div.tree>
+          @if ($match): <DataNode value={$data} path='$' />
+        </div.tree>
+      @else
+        <div.tree-empty>
+          <svg-icon icon={spec.icon} />
+          <span>Paste {spec.label} and click Inspect</span>
+        </div.tree-empty>
+    </div.tree-col>
+  </div.layout>
+</main.tool.inspector>

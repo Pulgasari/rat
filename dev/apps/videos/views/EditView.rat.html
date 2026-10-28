@@ -1,0 +1,21 @@
+<script>
+  // <EditView />: a hint for now. the plan: quick edits (trim, rotate, flip, crop, speed, mute) baked
+  // into an exported clip, not an editor with a timeline. rotate, flip and crop are live on the player
+
+  import { $src } from '../player.rat.js';
+
+  const PLANNED = [
+    ['cut', 'Trim / cut'], ['rotate', 'Rotate'], ['mirror', 'Flip / mirror'],
+    ['crop', 'Crop'], ['speed', 'Speed'], ['mute', 'Mute / extract audio'],
+  ];
+</script>
+
+<ViewHeader back='library' title='edit' />
+
+<main>
+  <Empty icon='edit' title='Quick edits' hint={$src ? 'Editing tools are on the way.' : 'Open a clip in the player first.'}>
+    <ul.planned>
+      @for (item of PLANNED): <li><svg-icon icon={item[0]} /> {item[1]}</li>
+    </ul.planned>
+  </Empty>
+</main>

@@ -18,6 +18,8 @@
     "@domina/render"          : "../../../../domina/packages/render/index.js",
     "@domina/verbs/"          : "../../../../domina/packages/verbs/",
     "@gestalt/core"           : "../../../../gestalt/packages/core/index.js",
+    "@gestalt/filters"        : "../../../../gestalt/packages/filters/index.js",
+    "@gestalt/filters/"       : "../../../../gestalt/packages/filters/",
     "@gestalt/patterns"       : "../../../../gestalt/packages/patterns/index.js",
     "@gestalt/syntax"         : "../../../../gestalt/packages/syntax/index.js",
     "@gestalt/webfonts"       : "../../../../gestalt/packages/webfonts/index.js",

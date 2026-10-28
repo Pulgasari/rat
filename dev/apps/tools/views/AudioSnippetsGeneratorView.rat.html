@@ -1,0 +1,175 @@
+<script>
+  // <AudioSnippetsGeneratorView />: a part of each of several audio files, heard one after the other and
+  // exported as one file or one each
+
+  import { decode, formatTime, play } from '../modules/audio.js';
+  import { download }                 from '../modules/files.js';
+  import { exclusive, fetchFile }     from '../modules/ffmpeg.js';
+
+  const FORMATS = ['mp3', 'wav', 'ogg', 'flac', 'm4a'];
+  const MIME    = { flac: 'audio/flac', m4a: 'audio/mp4', mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav' };
+
+  let $snippets  = [];       // { duration, end, file, id, peaks, start }
+  let $format!   = 'mp3';
+  let $playing   = null;     // the id of the snippet heard, or 'all'
+  let $position  = { id: null, time: 0 };
+  let $exporting = false;
+  let $error     = '';
+
+  const buffers = new Map;   // id -> AudioBuffer
+  let next = 0, playback = null;
+
+  const $total = $snippets.reduce((sum, snippet) => sum + snippet.end - snippet.start, 0);
+
+  const clamp  = (value, low, high) => Math.max(low, Math.min(high, value));
+  const update = (id, changes) => { $snippets = $snippets.map(snippet => snippet.id === id ? { ...snippet, ...changes } : snippet); };
+
+  async function add (files) {
+    for (const file of files) {
+      try {
+        const { buffer, peaks } = await decode(file, 400);
+        const id = next++;
+        buffers.set(id, buffer);
+        $snippets = [...$snippets, { duration: buffer.duration, end: buffer.duration, file, id, peaks, start: 0 }];
+      }
+      catch (error) { $error = `${file.name}: ${error.message}`; }
+    }
+  }
+
+  function remove (id) {
+    if ($playing === id) stop();
+    buffers.delete(id);
+    $snippets = $snippets.filter(snippet => snippet.id !== id);
+  }
+
+  function move (id, step) {
+    const list = [...$snippets];
+    const from = list.findIndex(snippet => snippet.id === id), to = from + step;
+    if (to < 0 || to >= list.length) return;
+    [list[from], list[to]] = [list[to], list[from]];
+    $snippets = list;
+  }
+
+  function setBound (snippet, which, time) {
+    if (which === 'start') update(snippet.id, { start: clamp(time, 0, snippet.end - 0.1) });
+    else update(snippet.id, { end: clamp(time, snippet.start + 0.1, snippet.duration) });
+  }
+
+  // :::::: LISTENING: one snippet, or all in order
+
+  function stop () {
+    const current = playback;
+    playback  = null;
+    $playing  = null;
+    $position = { id: null, time: 0 };
+    current?.stop();
+  }
+
+  function hear (snippet, then) {
+    playback = play(buffers.get(snippet.id), snippet.start, snippet.end, {
+      onend      : () => { if (playback) { playback = null; then ? then() : stop(); } },
+      onposition : time => $position = { id: snippet.id, time },
+    });
+  }
+
+  function toggle (snippet) {
+    const was = $playing;
+    stop();
+    if (was === snippet.id) return;
+    $playing = snippet.id;
+    hear(snippet);
+  }
+
+  function playAll (index = 0) {
+    if (index === 0) { stop(); $playing = 'all'; }
+    const snippet = $snippets[index];
+    if (!snippet || $playing !== 'all') return stop();
+    hear(snippet, () => playAll(index + 1));
+  }
+
+  // :::::: EXPORT: each part encoded to the format, then one per file or joined
+
+  async function exportAs (combined) {
+    $exporting = true;
+    $error     = '';
+    const format = $format, list = $snippets;
+    try {
+      await exclusive(async ff => {
+        const slices = [];
+        for (const snippet of list) {
+          const input = `in_${snippet.id}.${snippet.file.name.split('.').pop()}`;
+          const slice = `slice_${snippet.id}.${format}`;
+          await ff.writeFile(input, await fetchFile(snippet.file));
+          await ff.exec(['-i', input, '-ss', snippet.start.toFixed(3), '-to', snippet.end.toFixed(3), slice]);
+          await ff.deleteFile(input);
+          if (combined) slices.push(slice);
+          else {
+            download(new Blob([(await ff.readFile(slice)).buffer], { type: MIME[format] }), `${snippet.file.name.replace(/\.[^.]+$/, '')}_snippet.${format}`);
+            await ff.deleteFile(slice);
+          }
+        }
+        if (!combined) return;
+        await ff.writeFile('list.txt', slices.map(slice => `file '${slice}'`).join('\n'));
+        await ff.exec(['-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', `combined.${format}`]);
+        download(new Blob([(await ff.readFile(`combined.${format}`)).buffer], { type: MIME[format] }), `combined.${format}`);
+        for (const name of [...slices, 'list.txt', `combined.${format}`]) await ff.deleteFile(name);
+      });
+    }
+    catch (error) { $error = error.message; }
+    finally { $exporting = false; }
+  }
+</script>
+
+<ViewHeader back='/' title='Audio Snippets' />
+
+<main.tool>
+  <div.tool-body>
+    <Dropzone accept='audio/*' multiple what='audio files' onfiles={add} />
+
+    @if ($snippets.length)
+      <div.snippets>
+        @for (snippet, index of $snippets)
+          <div.snippet-pane>
+            <div.pane-header>
+              <svg-icon icon='audio' />
+              <span.pane-title>{snippet.file.name}</span.pane-title>
+              <span.sel-dur>{formatTime(snippet.end - snippet.start)}</span.sel-dur>
+              <div.pane-controls>
+                <btn-icon icon='chevron-up' label='up' disabled={index === 0} onclick={() => move(snippet.id, -1)} />
+                <btn-icon icon='chevron-down' label='down' disabled={index === $snippets.length - 1} onclick={() => move(snippet.id, 1)} />
+                <btn-icon icon='close' label='remove' onclick={() => remove(snippet.id)} />
+              </div.pane-controls>
+            </div.pane-header>
+
+            <Waveform peaks={snippet.peaks} duration={snippet.duration} start={snippet.start} end={snippet.end} position={$position.id === snippet.id ? $position.time : 0} onchange={(which, time) => setBound(snippet, which, time)} />
+
+            <div.pane-footer>
+              <btn-icon icon={$playing === snippet.id ? 'pause' : 'play'} label={$playing === snippet.id ? 'Pause' : 'Play selection'} onclick={() => toggle(snippet)} />
+              <div.time-row>
+                <label>Start</label>
+                <input.field.time-input type='number' step='0.1' min='0' max={(snippet.end - 0.1).toFixed(1)} value={snippet.start.toFixed(1)} oninput={event => setBound(snippet, 'start', Number(event.currentTarget.value))} />
+                <svg-icon icon='arrow-right' />
+                <label>End</label>
+                <input.field.time-input type='number' step='0.1' min={(snippet.start + 0.1).toFixed(1)} max={snippet.duration.toFixed(1)} value={snippet.end.toFixed(1)} oninput={event => setBound(snippet, 'end', Number(event.currentTarget.value))} />
+                <span.total-dur>/ {formatTime(snippet.duration)}</span.total-dur>
+              </div.time-row>
+            </div.pane-footer>
+          </div.snippet-pane>
+      </div.snippets>
+
+      <div.preview-bar>
+        <btn-push icon={$playing === 'all' ? 'stop' : 'play'} label={$playing === 'all' ? 'Stop preview' : 'Preview all'} onclick={() => $playing === 'all' ? stop() : playAll()} />
+        <span.preview-info>{$snippets.length} snippet{$snippets.length === 1 ? '' : 's'} · {formatTime($total)} total</span.preview-info>
+      </div.preview-bar>
+
+      <div.export-bar>
+        <Segments options={FORMATS} value={$format} onchange={value => $format = value} />
+        <div.tool-actions>
+          <btn-push icon={$exporting ? 'loading' : 'download'} label={$exporting ? 'Exporting …' : 'Export combined'} disabled={$exporting} onclick={() => exportAs(true)} />
+          <btn-push icon='download' label='Export individually' disabled={$exporting} onclick={() => exportAs(false)} />
+        </div.tool-actions>
+      </div.export-bar>
+
+    @if ($error): <div.err-block><svg-icon icon='warning' /> {$error}</div.err-block>
+  </div.tool-body>
+</main.tool>

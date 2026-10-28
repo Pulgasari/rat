@@ -1,0 +1,85 @@
+<script>
+  // <TaskPane task={task} index={0} total={3} />: one task of the batch, its options by type
+
+  import * as fx from '../modules/filters.js';
+  import { TASKS, moveTask, removeTask, setTask } from '../batch.rat.js';
+
+  const FORMATS   = ['webp', 'png', 'jpg'];
+  const TURNS     = [90, 180, 270];
+  const POSITIONS = [['tl', 'top-left'], ['tr', 'top-right'], ['bl', 'bottom-left'], ['br', 'bottom-right']];
+
+  const $task   = props.task;
+  const $params = $task.params;
+  const $def    = TASKS[$task.type];
+  const $effect = $task.type === 'filter' ? fx.effectById($params.id) : null;
+
+  const set = changes => setTask($task.id, changes);
+  const num = key => event => set({ [key]: Number(event.currentTarget.value) });
+</script>
+
+@fragment range (key, min, max, step, unit)
+  <input.task-range type='range' min={min} max={max} step={step} value={$params[key]} oninput={num(key)} />
+  <span.task-value>{$params[key]}{unit}</span>
+
+@fragment number (label, key, size)
+  <span.task-label>{label}</span>
+  <input class={`task-input ${size}`} type='number' value={$params[key]} oninput={num(key)} />
+
+@fragment chip (label, key, value)
+  <button.chip class:active={$params[key] === value} onclick={() => set({ [key]: value })}>{label}</button>
+
+<div.task>
+  <header>
+    <span.task-title><svg-icon icon={$def.icon} /> {$def.label}</span>
+    <span.task-actions>
+      <btn-icon icon='chevron-up' label='Move up' disabled={props.index === 0} onclick={() => moveTask($task.id, -1)} />
+      <btn-icon icon='chevron-down' label='Move down' disabled={props.index === props.total - 1} onclick={() => moveTask($task.id, 1)} />
+      <btn-icon icon='close' label='Remove' onclick={() => removeTask($task.id)} />
+    </span.task-actions>
+  </header>
+  <div.task-body>
+    @match ($task.type)
+      @case 'blur': {range('radius', 1, 20, 1, 'px')}
+      @case 'brightness': {range('value', -100, 100, 1, '')}
+      @case 'contrast': {range('value', -100, 100, 1, '')}
+      @case 'quality': {range('value', 1, 100, 1, '%')}
+      @case 'convert'
+        <div.chips>
+          @for (format of FORMATS): {chip(format, 'fmt', format)}
+        </div.chips>
+      @case 'flip'
+        {chip('Horizontal', 'axis', 'h')}
+        {chip('Vertical', 'axis', 'v')}
+      @case 'rotate'
+        <div.chips>
+          @for (deg of TURNS): {chip(`${deg}°`, 'deg', deg)}
+          <input.task-input.sm type='number' min='0' max='359' value={$params.deg} oninput={num('deg')} />
+        </div.chips>
+      @case 'resize'
+        <span.task-label>W</span>
+        <input.task-input type='number' placeholder='px' value={$params.w} oninput={event => set({ w: event.currentTarget.value })} />
+        <span.task-label>H</span>
+        <input.task-input type='number' placeholder='px' value={$params.h} oninput={event => set({ h: event.currentTarget.value })} />
+        <span.task-hint>(leave one empty to keep the ratio)</span>
+      @case 'crop'
+        {number('X', 'x', 'sm')}
+        {number('Y', 'y', 'sm')}
+        {number('W', 'w', 'sm')}
+        {number('H', 'h', 'sm')}
+      @case 'watermark'
+        <input.task-input.grow type='text' placeholder='Text' value={$params.text} oninput={event => set({ text: event.currentTarget.value })} />
+        {number('Size', 'size', 'sm')}
+        <span.task-label>Opacity</span>
+        <input.task-range.short type='range' min='0' max='1' step='0.05' value={$params.opacity} oninput={num('opacity')} />
+        @for (position of POSITIONS): <button.chip class:active={$params.pos === position[0]} title={position[1]} onclick={() => set({ pos: position[0] })}>{position[0].toUpperCase()}</button>
+      @case 'filter'
+        <select.task-input.grow value={$params.id} onchange={event => set({ id: event.currentTarget.value })}>
+          @for (effect of fx.EFFECTS.filter(effect => effect.id !== 'none')): <option value={effect.id}>{effect.name}</option>
+        </select.task-input.grow>
+        @if ($effect?.amount)
+          <span.task-label>Amount</span>
+          <input.task-range.short type='range' min={$effect.amount.min} max={$effect.amount.max} step={$effect.amount.step ?? 0.05} value={$params.amount} oninput={num('amount')} />
+          <span.task-value>{$params.amount}</span>
+      @default: <span.task-hint>No options</span>
+  </div.task-body>
+</div.task>

@@ -1,0 +1,44 @@
+<script>
+  // <CropOverlay />: the crop rect over the canvas, moved by its body, sized by its eight handles. the
+  // overlay spans the canvas, a pointer maps to image pixels through it
+
+  import { $crop, $ratio, $work, nextCrop } from '../editor.rat.js';
+
+  const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+
+  let layer = null;
+  let drag  = null;
+
+  function toImage (event) {
+    const bounds = layer.getBoundingClientRect();
+    return { x: (event.clientX - bounds.left) * ($work.width / bounds.width), y: (event.clientY - bounds.top) * ($work.height / bounds.height) };
+  }
+
+  function start (event, type) {
+    event.preventDefault();
+    event.stopPropagation();
+    drag = { origin: toImage(event), rect: $crop, type };
+  }
+
+  // the window follows a drag that leaves the overlay
+  function track (element) {
+    layer = element;
+    const move = event => { if (drag) $crop = nextCrop(drag, toImage(event), $work.width, $work.height, $ratio); };
+    const up   = () => { drag = null; };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', up);
+    return () => {
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', up);
+    };
+  }
+
+  const $box = !$crop ? "" : `left: ${$crop.x / $work.width * 100}%; top: ${$crop.y / $work.height * 100}%; width: ${$crop.w / $work.width * 100}%; height: ${$crop.h / $work.height * 100}%`;
+</script>
+
+<div.crop-layer @track>
+  <div.crop-box style={$box} onpointerdown={event => start(event, 'move')}>
+    <div.crop-grid></div.crop-grid>
+    @for (handle of HANDLES): <span class={`handle handle-${handle}`} onpointerdown={event => start(event, handle)}></span>
+  </div.crop-box>
+</div.crop-layer>

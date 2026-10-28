@@ -1,0 +1,33 @@
+<script>
+  // <StyleRow />: a hairstyle over the head, one of the list or the user's own png, its size and height
+
+  import { HAIRSTYLES } from '../modules/hairstyles.js';
+
+  import { $face, $offset, $scale, $style, useCustomStyle, useStyle } from '../state.rat.js';
+</script>
+
+<div.group>
+  <div.group-head><span>Hairstyle</span></div.group-head>
+  <div.styles>
+    <button.style.none class:on={!$style} onclick={() => useStyle(null)}>
+      <svg-icon icon='none' /><span>None</span>
+    </button.style>
+    @for (style of HAIRSTYLES)
+      <button.style class:on={$style === style.id} onclick={() => useStyle(style)}>
+        <img src={style.src} alt={style.name} /><span>{style.name}</span>
+      </button.style>
+    <label.style.upload class:on={$style === 'custom'}>
+      <svg-icon icon='upload' /><span>Your PNG</span>
+      <input type='file' accept='image/png,image/*' hidden onchange={event => { useCustomStyle(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
+    </label.style>
+  </div.styles>
+  @if ($style && $face)
+    <label.slider>
+      <span>Size</span>
+      <input type='range' min='0.6' max='1.8' step='0.01' value={$scale} oninput={event => $scale = Number(event.currentTarget.value)} />
+    </label.slider>
+    <label.slider>
+      <span>Height</span>
+      <input type='range' min='-0.4' max='0.4' step='0.01' value={$offset} oninput={event => $offset = Number(event.currentTarget.value)} />
+    </label.slider>
+</div.group>

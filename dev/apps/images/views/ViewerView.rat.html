@@ -1,0 +1,73 @@
+<script>
+  // <ViewerView />: the open images, one at a time, zoomed and panned on the stage, a strip of all of
+  // them below. a drop or the picker replaces the set
+
+  import * as fx from '../modules/filters.js';
+  import { editCurrent } from '../editor.rat.js';
+  import { $current, $error, $index, $many, $shots, download, formatSize, removeCurrent, setFiles } from '../tray.rat.js';
+  import {
+    $bare, $effect, $filter, $moved, $pan, $strip, $zoom,
+    attach, go, keys, openPicker, picker, reset, showAt, toggleFullscreen, zoomIn, zoomOut,
+  } from '../viewer.rat.js';
+
+  const EFFECTS = fx.EFFECTS.filter(effect => effect.cssBacked);
+
+  const $meta = $current ? [$current.type?.split('/')[1]?.toUpperCase(), formatSize($current.size)].filter(Boolean).join(' · ') : '';
+
+  function dropped (event) {
+    event.preventDefault();
+    if (event.dataTransfer?.files?.length) { setFiles(event.dataTransfer.files); reset(); }
+  }
+
+  function picked (event) {
+    setFiles(event.currentTarget.files);
+    event.currentTarget.value = '';
+    reset();
+  }
+</script>
+
+@if (!$bare)
+  <ViewHeader title={$current?.name || 'images'}>
+    @if ($many): <span.count>{$index + 1} / {$shots.length}</span>
+    @if ($meta): <span.meta>{$meta}</span>
+    <btn-icon icon='folder-open' label='Open images' onclick={openPicker} />
+    @if ($current)
+      <btn-icon icon='edit' label='Edit this image' onclick={editCurrent} />
+      <btn-icon icon='zoom-out' label='Zoom out' disabled={$zoom <= 1} onclick={zoomOut} />
+      <btn-icon icon='zoom-in' label='Zoom in' onclick={zoomIn} />
+      <btn-icon icon='fit' label='Fit' disabled={!$moved} onclick={reset} />
+      <btn-icon icon='download' label='Download' onclick={() => download($current.url, $current.name)} />
+      <select.effect-select title='Live effect (view only, not saved)' aria-label='Effect' value={$effect} onchange={event => $effect = event.currentTarget.value}>
+        @for (effect of EFFECTS): <option value={effect.id}>{effect.id === 'none' ? 'No effect' : effect.name}</option>
+      </select.effect-select>
+    @if ($many): <btn-icon icon='strip' label='Toggle thumbnails' aria-pressed={$strip} onclick={() => $strip = !$strip} />
+    <btn-icon icon='fullscreen' label='Fullscreen' onclick={toggleFullscreen} />
+    @if ($current)
+      <btn-icon icon='eye-off' label='Hide the bars (tap the image to restore)' onclick={() => $bare = true} />
+      <btn-icon icon='close' label='Close image' onclick={() => { removeCurrent(); reset(); }} />
+  </ViewHeader>
+
+<main.viewer class:bare={$bare} ondragover={event => event.preventDefault()} ondrop={dropped} @keys={editCurrent}>
+
+  <div.viewer-stage class:grab={$zoom > 1} onclick={() => { if ($bare) $bare = false; }} @attach>
+    @if ($current)
+      <img.viewer-image src={$current.url} alt={$current.name} draggable='false' style={`transform: translate(${$pan.x}px, ${$pan.y}px) scale(${$zoom})${$filter ? `; filter: ${$filter}` : ''}`} />
+    @else
+      <Empty icon='images' title='View an image' hint='Open images from your device, or drop them here. Nothing is uploaded, they stay on your machine.'>
+        <btn-push icon='folder-open' label='Open images' onclick={openPicker} />
+        @if ($error): <p.error><svg-icon icon='warning' /> {$error}</p.error>
+      </Empty>
+
+    @if ($many && !$bare)
+      <button.viewer-nav.prev aria-label='Previous' onclick={event => { event.stopPropagation(); go(-1); }}><svg-icon icon='chevron-left' /></button>
+      <button.viewer-nav.next aria-label='Next' onclick={event => { event.stopPropagation(); go(1); }}><svg-icon icon='chevron-right' /></button>
+  </div.viewer-stage>
+
+  @if ($many && $strip && !$bare)
+    <footer.strip>
+      @for (shot, index of $shots)
+        <button.strip-thumb class:active={index === $index} title={shot.name} onclick={() => showAt(index)}><img src={shot.url} alt={shot.name} loading='lazy' /></button>
+    </footer.strip>
+
+  <input type='file' accept='image/*' multiple hidden @picker onchange={picked} />
+</main.viewer>

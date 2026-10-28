@@ -1,0 +1,26 @@
+<script>
+  // <Dropzone accept='image/svg+xml,.svg' multiple what='an app.svg' onfiles={files => …} />: a field to drop
+  // files on or to click for a picker. onfiles gets an array of File
+
+  let $input = null;
+  let $over  = false;
+
+  const hand = files => { if (files?.length) props.onfiles([...files]); };
+
+  function dropped (event) {
+    event.preventDefault();
+    $over = false;
+    hand(event.dataTransfer?.files);
+  }
+
+  function picked (event) {
+    hand(event.currentTarget.files);
+    event.currentTarget.value = '';
+  }
+</script>
+
+<div.dropzone class:over={$over} onclick={() => $input?.click()} ondragover={event => { event.preventDefault(); $over = true; }} ondragleave={event => { if (event.target === event.currentTarget) $over = false; }} ondrop={dropped}>
+  <svg-icon icon='upload' />
+  <p>Drop {props.what ?? 'files'} here, or click to choose</p>
+  <input type='file' hidden accept={props.accept} multiple={props.multiple ?? false} ref={$input} onchange={picked} />
+</div.dropzone>

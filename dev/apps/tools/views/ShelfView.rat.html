@@ -1,0 +1,48 @@
+<script>
+  // <ShelfView />: every tool, filtered by a category and a search over name and description. a tool of
+  // another app (the image tools) is a plain link there
+
+  import { categories, tools } from '../tools.rat.js';
+
+  let $query    = '';
+  let $category = '';
+
+  const $shown = (() => {
+    const text = $query.trim().toLowerCase();
+    return tools.filter(tool => (!$category || tool.categories.includes($category)) && (!text || tool.name.toLowerCase().includes(text) || tool.description.toLowerCase().includes(text)));
+  })();
+
+  function open (event, tool) {
+    if (tool.href) return;
+    event.preventDefault();
+    RAT.app.router.go(`/${tool.slug}`);
+  }
+</script>
+
+<ViewHeader title='tools'>
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</ViewHeader>
+
+<main.shelf-main>
+  <div.categories>
+    <button.chip class:active={$category === ''} onclick={() => $category = ''}>all</button.chip>
+    @for (name of categories): <button.chip class:active={$category === name} onclick={() => $category = name}>{name}</button.chip>
+  </div.categories>
+
+  <ul.shelf>
+    @for (tool of $shown)
+      <li>
+        <a href={tool.href ?? `#/${tool.slug}`} onclick={event => open(event, tool)}>
+          <span.title>
+            <span.name>{tool.name}</span.name>
+            <span.desc>{tool.description}</span.desc>
+          </span.title>
+          <svg-icon.logo icon={tool.href ? 'external' : tool.icon} />
+        </a>
+      </li>
+  </ul.shelf>
+
+  @if (!$shown.length): <p.nothing>nothing matches “{$query}”.</p.nothing>
+
+  <SearchPanel class='search sticky' placeholder='search tools …' bind:value={$query} />
+</main.shelf-main>

@@ -1,0 +1,12 @@
+<script>
+  // <PlayerView />: the stage and its controls, the bars gone after a double tap
+
+  import { $chromeless, $title } from '../player.rat.js';
+</script>
+
+@if (!$chromeless): <ViewHeader back='library' title={$title || 'player'} />
+
+<main.player class:chromeless={$chromeless}>
+  <Stage />
+  @if (!$chromeless): <Controls />
+</main.player>

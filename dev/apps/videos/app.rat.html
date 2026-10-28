@@ -1,0 +1,48 @@
+<script>
+  // videos: the clips in folders the user grants (library.js), a player for one of them
+  // (player.rat.js) and, later, quick edits. a clip opened with the app ("open with") goes to the player
+
+  import { gallery } from './library.js';
+  import { load, skip, toggle } from './player.rat.js';
+
+  import LibraryView from './views/LibraryView.rat.html';
+  import PlayerView  from './views/PlayerView.rat.html';
+  import EditView    from './views/EditView.rat.html';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+
+  RAT.app.on('error', toast.error);
+  RAT.app.hold <| gallery.load();
+  hint('Videos');
+
+  globalThis.launchQueue?.setConsumer(async params => {
+    if (!params?.files?.length) return;
+    load(await params.files[0].getFile());
+    RAT.app.router.go('/player');
+  });
+
+  RAT.app.commands.assign({
+    'back-10'     : () => skip(-10),
+    'forward-10'  : () => skip(10),
+    'toggle-play' : toggle,
+  });
+
+  const DOCK = [
+    { icon: 'folders', label: 'Library', to: '/' },
+    { icon: 'play',    label: 'Player',  to: '/player' },
+    { icon: 'edit',    label: 'Edit',    to: '/edit' },
+    { icon: 'settings', label: 'Settings', onclick: () => RAT.app.toggle('config') },
+  ];
+</script>
+
+<rat-view name='library' route='/' component={LibraryView} />
+<rat-view name='player' route='/player' component={PlayerView} />
+<rat-view name='edit' route='/edit' component={EditView} />
+
+<rat-area name='dock' dock='bottom' overlay='never' open><Dock items={DOCK} /></rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name='Videos'><Folders gallery={gallery} /></Settings>
+</rat-area>

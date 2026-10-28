@@ -15,6 +15,11 @@ does not follow. without either the view shows what it holds.
 
   <rat-view route='/podcast/:id' component={PodcastDetailView} />
 
+lazy={() => import('./x.rat.html')} imports the component on the first activation: a build splits it off,
+the app does not load it (nor what it imports) before the view is shown.
+
+  <rat-view route='/pdf' lazy={() => import('./views/PdfView.rat.html')} />
+
 an error boundary: an error of its component (loading, rendering, effects)
 replaces the component, [error] is set, retry() loads it again. a failed event
 handler leaves it as it is and goes on to the app (on('error') of <rat-app>).
@@ -68,6 +73,7 @@ export class RatView extends DominaElement {
 
   #component = null;
   #dispose   = null;
+  #lazy      = null;
   #guards    = new Set;
   #loaded  = false;
   #params  = null;
@@ -84,7 +90,15 @@ export class RatView extends DominaElement {
     if (this.active && this.#params !== null) this.fill(this.#params);
   }
 
-  get #mounts () { return Boolean(this.src || this.#component); }
+  // a function that imports the component, called on the first activation
+  get lazy () { return this.#lazy; }
+  set lazy (value) {
+    if (value === this.#lazy) return;
+    this.#lazy = value;
+    if (this.active && this.#params !== null) this.fill(this.#params);
+  }
+
+  get #mounts () { return Boolean(this.src || this.#component || this.#lazy); }
 
   onConnected () {
     this.inert = !this.active;
@@ -142,7 +156,7 @@ export class RatView extends DominaElement {
     this.removeAttribute('error');
 
     try {
-      const Component = this.#component ?? componentOf(await load(new URL(this.src, this.baseURI).href));
+      const Component = this.#component ?? componentOf(await (this.#lazy ? this.#lazy() : load(new URL(this.src, this.baseURI).href)));
       if (ticket !== this.#ticket) return;
       if (!Component) throw new Error(`[rat] ${this.src ?? 'the view'} has no component`);
       this.#dispose?.();

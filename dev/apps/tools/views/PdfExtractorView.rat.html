@@ -1,0 +1,145 @@
+<script>
+  // <PdfExtractorView />: pages picked out of a pdf, as a new pdf (pdf-lib copies them) or as images
+  // (pdf.js renders them)
+
+  import { PDFDocument } from 'pdf-lib';
+  import * as PDFJS      from 'pdfjs';
+
+  import { download } from '../modules/files.js';
+
+  PDFJS.GlobalWorkerOptions.workerSrc = import.meta.resolve('pdfjs-worker');   // from the import map of the page
+
+  const FORMATS = ['pdf', 'png', 'jpg', 'webp'];
+  const MIME    = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+  const SCALES  = [{ label: '1×', value: 1 }, { label: '2×', value: 2 }, { label: '3×', value: 3 }];
+
+  let $doc     = null;   // the pdf.js document
+  let $name    = '';
+  let $pages   = [];     // [{ number, selected, thumb }]
+  let $format! = 'pdf';
+  let $quality = 92;
+  let $scale   = 2;
+  let $status  = 'idle'; // idle | loading | exporting
+  let $error   = '';
+
+  let bytes = null;      // the file, for pdf-lib
+
+  const $chosen = $pages.filter(page => page.selected);
+  const $busy   = $status !== 'idle';
+
+  async function render (doc, number, scale, background) {
+    const page     = await doc.getPage(number);
+    const viewport = page.getViewport({ scale });
+    const canvas   = Object.assign(document.createElement('canvas'), { height: viewport.height, width: viewport.width });
+    const ctx      = canvas.getContext('2d');
+    if (background) { ctx.fillStyle = background; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    return canvas;
+  }
+
+  async function use (files) {
+    const file = files[0];
+    if (!file.type.includes('pdf') && !/\.pdf$/i.test(file.name)) { $error = 'Not a PDF file'; return; }
+    $status = 'loading';
+    $error  = '';
+    try {
+      const buffer = await file.arrayBuffer();
+      bytes = buffer.slice(0);   // pdf.js takes the buffer over
+      const doc = await PDFJS.getDocument({ data: buffer }).promise;
+      $doc  = doc;
+      $name = file.name.replace(/\.pdf$/i, '');
+      const pages = [];
+      for (let number = 1; number <= doc.numPages; number++) {
+        const canvas = await render(doc, number, 0.3);
+        pages.push({ number, selected: true, thumb: URL.createObjectURL(await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.8))) });
+        $pages = [...pages];
+      }
+    }
+    catch (error) { $error = error.message; }
+    finally { $status = 'idle'; }
+  }
+
+  function reset () {
+    for (const page of $pages) URL.revokeObjectURL(page.thumb);
+    $doc   = null;
+    $pages = [];
+    $name  = '';
+    $error = '';
+    bytes  = null;
+  }
+
+  const select = fn => { $pages = $pages.map(page => ({ ...page, selected: fn(page) })); };
+
+  async function extract () {
+    if (!$chosen.length) return;
+    $status = 'exporting';
+    const name = $name || 'page';
+    try {
+      if ($format === 'pdf') {
+        const source = await PDFDocument.load(bytes);
+        const out    = await PDFDocument.create();
+        for (const page of await out.copyPages(source, $chosen.map(page => page.number - 1))) out.addPage(page);
+        download(new Blob([await out.save()], { type: 'application/pdf' }), `${name}_extracted.pdf`);
+      }
+      else for (const page of $chosen) {
+        const canvas = await render($doc, page.number, $scale, $format === 'jpg' ? '#fff' : null);
+        download(await new Promise(resolve => canvas.toBlob(resolve, MIME[$format], $quality / 100)), `${name}_p${page.number}.${$format}`);
+        await new Promise(resolve => setTimeout(resolve, 80));   // the browser takes downloads one after the other
+      }
+    }
+    catch (error) { $error = error.message; }
+    finally { $status = 'idle'; }
+  }
+
+  const $label = $status === 'exporting' ? 'Exporting …'
+    : `${$format === 'pdf' ? 'Extract' : 'Export'} ${$chosen.length} page${$chosen.length === 1 ? '' : 's'} as ${$format === 'pdf' ? 'PDF' : `.${$format}`}`;
+</script>
+
+<ViewHeader back='/' title='PDF Extractor' />
+
+<main.tool>
+  <div.tool-body>
+    @if (!$doc)
+      @if ($status === 'loading'): <div.loading-row><svg-icon icon='loading' /> Loading PDF …</div.loading-row>
+      @else: <Dropzone accept='.pdf,application/pdf' what='a PDF' onfiles={use} />
+    @else
+      <div.file-bar>
+        <svg-icon icon='pdf' />
+        <span.fname>{$name}.pdf</span.fname>
+        <span.page-count>{$doc.numPages} pages</span.page-count>
+        <button.ghost-btn onclick={reset}><svg-icon icon='close' /> Remove</button.ghost-btn>
+      </div.file-bar>
+
+      <div.sel-bar>
+        <span.sel-info>{$chosen.length} of {$doc.numPages} selected</span.sel-info>
+        <button.ghost-btn onclick={() => select(() => true)}>All</button.ghost-btn>
+        <button.ghost-btn onclick={() => select(() => false)}>None</button.ghost-btn>
+        <button.ghost-btn onclick={() => select(page => !page.selected)}>Invert</button.ghost-btn>
+      </div.sel-bar>
+
+      <div.pages-grid>
+        @for (page of $pages)
+          <div.page-thumb class:selected={page.selected} onclick={() => select(other => other.number === page.number ? !other.selected : other.selected)}>
+            <div.thumb-canvas-wrap>
+              <img.thumb-canvas src={page.thumb} alt={`Page ${page.number}`} />
+              <div.thumb-check><svg-icon icon={page.selected ? 'check-circle' : 'circle'} /></div.thumb-check>
+            </div.thumb-canvas-wrap>
+            <span.thumb-num>Page {page.number}</span.thumb-num>
+          </div.page-thumb>
+      </div.pages-grid>
+
+      <div.export-panel>
+        <Segments options={FORMATS} value={$format} onchange={value => $format = value} />
+        @if ($format !== 'pdf')
+          <Slider label='Quality' min={1} max={100} unit='%' value={$quality} onchange={value => $quality = value} />
+          <div.setting-row>
+            <label>Scale</label>
+            <Segments options={SCALES} value={$scale} onchange={value => $scale = value} />
+            <span.val.hint>higher = sharper</span.val.hint>
+          </div.setting-row>
+        <btn-push icon={$busy ? 'loading' : 'download'} label={$label} disabled={$busy || !$chosen.length} onclick={extract} />
+      </div.export-panel>
+
+    @if ($error): <div.err-block><svg-icon icon='warning' /> {$error}</div.err-block>
+  </div.tool-body>
+</main.tool>

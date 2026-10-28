@@ -1,0 +1,13 @@
+<script>
+  // <Segments options={['a', { value, label, icon }]} value={x} onchange={value => …} />: one of a few, as chips
+
+  const $options = (props.options ?? []).map(option => typeof option === 'object' ? option : { label: String(option), value: option });
+</script>
+
+<div.segments>
+  @for (option of $options)
+    <button.chip class:active={props.value === option.value} onclick={() => props.onchange(option.value)}>
+      @if (option.icon): <svg-icon icon={option.icon} />
+      {option.label}
+    </button.chip>
+</div.segments>

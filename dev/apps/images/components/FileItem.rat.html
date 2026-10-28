@@ -1,0 +1,20 @@
+<script>
+  // <FileItem entry={entry} onremove={id => …} />: one image of a file list (files.js), its state and,
+  // once done, its download
+
+  import { download } from '../tray.rat.js';
+
+  const ICONS = { busy: 'loading', done: 'check', error: 'warning', pending: 'image' };
+
+  const $entry = props.entry;
+</script>
+
+<div.file-item class={$entry.status}>
+  <span.file-thumb><img src={$entry.preview} alt={$entry.file.name} /></span.file-thumb>
+  <svg-icon icon={ICONS[$entry.status]} />
+  <span.file-name>{$entry.file.name}</span.file-name>
+  @if ($entry.status === 'done'): <span.file-label>{$entry.outName}</span.file-label>
+  @else if ($entry.status === 'error'): <span.file-label>{$entry.error}</span.file-label>
+  @if ($entry.status === 'done'): <btn-icon icon='download' label='Download' onclick={() => download($entry.outUrl, $entry.outName)} />
+  @if ($entry.status !== 'busy'): <btn-icon icon='close' label='Remove' onclick={() => props.onremove($entry.id)} />
+</div.file-item>
