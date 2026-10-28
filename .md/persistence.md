@@ -284,7 +284,9 @@ which values are worth keeping.
 - `d` ist der "magic" weg
 - `a` ist der "primitive" weg (vielleicht auch quasi der "core" bzzgl implementierung)
 
-in der praxis nimmt meistens sicherlich d, b, c
+in der praxis nimmt meistens sicherlich d, b, c.
+
+aber statt `stored` und `persist` sollte man 1 vokabel nehmen. ich tendiere zu `stored`.
 
 (2) wenn es `!=` gibt,  wäre `$theme! = ...` zumindest suboptimal.
   - `$$theme = ...`
