@@ -1,0 +1,140 @@
+<script>
+  // <SettingsSheet />: the look, live on the grid above (no backdrop), the drawer's bars and the folders
+
+  import {
+    $barsOrder, $folders, $look, BARS, appsOf, closeSheet, createFolder, deleteFolder, renameFolder,
+  } from '../state.rat.js';
+
+  const { dialogs } = RAT.app;
+
+  const PRESETS = ['#e6e6e6', '#111111', '#4f8cff', '#22c55e', '#f97316', '#ec4899'];
+  const SHAPES  = [['circle', 'Kreis'], ['squircle', 'Squircle'], ['square', 'Eckig']];
+  const SIDES   = [['top', 'Oben'], ['bottom', 'Unten']];
+
+  const number = key => event => { $look[key] = Number(event.currentTarget.value); };
+  const text   = key => event => { $look[key] = event.currentTarget.value; };
+  const check  = key => event => { $look[key] = event.currentTarget.checked; };
+
+  function move (index, step) {
+    const order = [...$barsOrder];
+    [order[index], order[index + step]] = [order[index + step], order[index]];
+    $look.barsOrder = order;
+  }
+
+  const ask = value => dialogs.prompt({ cancel: 'Abbrechen', message: 'Ordnername', ok: 'OK', title: 'Ordner', value });
+
+  async function add () {
+    const name = await ask('Ordner');
+    if (name != null) createFolder(name.trim() || 'Ordner');
+  }
+
+  async function rename (folder) {
+    const name = await ask(folder.name);
+    if (name != null) renameFolder(folder.id, name.trim());
+  }
+</script>
+
+@fragment range (key, label, min, max, step, unit)
+  <div.field.range-field>
+    <label>{label} <b>{$look[key]}{unit}</b></label>
+    <input type='range' min={min} max={max} step={step} value={$look[key]} oninput={number(key)} />
+  </div.field>
+
+@fragment color (key, label)
+  <div.field.row-field>
+    <label>{label}</label>
+    <input type='color' value={$look[key]} oninput={text(key)} />
+  </div.field>
+
+@fragment toggle (key, label)
+  <label.switch-row><span>{label}</span><input type='checkbox' checked={$look[key]} onchange={check(key)} /></label>
+
+@fragment segments (key, options)
+  <div.seg role='group'>
+    @for (option of options): <button.seg-btn class:active={$look[key] === option[0]} onclick={() => $look[key] = option[0]}>{option[1]}</button>
+  </div.seg>
+
+<section.overlay-sheet.settings aria-label='Einstellungen'>
+  <div.overlay-head>
+    <span.overlay-title>Einstellungen</span>
+    <button.icon-btn aria-label='Schließen' onclick={closeSheet}><svg-icon icon='close' /></button>
+  </div.overlay-head>
+
+  <h3.group-title>Raster</h3>
+  {range('cols', 'Spalten', 3, 10, 1, '')}
+  {range('gap', 'Abstand', 0, 28, 1, 'px')}
+
+  <h3.group-title>Zelle</h3>
+  {range('cellPad', 'Innenabstand', 0, 28, 1, 'px')}
+  <div.field>
+    <label>Form</label>
+    {segments('shape', SHAPES)}
+  </div.field>
+  <div.field>
+    <label>Icon-Farbe</label>
+    <div.color-row>
+      <input type='color' value={$look.iconColor} oninput={text('iconColor')} />
+      <div.color-presets>
+        @for (preset of PRESETS)
+          <button.swatch class:active={preset === $look.iconColor.toLowerCase()} style={`background: ${preset}`} aria-label={preset} onclick={() => $look.iconColor = preset}></button>
+      </div.color-presets>
+    </div.color-row>
+  </div.field>
+  {range('borderSize', 'Rahmenstärke', 0, 4, 1, 'px')}
+  {color('borderColor', 'Rahmenfarbe')}
+  {color('cellBg', 'Zell-Hintergrund')}
+  {range('cellBgAlpha', 'Zell-Transparenz', 0, 1, 0.05, '')}
+
+  <h3.group-title>Beschriftung</h3>
+  {toggle('showLabel', 'App-Name zeigen')}
+  {toggle('uppercase', 'Großbuchstaben')}
+  {toggle('cutLabel', 'Einzeilig kürzen (aus = mehrzeilig)')}
+
+  <h3.group-title>Hintergrund</h3>
+  {color('pageBg', 'Farbe')}
+  {range('pageBgAlpha', 'Deckkraft', 0, 1, 0.05, '')}
+  <p.hint>Deckkraft &lt; 1 lässt das System-Wallpaper durchscheinen.</p>
+
+  <h3.group-title>App-Drawer</h3>
+  <div.field>
+    <label>Position der Leisten</label>
+    {segments('barsPos', SIDES)}
+  </div.field>
+  <div.field>
+    <label>Reihenfolge der Leisten (von oben nach unten)</label>
+    <ul.order-list>
+      @for (bar, index of $barsOrder)
+        <li.order-row>
+          <span>{BARS[bar]}</span>
+          <span.row-actions>
+            <button.icon-btn aria-label='Nach oben' disabled={index === 0} onclick={() => move(index, -1)}><svg-icon icon='up' /></button>
+            <button.icon-btn aria-label='Nach unten' disabled={index === $barsOrder.length - 1} onclick={() => move(index, 1)}><svg-icon icon='down' /></button>
+          </span.row-actions>
+        </li.order-row>
+    </ul.order-list>
+  </div.field>
+  {toggle('letterTwoRows', 'Anfangsbuchstaben zweizeilig')}
+
+  <h3.group-title>Eigenes CSS</h3>
+  <textarea.css-area spellcheck='false' placeholder={'.tile-label { letter-spacing: .04em }'} value={$look.customCss} oninput={text('customCss')}></textarea>
+
+  <h3.group-title>Ordner</h3>
+  <div.field>
+    <div.field-head>
+      <label>Ordner</label>
+      <button.chip onclick={add}><svg-icon icon='add' /> Ordner erstellen</button>
+    </div.field-head>
+    <ul.folder-list>
+      @for (folder of $folders)
+        <li.folder-row>
+          <span.folder-row-name><svg-icon icon='folder' /><span>{folder.name}</span><em>{appsOf(folder).length}</em></span>
+          <span.row-actions>
+            <button.icon-btn aria-label='Umbenennen' onclick={() => rename(folder)}><svg-icon icon='edit' /></button>
+            <button.icon-btn.danger aria-label='Löschen' onclick={() => deleteFolder(folder.id)}><svg-icon icon='trash' /></button>
+          </span.row-actions>
+        </li.folder-row>
+      @else
+        <li.muted>noch keine ordner</li>
+    </ul.folder-list>
+  </div.field>
+</section.overlay-sheet>

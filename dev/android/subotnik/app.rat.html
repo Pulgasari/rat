@@ -1,0 +1,45 @@
+<script>
+  // subotnik: the home screen (pinned apps and folders) and, over it, the drawer of all apps. the
+  // whole home screen is this page, the native side lists and starts the apps (modules/launcher.js)
+
+  import { GLYPHS } from './modules/launcher.js';
+  import { swipe }  from './modules/touch.js';
+
+  import { $drawer, $folders, $homeApps, $apps, $sheet, back, closeSheet, home, load, openDrawer, openSettings } from './state.rat.js';
+
+  import { provide }  from '../.shared/glyphs.js';
+  import { onNative } from '../.shared/native.js';
+  import { toast }    from '../.shared/toast.js';
+
+  provide('sub', GLYPHS);
+
+  RAT.app.on('error', toast.error);
+  RAT.app.hold <| load();
+
+  // MainActivity: back never closes a launcher, it goes here. home while in front: the bare home screen
+  onNative('launcherback', back);
+  onNative('launcherhome', home);
+  addEventListener('keydown', event => { if (event.key === 'Escape') back(); });
+</script>
+
+<main.home @swipe={{ accept: dy => dy < -70, run: openDrawer }}>
+  <div.grid aria-label='Homescreen'>
+    @for (folder of $folders): <FolderTile folder={folder} />
+    @for (app of $homeApps): <AppTile app={app} />
+    @if (!$folders.length && !$homeApps.length)
+      <p.empty>{$apps.length ? 'homescreen ist leer. im app-drawer eine app lange drücken und anheften.' : 'keine apps gefunden'}</p>
+  </div.grid>
+</main.home>
+
+<button.fab.fab-drawer aria-label='Alle Apps' onclick={openDrawer}><svg-icon icon='grid' /></button>
+<button.fab aria-label='Einstellungen' onclick={openSettings}><svg-icon icon='settings' /></button>
+
+@if ($drawer): <Drawer />
+
+<!-- the settings have no backdrop: the grid stays visible for the live preview -->
+@if ($sheet === 'actions' || $sheet === 'folder'): <div.backdrop onclick={closeSheet}></div>
+
+@match ($sheet)
+  @case 'actions':  <ActionSheet />
+  @case 'folder':   <FolderSheet />
+  @case 'settings': <SettingsSheet />

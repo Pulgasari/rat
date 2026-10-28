@@ -1,0 +1,15 @@
+<script>
+  // <AppTile app={app} />: an app as a cell. a tap starts it, a long press offers what to do with it
+
+  import { glyphOf } from '../modules/launcher.js';
+  import { tile }    from '../modules/touch.js';
+
+  import { launch, openActions } from '../state.rat.js';
+
+  const app = props.app;
+</script>
+
+<button.tile @tile={{ hold: () => openActions({ app }), tap: () => launch(app.packageName) }}>
+  <span.tile-icon><svg-icon icon={glyphOf(app)} /></span>
+  <span.tile-label>{app.label}</span>
+</button.tile>

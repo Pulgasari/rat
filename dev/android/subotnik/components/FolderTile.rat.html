@@ -1,0 +1,20 @@
+<script>
+  // <FolderTile folder={folder} />: a folder as a cell, its first four apps in it. a tap opens it, a long
+  // press offers renaming and deleting
+
+  import { glyphOf } from '../modules/launcher.js';
+  import { tile }    from '../modules/touch.js';
+
+  import { appsOf, openActions, openFolder } from '../state.rat.js';
+
+  const folder   = props.folder;
+  const $preview = appsOf(folder).slice(0, 4);
+</script>
+
+<button.tile @tile={{ hold: () => openActions({ folder }), tap: () => openFolder(folder) }}>
+  <span.tile-icon.folder-icon>
+    @for (app of $preview): <span.mini><svg-icon icon={glyphOf(app)} /></span>
+    @else: <svg-icon.whole icon='folder' />
+  </span.tile-icon>
+  <span.tile-label>{folder.name}</span>
+</button.tile>

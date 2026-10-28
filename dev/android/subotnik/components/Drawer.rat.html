@@ -1,0 +1,64 @@
+<script>
+  // <Drawer />: all apps over the home screen. three bars filter them together: the categories, the
+  // first letters (a tap toggles one, a finger dragged along scrubs) and a search, where enter starts
+  // the first hit. a swipe down from the top of the list closes it
+
+  import { effect } from '@rat/signals';
+
+  import { CATEGORIES, LETTERS, categoryOf } from '../modules/launcher.js';
+  import { swipe }                           from '../modules/touch.js';
+
+  import { $apps, $barsOrder, $cat, $drawerApps, $letter, $letters, $query, closeDrawer, launch, setLetter } from '../state.rat.js';
+
+  let $scroller = null;
+
+  const $chips = (() => {
+    const present = new Set($apps.map(categoryOf));
+    return [{ id: null, label: 'Alle' }, ...CATEGORIES.filter(([id]) => present.has(id)).map(([id, label]) => ({ id, label }))];
+  })();
+
+  const orderOf = bar => $barsOrder.indexOf(bar);
+
+  // a filter that changes starts the list from the top
+  effect(() => { $cat; $letter; $query; if ($scroller) $scroller.scrollTop = 0; });
+
+  function scrub (event) {
+    const point  = event.touches[0];
+    const button = document.elementFromPoint(point.clientX, point.clientY);
+    if (button?.classList?.contains('letter') && !button.disabled) setLetter(button.dataset.letter, false);
+    event.preventDefault();
+  }
+
+  function enter (event) {
+    if (event.key !== 'Enter') return;
+    const first = $drawerApps[0];
+    if (first) launch(first.packageName);
+  }
+</script>
+
+<section.drawer aria-label='Alle Apps'>
+  <button.drawer-handle aria-label='Schließen' onclick={closeDrawer}><span></span></button>
+
+  <div.drawer-scroll ref={$scroller} @swipe={{ accept: dy => dy > 90, run: closeDrawer }}>
+    <div.grid aria-label='Apps'>
+      @for (app of $drawerApps): <AppTile app={app} />
+      @else: <p.empty>keine treffer</p>
+    </div.grid>
+  </div.drawer-scroll>
+
+  <div.drawer-bars>
+    <div.cat-bar role='group' aria-label='Kategorien' style={`order: ${orderOf('cat')}`}>
+      @for (chip of $chips): <button.cat-chip class:active={$cat === chip.id} onclick={() => $cat = chip.id}>{chip.label}</button>
+    </div.cat-bar>
+
+    <div.letter-bar role='group' aria-label='Anfangsbuchstaben' style={`order: ${orderOf('letter')}`} ontouchmove={scrub}>
+      @for (letter of LETTERS)
+        <button.letter class:active={$letter === letter} data-letter={letter} disabled={!$letters.has(letter)} onclick={() => setLetter(letter, true)}>{letter}</button>
+    </div.letter-bar>
+
+    <div.search-bar style={`order: ${orderOf('search')}`}>
+      <input type='search' placeholder='Apps suchen' autocomplete='off' autocapitalize='off' spellcheck='false' enterkeyhint='go' value={$query} oninput={event => $query = event.currentTarget.value} onkeydown={enter} />
+      @if ($query): <button.icon-btn aria-label='Suche leeren' onclick={() => $query = ''}><svg-icon icon='close' /></button>
+    </div.search-bar>
+  </div.drawer-bars>
+</section.drawer>
