@@ -1,0 +1,4 @@
+var i=Object.defineProperty;var a=(e,t)=>i(e,"name",{value:t,configurable:!0});import{r as s,p as o}from"./index-BL4eRE5A.js";import"./withControl-CDr4_Pqh.js";import"https://esm.sh/jsr/@pulgasari/logger";import"https://esm.sh/jsr/@pulgasari/str";import"./index-CgHh2HpB.js";import"https://esm.sh/jsr/@pulgasari/is";const n="dots",g="Dots",m={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},radius:{type:"number",default:3,min:0,max:10,step:.5,bake:!0},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:20,min:4,max:100,step:1,bake:!0}};function $(e={}){const t=s(m,e),r=Number(t.size)/2;return o(n,t.size,`
+    <rect width="${t.size}" height="${t.size}" fill="${t.bg}"/>
+    <circle cx="${r}" cy="${r}" r="${t.radius}" fill="${t.fg}"/>
+  `,t.rotate,e)}a($,"dots");export{$ as default,n as id,g as name,m as vars};

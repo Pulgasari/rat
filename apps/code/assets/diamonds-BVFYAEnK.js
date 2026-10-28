@@ -1,0 +1,4 @@
+var n=Object.defineProperty;var o=(a,t)=>n(a,"name",{value:t,configurable:!0});import{r as i,p as s}from"./index-BL4eRE5A.js";import"./withControl-CDr4_Pqh.js";import"https://esm.sh/jsr/@pulgasari/logger";import"https://esm.sh/jsr/@pulgasari/str";import"./index-CgHh2HpB.js";import"https://esm.sh/jsr/@pulgasari/is";const m="diamonds",b="Diamonds",p={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:24,min:4,max:100,step:1,bake:!0}};function h(a={}){const t=i(p,a),e=Number(t.size),r=e/2;return s(m,e,`
+    <rect width="${e}" height="${e}" fill="${t.bg}"/>
+    <path d="M${r},0 L${e},${r} L${r},${e} L0,${r} Z" fill="${t.fg}"/>
+  `,t.rotate,a)}o(h,"diamonds");export{h as default,m as id,b as name,p as vars};
