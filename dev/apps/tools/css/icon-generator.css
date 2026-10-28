@@ -1,0 +1,93 @@
+/* icon-generator, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='icon-generator'] {
+  .tool-body { max-width: 720px; }
+
+  .source {
+    display       : flex;
+    align-items   : center;
+    gap           : 0.75rem;
+    padding       : 0.5rem 0.75rem;
+    border-radius : 0.5rem;
+    background    : var(--zebra);
+    width         : 100%;
+  }
+  .source-preview {
+    width      : 48px;
+    height     : 48px;
+    object-fit : contain;
+  }
+  .source-name { opacity: 0.7; }
+
+  .size-picker {
+    display   : flex;
+    flex-wrap : wrap;
+    gap       : 0.35rem;
+    width     : 100%;
+  }
+
+  .options {
+    display        : flex;
+    flex-direction : column;
+    gap            : 0.5rem;
+    width          : 100%;
+  }
+  .option {
+    display     : flex;
+    align-items : center;
+    gap         : 0.6rem;
+    font-size   : 0.85rem;
+  }
+  .option > span:first-child { min-width: 6rem; opacity: 0.55; }
+  .option input[type=range]  { flex: 1; accent-color: var(--color-ink); }
+  .option input[type=color]  {
+    width         : 2.5rem;
+    height        : 1.6rem;
+    border        : none;
+    background    : none;
+    border-radius : 0.25rem;
+    cursor        : pointer;
+  }
+  .option-value {
+    min-width            : 3rem;
+    text-align           : right;
+    opacity              : 0.6;
+    font-variant-numeric : tabular-nums;
+  }
+
+  .results {
+    display   : flex;
+    flex-wrap : wrap;
+    gap       : 1rem;
+    width     : 100%;
+  }
+  .result {
+    display        : flex;
+    flex-direction : column;
+    align-items    : center;
+    gap            : 0.4rem;
+    padding        : 0.6rem;
+    border-radius  : 0.5rem;
+    background     : var(--zebra);
+    box-shadow     : var(--shadow);
+  }
+  .result img {
+    /* the checkerboard makes transparency visible */
+    background-image    : linear-gradient(45deg, var(--fg-25) 25%, transparent 25%),
+                          linear-gradient(-45deg, var(--fg-25) 25%, transparent 25%),
+                          linear-gradient(45deg, transparent 75%, var(--fg-25) 75%),
+                          linear-gradient(-45deg, transparent 75%, var(--fg-25) 75%);
+    background-size     : 12px 12px;
+    background-position : 0 0, 0 6px, 6px -6px, -6px 0;
+    max-width           : 128px;
+    height              : auto;
+  }
+  .result figcaption {
+    display     : flex;
+    align-items : center;
+    gap         : 0.25rem;
+    font-size   : 0.72rem;
+    opacity     : 0.7;
+  }
+}

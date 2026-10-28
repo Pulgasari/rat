@@ -1,0 +1,53 @@
+<script>
+  // <DataNode value={data} name={key} path='$' depth={0} />: one value of an inspected tree, its children
+  // folded below the third level
+
+  import { copy } from '../modules/files.js';
+
+  const TYPE_ICONS = { array: 'brackets', boolean: 'toggle', null: 'null', number: 'number', object: 'braces', string: 'quote' };
+
+  const typeOf = value => value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value;
+
+  const $type    = typeOf(props.value);
+  const $complex = $type === 'object' || $type === 'array';
+  const $entries = !$complex ? [] : $type === 'array' ? props.value.map((item, index) => [index, item]) : Object.entries(props.value);
+  const $brackets = $type === 'array' ? ['[', ']'] : ['{', '}'];
+  const $leaf    = props.value === null ? 'null' : $type === 'string' ? `"${props.value}"` : String(props.value);
+  const depth    = props.depth ?? 0;
+
+  let $open = depth < 3;
+
+  const pathOf = key => $type === 'array' ? `${props.path}[${key}]` : `${props.path}.${key}`;
+  const shown  = value => typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+</script>
+
+@fragment actions ()
+  <span.node-actions onclick={event => event.stopPropagation()}>
+    <button.act-btn title='Copy path' onclick={() => copy(props.path)}><svg-icon icon='path' /></button>
+    <button.act-btn title='Copy value' onclick={() => copy(shown(props.value))}><svg-icon icon='copy' /></button>
+  </span.node-actions>
+
+<div.node>
+  @if ($complex)
+    <div.node-row onclick={() => $open = !$open}>
+      <svg-icon.toggle-icon icon={$open ? 'chevron-down' : 'chevron-right'} />
+      @if (props.name !== undefined): <span.node-key>{props.name}</span><span.colon>:</span>
+      <svg-icon.type-icon icon={TYPE_ICONS[$type]} />
+      <span.bracket>{$brackets[0]}</span>
+      @if (!$open): <span.preview>{$entries.length} {$entries.length === 1 ? 'item' : 'items'}</span><span.bracket>{$brackets[1]}</span>
+      {actions()}
+    </div.node-row>
+    @if ($open)
+      <div.node-children>
+        @for (entry of $entries): <DataNode name={entry[0]} value={entry[1]} path={pathOf(entry[0])} depth={depth + 1} />
+      </div.node-children>
+      <div.node-row.closing><span.bracket>{$brackets[1]}</span></div.node-row.closing>
+  @else
+    <div.node-row.leaf>
+      <span.leaf-indent></span>
+      @if (props.name !== undefined): <span.node-key>{props.name}</span><span.colon>:</span>
+      <svg-icon.type-icon class={`is-${$type}`} icon={TYPE_ICONS[$type]} />
+      <span.prim-val class={`is-${$type}`}>{$leaf}</span.prim-val>
+      {actions()}
+    </div.node-row.leaf>
+</div.node>

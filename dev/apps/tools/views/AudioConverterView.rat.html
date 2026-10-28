@@ -1,0 +1,70 @@
+<script>
+  // <AudioConverterView />: audio files re-encoded by ffmpeg.wasm, one after the other
+
+  import { download } from '../modules/files.js';
+  import { run }      from '../modules/ffmpeg.js';
+
+  const FORMATS = ['flac', 'm4a', 'mp3', 'ogg', 'wav'];
+  const MIME    = { flac: 'audio/flac', m4a: 'audio/mp4', mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav' };
+  const ICONS   = { converting: 'loading', done: 'check-circle', error: 'warning', pending: 'audio' };
+
+  let $files   = [];   // { error, file, id, outName, progress, status, url }
+  let $format! = 'mp3';
+  let $running = false;
+
+  let next = 0;
+
+  const $pending = $files.filter(entry => entry.status === 'pending').length;
+  const $done    = $files.filter(entry => entry.status === 'done');
+
+  const update = (id, changes) => { $files = $files.map(entry => entry.id === id ? { ...entry, ...changes } : entry); };
+  const add    = files => { $files = [...$files, ...files.map(file => ({ file, id: next++, progress: 0, status: 'pending' }))]; };
+
+  function remove (entry) {
+    if (entry.url) URL.revokeObjectURL(entry.url);
+    $files = $files.filter(other => other.id !== entry.id);
+  }
+
+  async function convertAll () {
+    $running = true;
+    for (const entry of $files.filter(entry => entry.status === 'pending')) {
+      const format = $format;
+      const input  = `in.${entry.file.name.split('.').pop() || 'bin'}`;
+      update(entry.id, { progress: 0, status: 'converting' });
+      try {
+        const [data] = await run(entry.file, input, ['-i', input, `out.${format}`], [`out.${format}`], progress => update(entry.id, { progress }));
+        update(entry.id, { outName: `${entry.file.name.replace(/\.[^.]+$/, '')}.${format}`, progress: 100, status: 'done', url: URL.createObjectURL(new Blob([data.buffer], { type: MIME[format] })) });
+      }
+      catch (error) { update(entry.id, { error: error.message, status: 'error' }); }
+    }
+    $running = false;
+  }
+</script>
+
+<ViewHeader back='/' title='Audio Converter' />
+
+<main.tool>
+  <div.tool-body>
+    <Dropzone accept='audio/*' multiple what='audio files' onfiles={add} />
+
+    @if ($files.length)
+      <Segments options={FORMATS} value={$format} onchange={value => $format = value} />
+
+      <div.file-list>
+        @for (entry of $files)
+          <div.file-item class={entry.status}>
+            <svg-icon icon={ICONS[entry.status]} />
+            <span.name>{entry.file.name}</span.name>
+            <span.label>{entry.status === 'pending' ? '—' : entry.status === 'converting' ? `${entry.progress}%` : entry.status === 'done' ? entry.outName : entry.error}</span.label>
+            @if (entry.status === 'converting'): <div.progress-bar><div style={`width: ${entry.progress}%`}></div></div.progress-bar>
+            @if (entry.status === 'done'): <btn-icon icon='download' label='Download' onclick={() => download(entry.url, entry.outName)} />
+            @if (entry.status !== 'converting'): <btn-icon icon='close' label='Remove' onclick={() => remove(entry)} />
+          </div.file-item>
+      </div.file-list>
+
+      <div.tool-actions>
+        @if ($pending): <btn-push icon={$running ? 'loading' : 'run'} label={$running ? 'Converting …' : `Convert ${$pending} file${$pending === 1 ? '' : 's'}`} disabled={$running} onclick={convertAll} />
+        @if ($done.length): <btn-push icon='download' label='Download all' onclick={() => $done.forEach(entry => download(entry.url, entry.outName))} />
+      </div.tool-actions>
+  </div.tool-body>
+</main.tool>

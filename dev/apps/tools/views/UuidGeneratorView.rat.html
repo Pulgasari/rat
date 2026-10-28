@@ -1,0 +1,46 @@
+<script>
+  // <UuidGeneratorView />: a batch of uuids, v4 (random) or v1 (by time), one or all copied
+
+  import { $copied, copyShown } from '../modules/copied.rat.js';
+
+  let $count!   = 5;
+  let $version! = 'v4';
+  let $uuids    = [];
+
+  const v4 = () => crypto.randomUUID();
+
+  // a v1 by the clock: the time stamp in its fields, the rest random (not tied to a node)
+  function v1 () {
+    const time   = (BigInt(Date.now()) * 10000n + 122192928000000000n).toString(16).padStart(16, '0');
+    const random = [...crypto.getRandomValues(new Uint8Array(8))].map(byte => byte.toString(16).padStart(2, '0')).join('');
+    const clock  = ((parseInt(random.slice(0, 2), 16) & 0x3f) | 0x80).toString(16).padStart(2, '0');
+    return `${time.slice(-8)}-${time.slice(-12, -8)}-1${time.slice(-15, -12)}-${clock}${random.slice(2, 6)}-${random.slice(6)}`;
+  }
+
+  const generate = () => { $uuids = Array.from({ length: $count }, $version === 'v4' ? v4 : v1); };
+
+  generate();
+</script>
+
+<ViewHeader back='/' title='UUID Generator' />
+
+<main.tool>
+  <div.tool-body>
+    <div.controls>
+      <Segments options={['v4', 'v1']} value={$version} onchange={value => { $version = value; generate(); }} />
+      <Slider label='Count' min={1} max={100} value={$count} onchange={value => $count = value} />
+      <div.tool-actions>
+        <btn-push icon='refresh' label='Generate' onclick={generate} />
+        @if ($uuids.length): <btn-push icon={$copied === '*' ? 'check' : 'copy'} label={$copied === '*' ? 'Copied!' : 'Copy all'} onclick={() => copyShown($uuids.join('\n'), '*')} />
+      </div.tool-actions>
+    </div.controls>
+
+    <div.uuid-list>
+      @for (uuid of $uuids)
+        <div.uuid-row title='Click to copy' onclick={() => copyShown(uuid)}>
+          <code.uuid>{uuid}</code.uuid>
+          <svg-icon.copy-icon icon={$copied === uuid ? 'check' : 'copy'} />
+        </div.uuid-row>
+    </div.uuid-list>
+  </div.tool-body>
+</main.tool>

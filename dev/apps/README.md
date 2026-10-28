@@ -25,6 +25,7 @@ built (`apps/`, `rat build`, the build workflow):
 [podcasts](https://code.pulgasari.dev/rat/apps/podcasts/) ·
 [prompts](https://code.pulgasari.dev/rat/apps/prompts/) ·
 [todo](https://code.pulgasari.dev/rat/apps/todo/) ·
+[tools](https://code.pulgasari.dev/rat/apps/tools/) ·
 [vectorizer](https://code.pulgasari.dev/rat/apps/vectorizer/) ·
 [videos](https://code.pulgasari.dev/rat/apps/videos/)
 

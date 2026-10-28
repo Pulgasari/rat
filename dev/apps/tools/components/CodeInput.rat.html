@@ -1,0 +1,51 @@
+<script>
+  // <CodeInput bind:value={$text} title='Input' placeholder='…' filename='input.json' accept='text/*' />
+  // a text pane: typed, pasted, a file or a url read into it, copied, downloaded, cleared
+
+  import { download } from '../modules/files.js';
+
+  let { $value } = this.props;
+
+  let $file = null;
+
+  async function picked (event) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (file) $value = await file.text();
+  }
+
+  async function fromUrl () {
+    const url = await RAT.app.dialogs.prompt({ ok: 'Load', placeholder: 'https://example.com/file.txt', title: 'Load from URL' });
+    if (!url) return;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${url}: ${response.status} ${response.statusText}`);
+    $value = await response.text();
+  }
+
+  // tab indents instead of leaving the field
+  function indent (event) {
+    if (event.key !== 'Tab') return;
+    event.preventDefault();
+    event.currentTarget.setRangeText('  ', event.currentTarget.selectionStart, event.currentTarget.selectionEnd, 'end');
+    $value = event.currentTarget.value;
+  }
+</script>
+
+<div.pane>
+  <div.pane-header>
+    <span.pane-title>{props.title ?? 'Input'}</span.pane-title>
+    <div.pane-actions>
+      <btn-icon icon='upload' label='Upload' onclick={() => $file?.click()} />
+      <btn-icon icon='web' label='URL' onclick={fromUrl} />
+      @if ($value)
+        <btn-icon icon='copy' label='Copy' onclick={() => navigator.clipboard.writeText($value)} />
+        @if (props.filename): <btn-icon icon='download' label='Download' onclick={() => download($value, props.filename)} />
+        <btn-icon icon='close' label='Clear' onclick={() => $value = ''} />
+    </div.pane-actions>
+  </div.pane-header>
+  <textarea.code-input spellcheck='false' placeholder={props.placeholder ?? 'Paste code here …'} value={$value} oninput={event => $value = event.currentTarget.value} onkeydown={indent}></textarea.code-input>
+  <div.pane-footer>
+    @if ($value): <span.char-count>{$value.length} chars</span.char-count>
+  </div.pane-footer>
+  <input type='file' hidden accept={props.accept ?? 'text/*'} ref={$file} onchange={picked} />
+</div.pane>

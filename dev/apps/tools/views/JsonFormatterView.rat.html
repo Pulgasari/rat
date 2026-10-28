@@ -1,0 +1,43 @@
+<script>
+  // <JsonFormatterView />: json pretty printed with two, four spaces or a tab
+
+  let $input!  = '';
+  let $indent! = 2;
+  let $output  = '';
+  let $error   = '';
+
+  const INDENTS = [{ label: '2 spaces', value: 2 }, { label: '4 spaces', value: 4 }, { label: 'tab', value: '\t' }];
+
+  function format () {
+    const src = $input.trim();
+    if (!src) return;
+    try { $output = JSON.stringify(JSON.parse(src), null, $indent); $error = ''; }
+    catch (error) { $output = ''; $error = error.message; }
+  }
+
+  function indent (value) {
+    $indent = value;
+    if ($output) format();
+  }
+
+  function clear () {
+    $input  = '';
+    $output = '';
+    $error  = '';
+  }
+</script>
+
+<ViewHeader back='/' title='JSON Formatter' />
+
+<main.tool.workbench>
+  <div.panes>
+    <CodeInput bind:value={$input} placeholder='Paste JSON here …' filename='input.json' />
+    <CodeOutput value={$output} error={$error} filename='formatted.json' placeholder='Formatted JSON appears here …' />
+  </div.panes>
+
+  <div.tool-actions>
+    <btn-push icon='format' label='Format' disabled={!$input} onclick={format} />
+    <div.indent-picker><span.indent-label>Indent</span.indent-label><Segments options={INDENTS} value={$indent} onchange={indent} /></div.indent-picker>
+    <btn-push icon='close' label='Clear' disabled={!$input} onclick={clear} />
+  </div.tool-actions>
+</main.tool.workbench>

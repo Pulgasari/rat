@@ -1,0 +1,187 @@
+/* colorpicker, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='colorpicker'] {
+  /* ── header ── */
+  .color-header {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem; border-radius: .6rem;
+    background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+  }
+
+  .header-swatch {
+    width: 2.5rem; height: 2.5rem; border-radius: .4rem; flex-shrink: 0;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-fg) 15%, transparent);
+  }
+
+  h1 { font-size: 1rem; font-weight: 600; flex: 1; display: flex; align-items: center; gap: .35rem; }
+
+  .header-hex {
+    font-size: .85rem; opacity: .6; cursor: pointer; padding: .2rem .4rem;
+    border-radius: .3rem; transition: opacity .15s;
+  }
+
+  .header-hex:hover { opacity: 1; }
+
+  /* ── tabs ── */
+  /* ── tab content (tab bar is now a shared <${Picker}>) ── */
+  .tab {
+    display         : grid;
+    justify-content : stretch;
+    background      : #0001;
+    width           : 100%;
+    padding         : 1rem;
+  }
+
+  .tab-content { display: flex; flex-direction: column; gap: .75rem; }
+
+  /* ── slider ── */
+  .slider-row { display: flex; align-items: center; gap: .6rem; }
+
+  .slider-label { min-width: 1.5rem; font-size: .8rem; opacity: .55; }
+
+  .slider-track {
+    flex: 1; height: 10px; border-radius: 5px;
+    background: var(--gradient, color-mix(in srgb, var(--color-fg) 15%, transparent));
+    position: relative;
+  }
+
+  .slider-track input[type=range] {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer; margin: 0;
+  }
+
+  .slider-track::after {                        /* thumb overlay */
+    content: ''; pointer-events: none;
+    position: absolute; top: 50%; transform: translateY(-50%);
+    /* thumb position approximated — real thumb handled by browser */
+  }
+
+  /* style the native range for webkit */
+  input[type=range] { accent-color: var(--color-ink); cursor: pointer; }
+
+  .slider-track { cursor: pointer; }
+
+  /* transparent checkerboard under slider track */
+  .slider-track {
+    background-image: var(--gradient, none),
+      linear-gradient(45deg, #8882 25%, transparent 25%),
+      linear-gradient(-45deg,#8882 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #8882 75%),
+      linear-gradient(-45deg,transparent 75%, #8882 75%);
+    background-size: var(--gradient, 100% 100%), 8px 8px, 8px 8px, 8px 8px, 8px 8px;
+    background-position: 0 0, 0 0, 0 4px, 4px -4px, -4px 0;
+  }
+
+  .num-input {
+    /* width kommt jetzt inline via style, kein festes width mehr.
+       border/background/:focus come from the shared .field class */
+    padding: .25rem .4rem; border-radius: .35rem; text-align: right;
+    font-size: .8rem; font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+  }
+
+  /* ── hex input ── */
+  .hex-row { display: flex; align-items: center; gap: .6rem; }
+
+  .hex-input {
+    /* border/background/:focus come from the shared .field class */
+    flex: 1; padding: .3rem .5rem; border-radius: .35rem; font-family: monospace; font-size: .85rem;
+  }
+
+  .native-color {
+    width: 2rem; height: 2rem; border-radius: .35rem; border: none; padding: 0;
+    cursor: pointer; background: transparent;
+  }
+
+  /* ── copy rows ── */
+  .copy-rows { display: flex; flex-direction: column; gap: .35rem; }
+
+  .copy-row {
+    display: flex; align-items: center; gap: .5rem; padding: .35rem .5rem;
+    border-radius: .35rem; background: color-mix(in srgb, var(--color-fg) 5%, transparent);
+    font-size: .8rem;
+  }
+
+  .copy-label { opacity: .45; min-width: 2rem; }
+
+  .copy-value { flex: 1; font-size: .78rem; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── swatch ── */
+  .swatch {
+    border-radius: .35rem; flex-shrink: 0;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-fg) 12%, transparent);
+    background-image: linear-gradient(45deg,#8882 25%,transparent 25%),
+      linear-gradient(-45deg,#8882 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#8882 75%),
+      linear-gradient(-45deg,transparent 75%,#8882 75%);
+    background-size: 8px 8px; background-position: 0 0,0 4px,4px -4px,-4px 0;
+  }
+
+  .swatch { background-color: inherit; }
+
+  /* overridden by inline style */
+  .swatch-lg    { width: 3.5rem; height: 3.5rem; }
+
+  .swatch-shade { width: 100%; aspect-ratio: 1; border-radius: .3rem; }
+
+  /* ── mix tab ── */
+  .mix-row { display: flex; gap: 1rem; }
+
+  .mix-color { display: flex; flex-direction: column; gap: .4rem; flex: 1; }
+
+  .mix-result {
+    display: flex; gap: .75rem; align-items: flex-start; padding: .75rem;
+    border-radius: .5rem; background: color-mix(in srgb, var(--color-fg) 4%, transparent);
+  }
+
+  .swap-btn {
+    background: transparent; border: none; color: var(--color-fg);
+    cursor: pointer; opacity: .4; padding: .25rem;
+    border-radius: .35rem; transition: opacity .15s; align-self: center;
+  }
+
+  .swap-btn:hover { opacity: 1; }
+
+  /* ── shades tab ── */
+  .shade-grid { display: flex; gap: .4rem; }
+
+  .shade-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
+    width : 100%;
+    width : 100%;
+    gap   : 0.5rem;
+  }
+
+  .shade-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: .3rem;
+    cursor: pointer; opacity: .85; transition: opacity .15s;
+  }
+
+  .shade-item:hover { opacity: 1; }
+
+  .shade-hex { font-size: .6rem; font-family: monospace; opacity: .6; writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  .shade-num { font-size: .6rem; opacity: .4; font-variant-numeric: tabular-nums; }
+
+  .copy-row-vars { align-items: flex-start; }
+
+  .vars-textarea {
+    flex: 1;
+    resize: none;
+    background: transparent;
+    border: none;
+    color: var(--color-fg);
+    font-family: monospace;
+    font-size: .75rem;
+    line-height: 1.6;
+    opacity: .8;
+    outline: none;
+    height: calc(1.6em * var(--lines, 10));
+  }
+
+  @media (max-width: 400px) {
+    .shade-hex { display: none; }
+  }
+}

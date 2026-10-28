@@ -1,0 +1,138 @@
+<script>
+  // <SvgConverterView />: an svg rendered to png, jpg, webp or a one-page pdf, at its own size or another.
+  // the preview is an <img>: the svg's scripts and handlers never run
+
+  import { download } from '../modules/files.js';
+
+  const FORMATS = ['png', 'jpg', 'webp', 'pdf'];
+  const MIME    = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+
+  let $svg     = null;   // { name, text, url, width, height }
+  let $width   = 0;      // 0: its own
+  let $height  = 0;
+  let $locked  = true;
+  let $quality = 92;
+  let $error   = '';
+
+  const $w = $width  || $svg?.width  || 0;
+  const $h = $height || $svg?.height || 0;
+
+  // its size: width and height, else the viewBox
+  function sizeOf (text) {
+    const svg    = new DOMParser().parseFromString(text, 'image/svg+xml').querySelector('svg');
+    let   width  = parseFloat(svg?.getAttribute('width'))  || 0;
+    let   height = parseFloat(svg?.getAttribute('height')) || 0;
+    if ((!width || !height) && svg?.getAttribute('viewBox')) [, , width, height] = svg.getAttribute('viewBox').split(/[\s,]+/).map(Number);
+    return { height: height || 600, width: width || 800 };
+  }
+
+  async function use (files) {
+    const file = files[0];
+    if (!file.type.includes('svg') && !/\.svg$/i.test(file.name)) { $error = 'Not an SVG file'; return; }
+    const text = await file.text();
+    remove();
+    $svg   = { name: file.name.replace(/\.svg$/i, ''), text, url: URL.createObjectURL(new Blob([text], { type: 'image/svg+xml' })), ...sizeOf(text) };
+    $error = '';
+  }
+
+  function remove () {
+    if ($svg) URL.revokeObjectURL($svg.url);
+    $svg    = null;
+    $width  = 0;
+    $height = 0;
+  }
+
+  function setWidth (value) {
+    $width = value;
+    if ($locked && value) $height = Math.round(value * $svg.height / $svg.width);
+  }
+
+  function setHeight (value) {
+    $height = value;
+    if ($locked && value) $width = Math.round(value * $svg.width / $svg.height);
+  }
+
+  async function canvasOf (width, height, background) {
+    const image = new Image;
+    image.src = $svg.url;
+    await image.decode();
+    const canvas = Object.assign(document.createElement('canvas'), { height, width });
+    const ctx    = canvas.getContext('2d');
+    if (background) { ctx.fillStyle = background; ctx.fillRect(0, 0, width, height); }
+    ctx.drawImage(image, 0, 0, width, height);
+    return canvas;
+  }
+
+  async function exportAs (format) {
+    const width = $w, height = $h, name = $svg.name || 'image';
+    try {
+      if (format === 'pdf') {
+        const { PDFDocument } = await import('pdf-lib');
+        const canvas = await canvasOf(width, height);
+        const pdf    = await PDFDocument.create();
+        const page   = pdf.addPage([width, height]);
+        page.drawImage(await pdf.embedPng(canvas.toDataURL('image/png')), { height, width, x: 0, y: 0 });
+        return download(new Blob([await pdf.save()], { type: 'application/pdf' }), `${name}.pdf`);
+      }
+      const canvas = await canvasOf(width, height, format === 'jpg' ? '#fff' : null);   // jpg has no alpha
+      const blob   = await new Promise(resolve => canvas.toBlob(resolve, MIME[format], $quality / 100));
+      download(blob, `${name}.${format}`);
+    }
+    catch (error) { $error = error.message || String(error); }
+  }
+</script>
+
+<ViewHeader back='/' title='SVG Converter' />
+
+<main.tool>
+  <div.tool-body>
+    @if (!$svg)
+      <Dropzone accept='image/svg+xml,.svg' what='an SVG' onfiles={use} />
+    @else
+      <div.content>
+        <div.preview-wrap>
+          <div.svg-preview><img src={$svg.url} alt={$svg.name} /></div.svg-preview>
+          <div.preview-meta>
+            <span>{$svg.width} × {$svg.height}px</span>
+            <span>{$svg.name}.svg</span>
+            <button.ghost-btn onclick={remove}><svg-icon icon='close' /> Remove</button.ghost-btn>
+          </div.preview-meta>
+        </div.preview-wrap>
+
+        <div.settings>
+          <div.setting-group>
+            <label.setting-label>Output size</label.setting-label>
+            <div.size-row>
+              <div.size-field>
+                <span.size-unit>W</span.size-unit>
+                <input.field.size-input type='number' min='1' placeholder={$svg.width} value={$width || ''} oninput={event => setWidth(Number(event.currentTarget.value) || 0)} />
+                <span.size-unit>px</span.size-unit>
+              </div.size-field>
+              <button.lock-btn class:active={$locked} title={$locked ? 'Unlock aspect ratio' : 'Lock aspect ratio'} onclick={() => $locked = !$locked}><svg-icon icon={$locked ? 'lock' : 'lock-open'} /></button.lock-btn>
+              <div.size-field>
+                <span.size-unit>H</span.size-unit>
+                <input.field.size-input type='number' min='1' placeholder={$svg.height} value={$height || ''} oninput={event => setHeight(Number(event.currentTarget.value) || 0)} />
+                <span.size-unit>px</span.size-unit>
+              </div.size-field>
+              @if ($width || $height): <button.ghost-btn title='Reset to natural size' onclick={() => { $width = 0; $height = 0; }}><svg-icon icon='refresh' /></button.ghost-btn>
+            </div.size-row>
+            <span.size-hint>→ {$w} × {$h}px</span.size-hint>
+          </div.setting-group>
+
+          <div.setting-group>
+            <label.setting-label>Quality <span.setting-sub>(jpg / webp)</span.setting-sub></label.setting-label>
+            <Slider label='' min={1} max={100} unit='%' value={$quality} onchange={value => $quality = value} />
+          </div.setting-group>
+
+          <div.setting-group>
+            <label.setting-label>Export as</label.setting-label>
+            <div.export-btns>
+              @for (format of FORMATS): <button.btn.primary onclick={() => exportAs(format)}><svg-icon icon={format === 'pdf' ? 'pdf' : 'download'} /> .{format}</button.btn.primary>
+            </div.export-btns>
+          </div.setting-group>
+        </div.settings>
+      </div.content>
+
+    @if ($error): <div.err-block><svg-icon icon='warning' /> {$error}</div.err-block>
+  </div.tool-body>
+</main.tool>

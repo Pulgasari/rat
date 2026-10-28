@@ -1,0 +1,116 @@
+<script>
+  // <AudioCutterView />: a part of an audio file, chosen on its waveform and heard first, cut out by
+  // ffmpeg without re-encoding
+
+  import { decode, formatTime, play } from '../modules/audio.js';
+  import { download }                 from '../modules/files.js';
+  import { run }                      from '../modules/ffmpeg.js';
+
+  let $file     = null;
+  let $peaks    = null;
+  let $duration = 0;
+  let $start    = 0;
+  let $end      = 0;
+  let $position = 0;
+  let $playing  = false;
+  let $status   = 'idle';   // idle | loading | cutting | done | error
+  let $result   = null;     // { name, url }
+  let $error    = '';
+
+  let buffer   = null;
+  let playback = null;
+
+  async function use (files) {
+    stop();
+    reset();
+    $file   = files[0];
+    $status = 'loading';
+    try {
+      const decoded = await decode($file);
+      buffer    = decoded.buffer;
+      $peaks    = decoded.peaks;
+      $duration = buffer.duration;
+      $end      = buffer.duration;
+      $status   = 'idle';
+    }
+    catch (error) { $status = 'error'; $error = error.message; }
+  }
+
+  function reset () {
+    if ($result) URL.revokeObjectURL($result.url);
+    $file     = null;
+    $peaks    = null;
+    $result   = null;
+    $position = 0;
+    $start    = 0;
+    $status   = 'idle';
+  }
+
+  const stop = () => playback?.stop();
+
+  function toggle () {
+    if ($playing) return stop();
+    $playing = true;
+    playback = play(buffer, $start, $end, { onend: () => { $playing = false; $position = 0; playback = null; }, onposition: time => $position = time });
+  }
+
+  function move (which, time) {
+    if (which === 'start') $start = Math.max(0, Math.min(time, $end - 0.1));
+    else $end = Math.min($duration, Math.max(time, $start + 0.1));
+  }
+
+  async function cut () {
+    const ext   = $file.name.split('.').pop().toLowerCase();
+    $status = 'cutting';
+    try {
+      const [data] = await run($file, `in.${ext}`, ['-i', `in.${ext}`, '-ss', $start.toFixed(3), '-to', $end.toFixed(3), '-c', 'copy', `out.${ext}`], [`out.${ext}`]);
+      if ($result) URL.revokeObjectURL($result.url);
+      $result = { name: $file.name.replace(/\.([^.]+)$/, '_cut.$1'), url: URL.createObjectURL(new Blob([data.buffer], { type: $file.type })) };
+      $status = 'done';
+    }
+    catch (error) { $status = 'error'; $error = error.message; }
+  }
+</script>
+
+<ViewHeader back='/' title='Audio Cutter' />
+
+<main.tool>
+  <div.tool-body>
+    @if (!$file)
+      <Dropzone accept='audio/*' what='an audio file' onfiles={use} />
+    @else
+      <div.file-bar>
+        <svg-icon icon='audio' />
+        <span.fname>{$file.name}</span.fname>
+        <span.dur>{formatTime($duration)}</span.dur>
+        <btn-icon icon='close' label='Remove' onclick={() => { stop(); reset(); }} />
+      </div.file-bar>
+
+      @if ($status === 'loading'): <div.info-row><svg-icon icon='loading' /> Decoding …</div.info-row>
+
+      @if ($peaks)
+        <Waveform peaks={$peaks} duration={$duration} start={$start} end={$end} position={$position} onchange={move} />
+
+        <div.time-row>
+          <div.time-field>
+            <label>Start</label>
+            <input type='number' min='0' step='0.1' max={($end - 0.1).toFixed(1)} value={$start.toFixed(1)} oninput={event => move('start', Number(event.currentTarget.value))} />
+            <span.time-fmt>{formatTime($start)}</span.time-fmt>
+          </div.time-field>
+          <div.sel-dur><svg-icon icon='cut' />{formatTime($end - $start)}</div.sel-dur>
+          <div.time-field>
+            <label>End</label>
+            <input type='number' step='0.1' min={($start + 0.1).toFixed(1)} max={$duration.toFixed(1)} value={$end.toFixed(1)} oninput={event => move('end', Number(event.currentTarget.value))} />
+            <span.time-fmt>{formatTime($end)}</span.time-fmt>
+          </div.time-field>
+        </div.time-row>
+
+        <div.tool-actions>
+          <btn-icon icon={$playing ? 'pause' : 'play'} label={$playing ? 'Pause' : 'Preview'} onclick={toggle} />
+          <btn-push icon={$status === 'cutting' ? 'loading' : 'cut'} label={$status === 'cutting' ? 'Cutting …' : 'Cut & export'} disabled={$status === 'cutting'} onclick={cut} />
+          @if ($status === 'done' && $result): <btn-push icon='download' label='Download' onclick={() => download($result.url, $result.name)} />
+        </div.tool-actions>
+
+      @if ($status === 'error'): <div.err-block><svg-icon icon='warning' /> {$error}</div.err-block>
+  </div.tool-body>
+</main.tool>

@@ -1,0 +1,88 @@
+/* svg-converter, scoped to its view.
+   shared rules live in ../tools.css */
+
+rat-view[name='svg-converter'] {
+  /* ── content layout ── */
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    align-items: start;
+  }
+
+  @media (max-width: 560px) {
+    .content { grid-template-columns: 1fr; }
+  }
+
+  /* ── preview ── */
+  .preview-wrap {
+    border: 1px solid color-mix(in srgb, var(--color-fg) 12%, transparent);
+    border-radius: .6rem; overflow: hidden;
+  }
+
+  .svg-preview > img { block-size: 100%; inline-size: 100%; object-fit: contain; }
+
+  .svg-preview {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 1rem;
+    background: color-mix(in srgb, var(--color-fg) 3%, transparent);
+    /* checkerboard for transparency */
+    background-image:
+      linear-gradient(45deg, #8882 25%, transparent 25%),
+      linear-gradient(-45deg,#8882 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #8882 75%),
+      linear-gradient(-45deg,transparent 75%, #8882 75%);
+    background-size: 12px 12px;
+    background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  }
+
+  .preview-meta {
+    display: flex; align-items: center; gap: .5rem; padding: .45rem .65rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-fg) 10%, transparent);
+    background: color-mix(in srgb, var(--color-fg) 4%, transparent);
+    font-size: .75rem; opacity: .6;
+  }
+
+  .preview-meta span:first-child { font-variant-numeric: tabular-nums; }
+
+  .preview-meta span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── settings ── */
+  .settings { display: flex; flex-direction: column; gap: 1rem; }
+
+  .setting-group { display: flex; flex-direction: column; gap: .4rem; }
+
+  .setting-label {
+    font-size: .75rem; font-weight: 600; opacity: .55;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+
+  .setting-sub { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: .7; }
+
+  /* size row */
+  .size-row { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+
+  .size-field { display: flex; align-items: center; gap: .3rem; }
+
+  .size-unit { font-size: .78rem; opacity: .45; }
+
+  .size-input {
+    width: 5rem; padding: .3rem .4rem; border-radius: .35rem; font-size: .82rem;
+    font-variant-numeric: tabular-nums; text-align: right;
+  }
+
+  .size-hint { font-size: .75rem; opacity: .4; font-variant-numeric: tabular-nums; }
+
+  .lock-btn {
+    background: transparent; border: 1px solid color-mix(in srgb, var(--color-fg) 18%, transparent);
+    border-radius: .35rem; color: var(--color-fg); cursor: pointer;
+    padding: .3rem; display: flex; align-items: center;
+    opacity: .45; transition: opacity .15s, border-color .15s, color .15s;
+  }
+
+  .lock-btn:hover  { opacity: 1; }
+
+  .lock-btn.active { opacity: 1; border-color: var(--color-ink); color: var(--color-ink); }
+}

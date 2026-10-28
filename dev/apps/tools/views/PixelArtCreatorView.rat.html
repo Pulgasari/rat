@@ -1,0 +1,307 @@
+<script>
+  // <PixelArtCreatorView />: pixel art on a grid, drawn, filled, erased and picked, mirrored if wanted,
+  // with undo; out as svg, png (upng for a small one) or json. the grid is one canvas, not a cell per
+  // pixel: 128 × 128 are 16384 cells
+
+  import UPNG from 'upng-js';
+
+  import { download } from '../modules/files.js';
+
+  const PALETTE = ['#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261', '#264653', '#ffffff', '#000000'];
+  const SCALES  = [0.125, 0.25, 0.5, 1, 1.5, 2].map(value => ({ label: `${value}×`, value }));
+
+  const MIRRORS = [
+    { icon: 'minus', label: 'No mirror', value: 'none' },
+    { icon: 'flip-h', label: 'Mirror X', value: 'x' },
+    { icon: 'flip-v', label: 'Mirror Y', value: 'y' },
+    { icon: 'mirror-xy', label: 'Mirror X+Y', value: 'xy' },
+    { icon: 'swap', label: 'Diagonal', value: 'diagonal' },
+  ];
+
+  const PRESETS = [[8, 8], [16, 16], [32, 32], [64, 64], [128, 128], [16, 8], [32, 16], [64, 32], [128, 64]].map(([w, h]) => ({ h, label: `${w}×${h}`, w }));
+
+  const TOOLS = [
+    { icon: 'edit', label: '', value: 'draw' },
+    { icon: 'fill', label: '', value: 'fill' },
+    { icon: 'eraser', label: '', value: 'erase' },
+    { icon: 'pipette', label: '', value: 'pipette' },
+  ];
+
+  const empty = (w, h) => Array.from({ length: h }, () => Array(w).fill(null));
+
+  let $palette!     = PALETTE;
+  let $active!      = '#000000';
+  let $preset!      = { h: 16, w: 16 };
+  let $grid!        = empty(16, 16);
+  let $scale!       = 1;
+  let $showBg!      = true;
+  let $showGap!     = true;
+  let $showGrid!    = true;
+  let $mirror!      = 'none';
+  let $exportWidth! = 512;
+  let $tool         = 'draw';
+
+  const $used = [...new Set($grid.flat().filter(Boolean))];
+
+  // :::::: HISTORY
+
+  let history = [$grid];
+  let index   = 0;
+
+  function remember () {
+    history = [...history.slice(0, index + 1), $grid].slice(-100);
+    index   = history.length - 1;
+  }
+
+  const undo = () => { if (index > 0) $grid = history[--index]; };
+  const redo = () => { if (index < history.length - 1) $grid = history[++index]; };
+
+  function keys () {
+    const onKey = event => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      const key = event.key.toLowerCase();
+      if (key === 'z') { event.preventDefault(); event.shiftKey ? redo() : undo(); }
+      if (key === 'y') { event.preventDefault(); redo(); }
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }
+
+  // :::::: PAINTING
+
+  function mirrored (row, column) {
+    const { h, w } = $preset, r = h - 1 - row, c = w - 1 - column;
+    switch ($mirror) {
+      case 'x'        : return [[row, column], [row, c]];
+      case 'y'        : return [[row, column], [r, column]];
+      case 'xy'       : return [[row, column], [row, c], [r, column], [r, c]];
+      case 'diagonal' : return [[row, column], [column, row]].filter(([y, x]) => y < h && x < w);
+      default         : return [[row, column]];
+    }
+  }
+
+  function set (row, column, color) {
+    const grid = $grid.map(line => [...line]);
+    for (const [y, x] of mirrored(row, column)) grid[y][x] = color;
+    $grid = grid;
+  }
+
+  function flood (row, column, target, color) {
+    if (target === color) return;
+    const { h, w } = $preset;
+    const grid  = $grid.map(line => [...line]);
+    const stack = [[row, column]];
+    while (stack.length) {
+      const [y, x] = stack.pop();
+      if (y < 0 || y >= h || x < 0 || x >= w || grid[y][x] !== target) continue;
+      grid[y][x] = color;
+      stack.push([y + 1, x], [y - 1, x], [y, x + 1], [y, x - 1]);
+    }
+    $grid = grid;
+  }
+
+  let stroke = null;   // the colour a draw stroke sets (the first cell decides: draw, or take away)
+
+  function touch (row, column, first) {
+    const cell = $grid[row]?.[column];
+    if (cell === undefined) return;
+    if ($tool === 'pipette') { if (cell) $active = cell; $tool = 'draw'; return; }
+    if ($tool === 'fill')    { if (first) { flood(row, column, cell, $active); remember(); } return; }
+    if ($tool === 'erase')   return set(row, column, null);
+    if (first) stroke = cell === $active ? null : $active;
+    if (cell !== stroke) set(row, column, stroke);
+  }
+
+  // the canvas: drawn from the grid, a pointer mapped to its cell
+  function board (canvas, [grid, showGrid, showGap]) {
+    const { h, w } = $preset;
+    const ratio    = devicePixelRatio || 1;
+    const draw     = () => {
+      const cell = canvas.clientWidth / w;
+      canvas.width  = Math.round(canvas.clientWidth * ratio);
+      canvas.height = Math.round(cell * h * ratio);
+      canvas.style.height = `${cell * h}px`;
+      const ctx  = canvas.getContext('2d');
+      const gap  = showGap || showGrid ? 1 : 0;
+      const size = cell * ratio;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      grid.forEach((line, y) => line.forEach((color, x) => {
+        if (!color) return;
+        ctx.fillStyle = color;
+        ctx.fillRect(x * size, y * size, size - gap * ratio, size - gap * ratio);
+      }));
+      if (!showGrid) return;
+      ctx.fillStyle = getComputedStyle(canvas).getPropertyValue('--cc') || '#8884';
+      for (let x = 1; x < w; x++) ctx.fillRect(Math.round(x * size) - ratio, 0, ratio, canvas.height);
+      for (let y = 1; y < h; y++) ctx.fillRect(0, Math.round(y * size) - ratio, canvas.width, ratio);
+    };
+    const observer = new ResizeObserver(draw);
+    observer.observe(canvas);
+    draw();
+    return () => observer.disconnect();
+  }
+
+  function cellAt (event) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return [Math.floor((event.clientY - bounds.top) / bounds.height * $preset.h), Math.floor((event.clientX - bounds.left) / bounds.width * $preset.w)];
+  }
+
+  let painting = false;
+
+  function down (event) {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    painting = true;
+    touch(...cellAt(event), true);
+  }
+
+  function over (event) { if (painting && $tool !== 'fill') touch(...cellAt(event), false); }
+
+  function up () {
+    if (!painting) return;
+    painting = false;
+    if ($tool === 'draw' || $tool === 'erase') remember();
+  }
+
+  // :::::: THE WHOLE GRID
+
+  function resize (preset) {
+    const old = $grid;
+    $preset = { h: preset.h, w: preset.w };
+    $grid   = Array.from({ length: preset.h }, (_, y) => Array.from({ length: preset.w }, (_, x) => old[y]?.[x] ?? null));
+    history = [$grid];
+    index   = 0;
+  }
+
+  const change = grid => { $grid = grid; remember(); };
+
+  const clear   = () => change(empty($preset.w, $preset.h));
+  const fillAll = () => change($grid.map(line => line.map(() => $active)));
+  const invert  = () => change($grid.map(line => line.map(color => color ? `#${(0xffffff ^ parseInt(color.slice(1), 16)).toString(16).padStart(6, '0')}` : null)));
+
+  function replace (from, to) {
+    change($grid.map(line => line.map(color => color === from ? to : color)));
+    if (!$palette.includes(to)) $palette = [...$palette, to];
+  }
+
+  function addColor (color) {
+    if (!$palette.includes(color)) $palette = [...$palette, color];
+    $active = color;
+  }
+
+  // :::::: OUT AND IN
+
+  const exportJson = () => download(JSON.stringify({ grid: $grid, palette: $palette, preset: $preset, version: 1 }), 'pixel-art.json', 'application/json');
+
+  async function importJson (event) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (!file) return;
+    const data = JSON.parse(await file.text());
+    if (!data.grid || !data.preset) throw new Error('Not a pixel art file');
+    $preset  = data.preset;
+    $palette = data.palette ?? $palette;
+    $grid    = data.grid;
+    history  = [$grid];
+    index    = 0;
+  }
+
+  function svg () {
+    const { h, w } = $preset;
+    const rects = $grid.flatMap((line, y) => line.map((color, x) => color ? `<rect x="${x}" y="${y}" width="1" height="1" fill="${color}"/>` : '')).filter(Boolean).join('\n  ');
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges">\n  ${rects}\n</svg>`;
+  }
+
+  const cellSize = () => Math.max(4, Math.round($exportWidth / Math.max($preset.w, $preset.h)));
+
+  function png () {
+    const size   = cellSize();
+    const canvas = Object.assign(document.createElement('canvas'), { height: $preset.h * size, width: $preset.w * size });
+    const ctx    = canvas.getContext('2d');
+    $grid.forEach((line, y) => line.forEach((color, x) => { if (color) { ctx.fillStyle = color; ctx.fillRect(x * size, y * size, size, size); } }));
+    canvas.toBlob(blob => download(blob, 'pixel-art.png'));
+  }
+
+  // a palette png of at most 256 colours: far smaller
+  function smallPng () {
+    const size = cellSize(), width = $preset.w * size, height = $preset.h * size;
+    const rgba = new Uint8Array(width * height * 4);
+    $grid.forEach((line, y) => line.forEach((color, x) => {
+      if (!color) return;
+      const value = parseInt(color.slice(1), 16);
+      for (let dy = 0; dy < size; dy++) for (let dx = 0; dx < size; dx++) {
+        const at = ((y * size + dy) * width + x * size + dx) * 4;
+        rgba.set([(value >> 16) & 0xff, (value >> 8) & 0xff, value & 0xff, 255], at);
+      }
+    }));
+    download(new Blob([UPNG.encode([rgba.buffer], width, height, 256)], { type: 'image/png' }), 'pixel-art-opt.png');
+  }
+
+  let $import = null;
+</script>
+
+@fragment toolButton (icon, title, run, active)
+  <button.tool-btn class:active={active} title={title} onclick={run}><svg-icon icon={icon} /></button.tool-btn>
+
+<ViewHeader back='/' title='Pixel Art Creator' />
+
+<main.tool>
+  <div.tool-body data-show-bg={String($showBg)} data-show-gap={String($showGap || $showGrid)} data-show-grid={String($showGrid)} style={`--pxl-active: ${$active}; --pxl-scale: ${$scale}`} @keys>
+    <div.used-colors>
+      <div.used-swatch.transparent title='Transparent: fill with the active colour' onclick={() => replace(null, $active)}></div.used-swatch.transparent>
+      @for (color of $used)
+        <label.used-swatch style={`background: ${color}`} title={color}>
+          <input type='color' value={color} style='opacity: 0; position: absolute; width: 0; height: 0' oninput={event => replace(color, event.currentTarget.value)} />
+        </label.used-swatch>
+    </div.used-colors>
+
+    <div.canvas-wrap>
+      <canvas.pixel-grid @board={[$grid, $showGrid, $showGap]} onpointerdown={down} onpointermove={over} onpointerup={up} onpointercancel={up} oncontextmenu={event => event.preventDefault()}></canvas.pixel-grid>
+    </div.canvas-wrap>
+
+    <div.palette>
+      @for (color of $palette)
+        <div.pal-swatch class:active={$active === color} style={`background: ${color}`} title={`${color} (right click removes)`} onclick={() => $active = color} oncontextmenu={event => { event.preventDefault(); $palette = $palette.filter(other => other !== color); }}></div.pal-swatch>
+      <label.pal-add title='Add color'>
+        <input type='color' style='opacity: 0; position: absolute; width: 0; height: 0' oninput={event => addColor(event.currentTarget.value)} />
+        <svg-icon icon='add' />
+      </label.pal-add>
+    </div.palette>
+
+    <div.toolbar>
+      <Segments options={TOOLS} value={$tool} onchange={value => $tool = value} />
+      <Segments options={SCALES} value={$scale} onchange={value => $scale = value} />
+      <div.divider></div.divider>
+      <Segments options={MIRRORS.map(mode => ({ icon: mode.icon, label: '', value: mode.value }))} value={$mirror} onchange={value => $mirror = value} />
+      <div.divider></div.divider>
+      <div.tool-group>
+        @for (preset of PRESETS): <button.preset-btn class:active={$preset.w === preset.w && $preset.h === preset.h} onclick={() => resize(preset)}>{preset.label}</button.preset-btn>
+      </div.tool-group>
+      <div.divider></div.divider>
+      <div.tool-group>
+        {toolButton('undo', 'Undo (Ctrl+Z)', undo, false)}
+        {toolButton('redo', 'Redo (Ctrl+Y)', redo, false)}
+      </div.tool-group>
+      <div.divider></div.divider>
+      <div.tool-group>
+        {toolButton('delete', 'Clear', clear, false)}
+        {toolButton('fill-all', 'Fill all', fillAll, false)}
+        {toolButton('invert', 'Invert colors', invert, false)}
+      </div.tool-group>
+      <div.divider></div.divider>
+      <button.btn.primary onclick={() => download(svg(), 'pixel-art.svg', 'image/svg+xml')}><svg-icon icon='download' /> SVG</button.btn.primary>
+      <button.btn.secondary onclick={png}><svg-icon icon='image' /> PNG</button.btn.secondary>
+      <button.btn.secondary onclick={smallPng}><svg-icon icon='image' /> PNG opt</button.btn.secondary>
+      <button.btn.secondary onclick={exportJson}><svg-icon icon='braces' /> JSON</button.btn.secondary>
+      <button.btn.secondary title='Import JSON' onclick={() => $import?.click()}><svg-icon icon='upload' /> Import</button.btn.secondary>
+      <input type='file' accept='.json' hidden ref={$import} onchange={importJson} />
+      <div.divider></div.divider>
+      <div.tool-group>
+        {toolButton('checkers', 'Toggle background', () => $showBg = !$showBg, $showBg)}
+        {toolButton('gap', 'Toggle gap', () => $showGap = !$showGap, $showGap)}
+        {toolButton('grid', 'Toggle grid', () => $showGrid = !$showGrid, $showGrid)}
+      </div.tool-group>
+      <label.export-width>PNG width <input.field type='number' min='16' value={$exportWidth} oninput={event => $exportWidth = Number(event.currentTarget.value)} /></label.export-width>
+    </div.toolbar>
+  </div.tool-body>
+</main.tool>
