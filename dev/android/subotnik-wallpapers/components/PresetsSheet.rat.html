@@ -1,0 +1,34 @@
+<script>
+  // <PresetsSheet />: the sources, the config or both under a name, loaded back with a tap
+
+  import { $presets, deletePreset, loadPreset, savePreset } from '../state.rat.js';
+
+  const KINDS = [['source', 'Quelle'], ['config', 'Config'], ['wallpaper', 'Wallpaper']];
+
+  let $names = { config: '', source: '', wallpaper: '' };
+
+  function store (kind) {
+    savePreset(kind, $names[kind]);
+    $names = { ...$names, [kind]: '' };
+  }
+</script>
+
+<Sheet title='Presets'>
+  @for (kind of KINDS)
+    <div.preset-group>
+      <h3>{kind[1]}</h3>
+      <div.preset-add>
+        <input.preset-name type='text' placeholder='name…' value={$names[kind[0]]} oninput={event => $names = { ...$names, [kind[0]]: event.currentTarget.value }} />
+        <button.btn type='button' onclick={() => store(kind[0])}>Speichern</button>
+      </div.preset-add>
+      <ul.preset-list>
+        @for (preset, index of $presets[kind[0]])
+          <li>
+            <button.preset-load type='button' onclick={() => loadPreset(kind[0], index)}>{preset.name}</button>
+            <button.preset-del type='button' title='löschen' onclick={() => deletePreset(kind[0], index)}>✕</button>
+          </li>
+        @else
+          <li.preset-empty>keine</li>
+      </ul.preset-list>
+    </div.preset-group>
+</Sheet>

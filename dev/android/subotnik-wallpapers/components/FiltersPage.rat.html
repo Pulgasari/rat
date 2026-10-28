@@ -1,0 +1,35 @@
+<script>
+  // <FiltersPage />: the chain as tiles in their order (drag to reorder, tap to edit), the editor of
+  // the selected one below
+
+  import { ANIMATED, FILTERS, LABEL, PARAMS, toHex, toRgb } from '../modules/wallpaper.js';
+  import { reorder }                                      from '../modules/reorder.js';
+
+  import { $config, $selected, addFilter, moveFilter, removeFilter, setFilter, toggleFilter } from '../state.rat.js';
+
+  const $entry = $selected === null ? null : $config.filters[$selected] ?? null;
+</script>
+
+<div.tile-grid @reorder={{ move: moveFilter, tap: index => $selected = index }}>
+  @for (entry, index of $config.filters)
+    <div.tile.filter-tile class:disabled={!entry.enabled} class:selected={index === $selected} data-index={index}>
+      <span.tile-label>{LABEL[entry.type] ?? entry.type}</span>
+      <button.tile-toggle class:on={entry.enabled} type='button' title='aktiv' onclick={() => toggleFilter(index)}></button>
+      <button.tile-x type='button' title='entfernen' onclick={() => removeFilter(index)}>✕</button>
+    </div.tile>
+  <button.tile.tile-add type='button' title='filter hinzufügen' onclick={addFilter}>+</button>
+</div.tile-grid>
+
+@if ($entry)
+  <div.tile-editor>
+    <Choice label='Typ' value={$entry.type} options={FILTERS} onchange={type => setFilter($selected, 'type', type)} />
+    @for (param of PARAMS[$entry.type] ?? [])
+      @if (param[2] === 'color')
+        <label.field>
+          <span>{param[1]}</span>
+          <input type='color' value={toHex($entry[param[0]])} oninput={event => setFilter($selected, param[0], toRgb(event.currentTarget.value))} />
+        </label.field>
+      @else
+        <Range label={param[1]} value={$entry[param[0]]} min={param[2]} max={param[3]} step={param[4]} format={value => param[5] ? Number(value).toFixed(param[5]) : String(value)} onchange={value => setFilter($selected, param[0], value)} />
+    @if (ANIMATED.includes($entry.type)): <p.muted>animiert: läuft kontinuierlich, mehr akku.</p>
+  </div.tile-editor>

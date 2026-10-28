@@ -336,3 +336,23 @@ input[type=checkbox]:checked::after { left: 20px; }
   background: rgba(255, 255, 255, 0.06); color: var(--fg); font: inherit; font-weight: 600; cursor: pointer;
 }
 .rat-dialog button[value=ok] { background: var(--accent); color: #fff; }
+
+/* ===== toasts (pop-toast): above the fabs, centered ===== */
+
+body [data-pop-toasts] {
+  inset: auto auto max(84px, calc(env(safe-area-inset-bottom) + 72px)) 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+body pop-toast {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--fg);
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  padding: 10px 16px;
+}

@@ -1,0 +1,8 @@
+<script>
+  // <Toggle label='Position merken' value={x} onchange={on => …} />
+</script>
+
+<label.field.row>
+  <span>{props.label}</span>
+  <input type='checkbox' checked={props.value} onchange={event => props.onchange(event.currentTarget.checked)} />
+</label.field.row>

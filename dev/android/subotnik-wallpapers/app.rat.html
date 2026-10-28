@@ -1,0 +1,51 @@
+<script>
+  // subotnik-wallpapers: the config of the live wallpaper, over a live preview of it. the wallpaper
+  // itself is native (a live wallpaper can not be a webview), this page only writes its config
+
+  import { effect } from '@rat/signals';
+
+  import { GLYPHS }  from './modules/glyphs.js';
+  import { Preview } from './modules/preview.js';
+
+  import { $config, $hasMedia, $look, $overlay, $paused, closeOverlay, load } from './state.rat.js';
+
+  import { provide } from '../.shared/glyphs.js';
+  import { toast }   from '../.shared/toast.js';
+
+  provide('wp', GLYPHS, 2);
+
+  RAT.app.on('error', toast.error);
+  RAT.app.hold <| load();
+
+  // ::: the preview, the same shaders on the chosen media
+
+  let $canvas = null;
+  let ready   = false;
+
+  effect(() => {
+    if (!$canvas || ready) return;
+    ready = Preview.init($canvas);
+    if (ready) Preview.attach(() => $config);
+  });
+
+  effect(() => { $canvas; $config; if (ready) Preview.refreshMedia(); });
+  effect(() => { $canvas; Preview.setQuality($look.quality); });
+  effect(() => Preview.setPaused($paused));
+</script>
+
+<canvas#preview ref={$canvas}></canvas>
+@if (!$hasMedia): <p.preview-hint>Vorschau erscheint nach Medienauswahl</p>
+@if (!$overlay)
+  <button.preview-pause class:paused={$paused} aria-label={$paused ? 'Vorschau fortsetzen' : 'Vorschau pausieren'} onclick={() => $paused = !$paused}>
+    <svg-icon icon={$paused ? 'play' : 'pause'} />
+  </button>
+
+@if ($overlay): <div.backdrop onclick={closeOverlay}></div>
+
+<TopBar />
+
+@match ($overlay)
+  @case 'settings': <SettingsSheet />
+  @case 'presets':  <PresetsSheet />
+
+<Dock />

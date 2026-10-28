@@ -1,0 +1,12 @@
+<script>
+  // <Choice label='Modus' value={x} options={[['loop', 'Loop'], …]} onchange={value => …} />
+  // a select. the value goes back as the option's own (a number stays a number)
+  const pick = event => props.onchange(props.options.find(([value]) => String(value) === event.currentTarget.value)?.[0]);
+</script>
+
+<label.field>
+  <span>{props.label}</span>
+  <select onchange={pick}>
+    @for (option of props.options): <option value={option[0]} selected={String(option[0]) === String(props.value)}>{option[1]}</option>
+  </select>
+</label.field>
