@@ -307,4 +307,5 @@ so könnten `$tabs!` in mehrere views automatisch keys bekommen:
 <rat-view name='search'   /> // myapp:search:tabs
 ```
 
+(4) ja, type-based defaults. `Table` gehört nich in localStorage ^^
 
