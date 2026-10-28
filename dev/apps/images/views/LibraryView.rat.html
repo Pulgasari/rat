@@ -1,0 +1,26 @@
+<script>
+  // <LibraryView />: the images of the granted folders as a grid, one opens in the viewer
+
+  import { gallery, thumbOf } from '../library.js';
+  import { setFiles }         from '../tray.rat.js';
+  import { reset }            from '../viewer.rat.js';
+
+  import toast from '../../.shared/toast.js';
+
+  async function open (pic) {
+    try {
+      setFiles([await gallery.open(pic)]);
+      reset();
+      RAT.app.router.go('/');
+    }
+    catch (error) { toast.error(error); }
+  }
+</script>
+
+<ViewHeader title='library'>
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</ViewHeader>
+
+<main>
+  <Gallery gallery={gallery} thumb={thumbOf} onopen={open} noun='images' icon='image' />
+</main>

@@ -18,12 +18,15 @@ built (`apps/`, `rat build`, the build workflow):
 [feeds](https://code.pulgasari.dev/rat/apps/feeds/) ·
 [files](https://code.pulgasari.dev/rat/apps/files/) ·
 [icons](https://code.pulgasari.dev/rat/apps/icons/) ·
+[images](https://code.pulgasari.dev/rat/apps/images/) ·
+[looksmaxx](https://code.pulgasari.dev/rat/apps/looksmaxx/) ·
 [noisy](https://code.pulgasari.dev/rat/apps/noisy/) ·
 [notes](https://code.pulgasari.dev/rat/apps/notes/) ·
 [podcasts](https://code.pulgasari.dev/rat/apps/podcasts/) ·
 [prompts](https://code.pulgasari.dev/rat/apps/prompts/) ·
 [todo](https://code.pulgasari.dev/rat/apps/todo/) ·
-[vectorizer](https://code.pulgasari.dev/rat/apps/vectorizer/)
+[vectorizer](https://code.pulgasari.dev/rat/apps/vectorizer/) ·
+[videos](https://code.pulgasari.dev/rat/apps/videos/)
 
 sources (`dev/apps/`, no build): the same names under [`rat/dev/apps/`](https://code.pulgasari.dev/rat/dev/apps/). a view that mounts a component with the params of its route takes it as `component={X}`, not `src`: a build follows an import, not a string
 

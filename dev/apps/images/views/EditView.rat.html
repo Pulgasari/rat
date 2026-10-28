@@ -1,0 +1,154 @@
+<script>
+  // <EditView />: the editor. a toolbar (undo, rotate, flip, crop), the canvas, a panel of tabs
+  // (adjust, effects, resize, export) and a status bar
+
+  import * as edit from '../modules/edit.js';
+  import * as fx   from '../modules/filters.js';
+  import {
+    $adjust, $amount, $busy, $crop, $dirty, $effect, $error, $exportFormat, $exportQuality, $height, $locked,
+    $name, $panelTab, $preset, $redo, $undo, $width, $work, FORMATS, PRESETS,
+    applyCrop, applyPreset, applyResize, cancelCrop, exportImage, flip, formatOf, keys, loadFile, paint,
+    previewEffect, redo, reset, resetAdjust, rotate, selectEffect, setAdjust, setSize, startCrop, undo,
+  } from '../editor.rat.js';
+
+  const TABS = [
+    { icon: 'tune',    id: 'adjust',  label: 'Adjust' },
+    { icon: 'effects', id: 'effects', label: 'Effects' },
+    { icon: 'resize',  id: 'resize',  label: 'Resize' },
+    { icon: 'export',  id: 'export',  label: 'Export' },
+  ];
+
+  const ADJUST = [
+    ['brightness', 'Brightness', 200, 100],
+    ['contrast',   'Contrast',   200, 100],
+    ['saturate',   'Saturation', 200, 100],
+    ['grayscale',  'Grayscale',  100, 0],
+  ];
+
+  let $file     = null;
+  let $dropping = false;
+
+  const $chosen = fx.effectById($effect);
+  const $format = formatOf($exportFormat);
+  const $off    = !$work || !!$crop;
+
+  function dropped (event) {
+    event.preventDefault();
+    $dropping = false;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) loadFile(file);
+  }
+
+  function picked (event) {
+    const file = event.currentTarget.files?.[0];
+    if (file) loadFile(file);
+    event.currentTarget.value = '';
+  }
+
+  const screenSize = () => `${screen?.width || '?'}×${screen?.height || '?'}`;
+</script>
+
+@fragment tool (icon, label, run, disabled, active)
+  <button.edit-tool class:active={active} title={label} aria-label={label} disabled={disabled} onclick={run}><svg-icon icon={icon} /></button>
+
+@fragment slider (label, value, min, max, step, suffix, set, initial)
+  <label.slider>
+    <span.slider-head><span>{label}</span><button.slider-value title='Reset' onclick={() => set(initial)}>{value}{suffix}</button></span>
+    <input type='range' min={min} max={max} step={step} value={value} oninput={event => set(Number(event.currentTarget.value))} />
+  </label.slider>
+
+<ViewHeader back='/' title={$work ? $name : 'edit'}>
+  {tool('folder-open', 'Open image', () => $file?.click(), false, false)}
+  {tool('undo', 'Undo', undo, !$undo.length, false)}
+  {tool('redo', 'Redo', redo, !$redo.length, false)}
+  {tool('rotate-ccw', 'Rotate left', () => rotate('ccw'), $off, false)}
+  {tool('rotate-cw', 'Rotate right', () => rotate('cw'), $off, false)}
+  {tool('flip-h', 'Flip horizontal', () => flip('h'), $off, false)}
+  {tool('flip-v', 'Flip vertical', () => flip('v'), $off, false)}
+  {tool('crop', 'Crop', () => $crop ? cancelCrop() : startCrop(), !$work, !!$crop)}
+  {tool('reset', 'Reset to original', reset, !$dirty, false)}
+</ViewHeader>
+
+<main.editor @keys>
+
+  @if ($crop)
+    <div.cropbar>
+      <span.label>Aspect</span>
+      <div.chips>
+        @for (preset of PRESETS): <button.chip class:active={$preset === preset.id} title={preset.id === 'screen' ? screenSize() : preset.label} onclick={() => applyPreset(preset)}>{preset.label}</button>
+      </div.chips>
+      <span.spacer></span>
+      <span.crop-size>{$crop.w} × {$crop.h}</span>
+      <btn-push label='Cancel' onclick={cancelCrop} />
+      <btn-push icon='check' label='Apply crop' onclick={applyCrop} />
+    </div.cropbar>
+
+  <div.editor-body>
+    <div.editor-stage class:dropping={$dropping} ondragover={event => { event.preventDefault(); $dropping = true; }} ondragleave={event => { if (event.target === event.currentTarget) $dropping = false; }} ondrop={dropped}>
+      @if ($work)
+        <div.canvas-wrap @previewEffect={[$effect, $amount, $work]}>
+          <canvas.canvas style={`filter: ${edit.filterString($adjust)}`} @paint={$work}></canvas>
+          @if ($crop): <CropOverlay />
+        </div.canvas-wrap>
+      @else
+        <button.open onclick={() => $file?.click()}>
+          <svg-icon icon='image-add' />
+          <span>Open an image</span>
+          <small>Click to browse, or drop a file here.</small>
+        </button.open>
+      <div.drop-hint><svg-icon icon='download' /> <span>Drop to open</span></div.drop-hint>
+    </div.editor-stage>
+
+    <aside.panel>
+      @if (!$work)
+        <p.panel-empty>No image loaded.</p.panel-empty>
+      @else
+        <nav.tabs>
+          @for (tab of TABS): <button.tab class:active={$panelTab === tab.id} onclick={() => $panelTab = tab.id}><svg-icon icon={tab.icon} /> <span>{tab.label}</span></button>
+        </nav.tabs>
+
+        <section.panel-section>
+          @match ($panelTab)
+            @case 'effects'
+              <div.effects>
+                @for (effect of fx.EFFECTS)
+                  <button.effect class:active={$effect === effect.id} title={effect.previewable ? effect.name : 'Applied on export (no live preview)'} onclick={() => selectEffect(effect.id)}>{effect.name}{effect.previewable ? '' : ' *'}</button>
+              </div.effects>
+              @if ($effect !== 'none' && $chosen?.amount)
+                {slider('Amount', $amount, $chosen.amount.min, $chosen.amount.max, $chosen.amount.step ?? 0.05, '', value => $amount = value, $chosen.amount.default)}
+              @if ($effect !== 'none' && $chosen && !$chosen.previewable)
+                <p.note>* No live preview for this effect, it is applied when you export.</p.note>
+            @case 'resize'
+              <div.size-row>
+                <label.field><span>W</span><input type='number' min='1' value={$width} oninput={event => setSize('w', Number(event.currentTarget.value))} /></label.field>
+                <button.lock class:on={$locked} title='Lock aspect ratio' onclick={() => $locked = !$locked}><svg-icon icon={$locked ? 'link' : 'link-off'} /></button>
+                <label.field><span>H</span><input type='number' min='1' value={$height} oninput={event => setSize('h', Number(event.currentTarget.value))} /></label.field>
+              </div.size-row>
+              <btn-push label='Apply resize' disabled={$width === $work.width && $height === $work.height} onclick={applyResize} />
+            @case 'export'
+              <div.seg>
+                @for (format of FORMATS): <button.seg-btn class:active={$exportFormat === format.type} onclick={() => $exportFormat = format.type}>{format.label}</button>
+              </div.seg>
+              @if ($format.lossy)
+                {slider('Quality', $exportQuality, 10, 100, 1, '', value => $exportQuality = value, 92)}
+              <label.field><span>Name</span><input type='text' value={$name} oninput={event => $name = event.currentTarget.value} /><em>.{$format.ext}</em></label.field>
+              <btn-push icon='download' label='Download' disabled={$busy} onclick={exportImage} />
+            @default
+              @for (row of ADJUST)
+                {slider(row[1], $adjust[row[0]], 0, row[2], 1, '%', value => setAdjust(row[0], value), row[3])}
+              @if (!edit.isIdentity($adjust)): <btn-push icon='reset' label='Reset adjustments' onclick={resetAdjust} />
+        </section.panel-section>
+    </aside.panel>
+  </div.editor-body>
+
+  <footer.statusbar>
+    <svg-icon icon='image' />
+    <span>{$work ? `${$work.width} × ${$work.height} px` : 'no image'}</span>
+    @if ($error): <span.error><svg-icon icon='warning' /> {$error}</span>
+    <span.spacer></span>
+    @if ($busy): <span.working><svg-icon icon='loading' /> working …</span>
+    @else if ($dirty): <span.edited>edited</span>
+  </footer.statusbar>
+
+  <input type='file' accept='image/*' hidden ref={$file} onchange={picked} />
+</main.editor>

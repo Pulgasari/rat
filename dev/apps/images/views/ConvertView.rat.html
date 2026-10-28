@@ -1,0 +1,33 @@
+<script>
+  // <ConvertView />: images re-encoded as jpg, png or webp, at a quality for the lossy ones
+
+  import { $convertFormat, $convertQuality, $converts, FORMATS, add, convertAll, remove } from '../convert.rat.js';
+  import { downloadAll } from '../files.js';
+
+  const $pending = $converts.filter(entry => entry.status === 'pending').length;
+  const $done    = $converts.some(entry => entry.status === 'done');
+</script>
+
+<ViewHeader back='/' title='convert' />
+
+<main.tool>
+  <FileDrop onfiles={add} />
+
+  @if ($converts.length)
+    <div.tool-options>
+      <div.seg>
+        @for (format of FORMATS): <button.seg-btn class:active={$convertFormat === format} onclick={() => $convertFormat = format}>{format.toUpperCase()}</button>
+      </div.seg>
+      @if ($convertFormat !== 'png')
+        <label.quality>Quality <input type='range' min='10' max='100' value={$convertQuality} oninput={event => $convertQuality = Number(event.currentTarget.value)} /> <span>{$convertQuality}%</span></label.quality>
+    </div.tool-options>
+
+    <div.file-list>
+      @for (entry of $converts): <FileItem entry={entry} onremove={remove} />
+    </div.file-list>
+
+    <div.tool-actions>
+      @if ($pending): <btn-push icon='convert' label={`Convert ${$pending} file${$pending > 1 ? 's' : ''}`} onclick={convertAll} />
+      @if ($done): <btn-push icon='download' label='Download all' onclick={() => downloadAll($converts)} />
+    </div.tool-actions>
+</main.tool>

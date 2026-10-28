@@ -95,7 +95,9 @@ function scanCase (source, start) {
       last = start + token.end;
     }
   } catch (error) {
-    return { error: reason(error), index: start + (error.pos ?? 0) };
+    const at = start + (error.pos ?? 0);
+    if (depth === 0 && source.slice(last, at).includes('\n')) return { index: last };   // the body's first line, no js (@for …)
+    return { error: reason(error), index: at };
   }
   return { index: source.length };
 }

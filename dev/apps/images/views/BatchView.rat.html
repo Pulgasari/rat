@@ -1,0 +1,39 @@
+<script>
+  // <BatchView />: images through a pipeline of tasks, in order. the pipeline is kept
+
+  import { $batch, $tasks, TASKS, add, addTask, remove, runBatch } from '../batch.rat.js';
+  import { downloadAll } from '../files.js';
+
+  const $pending = $batch.filter(entry => entry.status === 'pending').length;
+  const $done    = $batch.some(entry => entry.status === 'done');
+  const $running = $batch.some(entry => entry.status === 'busy');
+</script>
+
+<ViewHeader back='/' title='batch' />
+
+<main.tool>
+  <FileDrop onfiles={add} />
+
+  @if ($batch.length)
+    <div.file-list>
+      @for (entry of $batch): <FileItem entry={entry} onremove={remove} />
+    </div.file-list>
+
+  <div.task-adder>
+    <span.adder-label>Add task</span>
+    <div.chips>
+      @for (type of Object.keys(TASKS)): <button.chip onclick={() => addTask(type)}><svg-icon icon={TASKS[type].icon} /> {TASKS[type].label}</button>
+    </div.chips>
+  </div.task-adder>
+
+  @if ($tasks.length)
+    <div.tasks>
+      @for (task, index of $tasks): <TaskPane task={task} index={index} total={$tasks.length} />
+    </div.tasks>
+
+  @if ($batch.length && $tasks.length)
+    <div.tool-actions>
+      <btn-push icon={$running ? 'loading' : 'run'} label={$running ? 'Processing …' : `Run on ${$pending} image${$pending === 1 ? '' : 's'}`} disabled={$running || !$pending} onclick={runBatch} />
+      @if ($done): <btn-push icon='download' label='Download all' onclick={() => downloadAll($batch)} />
+    </div.tool-actions>
+</main.tool>
