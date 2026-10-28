@@ -43,6 +43,71 @@ and in the explore suggestion further down:
   .explore-podcast-view  -> app-view[name='explore-podcast']
 */
 
+/*
+SUGGESTION — the rules below for the rat markup (dev/apps/podcasts): a view is <rat-view name>,
+header + main sit directly in it (no .view, no #episode / #podcast), the tags are those of
+@aufbau/elements 2. the shared sheet (.shared/css/zugriff.css) gives rat-view > main
+display: flex, a row: the views here stack their parts, so main turns into a column.
+replacing the active rules below with this block is the whole port:
+
+rat-view {
+  display   : flex;
+  flex-flow : column;
+
+  > * { padding: 1rem; }
+  > main { flex-direction: column; justify-content: flex-start; }
+  > main:has(> data-index) { padding: 0; }
+  > main:has(> .empty)      { justify-content: safe center; }
+  > main > btn-push         { align-self: center; }
+
+  .search-panel { background: var(--color-bg); position: sticky; top: 0; width: 100%; }
+  input-search  { width: stretch; }
+}
+
+rat-view:is([name='episode'], [name='podcast']) {
+  > main > .art {
+    max-width: 75%;
+    img { width: stretch; }
+  }
+}
+
+data-index[viewmode='list'] {
+  gap: 0;
+
+  > *:nth-child(odd) { background-color: #0001; }
+  > * {
+    display               : grid;
+    gap                   : 0.75rem;
+    grid-template-columns : 100px auto;
+    grid-template-rows    : 1fr;
+
+    > *             { grid-column: 2; }
+    > *:first-child { grid-column: 1; grid-row: span 4; }
+  }
+}
+
+data-item {
+  contain-intrinsic-height : auto 170px;
+  content-visibility       : auto;
+  transition-behavior      : allow-discrete;
+
+  .art, .artwork {
+    align-items     : center;
+    display         : grid;
+    justify-content : center;
+
+    svg-icon { font-size: 2rem; opacity: 0.25; }
+  }
+
+  .meta       { display: flex; justify-content: space-between; opacity: 0.5; }
+  .title      { font-size: 1.25rem; font-weight: bold; line-height: 1.25; }
+  .ActionMenu { align-items: center; display: flex; gap: 0.5rem; }
+}
+
+.meta > btn-push,
+data-item .title { display: contents !important; }
+*/
+
 .view {
   display   : flex;
   flex-flow : column;
