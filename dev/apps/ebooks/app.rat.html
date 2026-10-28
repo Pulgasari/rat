@@ -6,12 +6,15 @@
 
   import { load } from './lib.js';
 
+  import LibraryView from './views/LibraryView.rat.html';
+  import ReaderView  from './views/ReaderView.rat.html';
+
   RAT.app.hold <| load().catch <| toast.error;
 </script>
 
 <rat-area name='main'>
-  <rat-view route='/' name='library' src='views/LibraryView.rat.html' />
-  <rat-view route='/reader' name='reader' src='views/ReaderView.rat.html' transition='slide' />
+  <rat-view route='/' name='library' component={LibraryView} />
+  <rat-view route='/reader' name='reader' component={ReaderView} transition='slide' />
 </rat-area>
 
 <rat-area name='config' dock='end'><Settings name='eBooks' /></rat-area>

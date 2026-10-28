@@ -1,33 +1,27 @@
 <script>
-import { sortPodcasts } from './../methods.js';
+  // <PodcastsView />: the subscriptions, by date or by name, as a list or a grid
 
-const app = RAT.app;
+  import { state }        from './../state.js';
+  import { sortPodcasts } from './../methods.js';
 
-$sorting  = RAT.$Enum ('newest', 'alpha');
-$viewmode = RAT.$Enum ('list', 'grid');
-$podcasts = app.database.podcasts.as('values') |> sortPodcasts (#, $sorting);
-  
-if (!podcasts) return null;
+  const podcasts = RAT.app.database.podcasts.$items;
+
+  let { $dialog } = state;
+
+  let $sorting!  = 'newest';
+  let $viewmode! = 'list';
+
+  const $podcasts = sortPodcasts(podcasts.toArray(), $sorting);
+
+  const empty = { hint: "Paste a podcast's RSS feed URL to subscribe.", icon: 'rss', title: 'No subscriptions yet' };
 </script>
 
-<>
-  <header>
-    <h1>Podcasts</h1>
-    <div class="view-tools">
-      <Picker signal={$sorting}  look='segments' />
-      <Picker signal={$viewmode} look='segments' />
-      <btn-icon icon|label='add' onClick={() => app.dialog = 'add'} />
-    </div>
-  </header>
+<ViewHeader title='podcasts'>
+  <Picker look='segments' options={[['newest', 'newest'], ['alpha', 'a–z']]} value={$sorting} onchange={value => $sorting = value} />
+  <Picker look='segments' options={[['list', 'list'], ['grid', 'grid']]} value={$viewmode} onchange={value => $viewmode = value} />
+  <btn-icon icon='add' label='add' onclick={() => $dialog = 'add'} />
+</ViewHeader>
 
-  <main>
-    <PodcastsIndex
-      podcasts={$podcasts}
-      empty={{
-        icon  : 'rss',
-        title : 'No subscriptions yet',
-        hint  : "Paste a podcast's RSS feed URL to subscribe."
-      }}
-    />
-  </main>
-</>
+<main>
+  <PodcastsIndex podcasts={$podcasts} viewmode={$viewmode} empty={empty} />
+</main>

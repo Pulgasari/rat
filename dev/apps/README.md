@@ -13,16 +13,16 @@
 built (`apps/`, `rat build`, the build workflow):
 [cli](https://code.pulgasari.dev/rat/apps/cli/) ·
 [code](https://code.pulgasari.dev/rat/apps/code/) ·
-[ebooks](https://code.pulgasari.dev/rat/dev/apps/ebooks/) (source) ·
-[feeds](https://code.pulgasari.dev/rat/dev/apps/feeds/) (source) ·
+[ebooks](https://code.pulgasari.dev/rat/apps/ebooks/) ·
+[feeds](https://code.pulgasari.dev/rat/apps/feeds/) ·
 [files](https://code.pulgasari.dev/rat/apps/files/) ·
 [icons](https://code.pulgasari.dev/rat/apps/icons/) ·
 [noisy](https://code.pulgasari.dev/rat/apps/noisy/) ·
 [notes](https://code.pulgasari.dev/rat/apps/notes/) ·
-[podcasts](https://code.pulgasari.dev/rat/dev/apps/podcasts/) (source) ·
+[podcasts](https://code.pulgasari.dev/rat/apps/podcasts/) ·
 [vectorizer](https://code.pulgasari.dev/rat/apps/vectorizer/)
 
-sources (`dev/apps/`, no build): the same names under [`rat/dev/apps/`](https://code.pulgasari.dev/rat/dev/apps/). ebooks, feeds and podcasts are not built yet: ebooks loads its views through `<rat-view src>` (a string the build does not see), feeds and podcasts do not compile
+sources (`dev/apps/`, no build): the same names under [`rat/dev/apps/`](https://code.pulgasari.dev/rat/dev/apps/). a view that mounts a component with the params of its route takes it as `component={X}`, not `src`: a build follows an import, not a string
 
 **md:**
 [`TODO.md`](TODO.md)

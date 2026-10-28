@@ -78,6 +78,8 @@ export class RatView extends HTMLElement {
   name?       : string;
   route?      : string;
   src?        : string;
+  /** A component in place of src, mounted the same way (the params as props): a build sees it as an import. */
+  component?  : ((props: Record<string, unknown>) => unknown) | null;
   transition? : string;
   readonly app    : RatApp | null;
   readonly loaded : boolean;

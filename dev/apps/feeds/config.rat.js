@@ -7,8 +7,18 @@ export default {
   id   : 'feeds',
   name : 'Feeds',
 
+  // the elements of @aufbau the app uses, defined before its code runs (no autoloader: a build takes these and no others)
+  import : [
+    '@aufbau/elements/webcomponents/input/tags.js',
+    '@aufbau/elements/webcomponents/btn-icon.js',
+    '@aufbau/elements/webcomponents/btn-push.js',
+    '@aufbau/elements/webcomponents/input-option.js',
+    '@aufbau/elements/webcomponents/pop-toast.js',
+    '@aufbau/elements/webcomponents/svg-icon.js',
+  ],
+
   // the components of this app first, then the shared ones
-  autoImport : ['./components/', '../.shared/components/'],
+  autoImport : ['./components/', './views/', '../.shared/components/'],
 
   icons : {
     ...config.icons,
@@ -23,4 +33,8 @@ export default {
       read  : null,   // key: an item key, the ones opened
     },
   },
+  dialogs : true,   // adding a feed, unfollowing one
+  offline : true,
+
+  build : { emptyOutDir: true, outDir: '../../../apps/feeds' },   // rat build -> apps/feeds
 };

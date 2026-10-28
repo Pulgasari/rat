@@ -3,8 +3,6 @@
 
 import { computed } from '@rat/signals';
 
-import PopPrompt from '@aufbau/elements/webcomponents/pop-prompt.js';
-
 import toast from '../.shared/toast.js';
 
 import * as db   from './db.js';
@@ -46,7 +44,7 @@ const hostOf = url => { try { return new URL(url).hostname.replace(/^www\./, '')
 export const feedName = item => db.feedById(item.feedId)?.title || hostOf(item.link);
 
 export async function addFeed () {
-  const input = (await PopPrompt.prompt('Paste a feed URL, a site URL, or a YouTube channel / @handle / video link.', '', { confirm: 'Add' }))?.trim();
+  const input = (await RAT.app.dialogs.prompt({ message: 'Paste a feed URL, a site URL, or a YouTube channel / @handle / video link.', ok: 'Add', title: 'Add feed' }))?.trim();
   if (!input) return;
   state.busy.value = 'Adding feed…';
   try {
@@ -71,7 +69,7 @@ export async function refreshView (name = current.value) {
 }
 
 export async function removeFeed (feed) {
-  if (!await PopPrompt.confirm(`Unfollow “${feed.title}”? Its stored entries are removed too.`, { confirm: 'Unfollow' })) return;
+  if (!await RAT.app.dialogs.confirm({ message: `Unfollow “${feed.title}”? Its stored entries are removed too.`, ok: 'Unfollow', title: feed.title })) return;
   if (current.value === 'feed' && state.feedId.value === feed.id) open('latest');
   await db.removeFeed(feed.id);
   toast.success('Unfollowed');

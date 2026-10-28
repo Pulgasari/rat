@@ -8,8 +8,22 @@ export default {
   id   : 'podcasts',
   name : 'Podcasts',
 
+  // the elements of @aufbau the app uses, defined before its code runs (no autoloader: a build takes these and no others)
+  import : [
+    '@aufbau/elements/webcomponents/input/tags.js',
+    '@aufbau/elements/webcomponents/aufbau-progress.js',
+    '@aufbau/elements/webcomponents/btn-icon.js',
+    '@aufbau/elements/webcomponents/btn-push.js',
+    '@aufbau/elements/webcomponents/btn-tap.js',
+    '@aufbau/elements/webcomponents/data-index.js',
+    '@aufbau/elements/webcomponents/data-item.js',
+    '@aufbau/elements/webcomponents/input-option.js',
+    '@aufbau/elements/webcomponents/pop-toast.js',
+    '@aufbau/elements/webcomponents/svg-icon.js',
+  ],
+
   // the components of this app first, then the shared ones
-  autoImport : ['./components/', '../.shared/components/'],
+  autoImport : ['./components/', './views/', '../.shared/components/'],
 
   icons : {
     ...config.icons,
@@ -33,5 +47,16 @@ export default {
     //  'episodes' : Table ({ id: UUID, fav: Bool (false), progress: Time (0) }),
     }
   },
-  offline  : true,
+  dialogs    : true,
+  offline    : true,
+  thumbnails : { width: 256 },   // the covers, small copies kept in opfs (Artwork)
+
+  hotkeys : {
+    'escape'      : { exec: 'close-dialog' },
+    'space'       : { exec: 'toggle-play', preventDefault: true },
+    'arrow-left'  : { exec: 'skip-back' },
+    'arrow-right' : { exec: 'skip-forward' },
+  },
+
+  build : { emptyOutDir: true, outDir: '../../../apps/podcasts' },   // rat build -> apps/podcasts
 };

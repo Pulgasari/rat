@@ -9,8 +9,11 @@ to the view around it, so views nest (one active per level).
 
 src loads a .rat (or .rat.js) file through the loader on the first activation
 and mounts its component with the params of the route as props (and the view
-itself as props.view). other params remount it. without src the view shows
-what it holds.
+itself as props.view). other params remount it. component={X} does the same
+with a component at hand: a build sees it as an import, a src is a string it
+does not follow. without either the view shows what it holds.
+
+  <rat-view route='/podcast/:id' component={PodcastDetailView} />
 
 an error boundary: an error of its component (loading, rendering, effects)
 replaces the component, [error] is set, retry() loads it again. a failed event
@@ -63,14 +66,25 @@ export class RatView extends DominaElement {
     }`;
   }
 
-  #dispose = null;
-  #guards  = new Set;
+  #component = null;
+  #dispose   = null;
+  #guards    = new Set;
   #loaded  = false;
   #params  = null;
   #ticket  = 0;
 
   get app    () { return this.closest('rat-app'); }
-  get loaded () { return !this.src || this.#loaded; }
+  get loaded () { return !this.#mounts || this.#loaded; }
+
+  // a component in place of src, the same way
+  get component () { return this.#component; }
+  set component (value) {
+    if (value === this.#component) return;
+    this.#component = value;
+    if (this.active && this.#params !== null) this.fill(this.#params);
+  }
+
+  get #mounts () { return Boolean(this.src || this.#component); }
 
   onConnected () {
     this.inert = !this.active;
@@ -109,7 +123,7 @@ export class RatView extends DominaElement {
       this.inert  = false;
       this.emit('rat:enter', { params });
     }
-    if (this.src && !sameParams(params, this.#params)) this.fill(params);
+    if (this.#mounts && !sameParams(params, this.#params)) this.fill(params);
   }
 
   leave () {
@@ -128,9 +142,9 @@ export class RatView extends DominaElement {
     this.removeAttribute('error');
 
     try {
-      const Component = componentOf(await load(new URL(this.src, this.baseURI).href));
+      const Component = this.#component ?? componentOf(await load(new URL(this.src, this.baseURI).href));
       if (ticket !== this.#ticket) return;
-      if (!Component) throw new Error(`[rat] ${this.src} exports no component`);
+      if (!Component) throw new Error(`[rat] ${this.src ?? 'the view'} has no component`);
       this.#dispose?.();
       this.replaceChildren();
       this.#dispose = mount(Component, this, { ...params, view: this });
@@ -150,7 +164,7 @@ export class RatView extends DominaElement {
   fail (error) {
     this.#dispose?.();
     this.#dispose = null;
-    showError(this, error, this.src ? () => this.retry() : null);
+    showError(this, error, this.#mounts ? () => this.retry() : null);
   }
 
   retry () {
