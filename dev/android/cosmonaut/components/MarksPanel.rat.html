@@ -1,0 +1,168 @@
+<script>
+  // <MarksPanel />: the bookmarks, three views in one sheet: the list (by folder, filtered by a tag),
+  // the editor of one bookmark, and import / export (json keeps the folders, netscape html is flat)
+
+  import { detectFormat, fromJson, fromNetscape, pickTextFile, saveTextFile, toJson, toNetscape } from '../modules/bookmarks-io.js';
+  import { bucketsBy, domainOf, initial } from '../modules/util.js';
+
+  import { $bookmarks, $folders, addCurrent, addFolder, close, deleteMark, go, importMarks, saveMark } from '../state.rat.js';
+
+  const { dialogs } = RAT.app;
+
+  let $view    = 'list';   // list | editor | io
+  let $tag     = null;     // the tag the list is filtered by
+  let $editing = null;     // a copy of the bookmark in the editor, its tags as the text of the field
+
+  // :::::: LIST
+
+  const $tags = [...new Set($bookmarks.flatMap(mark => mark.tags ?? []))].sort();
+
+  const $sections = (() => {
+    const tag     = $tags.includes($tag) ? $tag : null;
+    const shown   = tag ? $bookmarks.filter(mark => mark.tags?.includes(tag)) : $bookmarks;
+    const buckets = bucketsBy(shown, mark => mark.folder || '');
+    const order   = [...$folders.map(folder => folder.id).filter(id => buckets.has(id)), ...(buckets.has('') ? [''] : [])];
+    const titleOf = id => id ? $folders.find(folder => folder.id === id)?.name ?? '' : $folders.length ? 'No folder' : '';
+    return order.map(id => ({ id, marks: buckets.get(id), title: titleOf(id) }));
+  })();
+
+  const filterBy = tag => { $tag = $tag === tag ? null : tag; };
+
+  async function folder () {
+    const name = await dialogs.prompt({ cancel: 'Cancel', message: 'the name of the folder', ok: 'Create', title: 'Folder', value: 'Folder' });
+    if (name != null) addFolder(name);
+  }
+
+  // :::::: EDITOR
+
+  function edit (mark) {
+    $editing = { ...mark, folder: mark.folder ?? '', tags: (mark.tags ?? []).join(' ') };
+    $view    = 'editor';
+  }
+
+  const field = key => event => { $editing = { ...$editing, [key]: event.currentTarget.value }; };
+
+  function save () {
+    saveMark({ ...$editing, folder: $editing.folder || undefined, tags: $editing.tags.split(/\s+/).filter(Boolean), title: $editing.title.trim(), url: $editing.url.trim() });
+    $view = 'list';
+  }
+
+  function remove () {
+    deleteMark($editing.id);
+    $view = 'list';
+  }
+
+  // :::::: IMPORT / EXPORT
+
+  let $format = 'json';
+  let $text   = '';
+  let $status = '';
+  let $file   = null;
+
+  function openIo () {
+    $text   = '';
+    $status = '';
+    $view   = 'io';
+  }
+
+  async function exportMarks () {
+    const data = { bookmarkFolders: $folders, bookmarks: $bookmarks };
+    $text = $format === 'html' ? toNetscape(data) : toJson(data);
+    const where = await saveTextFile(`bookmarks.${$format}`, $text);
+    $status = where ? `saved: ${where}` : 'saving failed, the content above can be copied';
+  }
+
+  function importText (source) {
+    const text = $text.trim();
+    if (!text) return $status = 'nothing to import';
+    const parsed = $format === 'html' ? fromNetscape(text) : fromJson(text);
+    if (!parsed) return $status = `could not read this as ${$format.toUpperCase()}`;
+    const added   = importMarks(parsed);
+    const skipped = parsed.bookmarks.length - added;
+    $status = `${added} imported` + (skipped ? ` (${skipped} already there)` : '') + (source ? ` from ${source}` : '');
+  }
+
+  async function loadFile () {
+    try {
+      const { name, text } = await pickTextFile($file);
+      $format = detectFormat(name, text);
+      $text   = text;
+      importText(name);
+    }
+    catch { $status = 'the file could not be read'; }
+  }
+</script>
+
+@fragment tagChip (tag)
+  <button.tag class:active={tag === $tag} onclick={event => { event.stopPropagation(); filterBy(tag); }}>{tag}</button>
+
+<section.panel.sheet aria-label='Bookmarks'>
+  <button.backdrop aria-label='Close' onclick={close}></button>
+  <div.sheet-body>
+    <div.sheet-head>
+      <span.sheet-title>Bookmarks</span>
+      <span.sheet-actions>
+        <button.txt-btn onclick={openIo}>Import/Export</button>
+        <button.txt-btn onclick={folder}>Folder</button>
+        <button.txt-btn onclick={() => { addCurrent(); $view = 'list'; }}>This page</button>
+      </span.sheet-actions>
+    </div.sheet-head>
+
+    @match ($view)
+      @case 'editor'
+        <div.editor>
+          <input.in placeholder='Title' value={$editing.title} oninput={field('title')} />
+          <input.in placeholder='URL' inputmode='url' autocapitalize='off' spellcheck='false' value={$editing.url} oninput={field('url')} />
+          <label.field-label>Folder</label>
+          <select.in onchange={field('folder')}>
+            <option value='' selected={!$editing.folder}>No folder</option>
+            @for (item of $folders): <option value={item.id} selected={item.id === $editing.folder}>{item.name}</option>
+          </select.in>
+          <input.in placeholder='Tags (space separated)' autocapitalize='off' spellcheck='false' value={$editing.tags} oninput={field('tags')} />
+          <div.editor-actions>
+            <button.txt-btn.danger.push-left onclick={remove}>Delete</button>
+            <button.txt-btn onclick={() => $view = 'list'}>Cancel</button>
+            <button.txt-btn.primary onclick={save}>Save</button>
+          </div.editor-actions>
+        </div.editor>
+      @case 'io'
+        <div.editor>
+          <div.seg>
+            @for (option of [['json', 'JSON'], ['html', 'HTML']]): <button.seg-btn class:active={$format === option[0]} onclick={() => $format = option[0]}>{option[1]}</button>
+          </div.seg>
+          <textarea.css-area spellcheck='false' placeholder='Export writes a file and shows its content here to copy. To import, load a file, or paste text here and press Import.' value={$text} oninput={event => $text = event.currentTarget.value}></textarea>
+          @if ($status): <p.io-status>{$status}</p>
+          <input type='file' accept='.json,.html,.htm,application/json,text/html' hidden ref={$file} />
+          <div.editor-actions>
+            <button.txt-btn onclick={() => $view = 'list'}>Close</button>
+            <button.txt-btn onclick={loadFile}>Load file</button>
+            <button.txt-btn onclick={exportMarks}>Export</button>
+            <button.txt-btn.primary onclick={() => importText()}>Import</button>
+          </div.editor-actions>
+        </div.editor>
+      @default
+        @if ($tags.length)
+          <div.tag-bar>
+            @for (tag of $tags): {tagChip(tag)}
+          </div.tag-bar>
+        @for (section of $sections)
+          <div.group>
+            @if (section.title): <div.group-head><span>{section.title}</span><span.line></span></div>
+            <ul.rows>
+              @for (mark of section.marks)
+                <li.row onclick={() => go(mark.url)}>
+                  <span.ricon>{initial(domainOf(mark.url))}</span>
+                  <span.rtext>
+                    <b>{mark.title || domainOf(mark.url)}</b><span>{domainOf(mark.url)}</span>
+                    @if (mark.tags?.length)
+                      <span.tags>
+                        @for (tag of mark.tags): {tagChip(tag)}
+                      </span.tags>
+                  </span.rtext>
+                  <button.icon-btn aria-label='Edit' onclick={event => { event.stopPropagation(); edit(mark); }}><svg-icon icon='pencil' /></button>
+                </li.row>
+            </ul.rows>
+          </div.group>
+        @if (!$bookmarks.length): <p.empty>no bookmarks yet</p>
+  </div.sheet-body>
+</section.panel>

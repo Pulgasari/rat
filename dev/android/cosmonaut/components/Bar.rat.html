@@ -1,0 +1,55 @@
+<script>
+  // <Bar />: the dock, a closed bar: buttons split evenly around the pill, the load progress on the seam
+  // to the content. the collapsed chrome webview is exactly this bar: its measured height goes to native,
+  // which sizes the strip and the content inset to it (setStripHeight, css px = dp), and to --strip
+
+  import { domainOf } from '../modules/util.js';
+  import { call }     from '../modules/browser.js';
+  import { hold }     from '../modules/press.js';
+
+  import { $active, $dockItems, DOCK, isBookmarked, open, openMenu, toggleBookmark } from '../state.rat.js';
+
+  let $pill = null;
+
+  const $enabled  = $dockItems.filter(item => item.on).map(item => item.id);
+  const $half     = Math.ceil($enabled.length / 2);
+  const $loading  = Boolean($active?.loading && $active.progress < 100);
+
+  function strip (bar) {
+    const observer = new ResizeObserver(() => {
+      const height = Math.ceil(bar.getBoundingClientRect().height);
+      document.documentElement.style.setProperty('--strip', `${height}px`);
+      call('setStripHeight', { height });
+    });
+    observer.observe(bar, { box: 'border-box' });
+    return () => observer.disconnect();
+  }
+
+  // long press on the pill
+  function pillMenu () {
+    const tab = $active;
+    openMenu([
+      { icon: 'book', label: tab && isBookmarked(tab.url) ? 'Remove bookmark' : 'Add bookmark', run: toggleBookmark },
+      { separator: true },
+      { icon: 'reload', label: 'Reload',      run: () => call('reload') },
+      { icon: 'bolt',   label: 'Hard reload', run: () => call('hardReload') },
+      { separator: true },
+      { danger: true, icon: 'x', label: 'Close tab', run: () => tab && call('closeTab', { id: tab.id }) },
+    ], $pill);
+  }
+</script>
+
+@fragment button (id)
+  <button.trig title={DOCK[id].label} aria-label={DOCK[id].label} onclick={DOCK[id].run}><svg-icon icon={DOCK[id].icon} /></button>
+
+<div.prog hidden={!$loading}><span style={`width: ${$loading ? $active.progress : 0}%`}></span></div>
+
+<div.bar @strip>
+  <div.dock-group>
+    @for (id of $enabled.slice(0, $half)): {button(id)}
+  </div.dock-group>
+  <button.pill ref={$pill} onclick={() => open('url')} @hold={pillMenu}><span.pill-text>{$active?.url ? domainOf($active.url) : 'Search or URL'}</span></button>
+  <div.dock-group>
+    @for (id of $enabled.slice($half)): {button(id)}
+  </div.dock-group>
+</div.bar>

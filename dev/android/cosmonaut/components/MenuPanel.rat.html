@@ -1,0 +1,36 @@
+<script>
+  // <MenuPanel />: the context menu, an anchored floating list. the collapsed chrome is only the dock
+  // strip, so the menu is a panel and expands the chrome to draw above it. it centers on its anchor (an
+  // element, or { x }), clamped to the screen
+
+  import { $menu, close } from '../state.rat.js';
+
+  let $list = null;
+  let $left = 8;
+
+  requestAnimationFrame(() => {
+    if (!$list) return;
+    const anchor = $menu?.anchor;
+    const box    = anchor?.getBoundingClientRect?.();
+    const center = box ? box.left + box.width / 2 : anchor?.x ?? innerWidth / 2;
+    $left = Math.min(Math.max(8, center - $list.offsetWidth / 2), innerWidth - $list.offsetWidth - 8);
+  });
+
+  function run (item) {
+    close();
+    item.run();
+  }
+</script>
+
+<section.panel.menu-panel aria-label='Menu'>
+  <button.backdrop.backdrop-clear aria-label='Close' onclick={close}></button>
+  <ul.menu role='menu' ref={$list} style={`left: ${$left}px`}>
+    @for (item of $menu?.items ?? [])
+      @if (item.separator): <li.sep role='separator'></li>
+      @else
+        <li role='menuitem' class:danger={item.danger} onclick={() => run(item)}>
+          <span.mi>@if (item.icon): <svg-icon icon={item.icon} /></span.mi>
+          <span>{item.label}</span>
+        </li>
+  </ul.menu>
+</section.panel>

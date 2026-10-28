@@ -1,0 +1,56 @@
+<script>
+  // <TabsPanel />: the tabs overview. the tabs are native ($session), their groups are the chrome's:
+  // the named groups in their order, then the tabs in none
+
+  import { call }                        from '../modules/browser.js';
+  import { bucketsBy, domainOf, initial } from '../modules/util.js';
+
+  import { $groups, $session, $tabGroups, addGroup, close, newTab, setGroup } from '../state.rat.js';
+
+  const { dialogs } = RAT.app;
+
+  const $sections = (() => {
+    const buckets = bucketsBy($session.tabs, tab => $tabGroups[tab.id] ?? '');
+    const order   = [...$groups.map(group => group.id).filter(id => buckets.has(id)), ...(buckets.has('') ? [''] : [])];
+    return order.map(id => ({ id, tabs: buckets.get(id), title: id && ($groups.find(group => group.id === id)?.name ?? '') }));
+  })();
+
+  function activate (tab) {
+    call('activateTab', { id: tab.id });
+    close();
+  }
+
+  async function group () {
+    const name = await dialogs.prompt({ cancel: 'Cancel', message: 'the name of the group', ok: 'Create', title: 'Group', value: 'Group' });
+    if (name != null) addGroup(name);
+  }
+</script>
+
+<section.panel.sheet aria-label='Tabs'>
+  <button.backdrop aria-label='Close' onclick={close}></button>
+  <div.sheet-body>
+    <div.sheet-head>
+      <span.sheet-title>Tabs</span>
+      <span.sheet-actions>
+        <button.txt-btn onclick={group}>Group</button>
+        <button.txt-btn onclick={newTab}>New tab</button>
+      </span.sheet-actions>
+    </div.sheet-head>
+    @for (section of $sections)
+      <div.group>
+        @if (section.title): <div.group-head><span>{section.title}</span><span.line></span></div>
+        <ul.rows>
+          @for (tab of section.tabs)
+            <li.row class:active={tab.id === $session.activeId} onclick={() => activate(tab)}>
+              <span.ricon>{initial(domainOf(tab.url))}</span>
+              <span.rtext><b>{tab.title || domainOf(tab.url) || 'New tab'}</b><span>{domainOf(tab.url)}</span></span>
+              <select.mini-select onclick={event => event.stopPropagation()} onchange={event => setGroup(tab.id, event.currentTarget.value)}>
+                <option value='' selected={!$tabGroups[tab.id]}>—</option>
+                @for (item of $groups): <option value={item.id} selected={$tabGroups[tab.id] === item.id}>{item.name}</option>
+              </select.mini-select>
+              <button.icon-btn aria-label='Close tab' onclick={event => { event.stopPropagation(); call('closeTab', { id: tab.id }); }}>×</button>
+            </li.row>
+        </ul.rows>
+      </div.group>
+  </div.sheet-body>
+</section.panel>

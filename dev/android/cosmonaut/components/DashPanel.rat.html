@@ -1,0 +1,21 @@
+<script>
+  // <DashPanel />: the start page of a new tab, the bookmarks as a grid
+
+  import { domainOf, initial } from '../modules/util.js';
+
+  import { $bookmarks, go, open } from '../state.rat.js';
+</script>
+
+<section.panel.dash aria-label='Start'>
+  <div.dash-body>
+    <button.dash-search onclick={() => open('url')}>Search or URL</button>
+    <div.dash-grid>
+      @for (mark of $bookmarks)
+        <div.tile onclick={() => go(mark.url)}>
+          <span.fav>{initial(domainOf(mark.url))}</span>
+          <b>{mark.title || domainOf(mark.url)}</b>
+        </div.tile>
+    </div.dash-grid>
+    @if (!$bookmarks.length): <p.empty>no bookmarks yet</p>
+  </div.dash-body>
+</section.panel>

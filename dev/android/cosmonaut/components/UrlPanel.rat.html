@@ -1,0 +1,72 @@
+<script>
+  // <UrlPanel />: the field at the bottom, suggestions from bookmarks and open tabs above it, and while
+  // a search is typed a row of engines to send it to
+
+  import { describeCommand, parseCommand } from '../modules/commands.js';
+  import { isUrlLike }                     from '../modules/search.js';
+  import { domainOf, initial }             from '../modules/util.js';
+
+  import { $active, $bookmarks, $defaultEngine, $engines, $session, close, go } from '../state.rat.js';
+
+  const MAX    = 12;
+  const SCHEME = /^[a-z]+:\/\//i;
+
+  let $text  = $active?.url ?? '';
+  let $input = null;
+
+  // opened: the field focused, its text selected
+  setTimeout(() => { $input?.focus(); $input?.select(); }, 30);
+
+  const $suggestions = (() => {
+    const typed = $text.trim();
+    const query = typed.toLowerCase();
+
+    // a command takes the whole row: it is what enter does
+    const command = parseCommand(typed);
+    if (command) return [{ sub: describeCommand(command), title: command.text, url: typed }];
+
+    const items = [];
+    // the input itself first, once it reads as a url or a phrase
+    if (query && (query.includes('.') || query.includes(' ') || SCHEME.test(query))) items.push({ sub: isUrlLike(typed) ? 'open' : 'search', title: typed, url: typed });
+
+    const pool = [
+      ...$bookmarks.map(mark => ({ sub: domainOf(mark.url), tags: mark.tags?.join(' '), title: mark.title || domainOf(mark.url), url: mark.url })),
+      ...$session.tabs.filter(tab => tab.id !== $session.activeId).map(tab => ({ sub: `${domainOf(tab.url)} · tab`, title: tab.title || domainOf(tab.url), url: tab.url })),
+    ];
+    for (const item of pool) {
+      if (items.length >= MAX) break;
+      if (!query || `${item.title} ${item.url} ${item.tags ?? ''}`.toLowerCase().includes(query)) items.push(item);
+    }
+    return items;
+  })();
+
+  const $searching = Boolean($text.trim()) && !isUrlLike($text.trim()) && !parseCommand($text.trim());
+
+  let $failed = new Set;   // engines whose icon did not load: their initial instead
+
+  function submit (event) {
+    event.preventDefault();
+    go($text);
+  }
+</script>
+
+<section.panel aria-label='Address'>
+  <button.backdrop aria-label='Close' onclick={close}></button>
+  <div.panel-scroll>
+    <ul.suggest>
+      @for (item of $suggestions): <li onclick={() => go(item.url)}><b>{item.title}</b><span>{item.sub}</span></li>
+    </ul.suggest>
+  </div.panel-scroll>
+  @if ($searching)
+    <div.engine-row>
+      @for (engine of $engines)
+        <button.eng class:default={engine.id === $defaultEngine} title={engine.name} onclick={() => go($text, engine.id)}>
+          @if (engine.icon && !$failed.has(engine.id)): <img src={engine.icon} alt='' onerror={() => $failed = new Set([...$failed, engine.id])} />
+          @else: {initial(engine.name)}
+        </button.eng>
+    </div.engine-row>
+  <form.urlbar onsubmit={submit}>
+    <input.url-input type='text' inputmode='url' autocapitalize='off' autocomplete='off' spellcheck='false' placeholder='Search or enter URL' ref={$input} value={$text} oninput={event => $text = event.currentTarget.value} />
+    <button.go type='submit' aria-label='Go'><svg-icon icon='go' /></button>
+  </form.urlbar>
+</section.panel>

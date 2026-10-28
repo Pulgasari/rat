@@ -1,0 +1,63 @@
+<script>
+  // <SettingsPanel />: colors, the dock and its buttons. every change applies live (state.rat.js)
+
+  import { $dock, $dockItems, $settings, DOCK, close, open } from '../state.rat.js';
+
+  const SIDES = [['bottom', 'Bottom'], ['top', 'Top']];
+
+  function move (index, step) {
+    const dock = [...$dockItems];
+    [dock[index], dock[index + step]] = [dock[index + step], dock[index]];
+    $dock = dock;
+  }
+
+  const toggle = (id, on) => { $dock = $dockItems.map(item => item.id === id ? { ...item, on } : item); };
+</script>
+
+@fragment color (key, label)
+  <div.row-field><label>{label}</label><input type='color' value={$settings[key]} oninput={event => $settings[key] = event.currentTarget.value} /></div>
+
+@fragment sides (key)
+  <div.seg>
+    @for (side of SIDES): <button.seg-btn class:active={$settings[key] === side[0]} onclick={() => $settings[key] = side[0]}>{side[1]}</button>
+  </div.seg>
+
+@fragment range (key, label, min, max)
+  <div.range-field>
+    <label>{label} <b>{$settings[key]}px</b></label>
+    <input type='range' min={min} max={max} step='1' value={$settings[key]} oninput={event => $settings[key] = Number(event.currentTarget.value)} />
+  </div.range-field>
+
+<section.panel.sheet aria-label='Settings'>
+  <button.backdrop aria-label='Close' onclick={close}></button>
+  <div.sheet-body>
+    <div.sheet-head><span.sheet-title>Settings</span></div.sheet-head>
+
+    <h3.grp>Colors</h3>
+    {color('bg', 'Background')}
+    {color('fg', 'Foreground')}
+    {color('accent', 'Accent')}
+    <label.switch-row><span>Blur behind panels</span><input type='checkbox' checked={$settings.blur} onchange={event => $settings.blur = event.currentTarget.checked} /></label>
+
+    <h3.grp>Search</h3>
+    <div.field><button.txt-btn onclick={() => open('engines')}>Manage search engines</button></div.field>
+
+    <h3.grp>Dock</h3>
+    <div.field><label>Position</label>{sides('dockPos')}</div.field>
+    <div.field><label>Loading bar</label>{sides('loaderPos')}</div.field>
+    {range('dockSize', 'Size', 36, 60)}
+    {range('dockGap', 'Gap', 4, 28)}
+
+    <h3.grp>Dock buttons</h3>
+    <ul.rows>
+      @for (item, index of $dockItems)
+        <li.row>
+          <span.ricon><svg-icon icon={DOCK[item.id].icon} /></span>
+          <span.rtext><b>{DOCK[item.id].label}</b></span>
+          <button.icon-btn aria-label='Move up' disabled={index === 0} onclick={() => move(index, -1)}>↑</button>
+          <button.icon-btn aria-label='Move down' disabled={index === $dockItems.length - 1} onclick={() => move(index, 1)}>↓</button>
+          <input type='checkbox' checked={item.on} onchange={event => toggle(item.id, event.currentTarget.checked)} />
+        </li.row>
+    </ul.rows>
+  </div.sheet-body>
+</section.panel>

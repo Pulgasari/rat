@@ -1,0 +1,31 @@
+<script>
+  // cosmonaut: the chrome of the browser, a transparent webview over the native content webviews (one
+  // per tab). collapsed it is the dock strip, a panel expands it to the full screen: the resize trick of
+  // ARCHITECTURE.md in the native project. the bar stays at the bottom edge, the panels are fixed
+  // overlays, html and body stay transparent
+
+  import { GLYPHS } from './modules/glyphs.js';
+
+  import { $panel, start } from './state.rat.js';
+
+  import { provide } from '../.shared/glyphs.js';
+  import { toast }   from '../.shared/toast.js';
+
+  provide('cos', GLYPHS, 1.8);
+
+  RAT.app.on('error', toast.error);
+  RAT.app.hold <| start();
+</script>
+
+<Bar />
+
+@match ($panel)
+  @case 'dash':     <DashPanel />
+  @case 'engines':  <EnginesPanel />
+  @case 'find':     <FindPanel />
+  @case 'marks':    <MarksPanel />
+  @case 'menu':     <MenuPanel />
+  @case 'scripts':  <ScriptsPanel />
+  @case 'settings': <SettingsPanel />
+  @case 'tabs':     <TabsPanel />
+  @case 'url':      <UrlPanel />

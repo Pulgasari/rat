@@ -1,0 +1,50 @@
+<script>
+  // <ScriptsPanel />: the userscripts and the editor of one. state.rat.js pushes them to native on
+  // every change
+
+  import { uid } from '../modules/util.js';
+
+  import { $scripts, close, deleteScript, saveScript } from '../state.rat.js';
+
+  let $editing = null;   // a copy of the script in the editor, its matches as the text of the field
+
+  const edit = script => { $editing = { ...(script ?? { code: '', css: '', enabled: true, id: uid('u'), name: '' }), matches: (script?.matches ?? []).join(' ') }; };
+  const field = key => event => { $editing = { ...$editing, [key]: event.currentTarget.value }; };
+
+  function save () {
+    saveScript({ ...$editing, matches: $editing.matches.split(/\s+/).filter(Boolean), name: $editing.name.trim() || 'Script' });
+    $editing = null;
+  }
+</script>
+
+<section.panel.sheet aria-label='Userscripts'>
+  <button.backdrop aria-label='Close' onclick={close}></button>
+  <div.sheet-body>
+    <div.sheet-head>
+      <span.sheet-title>Userscripts</span>
+      <span.sheet-actions><button.txt-btn onclick={() => edit(null)}>New</button></span.sheet-actions>
+    </div.sheet-head>
+    @if ($editing)
+      <div.editor>
+        <input.in placeholder='Name' value={$editing.name} oninput={field('name')} />
+        <input.in placeholder='Match patterns, e.g. https://*.example.com/*  (space separated)' value={$editing.matches} oninput={field('matches')} />
+        <textarea.css-area spellcheck='false' placeholder='// javascript, runs once the page has loaded' value={$editing.code} oninput={field('code')}></textarea>
+        <textarea.css-area spellcheck='false' placeholder='/* css, added to the page */' value={$editing.css} oninput={field('css')}></textarea>
+        <label.switch-row><span>Enabled</span><input type='checkbox' checked={$editing.enabled !== false} onchange={event => $editing = { ...$editing, enabled: event.currentTarget.checked }} /></label>
+        <div.editor-actions>
+          <button.txt-btn onclick={() => $editing = null}>Cancel</button>
+          <button.txt-btn.primary onclick={save}>Save</button>
+        </div.editor-actions>
+      </div.editor>
+    @else
+      <ul.rows>
+        @for (script of $scripts)
+          <li.row onclick={() => edit(script)}>
+            <span.rtext><b>{script.name || 'Script'}</b><span>{script.matches?.join(' ') || 'all pages'}</span></span>
+            <input type='checkbox' checked={script.enabled !== false} onclick={event => event.stopPropagation()} onchange={event => saveScript({ ...script, enabled: event.currentTarget.checked })} />
+            <button.icon-btn aria-label='Delete' onclick={event => { event.stopPropagation(); deleteScript(script.id); }}>×</button>
+          </li.row>
+      </ul.rows>
+      @if (!$scripts.length): <p.empty>no userscripts yet</p>
+  </div.sheet-body>
+</section.panel>

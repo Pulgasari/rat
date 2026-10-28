@@ -1,0 +1,64 @@
+<script>
+  // <EnginesPanel />: search engines, a name and a url with %s for the query (anything with a query
+  // parameter works), an icon url if wanted
+
+  import { initial, uid } from '../modules/util.js';
+
+  import { $defaultEngine, $engines, close, deleteEngine, saveEngine } from '../state.rat.js';
+
+  let $editing = null;   // { engine, isDefault, known }
+
+  const edit  = engine => { $editing = { engine: { ...(engine ?? { icon: '', id: uid('e'), name: '', url: '' }) }, isDefault: engine?.id === $defaultEngine, known: Boolean(engine) }; };
+  const field = key => event => { $editing = { ...$editing, engine: { ...$editing.engine, [key]: event.currentTarget.value } }; };
+
+  // an engine without a url is not kept
+  function save () {
+    const { engine, isDefault } = $editing;
+    const url = engine.url.trim();
+    if (url) {
+      saveEngine({ ...engine, icon: engine.icon.trim(), name: engine.name.trim() || 'Search', url });
+      if (isDefault) $defaultEngine = engine.id;
+    }
+    $editing = null;
+  }
+
+  function remove () {
+    deleteEngine($editing.engine.id);
+    $editing = null;
+  }
+</script>
+
+<section.panel.sheet aria-label='Search engines'>
+  <button.backdrop aria-label='Close' onclick={close}></button>
+  <div.sheet-body>
+    <div.sheet-head>
+      <span.sheet-title>Search engines</span>
+      <span.sheet-actions><button.txt-btn onclick={() => edit(null)}>Add</button></span.sheet-actions>
+    </div.sheet-head>
+    @if ($editing)
+      <div.editor>
+        <input.in placeholder='Name' value={$editing.engine.name} oninput={field('name')} />
+        <input.in placeholder='URL with %s for the query, e.g. https://example.com/?q=%s' inputmode='url' autocapitalize='off' spellcheck='false' value={$editing.engine.url} oninput={field('url')} />
+        <input.in placeholder='Icon URL (optional)' inputmode='url' autocapitalize='off' spellcheck='false' value={$editing.engine.icon} oninput={field('icon')} />
+        <label.switch-row><span>Default</span><input type='checkbox' checked={$editing.isDefault} onchange={event => $editing = { ...$editing, isDefault: event.currentTarget.checked }} /></label>
+        <div.editor-actions>
+          @if ($editing.known): <button.txt-btn.danger.push-left onclick={remove}>Delete</button>
+          <button.txt-btn onclick={() => $editing = null}>Cancel</button>
+          <button.txt-btn.primary onclick={save}>Save</button>
+        </div.editor-actions>
+      </div.editor>
+    @else
+      <ul.rows>
+        @for (engine of $engines)
+          <li.row onclick={() => edit(engine)}>
+            <span.ricon>{initial(engine.name)}</span>
+            <span.rtext>
+              <b>{engine.name}</b><span>{engine.url}</span>
+              @if (engine.id === $defaultEngine): <span.tags><span.tag>Default</span></span>
+            </span.rtext>
+            <button.icon-btn aria-label='Edit' onclick={event => { event.stopPropagation(); edit(engine); }}><svg-icon icon='pencil' /></button>
+          </li.row>
+      </ul.rows>
+      @if (!$engines.length): <p.empty>no entries yet</p>
+  </div.sheet-body>
+</section.panel>
