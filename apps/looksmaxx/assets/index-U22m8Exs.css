@@ -1,0 +1,350 @@
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+
+
+/* ── TO STYLE: what every app shares ─────────────────────────────────────────
+   (n) = how many apps use it
+
+   frame
+   - rat-app
+   - rat-area, by name: main | menu (dock=start, a drawer where narrow) |
+     config (dock=end) | context (dock=bottom, a sheet). open, :state(overlay)
+   - rat-view, its glide transition
+   - rat-view > header: ViewHeader (.ViewBack, h1, .ViewTools) or the app's own (12)
+   - rat-view > main
+   - app-panel (5), app-config (Config, 13), app-float (1)
+
+   navigation
+   - Dock: .dock > btn-tap.col, .active, aria-current (6)
+   - the menu area's content: .sidebar / .menu, .nav-item, .brand (feeds, audio,
+     todo, notes, prompts, files), each its own markup for now
+   - nav-crumbs (2), nav-toc (notes)
+
+   controls
+   - btn-icon (11), btn-push (8), btn-tap
+   - native button / input / select / textarea: no font inherited (arial)
+   - input-value + input-option, the combobox and segments looks (Picker, Config)
+   - input-text, input-search, SearchPanel .search-panel (5)
+   - input-number (Slider), input-file look=dropzone (Dropzone), input-bool,
+     input-date / -time / -datetime, input-chips, input-url, input-password
+   - .chip, .chip.active (4)
+
+   content
+   - data-index + data-item, aufbau-index + aufbau-item: list and grid
+   - data-tree (Tree, FolderTree with .reconnect)
+   - output-md (Reader), write-md
+   - aufbau-progress, media-file
+   - svg-icon, its sizes in buttons, headers, lists
+
+   feedback
+   - pop-toast (toast(), every app)
+   - pop-modal / Modal .modal-backdrop, pop-prompt (prompt, confirm)
+   - .empty (Empty, 9), Loading, .booting (6, each its own spinner)
+   - .install-tip (InstallTip, 6), Brand
+*/
+
+html, body { height: 100%; }
+body { overflow: hidden; overscroll-behavior: none; }
+
+/* with areas rat-app is their grid (its own css), an app without areas gets a column */
+rat-app {
+  height   : 100dvh;
+  overflow : hidden;
+
+  &:not(:has(> rat-area)) { display: flex; flex-flow: column; }
+}
+
+rat-view {
+  display: flex;
+  flex-direction: column;
+}
+rat-view > header {
+  --bg  : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --gap : small;
+  --pad : normal;
+  display: flex; justify-content: space-between;
+  position: sticky; top: 0;
+  text-transform: uppercase;
+
+  button { text-transform: uppercase; }
+  > h1   { flex: 1 1 auto; }   /* next to the back button, the tools at the end */
+}
+rat-view > main {
+  justify-content: safe center;
+  display: flex;
+  flex: 1;
+}
+rat-view .empty {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-flow: column;
+  --gap: normal;
+}
+
+rat-view .empty   { text-align: center; }
+rat-view .empty * { text-align: center; }
+
+/* ── the dock, the Dock component: a row of btn-tap, icon over label ─────── */
+
+.dock {
+  --bg       : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  border-top : 1px solid var(--line);
+  display    : flex;
+  flex       : none;
+  text-transform: uppercase;
+
+  > btn-tap {
+    --bg           : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+    flex           : 1 1 0;
+    flex-direction : column;
+    font-size      : 1rem;
+    gap            : calc(var(--unit, 0.25rem) * 2);
+    gap            : --space(small);
+    padding        : calc(var(--unit, 0.25rem) * 2);
+    padding        : --space(small);
+    opacity        : 0.5;
+
+    &:hover       { opacity: 1; }
+    &.active      { opacity: 1; color: var(--color-ink); color: --color(ink); }
+    &::part(icon) { font-size: 2rem; }
+  }
+}
+
+/* ── tokens ─────────────────────────────────────────────────────── */
+
+body {
+  --hover   :  color-mix(in oklch, var(--color-fg) 90%, transparent);
+  --line    :  color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --panel   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  --panel-2 : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --zebra   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  /* --radius  : 0.5rem; */
+}
+
+/* ── mobile / android  ─────────────────────────────────────────────────────── */
+
+/*
+safe-area insets. non-zero where the page runs edge-to-edge:
+the capacitor wrappers (android 15+ enforces it, viewport-fit=cover opts in) and notched screens.      
+body's background covers the canvas behind the system bars, rat-app keeps clear
+*/
+
+body {
+  --safe-top    : env(safe-area-inset-top,    0px);
+  --safe-right  : env(safe-area-inset-right,  0px);
+  --safe-bottom : env(safe-area-inset-bottom, 0px);
+  --safe-left   : env(safe-area-inset-left,   0px);
+}
+
+:root rat-app {
+  background-clip : content-box;
+  padding         : var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+
+/* CUSTOM PROPS */
+
+
+/* TYPO */
+
+/*
+:root {
+  --font      : "Manrope";
+  --font-code : "JetBrains Mono", monospace;
+  --font-size : 12px;
+}
+*          { font-family : var(--font); }
+html, body { font-size   : var(--font-size); }
+*/
+
+/* move to: gestalt/packages/css/mobile.css */
+
+/* ::selection { background: var(--accent-25); } */
+
+/* ── oled fix (temp) ─────────────────────────────────────────────────────── */
+
+/* move to: zugriff/apps/podcasts/app.css
+or move to: gestalt/packages/css/surfaces.css */
+
+@container style(--palette: oled) {
+  body {
+    --line: color-mix(in oklch, var(--color-fg) 25%, transparent);
+  }
+  rat-app {
+    rat-view > header { border-bottom : 1px solid var(--line); }
+    .dock             { border-top    : 1px solid var(--line); }
+    data-item         { border-bottom : 1px solid var(--line); }
+  }
+}
+/* looksmaxx :: app.css. a bar on top, the photo in the middle, the controls below it */
+
+body {
+  --fg-50  : color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --fg-75  : color-mix(in oklch, var(--color-fg) 75%, transparent);
+  --radius : 0.5rem;
+}
+
+/* ── top bar ─────────────────────────────────────────────────────────────── */
+.topbar {
+  display    : flex;
+  align-items  : center;
+  gap      : 0.5rem;
+  padding    : 0 0.75rem;
+  height     : 3rem;
+  flex     : none;
+  border-bottom: 1px solid var(--line);
+  background   : var(--panel);
+}
+.topbar strong { font-size: 0.95rem; }
+.spacer { flex: 1 1 auto; }
+
+/* icon buttons (reset the base button chrome) */
+.ibtn {
+  display    : inline-flex;
+  align-items  : center;
+  justify-content: center;
+  width    : 2rem;
+  height     : 2rem;
+  padding    : 0;
+  border     : 1px solid transparent;
+  border-radius: var(--radius);
+  background   : transparent;
+  color    : var(--color-fg);
+  cursor     : pointer;
+}
+.ibtn:hover:not(:disabled) { border-color: var(--line); }
+.topbar svg-icon[mode='image'] { font-size: 1.5rem; }
+
+/* ── stage ───────────────────────────────────────────────────────────────── */
+.stage {
+  display       : grid;
+  flex          : 1 1 auto;
+  grid-template : minmax(0, 1fr) / minmax(0, 1fr);
+  min-height    : 0;
+  overflow      : hidden;
+  padding       : 1rem;
+  place-items   : center;
+}
+
+/* the photo fits the room left by the controls, its own ratio kept */
+.canvas-wrap { display: grid; max-block-size: 100%; max-inline-size: 100%; min-block-size: 0; position: relative; }
+.canvas-wrap canvas {
+  border-radius   : var(--radius);
+  box-shadow      : 0 8px 30px rgb(0 0 0 / 0.35);
+  display         : block;
+  max-block-size  : 100%;
+  max-inline-size : 100%;
+  min-block-size  : 0;
+}
+
+.overlay-status {
+  position   : absolute;
+  inset    : 0;
+  display  : flex;
+  align-items: center;
+  justify-content: center;
+  gap    : 0.6rem;
+  border-radius: var(--radius);
+  background : color-mix(in oklch, var(--color-bg) 55%, transparent);
+  backdrop-filter: blur(2px);
+  font-size  : 0.85rem;
+}
+.spin {
+  width : 1.1rem; height: 1.1rem;
+  border: 2px solid var(--line);
+  border-top-color: var(--color-ink);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── dropzone (empty state) ──────────────────────────────────────────────── */
+.drop {
+  display  : flex;
+  flex-direction: column;
+  align-items: center;
+  gap    : 0.6rem;
+  max-width  : 24rem;
+  padding  : 2.5rem 2rem;
+  border   : 2px dashed var(--line);
+  border-radius: calc(var(--radius) + 6px);
+  background : var(--panel);
+  color    : var(--color-fg);
+  text-align : center;
+  cursor   : pointer;
+}
+.drop:hover { border-color: var(--color-ink); }
+.drop strong { font-size: 1rem; }
+.drop span { font-size: 0.8rem; color: var(--fg-75); line-height: 1.5; }
+
+/* ── controls ────────────────────────────────────────────────────────────── */
+.controls {
+  flex    : none;
+  border-top: 1px solid var(--line);
+  background : var(--panel);
+  padding   : 0.75rem;
+  display   : flex;
+  flex-direction: column;
+  gap     : 0.9rem;
+  max-height: 46dvh;
+  overflow  : auto;
+}
+.msg { font-size: 0.8rem; color: color-mix(in oklch, var(--color-fg) 70%, var(--color-ink)); }
+
+.group { display: flex; flex-direction: column; gap: 0.55rem; }
+.group-head {
+  display  : flex;
+  align-items: baseline;
+  gap    : 0.5rem;
+  font-size  : 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color    : var(--fg-50);
+}
+.link {
+  padding: 0; border: none; background: none; color: var(--color-ink);
+  font-size: 0.75rem; text-transform: none; letter-spacing: 0; cursor: pointer;
+}
+
+/* swatches */
+.swatches { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.swatch {
+  width : 2rem; height: 2rem; padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.swatch.on { border-color: var(--color-fg); box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-ink); }
+.swatch.custom {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--panel-2); color: var(--color-fg); position: relative; overflow: hidden;
+}
+.swatch.custom input[type=color] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* hairstyles */
+.styles { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; }
+.style {
+  flex   : 0 0 auto;
+  width  : 4.5rem;
+  height : 5rem;
+  padding: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap  : 0.25rem;
+  border : 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-2);
+  color  : var(--color-fg);
+  cursor : pointer;
+}
+.style.on { border-color: var(--color-ink); box-shadow: 0 0 0 1px var(--color-ink); }
+.style img { width: 3rem; height: 3rem; object-fit: contain; }
+.style span { font-size: 0.65rem; color: var(--fg-75); text-align: center; line-height: 1.1; }
+.style.none, .style.upload { color: var(--fg-50); }
+
+/* sliders */
+.slider { display: flex; align-items: center; gap: 0.6rem; font-size: 0.75rem; color: var(--fg-75); }
+.slider span { flex: 0 0 3.5rem; }
+.slider input[type=range] { flex: 1 1 auto; accent-color: var(--color-ink); }

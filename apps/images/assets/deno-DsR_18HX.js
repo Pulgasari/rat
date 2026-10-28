@@ -1,0 +1,1 @@
+var e=Object.defineProperty;var n=(o,t)=>e(o,"name",{value:t,configurable:!0});import{H as i,r as a}from"./_fs-Cf_TBARi.js";import{fs as r}from"./deno-xgjCZN34.js";async function p(){const o=await globalThis.bindings["rat:dialogs.folder"]();return o?new i(r,o):null}n(p,"pick");const f=n(o=>o.toJSON(),"keep"),d=n(o=>a(r,o),"revive");export{f as keep,p as pick,d as revive};

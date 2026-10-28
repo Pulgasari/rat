@@ -1,0 +1,1 @@
+var o=Object.defineProperty;var i=(r,t)=>o(r,"name",{value:t,configurable:!0});const e=i((r,t)=>globalThis.Capacitor?.Plugins?.[r]??Promise.reject(new Error(`[rat] ${t} is not installed in the capacitor project`)),"plugin");export{e as p};

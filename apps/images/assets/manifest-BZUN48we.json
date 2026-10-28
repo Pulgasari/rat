@@ -1,0 +1,108 @@
+{
+  "id": "images",
+  "name": "images",
+  "short_name": "images",
+  "description": "An images manager, viewer and editor.",
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "categories": [
+    "image"
+  ],
+  "background_color": "#282a36",
+  "theme_color": "#282a36",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "image/png": [
+          ".png"
+        ],
+        "image/jpeg": [
+          ".jpg",
+          ".jpeg",
+          ".jfif"
+        ],
+        "image/gif": [
+          ".gif"
+        ],
+        "image/webp": [
+          ".webp"
+        ],
+        "image/avif": [
+          ".avif"
+        ],
+        "image/bmp": [
+          ".bmp"
+        ],
+        "image/svg+xml": [
+          ".svg"
+        ],
+        "image/x-icon": [
+          ".ico"
+        ],
+        "image/heic": [
+          ".heic"
+        ],
+        "image/heif": [
+          ".heif"
+        ],
+        "image/tiff": [
+          ".tif",
+          ".tiff"
+        ]
+      }
+    }
+  ],
+  "launch_handler": {
+    "client_mode": [
+      "focus-existing",
+      "auto"
+    ]
+  },
+  "shortcuts": [
+    {
+      "name": "Library",
+      "short_name": "Library",
+      "url": "./#/library"
+    },
+    {
+      "name": "Edit",
+      "short_name": "Edit",
+      "url": "./#/edit"
+    },
+    {
+      "name": "Convert",
+      "short_name": "Convert",
+      "url": "./#/convert"
+    },
+    {
+      "name": "Batch",
+      "short_name": "Batch",
+      "url": "./#/batch"
+    }
+  ]
+}

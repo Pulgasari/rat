@@ -1,0 +1,11 @@
+var y=Object.defineProperty;var c=(r,t)=>y(r,"name",{value:t,configurable:!0});import{parse as p,stringify as u}from"https://esm.sh/yaml@2.4.5";import{parse as E,stringify as J}from"https://esm.sh/yaml@2.4.5";import{parse as a}from"https://esm.sh/smol-toml@1.3.1";import{parse as x}from"https://esm.sh/smol-toml@1.3.1";function l(r){const t=[],s=/("([^"]*)"|([^,]*))(,|$)/g;let i;for(;(i=s.exec(r))!==null&&(t.push(i[2]??i[3]??""),i[4]!==""););return t}c(l,"splitLine");function $(r){if(r==="")return null;if(r==="true")return!0;if(r==="false")return!1;const t=Number(r);return isNaN(t)?r:t}c($,"coerce");function g(r){const t=r.trim().split(`
+`),s=l(t[0]);return t.slice(1).filter(i=>i.trim()).map(i=>{const n=l(i);return Object.fromEntries(s.map((e,o)=>[e.trim(),$(n[o]?.trim()??"")]))})}c(g,"csvParse");function j(r){const t=Array.isArray(r)?r:[r];if(!t.length)return"";const s=Object.keys(t[0]),i=c(n=>{const e=n===null?"":String(n);return/[,"\n]/.test(e)?`"${e.replace(/"/g,'""')}"`:e},"escape");return[s.join(","),...t.map(n=>s.map(e=>i(n[e])).join(","))].join(`
+`)}c(j,"csvStringify");function m(r){return typeof r=="string"?`"${r.replace(/\\/g,"\\\\").replace(/"/g,'\\"')}"`:typeof r=="boolean"||typeof r=="number"?String(r):r===null?'""':`"${String(r)}"`}c(m,"tomlValue");function f(r,t=""){let s="";const i=Object.entries(r);for(const[n,e]of i.filter(([,o])=>typeof o!="object"||o===null))s+=`${n} = ${m(e)}
+`;for(const[n,e]of i.filter(([,o])=>Array.isArray(o)))if(e.every(o=>typeof o!="object"||o===null))s+=`${n} = [${e.map(m).join(", ")}]
+`;else for(const o of e)s+=`
+[[${t}${n}]]
+`+f(o,`${t}${n}.`);for(const[n,e]of i.filter(([,o])=>typeof o=="object"&&o!==null&&!Array.isArray(o)))s+=`
+[${t}${n}]
+`+f(e,`${t}${n}.`);return s}c(f,"tomlSection");const S=c(r=>Array.isArray(r)?r.map(t=>`[[items]]
+${f(t)}`).join(`
+`):f(r),"tomlStringify"),b={csv:g,json:JSON.parse,toml:a,yaml:p},A={csv:j,js:c(r=>`let data = ${JSON.stringify(r,null,2).replace(/"([^"]+)":/g,"$1:")}`,"js"),json:c(r=>JSON.stringify(r,null,2),"json"),toml:S,yaml:c(r=>u(r,{indent:2}),"yaml")},h=c((r,t,s)=>A[s](b[t](r)),"convert");export{h as convert,g as csvParse,j as csvStringify,x as tomlParse,S as tomlStringify,E as yamlParse,J as yamlStringify};

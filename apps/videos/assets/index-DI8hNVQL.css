@@ -1,0 +1,299 @@
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+
+
+/* ── TO STYLE: what every app shares ─────────────────────────────────────────
+   (n) = how many apps use it
+
+   frame
+   - rat-app
+   - rat-area, by name: main | menu (dock=start, a drawer where narrow) |
+     config (dock=end) | context (dock=bottom, a sheet). open, :state(overlay)
+   - rat-view, its glide transition
+   - rat-view > header: ViewHeader (.ViewBack, h1, .ViewTools) or the app's own (12)
+   - rat-view > main
+   - app-panel (5), app-config (Config, 13), app-float (1)
+
+   navigation
+   - Dock: .dock > btn-tap.col, .active, aria-current (6)
+   - the menu area's content: .sidebar / .menu, .nav-item, .brand (feeds, audio,
+     todo, notes, prompts, files), each its own markup for now
+   - nav-crumbs (2), nav-toc (notes)
+
+   controls
+   - btn-icon (11), btn-push (8), btn-tap
+   - native button / input / select / textarea: no font inherited (arial)
+   - input-value + input-option, the combobox and segments looks (Picker, Config)
+   - input-text, input-search, SearchPanel .search-panel (5)
+   - input-number (Slider), input-file look=dropzone (Dropzone), input-bool,
+     input-date / -time / -datetime, input-chips, input-url, input-password
+   - .chip, .chip.active (4)
+
+   content
+   - data-index + data-item, aufbau-index + aufbau-item: list and grid
+   - data-tree (Tree, FolderTree with .reconnect)
+   - output-md (Reader), write-md
+   - aufbau-progress, media-file
+   - svg-icon, its sizes in buttons, headers, lists
+
+   feedback
+   - pop-toast (toast(), every app)
+   - pop-modal / Modal .modal-backdrop, pop-prompt (prompt, confirm)
+   - .empty (Empty, 9), Loading, .booting (6, each its own spinner)
+   - .install-tip (InstallTip, 6), Brand
+*/
+
+html, body { height: 100%; }
+body { overflow: hidden; overscroll-behavior: none; }
+
+/* with areas rat-app is their grid (its own css), an app without areas gets a column */
+rat-app {
+  height   : 100dvh;
+  overflow : hidden;
+
+  &:not(:has(> rat-area)) { display: flex; flex-flow: column; }
+}
+
+rat-view {
+  display: flex;
+  flex-direction: column;
+}
+rat-view > header {
+  --bg  : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --gap : small;
+  --pad : normal;
+  display: flex; justify-content: space-between;
+  position: sticky; top: 0;
+  text-transform: uppercase;
+
+  button { text-transform: uppercase; }
+  > h1   { flex: 1 1 auto; }   /* next to the back button, the tools at the end */
+}
+rat-view > main {
+  justify-content: safe center;
+  display: flex;
+  flex: 1;
+}
+rat-view .empty {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-flow: column;
+  --gap: normal;
+}
+
+rat-view .empty   { text-align: center; }
+rat-view .empty * { text-align: center; }
+
+/* ── the dock, the Dock component: a row of btn-tap, icon over label ─────── */
+
+.dock {
+  --bg       : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  border-top : 1px solid var(--line);
+  display    : flex;
+  flex       : none;
+  text-transform: uppercase;
+
+  > btn-tap {
+    --bg           : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+    flex           : 1 1 0;
+    flex-direction : column;
+    font-size      : 1rem;
+    gap            : calc(var(--unit, 0.25rem) * 2);
+    gap            : --space(small);
+    padding        : calc(var(--unit, 0.25rem) * 2);
+    padding        : --space(small);
+    opacity        : 0.5;
+
+    &:hover       { opacity: 1; }
+    &.active      { opacity: 1; color: var(--color-ink); color: --color(ink); }
+    &::part(icon) { font-size: 2rem; }
+  }
+}
+
+/* ── tokens ─────────────────────────────────────────────────────── */
+
+body {
+  --hover   :  color-mix(in oklch, var(--color-fg) 90%, transparent);
+  --line    :  color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --panel   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  --panel-2 : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --zebra   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  /* --radius  : 0.5rem; */
+}
+
+/* ── mobile / android  ─────────────────────────────────────────────────────── */
+
+/*
+safe-area insets. non-zero where the page runs edge-to-edge:
+the capacitor wrappers (android 15+ enforces it, viewport-fit=cover opts in) and notched screens.      
+body's background covers the canvas behind the system bars, rat-app keeps clear
+*/
+
+body {
+  --safe-top    : env(safe-area-inset-top,    0px);
+  --safe-right  : env(safe-area-inset-right,  0px);
+  --safe-bottom : env(safe-area-inset-bottom, 0px);
+  --safe-left   : env(safe-area-inset-left,   0px);
+}
+
+:root rat-app {
+  background-clip : content-box;
+  padding         : var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+
+/* CUSTOM PROPS */
+
+
+/* TYPO */
+
+/*
+:root {
+  --font      : "Manrope";
+  --font-code : "JetBrains Mono", monospace;
+  --font-size : 12px;
+}
+*          { font-family : var(--font); }
+html, body { font-size   : var(--font-size); }
+*/
+
+/* move to: gestalt/packages/css/mobile.css */
+
+/* ::selection { background: var(--accent-25); } */
+
+/* ── oled fix (temp) ─────────────────────────────────────────────────────── */
+
+/* move to: zugriff/apps/podcasts/app.css
+or move to: gestalt/packages/css/surfaces.css */
+
+@container style(--palette: oled) {
+  body {
+    --line: color-mix(in oklch, var(--color-fg) 25%, transparent);
+  }
+  rat-app {
+    rat-view > header { border-bottom : 1px solid var(--line); }
+    .dock             { border-top    : 1px solid var(--line); }
+    data-item         { border-bottom : 1px solid var(--line); }
+  }
+}
+/* videos :: app.css. the library is the shared <Gallery>, this is the player: the stage takes the
+   room, the controls sit below it, a double tap folds the bars away */
+
+rat-view[name='library'] > main { display: block; }
+
+/* :::::: PLAYER */
+
+.player {
+  background     : #000;
+  display        : flex;
+  flex           : 1 1 auto;
+  flex-direction : column;
+  min-block-size : 0;
+  padding        : 0;
+}
+
+.stage {
+  background  : #000;
+  display     : grid;
+  grid-template : minmax(0, 1fr) / minmax(0, 1fr);   /* the video's own size does not stretch the stage */
+  flex        : 1 1 auto;
+  min-height  : 0;
+  overflow    : hidden;
+  place-items : center;
+  position    : relative;
+}
+
+.frame {
+  block-size  : 100%;
+  min-block-size  : 0;
+  min-inline-size : 0;
+  display     : grid;
+  inline-size : 100%;
+  place-items : center;
+
+  /* a forced aspect ratio shrinks the frame to that shape, centered */
+  &.framed { aspect-ratio: var(--aspect); block-size: auto; inline-size: auto; max-block-size: 100%; max-inline-size: 100%; }
+}
+
+.video {
+  background  : #000;
+  block-size  : 100%;
+  inline-size : 100%;
+  object-fit  : var(--fit, contain);
+  transition  : transform 0.2s ease;
+}
+
+/* no clip: the whole stage opens one */
+.stage > .open {
+  align-items     : center;
+  background      : var(--color-bg);
+  border          : 0;
+  color           : inherit;
+  cursor          : pointer;
+  display         : flex;
+  flex-direction  : column;
+  font            : inherit;
+  gap             : 0.4rem;
+  inset           : 0;
+  justify-content : center;
+  position        : absolute;
+
+  > svg-icon { font-size: 3rem; opacity: 0.6; }
+  > span     { font-size: 1.1rem; font-weight: 600; }
+  > small    { opacity: 0.6; }
+}
+
+.controls {
+  background     : var(--panel, var(--color-bg));
+  border-top     : 1px solid var(--line);
+  display        : flex;
+  flex           : none;
+  flex-direction : column;
+  gap            : 0.35rem;
+  padding        : 0.5rem 0.4rem;
+
+  > .row { align-items: center; display: flex; gap: 0.2rem; justify-content: space-around; }
+}
+
+.control {
+  background    : transparent;
+  border        : 0;
+  border-radius : 0.5rem;
+  color         : inherit;
+  cursor        : pointer;
+  display       : grid;
+  font-size     : 1.25rem;
+  min-block-size  : 2.75rem;
+  min-inline-size : 2.75rem;
+  place-items   : center;
+
+  &:disabled { cursor: default; opacity: 0.35; }
+  &.active   { color: var(--color-ink); }
+
+  /* play and pause carry the transport row */
+  &.big { background: var(--color-ink); border-radius: 999px; color: var(--color-bg); font-size: 1.6rem; min-block-size: 3.5rem; min-inline-size: 3.5rem; }
+}
+
+.progress {
+  align-items : center;
+  display     : flex;
+  gap         : 0.6rem;
+  padding     : 0 0.5rem;
+
+  > .scrub { accent-color: var(--color-ink); flex: 1; min-inline-size: 0; }
+  > .time  { font-size: 0.8rem; font-variant-numeric: tabular-nums; min-inline-size: 3ch; opacity: 0.75; text-align: center; }
+}
+
+/* :::::: EDIT */
+
+.planned {
+  display    : grid;
+  gap        : 0.5rem;
+  list-style : none;
+  margin     : 0.5rem 0 0;
+  padding    : 0;
+  text-align : start;
+
+  > li { align-items: center; display: flex; gap: 0.5rem; opacity: 0.8; }
+  svg-icon { font-size: 1.25rem; }
+}
