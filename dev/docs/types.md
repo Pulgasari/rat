@@ -32,8 +32,14 @@ types and schemas sit in the `@rat/types` package.
 [FileExt](#fileext) ·
 [Path](#path)
 
-#### CaseTypes
-[KebabCase](#kebabcase)
+#### Case Types
+[CamelCase](#camelcase) ·
+[ConstantCase](#constantcase) ·
+[KebabCase](#kebabcase) ·
+[MockingCase](#mockingcase) ·
+[PascalCase](#pascalcase) ·
+[SnakeCase](#snakecase) ·
+[TitleCase](#titlecase)
 
 ---
 
