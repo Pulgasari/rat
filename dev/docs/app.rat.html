@@ -10,7 +10,7 @@
   // the languages of rat as modules of this app, not a specifier <write-code> imports by its name: a build has no import map
   customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
   
-  const TOPICS = ['welcome', 'config', 'components', 'comptime', 'directives', 'dom', 'htx', 'modules', 'operators', 'persistence', 'schemas', 'signals', 'types'];
+  const TOPICS = ['welcome', 'config', 'components', 'comptime', 'directives', 'dom', 'htx', 'modules', 'operators', 'persistence', 'schemas', 'signals', 'styles', 'types'];
   const PAGES2 = TOPICS.map :: item => ({ name: item, title: item });
   const $page  = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
   const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
@@ -52,6 +52,7 @@
 <rat-view route='/*' id|name='page'>
   <header id='bar'>
     <button aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
+    <!--<button aria-label|cmd:toggle='menu'>☰</button>-->
     <span>RAT docs</span>
     </header>
   
@@ -63,9 +64,9 @@
   </main>
 
   <footer>
-    <div.prev>@if ($prev): <a href={'#/' + $prev.name} rel='prev'>← {$prev.title}</a></div>
+    <div.prev>@if ($prev): <a href={'#/' + $prev.name} rel='prev'>← {$prev.title}</a></div.prev>
     <div>{$page}</div>
-    <div.next>@if ($next): <a href={'#/' + $next.name} rel='next'>{$next.title} →</a></div>
+    <div.next>@if ($next): <a href={'#/' + $next.name} rel='next'>{$next.title} →</a></div.next>
   </footer>
 </rat-view>
 
