@@ -14,12 +14,10 @@ its files belong to. a foldertype changes the folder's icon for now, a default v
 
 // :::::: IMPORT
 
-import { effect }             from '@rat/signals';
 import { $Dict, $Table, Str } from '@rat/types';
 import { Path }               from '@rat/types/Path';
 
-import * as storage from '../../.shared/storage.js';
-import { $folder }  from './root.rat.js';
+import { $folder } from './root.rat.js';
 
 // ::::::
 
@@ -27,15 +25,10 @@ const // ::: schemas
 Bookmark   = { folder: Str, name: Str, path: Path },
 Foldertype = { icon: Str, label: Str };
 
-const // ::: signals (stored)
-$bookmarks      = $Table (Bookmark)        .create :: storage.read('files:bookmarks',   []),   // [{ folder, name, path }], path stored as 'a/b'
-$folderTyped    = $Dict  (Str, Str)        .create :: storage.read('files:folderTyped', {}),   // 'folder:a/b' -> foldertype id
-$ownFolderTypes = $Dict  (Str, Foldertype) .create :: storage.read('files:folderTypes', {});   // id -> { icon, label }
-
-// ::: effects
-effect(() => storage.write('files:bookmarks',   $bookmarks));
-effect(() => storage.write('files:folderTyped', $folderTyped));
-effect(() => storage.write('files:folderTypes', $ownFolderTypes));
+const // ::: kept: the bookmarks (a table) in the app's database, the rest in its store
+$bookmarks!      = $Table (Bookmark)        .create(),   // [{ folder, name, path }], path kept as 'a/b'
+$folderTyped!    = $Dict  (Str, Str)        .create(),   // 'folder:a/b' -> foldertype id
+$ownFolderTypes! = $Dict  (Str, Foldertype) .create();   // id -> { icon, label }
 
 const $folderId = String($folder?.id ?? '');
 

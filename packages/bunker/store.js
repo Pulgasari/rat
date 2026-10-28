@@ -17,7 +17,11 @@ keys and values, the same for every driver:
 
   prefs.getSync('theme');         // a sync driver only (local, session, cookie, memory):
   prefs.setSync('theme', 'dark'); // read before the first paint
+
+  await prefs.load();             // every key into memory, once: any driver reads sync after it
+  prefs.peek('theme');            // from memory, a sync driver straight from it without load()
   
+
   prefs.on('change', ({ type, keys }) => …)  // returns its stop, another tab included where the driver can
   await prefs.as(Map)                        // see cast.js
 
@@ -32,9 +36,11 @@ import { codecOf }  from './codecs.js';
 import { driverOf } from './drivers.js';
 
 class Store {
+  #cache     = null;   // key -> value once load() is done
   #codec;
   #driver;
   #listeners = new Set;
+  #loading   = null;
   #schema;
 
   constructor ({ codec, driver = 'memory', schema = null, ...options } = {}) {
@@ -42,16 +48,44 @@ class Store {
     if (!this.#driver) throw new TypeError(`[bunker] no driver "${driver}"`);
     this.#codec  = codecOf(codec, this.#driver);
     this.#schema = schema;
-    this.#driver.watch?.(change => this.emit(change));
+    this.#driver.watch?.(change => this.#changed(change));
   }
 
   get driver () { return this.#driver; }
+  get loaded () { return Boolean(this.#cache); }
   get schema () { return this.#schema; }
   get sync   () { return this.#driver.sync; }
+
+  // :::::: LOAD AHEAD
+
+  // every key into memory, the same promise for every call
+  load () {
+    return this.#loading ??= this.entries().then(entries => { this.#cache = new Map(entries); });
+  }
+
+  peek (key, fallback) {
+    if (this.#cache) return this.#cache.has(key) ? this.#cache.get(key) : fallback;
+    if (this.#driver.sync) return this.getSync(key, fallback);
+    throw new TypeError('[bunker] peek(): the driver is not synchronous, load() first');
+  }
+
+  // another tab wrote: what is in memory follows before anyone hears of it
+  async #changed (change) {
+    if (this.#cache) {
+      if (change.type === 'clear') this.#cache.clear();
+      for (const key of change.keys) {
+        if (change.type === 'delete') { this.#cache.delete(key); continue; }
+        const stored = await this.#driver.get(key);
+        stored === undefined ? this.#cache.delete(key) : this.#cache.set(key, await this.#codec.decode(stored));
+      }
+    }
+    this.emit(change);
+  }
 
   // :::::: READ
 
   async get (key, fallback) {
+    if (this.#cache) return this.peek(key, fallback);
     const stored = await this.#driver.get(key);
     return stored === undefined ? fallback : this.#codec.decode(stored);
   }
@@ -75,17 +109,20 @@ class Store {
 
   async set (key, value) {
     value = this.check(value);
+    this.#cache?.set(key, value);
     await this.#driver.set(key, this.#codec.encode(value));
     this.emit({ keys: [key], type: 'set' });
     return value;
   }
 
   async delete (key) {
+    this.#cache?.delete(key);
     await this.#driver.delete(key);
     this.emit({ keys: [key], type: 'delete' });
   }
 
   async clear () {
+    this.#cache?.clear();
     await this.#driver.clear();
     this.emit({ keys: [], type: 'clear' });
   }
@@ -112,6 +149,7 @@ class Store {
   setSync (key, value) {
     this.#syncOnly('setSync');
     value = this.check(value);
+    this.#cache?.set(key, value);
     this.#driver.set(key, this.#codec.encode(value));
     this.emit({ keys: [key], type: 'set' });
     return value;
@@ -119,6 +157,7 @@ class Store {
 
   deleteSync (key) {
     this.#syncOnly('deleteSync');
+    this.#cache?.delete(key);
     this.#driver.delete(key);
     this.emit({ keys: [key], type: 'delete' });
   }

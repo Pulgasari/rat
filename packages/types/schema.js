@@ -15,13 +15,20 @@ List, Record and Tuple are data types as well (one file each): called they
 give a schema, with new a value.
 */
 
+import { Signal, SIGNAL } from '@rat/signals';
+import { stored } from './stored.js';
+
+const STORED = Symbol('rat.stored');   // the options of .stored()
+const MADE   = new WeakMap;            // a value create() made -> the schema it was made by
+
 class Schema {
   // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
   // parts: the schemas a structure is made of (record fields, tuple items, union cases).
   // transform: how a value is made into this schema's form, for from() (a case of Str).
   // factory: (schema, value) -> a value of the data type, for create() (typed sets it). not make: Id.make() makes a key
-  constructor ({ checks = [], describe = {}, factory = null, initial, kind, nullable = false, parts = null, run, transform = null }) {
-    Object.assign(this, { checks, describe: { kind, ...describe }, factory, initial, kind, nullable, parts, run, transform });
+  // [STORED]: the options of stored(), the schema makes kept values then
+  constructor ({ checks = [], describe = {}, factory = null, initial, kind, nullable = false, parts = null, run, transform = null, [STORED]: kept = null }) {
+    Object.assign(this, { checks, describe: { kind, ...describe }, factory, initial, kind, nullable, parts, run, transform, [STORED]: kept });
     Object.freeze(this);
   }
 
@@ -32,6 +39,12 @@ class Schema {
 
   default  (value) { return this.derive({ describe: { initial: value }, initial: value }); }
   optional ()      { return this.derive({ describe: { optional: true }, nullable: true }); }
+
+  // kept beyond the page (stored.js): a key or { key, in, debounce, sync, version, migrate }
+  stored (options = {}) { return this.derive({ [STORED]: { ...this[STORED], ...(typeof options === 'string' ? { key: options } : options) } }); }
+
+  // $(schema): its signal, a kept one after stored()
+  [SIGNAL] () { return this[STORED] ? stored({}, this) : new Signal(this); }
 
   // { value } or { issues: [{ message, path }] }
   validate (input, path = []) {
@@ -47,7 +60,10 @@ class Schema {
   // a value of the data type this schema was made by: $Dict(Key, Value).create({ … }) is a $Dict with it
   create (value) {
     if (!this.factory) throw new TypeError(`[rat] ${this.kind} is no data type, there is nothing to create: its values are plain js`);
-    return this.factory(this, value);
+    const made = this.factory(this, value);
+    if (made !== null && typeof made === 'object') MADE.set(made, this);
+    // without a key yet it waits for one: $x! = …create() hands over the name
+    return this[STORED]?.key ? stored({}, made) : made;
   }
 
   // a value in this schema's form: KebabCase.from('togglePlay') -> 'toggle-play'
@@ -101,6 +117,8 @@ const Num  = new NumSchema({ initial: 0,     kind: 'num',  run: scalar('a number
 
 const isSchema = value => value instanceof Schema;
 
+const madeBy = value => MADE.get(value);
+
 // one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
 // of a list of strings. the class stays a class (new, extends, instanceof), only a call differs.
 // the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
@@ -124,4 +142,4 @@ const isObject = value => value !== null && typeof value === 'object' && !Array.
 
 // :::::: EXPORT
 
-export { Bool, Num, Schema, bare, isObject, isSchema, scalar, schemaOf, typed };
+export { Bool, Num, STORED, Schema, bare, isObject, isSchema, madeBy, scalar, schemaOf, typed };

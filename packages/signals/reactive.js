@@ -25,11 +25,13 @@ registry decides which variant its value gets, now and on every write:
   $(Enum('a', 'b'))     a signal checked by the schema
   $(new Map)            a signal holding a $Map, once a variant for Map is registered
   $(signal)             the signal itself
+  $(value with [SIGNAL]) the signal it makes: a schema with .stored() gives one that is kept
 */
 
 import { Signal, batch, isSchema, isSignal, untrack } from './core.js';
 
 const REACTIVE = Symbol.for('rat.reactive');
+const SIGNAL   = Symbol.for('rat.signal');
 
 // outside the target, so a sealed or frozen instance works too (a Record is sealed)
 const versions  = new WeakMap;
@@ -130,6 +132,7 @@ class Holder extends Signal {
 
 function $ (value) {
   if (isSignal(value)) return value;
+  if (typeof value?.[SIGNAL] === 'function') return value[SIGNAL]();
   if (isSchema(value)) return new Signal(value);
   return new Holder(value);
 }
@@ -138,4 +141,4 @@ $.register = register;
 
 // :::::: EXPORT
 
-export { $, REACTIVE, isReactive, reactive, register, wrap };
+export { $, REACTIVE, SIGNAL, isReactive, reactive, register, wrap };

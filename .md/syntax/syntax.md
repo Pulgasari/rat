@@ -289,7 +289,7 @@ an exported reactive variant (`$Record`, `$List` …) is imported the same way a
 
 ```js
 // state.rat.js
-export const $settings = $Record(Settings).create(stored);
+export const $settings! = $Record(Settings).create();
 
 // Library.rat.html
 import { $settings } from './state.rat.js';
@@ -320,6 +320,22 @@ $zoom = '120';                              // 120
 
 no new syntax: `signal()` takes anything with a standard schema interface (`~standard`),
 so a zod or valibot schema works as well (its initial value is `undefined`).
+
+### kept values: `$name!`
+
+a `!` right after the name in a declaration keeps the value beyond the page ([persistence.md](../persistence.md),
+`stored` of `@rat/types`): read back when it is made, written on every change, the key is the name.
+
+```js
+let $theme! = Enum('zombie', 'oled', 'rainbow');       // let $theme = $$.stored('theme', Enum(…))
+export const $settings! = $Record(Settings).create();  // a variant: $$.stored('settings', $Record(Settings).create())
+$draft! = '';                                          // .rat: the implicit let
+let $look! = Enum(…).stored({ key: 'look', in: 'session' });   // the options from the schema, a written key wins
+```
+
+only in a declaration of the top level: after `let` / `const` / `var` or a comma of one, in a `.rat` file at
+the start of a statement. a read is `$theme`. `$x!= y` anywhere else is the comparison it is. a `const` that is
+no variant is a computed: there is nothing to keep, an error.
 
 ### named cases
 

@@ -459,6 +459,8 @@ could read:
 
 ### 1 persistence by hand
 
+**status:** done through `stored` ([persistence.md](persistence.md)): `$settings!`, `$tabs!` with `$tabIndex!`, `$bookmarks!` (in the database), `$folderTyped!`, `$ownFolderTypes!`, `$ended!`, `$targets!`, `$folderName!`. no keys, no effects, no `persist()`, `.shared/storage.js` is gone (notes, icons, appearance and install too). remotes keep their file (passwords, see `in: 'secure'`).
+
 `rat` `lib` · six places store something, each by hand:
 - a prefix per key,
 - an effect per value,

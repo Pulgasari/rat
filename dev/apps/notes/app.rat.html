@@ -5,9 +5,8 @@
 import { effect } from '@rat/runtime';
 
 // ::: modules
-import { hint }          from '../.shared/install.js';
-import { read, write }   from '../.shared/storage.js';
-import { toast }         from '../.shared/toast.js';
+import { hint }  from '../.shared/install.js';
+import { toast } from '../.shared/toast.js';
   
 // ::: components (the shared ones come through autoImport, ../zugriff.config.js)
 import Header from './Header.rat.html';
@@ -22,18 +21,11 @@ const lib    = app.folders;
 app.hold(lib.load());
 hint(config.name);
 
-// the open note, { sourceId, path } | null. kept by hand until persistence is decided
-const OPEN = 'notes:open';
-const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } catch { return null; } };
-
   // ::: signal
-  let $filter   = '';
-  let $open     = stored();
-  let $text     = null;
-  let $textSize = read('notes:textSize', 16);
-
-  // ::: effect
-  effect(() => write('notes:textSize', $textSize));
+  let $filter    = '';
+  let $open!     = null;   // the open note, { sourceId, path } | null
+  let $text      = null;
+  let $textSize! = 16;
 
   // ::: computed
   const $note    = $open && lib.trees.value[$open.sourceId] ? lib.nodeAt($open.sourceId, $open.path) : null;
@@ -42,17 +34,11 @@ const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } ca
 
   const titleOf = node => node.name.replace(/\.[^.]+$/, '');
 
-  function remember (open) {
-    $open = open;
-    if (open) localStorage.setItem(OPEN, JSON.stringify(open));
-    else localStorage.removeItem(OPEN);
-  }
-
   // a drawer closes once something in it was picked, a sidebar stays
   const closeMenu = () => { const menu = app.area('menu'); if (menu?.isOverlay) menu.hide(); };
 
   function openNote (sourceId, path) {
-    remember({ path, sourceId });
+    $open = { path, sourceId };
     app.router.go('/note');
     closeMenu();
   }
@@ -60,7 +46,7 @@ const stored = () => { try { return JSON.parse(localStorage.getItem(OPEN)); } ca
   function forget (sourceId) {
     toast('Folder removed');
     if ($open?.sourceId !== sourceId) return;
-    remember(null);
+    $open = null;
     app.router.go('/');
   }
 

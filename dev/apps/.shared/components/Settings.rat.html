@@ -7,7 +7,7 @@
   import { available, install, ios, standalone }      from '../install.js';
   import { toast }                                     from '../toast.js';
 
-  let $values   = { ...appearance };
+  let $values   = { ...appearance() };
   let $palettes = [];
 
   const $canInstall = available.value;

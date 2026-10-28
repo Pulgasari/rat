@@ -31,7 +31,7 @@ export function aria (value: unknown): unknown;
 export function when    (condition: unknown, then: () => unknown, otherwise?: (() => unknown) | null): unknown;
 export function raw     (html: string | null | undefined): unknown;
 
-export { NONE, any, either, is, match, part, pass, pattern, rest } from '@rat/types';
+export { NONE, any, either, is, match, part, pass, pattern, rest, stored } from '@rat/types';
 
 /** let { $x } = source: a signal per key, the property's own signal or a computed that follows it. defaults: key -> null | () => fallback. */
 export declare function signalsOf<T extends object> (source: T, defaults: Record<string, (() => unknown) | null>): T;

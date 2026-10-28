@@ -20,21 +20,15 @@ index.
 
 // :::::: IMPORT
 
-import { effect } from '@rat/signals';
 import { $List, $Record } from '@rat/types';
-
-import { read, write } from '../../.shared/storage.js';
 
 // ::::::
 
 const HISTORY = 50;
-const STORAGE = 'files:tasks';
 
-const // ::: the lists, changed in place
-$open  = new $List,
-$ended = new $List(read(STORAGE, []));
-
-effect(() => write(STORAGE, $ended));
+const // ::: the lists, changed in place. the ended ones kept
+$open   = new $List,
+$ended! = new $List;
 
 export const // ::: what the views read: signals, as every $name another module imports
 $queue   = $open.toArray(),

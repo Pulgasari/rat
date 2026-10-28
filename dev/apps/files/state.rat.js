@@ -13,12 +13,11 @@ of a server.
 // :::::: IMPORT
 
 import dom from '@domina/dom';
-import { effect, untrack }           from '@rat/signals';
+import { batch, effect, untrack }    from '@rat/signals';
 import { $List, $Record, Enum, Str } from '@rat/types';
 import { Path }                      from '@rat/types/Path';
 
-import { read, write } from '../.shared/storage.js';
-import { toast }       from '../.shared/toast.js';
+import { toast } from '../.shared/toast.js';
 
 import * as fs       from './modules/fs.js';
 import * as places   from './modules/places.rat.js';
@@ -44,7 +43,7 @@ const ICON = {
 
 export const PATTERNS = ['pattern-bg', 'pattern-tile'];
 
-// :::::: SETTINGS, kept across visits under files:settings
+// :::::: SETTINGS, kept across visits
 
 const Settings = {
   open           : Enum('auto', 'single', 'double'),   // a tap opens, a double click, or by the pointer
@@ -55,9 +54,7 @@ const Settings = {
   viewmode       : Enum('list', 'grid'),
 };
 
-export const $settings = $Record(Settings).create(read('files:settings', {}));
-
-effect(() => write('files:settings', $settings));
+export const $settings! = $Record(Settings).create();
 
 effect(() => {
   const element = document.documentElement;
@@ -98,22 +95,18 @@ $selected = null,    // the entry the context area is about
 $sheet    = null,    // what the context area shows instead: 'tasks', 'remotes'
 $size     = null;    // { width, height } of the image in the preview
 
-// :::::: TABS, each a $Record { path, source }
+// :::::: TABS, each a $Record { path, source }, kept with the index of the one on screen
 
 const Tab = $Record({ path: Path, '?source': Str });
 
 const tabOf = (tab = {}) => Tab.create({ path: tab.path ?? Path.root, source: tab.source ?? null });
 
-// kept as { index, list }, the paths as 'a/b' (an older tab's as ['a', 'b'])
-const stored = read('files:tabs', { index: 0, list: [] });
+export const $tabs! = $List(Tab).create([tabOf()]);
 
-export const $tabs = new $List(stored.list.map(tabOf));
-if (!$tabs.length) $tabs.push(tabOf());
+let $tabIndex! = 0;
 
-// the tab on screen, the tab itself: it can not point past the end of the list
-export let $tab = $tabs.at(stored.index) ?? $tabs.at(0);
-
-effect(() => write('files:tabs', { index: $tabs.indexOf($tab), list: $tabs }));
+// the tab on screen, the tab itself: never past the end of the list
+export const $tab = $tabs.at($tabIndex) ?? $tabs.at(0);
 
 export const
 $path   = $tab.path,
@@ -131,8 +124,8 @@ export function goTo (path, from) {
 }
 
 export function openTab (path = $path, from = $source) {
-  $tab = tabOf({ path, source: from });
-  $tabs.push($tab);
+  $tabs.push(tabOf({ path, source: from }));
+  $tabIndex = $tabs.length - 1;
   $selected = null;
 }
 
@@ -142,20 +135,26 @@ export function closeTab (tab) {
     goTo(Path.root);
     return;
   }
-  if (tab === $tab) $tab = $tabs.at($tabs.indexOf(tab) + 1) ?? $tabs.at(-2);
-  $tabs.remove(tab);
+  const index = $tabs.indexOf(tab);
+  batch(() => {
+    $tabs.remove(tab);
+    if (index < $tabIndex || $tabIndex === $tabs.length) $tabIndex--;
+  });
 }
 
 export function switchTab (tab) {
   scrollTop.set($tab, scroller()?.scrollTop ?? 0);
-  $tab      = tab;
+  $tabIndex = $tabs.indexOf(tab);
   $selected = null;
 }
 
 // these tabs or a fresh one at home, the tab on screen stays where it is among them
 function resetTabs (tabs = []) {
-  $tabs.replace(tabs.length ? tabs : [tabOf()]);
-  if (!$tabs.includes($tab)) $tab = $tabs.at(0);
+  const tab = $tab;
+  batch(() => {
+    $tabs.replace(tabs.length ? tabs : [tabOf()]);
+    $tabIndex = Math.max(0, $tabs.indexOf(tab));
+  });
 }
 
 export const tabName = tab => tab.path.name || sourceName(tab.source);

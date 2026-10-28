@@ -701,18 +701,25 @@ function reads (root, names, skip = new Set) {
 // `new $Map`, `new $List(items)`, `$Dict(Str, Str).create(…)` (a schema's create() makes the variant it was
 // called on): an instance of a reactive variant
 const isVariantName = node => node?.type === 'Identifier' && /^\$[A-Z]/.test(node.name);
-const isVariant     = init => init?.type === 'NewExpression' ? isVariantName(init.callee)
-  : init?.type === 'CallExpression' && init.callee.type === 'MemberExpression' && init.callee.property.name === 'create'
-    && init.callee.object.type === 'CallExpression' && isVariantName(init.callee.object.callee);
+
+// $List(Tab), $List(Tab).stored('tabs'): the schema of a variant, schema methods chained on
+const isVariantSchema = node => node?.type === 'CallExpression'
+  && (isVariantName(node.callee) || node.callee.type === 'MemberExpression' && isVariantSchema(node.callee.object));
+
+const isVariant = init => init?.type === 'NewExpression' ? isVariantName(init.callee)
+  : init?.type === 'CallExpression' && init.callee.type === 'MemberExpression' && init.callee.property.name === 'create' && isVariantSchema(init.callee.object);
 
 // top level `let $x = …` / `const $x = …`, as { edits, names, variants }. a let goes through $(),
 // which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded).
-// a variant instance is no signal and gets no .value, it is used as written
-function declarations (program, runtime, source, known = new Set) {
+// a variant instance is no signal and gets no .value, it is used as written.
+// kept: the names written $x! (keptNames), they go through stored() with the name as the key
+function declarations (program, runtime, source, known = new Set, kept = new Set) {
   const names    = new Set;
   const variants = new Set;
   const edits    = [];
   const skip     = new Set; // nodes that moved elsewhere, reads() leaves them alone
+  const keeps    = new Set; // the kept names declared here
+  let   computed = null;    // a kept const that is no variant: nothing to keep
 
   // a default's code with .value for the reactive names known so far
   const codeOf = node => applyEdits(source.slice(node.start, node.end), reads(node, new Set([...known, ...names])).map(edit => ({ ...edit, pos: edit.pos - node.start })));
@@ -746,23 +753,35 @@ function declarations (program, runtime, source, known = new Set) {
       const { id, init } = declarator;
       if (id.type === 'ObjectPattern' && init) { destructure(id, init); continue; }
       if (id.type !== 'Identifier' || !id.name.startsWith('$') || id.name.length < 2) continue;
-      if (isVariant(init)) { variants.add(id.name); continue; }
+
+      const key = kept.has(id.name) ? JSON.stringify(id.name.slice(1)) : null;
+      if (key) keeps.add(id.name);
+
+      if (isVariant(init)) {
+        variants.add(id.name);
+        if (key) {
+          edits.push({ order: -1, pos: init.start, text: `${runtime}.stored(${key}, ` });
+          edits.push({ order: 1,  pos: init.end,   text: ')' });
+        }
+        continue;
+      }
       names.add(id.name);
 
       if (declaration.kind === 'const') {
+        if (key) computed ??= id;
         if (!init) continue;
         edits.push({ order: -1, pos: init.start, text: `${runtime}.computed(() => (` });
         edits.push({ order: 1,  pos: init.end,   text: '))' });
       }
       else if (init) {
-        edits.push({ order: -1, pos: init.start, text: `${runtime}.$(` });
+        edits.push({ order: -1, pos: init.start, text: key ? `${runtime}.stored(${key}, ` : `${runtime}.$(` });
         edits.push({ order: 1,  pos: init.end,   text: ')' });
       }
-      else edits.push({ pos: id.end, text: ` = ${runtime}.$()` });
+      else edits.push({ pos: id.end, text: key ? ` = ${runtime}.stored(${key})` : ` = ${runtime}.$()` });
     }
   }
 
-  return { edits, names, skip, variants };
+  return { computed, edits, keeps, names, skip, variants };
 }
 
 // a variant binding changes through its methods. reassigned, whatever read it would keep the old object
@@ -786,7 +805,9 @@ yet. offsets count from offset.
 // $Dict(…).create at index: the tokens of a schema's create()
 function created (list, index) {
   if (!/^\$[A-Z]/.test(list[index]?.value ?? '') || list[index + 1]?.type !== tt.parenL) return false;
-  const close = closing(list, index + 1);
+  let close = closing(list, index + 1);
+  // schema methods between: $List(Tab).stored('tabs').create()
+  while (list[close + 1]?.type === tt.dot && list[close + 2]?.value !== 'create' && list[close + 3]?.type === tt.parenL) close = closing(list, close + 3);
   return list[close + 1]?.type === tt.dot && list[close + 2]?.value === 'create';
 }
 
@@ -827,8 +848,11 @@ function declared (code, offset = 0) {
           continue;
         }
         if (item.type === tt.name && item.value[0] === '$' && item.value.length > 1) {
-          const variant = list[next + 1]?.type === tt.eq && (list[next + 2]?.type === tt._new ? /^\$[A-Z]/.test(list[next + 3]?.value ?? '') : created(list, next + 2));
-          out.push({ end: item.end + offset, kind: variant ? 'variant' : kind, name: item.value, start: item.start + offset, statement: token.start + offset });
+          // $x! = …: kept, the = may sit in the != token
+          const bang = list[next + 1]?.start === item.end && ['!', '!='].includes(list[next + 1].value) ? list[next + 1] : null;
+          const eq   = bang?.value === '!=' ? next + 1 : bang ? next + 2 : next + 1;
+          const variant = (bang?.value === '!=' || list[eq]?.type === tt.eq) && (list[eq + 1]?.type === tt._new ? /^\$[A-Z]/.test(list[eq + 2]?.value ?? '') : created(list, eq + 1));
+          out.push({ end: item.end + offset, kept: Boolean(bang), kind: variant ? 'variant' : kind, name: item.value, start: item.start + offset, statement: token.start + offset });
         }
         expectName = false;
         continue;
@@ -882,18 +906,65 @@ function implicitLet (code, options) {
   return edits.length ? applyEdits(code, edits) : code;
 }
 
+// let $theme! = …: kept beyond the page (stored, @rat/types), the key is the name. the ! becomes a space
+// (every position stays) and the name is handed to declarations(). only where a name is declared: after
+// let / const / var or a comma of such a statement, and in a .rat file at the start of a statement (the
+// implicit let). $x!= somewhere else stays the comparison it is
+function keptNames (code, { filename, implicit, offset, source }) {
+  const names = new Set;
+  let list;
+  try { list = tokens(scannable(code)); } catch { return { code, names }; }
+
+  const keyword = token => token?.type === tt._const || token?.type === tt._var || token?.type === tt.name && token.value === 'let';
+  const cuts    = [];
+  let   depth   = 0;
+  let   inside  = false;   // in a let / const / var statement of the top level
+
+  for (let index = 0; index < list.length; index++) {
+    const token    = list[index];
+    const previous = list[index - 1];
+    if (OPENERS.has(token.type)) { depth++; continue; }
+    if (CLOSERS.has(token.type)) { depth--; continue; }
+
+    const start = !depth && (!previous || previous.type === tt.semi || previous.type === tt.braceR || breaks(code, previous, token) && !previous.type.beforeExpr && !keyword(previous));
+    if (start) inside = false;
+    if (!depth && keyword(token)) { inside = true; continue; }
+
+    const bang = list[index + 1];
+    if (token.type !== tt.name || !/^\$\w/.test(token.value) || bang?.start !== token.end || !['!', '!='].includes(bang.value)) continue;
+    if (bang.value === '!' && list[index + 2] && list[index + 2].type !== tt.eq && list[index + 2].type !== tt.comma && list[index + 2].type !== tt.semi && !breaks(code, bang, list[index + 2])) continue;
+
+    const declared = keyword(previous) || inside && previous?.type === tt.comma;
+    const fail     = message => new CompileError(message, { filename, index: offset + token.start, source });
+    if (declared && depth) throw fail(`${token.value}! is kept beyond the page: a declaration of the top level only`);
+    if (!declared && !(start && implicit)) {
+      if (start) throw fail(`${token.value}! is kept beyond the page in a declaration: let ${token.value}! = …`);
+      continue;
+    }
+    names.add(token.value);
+    cuts.push(bang.start);
+  }
+
+  return { code: cuts.reduceRight((out, at) => out.slice(0, at) + ' ' + out.slice(at + 1), code), names };
+}
+
 function transformScript (code, { cases = new Map, filename, lift = false, names = new Set, offset = 0, runtime = '$$', sheets, source = code, extraEdits } = {}) {
-  let   sugared  = sweeten     (code,    { cases, filename, offset, source });
-  if (!filename?.endsWith('.js')) sugared = implicitLet(sugared, { filename, offset, source });
+  const implicit = !filename?.endsWith('.js');
+  const kept     = keptNames(code, { filename, implicit, offset, source });
+  let   sugared  = sweeten     (kept.code, { cases, filename, offset, source });
+  if (implicit) sugared = implicitLet(sugared, { filename, offset, source });
   if (sheets) {
     const statements = styleStatements(sugared);
     sheets.push(...statements.found.map(sheet => ({ ...sheet, index: sheet.index + offset })));
     sugared = statements.code;
   }
   const program  = parseOrFail (sugared, { filename, offset, source });
-  const declared = declarations(program, runtime, sugared, names);
+  const declared = declarations(program, runtime, sugared, names, kept.names);
 
   for (const name of declared.names) names.add(name);
+
+  if (declared.computed) throw new CompileError(`${declared.computed.name} is a computed, made from others: there is nothing to keep. let ${declared.computed.name}! = … keeps a value`, { filename, index: offset + declared.computed.start, source });
+  for (const name of kept.names) if (!declared.keeps.has(name)) throw new CompileError(`${name}! is kept beyond the page: a declaration of the top level only`, { filename, index: offset + sugared.indexOf(name), source });
 
   // an imported $name is a signal or a reactive variant of another module ($List and the other $Names are
   // classes and stay as written): renamed in the import, read through $$.imported(), read and written as $x.value

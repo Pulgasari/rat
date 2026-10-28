@@ -9,8 +9,7 @@
 
 import { signal } from '@rat/signals';
 
-import { read, write } from './storage.js';
-import { toast }       from './toast.js';
+import { toast } from './toast.js';
 
 let offer = null;
 
@@ -39,12 +38,11 @@ export async function install () {
   return (await current.userChoice).outcome === 'accepted';
 }
 
-// a toast, once per app, the first time installing is possible
+// a toast, once per app (RAT.app.store), the first time installing is possible
 export function hint (name) {
-  const key  = `${name}:install-hint`;
   const show = () => {
-    if (read(key)) return;
-    write(key, true);
+    if (RAT.app.store.peek('install-hint')) return;
+    RAT.app.store.set('install-hint', true);
     toast(`${name} can be installed: see the settings`);
   };
   if (available.value) show();

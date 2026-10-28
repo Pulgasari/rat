@@ -27,6 +27,7 @@ config.rat.js next to src (or config-src) is loaded before the app's code: its
 mods land on the app (RAT.app.database …, see ../mods.js), its autoImport
 names the folders components come from without an import (see ../run/loader.js), its
 viewport is the <meta name='viewport'> of the page (see ../viewport.js),
+then the places of kept values are set up, RAT.app.store read ahead (see ../stored.js).
 the config itself is app.config.
 
 areas open and close by their name, two forms to find out which serves better:
@@ -81,6 +82,7 @@ import { catchErrors, showError }        from '../boundary.js';
 import { autoImport, componentOf, load } from '../run/loader.js';
 import { useMods }                       from '../mods.js';
 import { platform }                      from '../platform.js';
+import { useStored }                     from '../stored.js';
 import { viewport }                      from '../viewport.js';
 import { RatArea }                       from './rat-area.js';
 import { RatView }                       from './rat-view.js';
@@ -292,7 +294,7 @@ export class RatApp extends DominaElement {
     const url   = named ? new URL(named, this.baseURI).href : new URL('config.rat.js', new URL(this.src, this.baseURI)).href;
 
     // a get, not a head: offline the service worker answers it from its cache
-    if (!named && !(await fetch(url, { cache: 'no-cache' }).then(response => response.ok, () => false))) return this.#config = {};
+    if (!named && !(await fetch(url, { cache: 'no-cache' }).then(response => response.ok, () => false))) return this.#config = await this.#apply({});
 
     const module = await load(url);
     const config = module.default ?? { ...module };
@@ -304,6 +306,7 @@ export class RatApp extends DominaElement {
   async #apply (config) {
     if (config.viewport) viewport(config.viewport);
     await useMods(this, config);
+    await useStored(this, config);
     return config;
   }
 
