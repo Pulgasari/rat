@@ -80,7 +80,7 @@
   <main.vectorizer>
     @if (!$source)
       <label.drop on:dragover!={() => {}} on:drop!={event => open(event.dataTransfer.files[0])}>
-        <svg-icon icon='mdi:vector-curve' />
+        <svg-icon icon='vector' />
         <strong>Pick an image</strong>
         <span>or drop it here, or paste it</span>
         <input type='file' accept='image/*' onchange={event => open(event.target.files[0])} />
@@ -123,8 +123,8 @@
 
       <div.actions>
         <btn-push icon='download' label='Download svg' onclick={download} disabled={!$svg} />
-        <btn-push icon='mdi:content-copy' label='Copy' onclick={copy} disabled={!$svg} />
-        <btn-push icon='mdi:image-plus' label='Another image' onclick={reset} />
+        <btn-push icon='copy' label='Copy' onclick={copy} disabled={!$svg} />
+        <btn-push icon='image-add' label='Another image' onclick={reset} />
       </div.actions>
   </main.vectorizer>
 </rat-area>

@@ -31,7 +31,7 @@
   @if ($url && !$broken)
     <img loading='lazy' src={$url} onerror={() => $broken = true} />
   @else
-    <svg-icon icon='mdi:podcast' />
+    <svg-icon icon='podcast' />
 
 @if (props.onclick)
   <button.art.not-a-button class={props.class} aria-label={props['aria-label']} onclick={props.onclick}>{picture()}</button>

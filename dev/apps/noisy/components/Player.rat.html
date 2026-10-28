@@ -21,9 +21,9 @@
     <span.player-title>Player</span>
 
   <div.player-controls>
-    <btn-icon icon='mdi:skip-previous' label='Previous' onclick='previous' />
-    <btn-icon icon={$playing ? 'mdi:pause' : 'mdi:play'} label={$playing ? 'Pause' : 'Play'} onclick='toggle-play' />
-    <btn-icon icon='mdi:skip-next' label='Next' onclick='next' />
+    <btn-icon icon='skip-previous' label='Previous' onclick='previous' />
+    <btn-icon icon={$playing ? 'pause' : 'play'} label={$playing ? 'Pause' : 'Play'} onclick='toggle-play' />
+    <btn-icon icon='skip-next' label='Next' onclick='next' />
   </div.player-controls>
 
   @if ($track): <input.player-seek type='range' min='0' max={$duration || 0} step='1' value={$time} oninput={event => player.seek(Number(event.target.value))} aria-label='Position' />

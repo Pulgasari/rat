@@ -125,7 +125,7 @@ const rememberAction = (podcast, isRemembered) => isRemembered
 function subscribeAction (podcast, isSubscribed) {
   const step = subscribing.value[podcast.id];
   return isSubscribed ? { icon: 'check', label: 'In library', onclick: () => go('podcast', podcast.id) }
-       : step         ? { icon: 'svg-spinners:bars-scale-middle', label: STEPS[step], disabled: true }
+       : step         ? { icon: 'loading', label: STEPS[step], disabled: true }
        :                { icon: 'add', label: 'Subscribe', onclick: () => subscribe(podcast) };
 }
 

@@ -38,10 +38,10 @@ const keyOf = (path) => `${$folderId}:${path}`;
 
 // the built-in ones by the id of the scan category they stand for
 export const BUILTIN = {
-  audio     : { icon: 'lucide:music',     label: 'Audio'     },
-  documents : { icon: 'lucide:file-text', label: 'Documents' },
-  images    : { icon: 'lucide:image',     label: 'Images'    },
-  video     : { icon: 'lucide:film',      label: 'Videos'    },
+  audio     : { icon: 'audio',     label: 'Audio'     },
+  documents : { icon: 'document', label: 'Documents' },
+  images    : { icon: 'image',     label: 'Images'    },
+  video     : { icon: 'video',      label: 'Videos'    },
 };
 
 export const $folderTypes = { ...BUILTIN, ...$ownFolderTypes.toJSON() };
@@ -56,7 +56,7 @@ export function setFolderType (path, id) {
   else    $folderTyped.delete (key);
 }
 
-export function addFolderType ({ icon = 'lucide:folder', label }) {
+export function addFolderType ({ icon = 'folder', label }) {
   const id = crypto.randomUUID();
   $ownFolderTypes.set(id, { icon, label });
   return id;

@@ -63,7 +63,7 @@
       @if ($podcast.title): <div.title>{$podcast.title}</div>
       @if ($podcast.author): <div.author>{$podcast.author}</div>
       @if ($podcast.description): <p.about>{plain($podcast.description).slice(0, 400)}</p>
-      @if ($podcast.link): <Link href={$podcast.link} icon='mdi:web' label='Website' />
+      @if ($podcast.link): <Link href={$podcast.link} icon='web' label='Website' />
     </div.info>
 
     <div>
@@ -71,7 +71,7 @@
       <Picker signal={$sorting} look='segments' />
     </div>
 
-    <EpisodesIndex episodes={$shown} empty={{ icon: 'mdi:magnify-close', title: 'Nothing matches your filter' }} />
+    <EpisodesIndex episodes={$shown} empty={{ icon: 'no-results', title: 'Nothing matches your filter' }} />
   </main>
 
   @if ($all.length): <SearchPanel placeholder='filter episodes …' bind:value={$search} />

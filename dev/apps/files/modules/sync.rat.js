@@ -141,7 +141,7 @@ export function send (target, files = $outbox, pin = '') {
 
   const what = files.length === 1 ? files[0].name : `${files.length} files`;
 
-  return run({ icon: 'lucide:send', label: `Send ${what} to ${labelOf(target)}`, lane: 'send' }, async ({ progress }) => {
+  return run({ icon: 'send', label: `Send ${what} to ${labelOf(target)}`, lane: 'send' }, async ({ progress }) => {
     const listener = await native.addListener('progress', event => progress(event.sent, event.total));
     try {
       const attempt = secret => native.send({ files, fingerprint: target.fingerprint ?? '', host: target.host, pin: secret, port: target.port, protocol: target.protocol });

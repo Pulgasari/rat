@@ -29,7 +29,7 @@
       <small>{noteOf(task)}</small>
       @if (task.state === 'running' && task.progress?.total): <progress max={task.progress.total} value={task.progress.done} />
     </span.text>
-    @if (isOpen(task)): <btn-icon icon='lucide:x' label={'cancel ' + task.label} onclick={() => cancel(task)} />
+    @if (isOpen(task)): <btn-icon icon='close' label={'cancel ' + task.label} onclick={() => cancel(task)} />
   </li>
 
 @if ($queue.length)
@@ -42,7 +42,7 @@
 @if ($history.length)
   <div-x.section-head>
     <h3>History</h3>
-    <btn-icon icon='lucide:trash' label='clear the history' onclick={clearHistory} />
+    <btn-icon icon='trash' label='clear the history' onclick={clearHistory} />
   </div-x.section-head>
   <ul.tasks>
     @for (task of $history): {row(task)}

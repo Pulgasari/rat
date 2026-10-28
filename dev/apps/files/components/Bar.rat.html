@@ -4,10 +4,10 @@
 
 <header.bar>
   @if (props.back)
-    <btn-icon icon='lucide:arrow-left' label='back' onclick={props.back} />
+    <btn-icon icon='back' label='back' onclick={props.back} />
   @else
-    <btn-icon icon='lucide:menu' label='menu' onclick={() => RAT.app.toggle('menu')} />
+    <btn-icon icon='menu' label='menu' onclick={() => RAT.app.toggle('menu')} />
   <h1>{props.title}</h1>
   <slot />
-  <btn-icon icon='lucide:settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
 </header.bar>

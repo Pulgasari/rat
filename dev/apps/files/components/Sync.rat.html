@@ -22,7 +22,7 @@
   const $auto    = $autoSync ?? {};
 
   const isChosen = target => Boolean($current) && sync.sameTarget($current, target);
-  const iconOf   = target => target.deviceType === 'mobile' ? 'lucide:smartphone' : 'lucide:monitor';
+  const iconOf   = target => target.deviceType === 'mobile' ? 'phone' : 'desktop';
 
   function choose (target) {
     $chosen  = target;
@@ -61,14 +61,14 @@
         <small>{target.host}:{target.port} · {target.protocol}</small>
       </span.text>
     </button.entry>
-    @if (removable): <btn-icon icon='lucide:x' label={'forget ' + sync.labelOf(target)} onclick={() => sync.forget(target)} />
+    @if (removable): <btn-icon icon='close' label={'forget ' + sync.labelOf(target)} onclick={() => sync.forget(target)} />
   </li.row>
 
 @if (!sync.available())
   <Bar title='Send' />
   <div.scroll>
     <div-y.hero>
-      <svg-icon icon='lucide:send' />
+      <svg-icon icon='send' />
       <h2>Only in the android app</h2>
       <p>Sending to devices on your network needs the app: a web page may not search the network or talk to a device by its address.</p>
     </div-y.hero>
@@ -81,12 +81,12 @@
     <section>
       <div-x.section-head>
         <h2>Send to</h2>
-        <btn-icon icon='lucide:radar' label='search again' onclick={sync.start} />
+        <btn-icon icon='radar' label='search again' onclick={sync.start} />
       </div-x.section-head>
       @if ($found.length || $before.length)
         <ul.rows>
           @for (target of $found): {receiver(target, iconOf(target), false)}
-          @for (target of $before): {receiver(target, 'lucide:history', true)}
+          @for (target of $before): {receiver(target, 'history', true)}
         </ul.rows>
       @else
         <p.hint>Looking for devices on this network. A LocalSend app on the other side is enough.</p.hint>
@@ -106,18 +106,18 @@
           @for (file of $files)
             <li.row>
               <span.entry>
-                <span.thumb><svg-icon icon='lucide:file' /></span.thumb>
+                <span.thumb><svg-icon icon='file' /></span.thumb>
                 <span.text><span.name>{file.name}</span.name><small>{file.size >= 0 ? fmt.bytes(file.size) : ''}</small></span.text>
               </span.entry>
-              <btn-icon icon='lucide:x' label={'remove ' + file.name} onclick={() => sync.remove(file.uri)} />
+              <btn-icon icon='close' label={'remove ' + file.name} onclick={() => sync.remove(file.uri)} />
             </li.row>
         </ul.rows>
       @else
         <p.hint>Pick files, or send them from the library: their details have a "send" button.</p.hint>
       <div-x.actions>
-        <Action icon='lucide:file-plus' label='pick files' onclick={sync.pickFiles} />
+        <Action icon='file-add' label='pick files' onclick={sync.pickFiles} />
         <button.action.primary type='button' disabled={!$files.length || !$current} onclick={() => sync.send($current, $files, $pin)}>
-          <svg-icon icon='lucide:send' /> {sendLabel($files, $size)}
+          <svg-icon icon='send' /> {sendLabel($files, $size)}
         </button.action.primary>
       </div-x.actions>
     </section>
@@ -132,12 +132,12 @@
       }} />
       @if (!$auto.enabled): <input-text placeholder='only on this wi-fi (ssid), optional' bind:value={$ssid} />
       <div-x.actions>
-        <Action icon='lucide:folder-search' label='folder' onclick={sync.pickSyncFolder} />
+        <Action icon='folder-search' label='folder' onclick={sync.pickSyncFolder} />
         @if ($auto.enabled)
-          <Action icon='lucide:refresh-cw' label='now' onclick={sync.syncNow} />
-          <Action icon='lucide:pause' label='turn off' onclick={sync.stopAutoSync} />
+          <Action icon='refresh' label='now' onclick={sync.syncNow} />
+          <Action icon='pause' label='turn off' onclick={sync.stopAutoSync} />
         @else
-          <Action icon='lucide:play' label='turn on' disabled={!$auto.tree || !$current} onclick={() => sync.startAutoSync($current, { pin: $pin, ssid: $ssid })} />
+          <Action icon='play' label='turn on' disabled={!$auto.tree || !$current} onclick={() => sync.startAutoSync($current, { pin: $pin, ssid: $ssid })} />
       </div-x.actions>
     </section>
   </div.scroll>

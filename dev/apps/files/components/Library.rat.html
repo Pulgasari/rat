@@ -28,7 +28,7 @@
 @else
   <Bar title={$path.name || folderName()} back={up}>
     <btn-icon
-      icon={$grid ? 'lucide:list' : 'lucide:layout-grid'}
+      icon={$grid ? 'list' : 'grid'}
       label={$grid ? 'show as list' : 'show as grid'}
       onclick={toggleView}
     />
@@ -39,7 +39,7 @@
   <div.pane>
     <div.listing>
       @if ($loading)
-        <svg-icon icon='lucide:loader' />
+        <svg-icon icon='pending' />
       @else if ($visible.length)
         <data-index viewmode={$settings.viewmode} item-size='128px' item-size-min='80px' item-size-max='320px'>
           @for (entry of $visible): <Entry entry={entry} />
@@ -48,7 +48,7 @@
         <p.empty>{$filter ? 'nothing matches the filter' : 'this folder is empty'}</p.empty>
     </div.listing>
     <button.fab type='button' aria-label|title='new folder' onclick={newFolder}>
-      <svg-icon icon='lucide:folder-plus' />
+      <svg-icon icon='folder-add' />
     </button.fab>
   </div.pane>
 

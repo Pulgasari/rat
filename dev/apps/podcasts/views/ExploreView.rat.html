@@ -6,8 +6,8 @@
   import { ANY, localCountry }        from './../search.js';
 
   const TABS = [
-    { value: 'podcasts', label: 'podcasts', icon: 'mdi:podcast'       },
-    { value: 'episodes', label: 'episodes', icon: 'mdi:playlist-play' },
+    { value: 'podcasts', label: 'podcasts', icon: 'podcast'       },
+    { value: 'episodes', label: 'episodes', icon: 'episodes' },
   ];
 
   const search = {
@@ -35,9 +35,9 @@
   const TEASER    = 200;
 
   const EMPTY = {
-    episodes : { icon: 'mdi:playlist-play', title: 'Search for an episode',    hint: 'Episodes are found by title, author or description across the whole directory.' },
+    episodes : { icon: 'episodes', title: 'Search for an episode',    hint: 'Episodes are found by title, author or description across the whole directory.' },
     podcasts : { icon: 'bookmark-unfilled', title: 'Nothing on the shortlist', hint: 'Search for a podcast, open it, and remember it to come back to it later.' },
-    search   : { icon: 'mdi:magnify-close', title: 'Nothing found',            hint: 'Try another name, another storefront, or paste a feed URL.' },
+    search   : { icon: 'no-results', title: 'Nothing found',            hint: 'Try another name, another storefront, or paste a feed URL.' },
   };
 
   const db = RAT.app.database;
@@ -109,7 +109,7 @@
     <ActionMenu items={[
       rememberAction(podcastOf(entry), $remembered.has(entry.podcastId)),
       subscribeAction(podcastOf(entry), $subscribed.has(entry.podcastId)),
-      entry.link && { icon: 'mdi:open-in-new', href: entry.link, title: 'open the episode in the store' },
+      entry.link && { icon: 'external', href: entry.link, title: 'open the episode in the store' },
     ].filter(Boolean)} />
   </data-item>
 

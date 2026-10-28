@@ -61,7 +61,7 @@
     <span.field-hint>Back up your subscriptions and listening progress as JSON, or restore from a file.</span>
     <span.field-row>
       <button onclick={exportFeeds}><svg-icon icon='download' /> Export JSON</button>
-      <button onclick={() => $file?.click()}><svg-icon icon='mdi:upload' /> Import JSON</button>
+      <button onclick={() => $file?.click()}><svg-icon icon='upload' /> Import JSON</button>
       <input hidden type='file' accept='application/json,.json' ref={$file}
         onchange={event => { importFeeds(event.target.files[0]); event.target.value = ''; }} />
     </span.field-row>

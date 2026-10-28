@@ -47,8 +47,8 @@
           @for (book of $visible): <aufbau-item><BookItem book={book} /></aufbau-item>
         </data-index>
       @else if ($search)
-        <Empty icon='mdi:magnify-close' title='Nothing matches your search' />
+        <Empty icon='no-results' title='Nothing matches your search' />
       @else
-        <Empty icon='mdi:book-outline' title='No books here yet' hint='Scanning may still be running, or this folder has no EPUB/PDF files.' />
+        <Empty icon='book' title='No books here yet' hint='Scanning may still be running, or this folder has no EPUB/PDF files.' />
     </section.shelf>
 </main>

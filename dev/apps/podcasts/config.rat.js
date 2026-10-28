@@ -10,6 +10,18 @@ export default {
 
   // the components of this app first, then the shared ones
   autoImport : ['./components/', '../.shared/components/'],
+
+  icons : {
+    ...config.icons,
+    'ahead-30'    : 'mdi:fast-forward-30',   // lucide has no number in its skips
+    'back-15'     : 'mdi:rewind-15',
+    episodes      : 'lucide:list-music',
+    explore       : 'lucide:compass',
+    'no-episodes' : 'lucide:list-x',
+    played        : 'mdi:check-circle',      // filled against outlined: lucide has no filled ones
+    podcast       : 'lucide:podcast',
+    unplayed      : 'mdi:check-circle-outline',
+  },
   
   database :{
     schema :{

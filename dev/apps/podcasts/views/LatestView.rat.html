@@ -17,10 +17,10 @@
   const $shown   = filterEpisodes(sortEpisodes($joined, 'newest'), $search, true).slice(0, 200);
 
   const $empty = !$hasSubs
-    ? { icon: 'mdi:rss', title: 'No subscriptions yet', hint: 'Add a podcast by its RSS feed URL to see its latest episodes here.' }
+    ? { icon: 'rss', title: 'No subscriptions yet', hint: 'Add a podcast by its RSS feed URL to see its latest episodes here.' }
     : $search
-      ? { icon: 'mdi:magnify-close',   title: 'Nothing matches your filter' }
-      : { icon: 'mdi:playlist-remove', title: 'No episodes found', hint: 'Try refreshing your feeds.' };
+      ? { icon: 'no-results',   title: 'Nothing matches your filter' }
+      : { icon: 'no-episodes', title: 'No episodes found', hint: 'Try refreshing your feeds.' };
 </script>
 
 <ViewHeader title='latest episodes'>

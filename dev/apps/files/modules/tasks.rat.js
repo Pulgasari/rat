@@ -6,7 +6,7 @@ copying and moving. a task waits in its lane, runs, and ends in the history. the
 side, the tasks of one lane one after another: two writes never race, a write does not wait for the
 index.
 
-  const done = run({ label: 'Rename a.txt', icon: 'lucide:pencil', lane: 'write' }, async ({ progress, signal }) => {
+  const done = run({ label: 'Rename a.txt', icon: 'edit', lane: 'write' }, async ({ progress, signal }) => {
     progress(1, 3);   // done, total
   });
 
@@ -50,7 +50,7 @@ function finish (task, changes) {
   $ended.splice(HISTORY);
 }
 
-export function run ({ icon = 'lucide:loader', label, lane = 'default' }, work) {
+export function run ({ icon = 'pending', label, lane = 'default' }, work) {
   const controller = new AbortController;
   const { signal } = controller;
   const task       = new $Record({

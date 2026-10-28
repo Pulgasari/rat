@@ -36,11 +36,6 @@ const { dialogs, router } = RAT.app;
 
 // :::::: CONSTANTS
 
-const ICON = {
-  copy : 'lucide:copy',
-  move : 'lucide:scissors',
-};
-
 export const PATTERNS = ['pattern-bg', 'pattern-tile'];
 
 // :::::: SETTINGS, kept across visits
@@ -212,7 +207,7 @@ effect(() => {
 
 // the walk as a task: its file count is the progress, cancelling stops it
 function indexFolder (handle, folder) {
-  return run({ icon: 'lucide:scan-search', label: `Read ${folder.name}`, lane: 'index' }, ({ progress, signal }) => {
+  return run({ icon: 'scan', label: `Read ${folder.name}`, lane: 'index' }, ({ progress, signal }) => {
     signal.addEventListener('abort', () => scan.stop());
     const follow = effect(() => { if ($scanning) progress($scanning.files, null); });
     return scan.scan(handle, folder).finally(follow);
@@ -234,8 +229,8 @@ export const isImage = entry => entry.kind !== 'directory' && Boolean(entry.type
 
 // a folder with a type shows the type's icon, at is the path the entry lies in
 export const iconOf = (entry, at) => entry.kind === 'directory'
-  ? (at && places.folderTypeOf(at.child(entry.name))?.icon) || 'lucide:folder'
-  : CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'lucide:file';
+  ? (at && places.folderTypeOf(at.child(entry.name))?.icon) || 'folder'
+  : CATEGORIES.find(item => item.id === categoryOf(entry))?.icon ?? 'file';
 
 export const keyOf = entry => String((entry.path ?? Path.root).child(entry.name));
 
@@ -293,7 +288,7 @@ export async function newFolder () {
   if (!name) return;
   const handle = await writable();
   const at     = $path;
-  await writeTask({ icon: 'lucide:folder-plus', label: `New folder ${name}` }, at, () => fs.mkdir(handle, at, name));
+  await writeTask({ icon: 'folder-add', label: `New folder ${name}` }, at, () => fs.mkdir(handle, at, name));
 }
 
 export async function renameEntry (entry) {
@@ -304,7 +299,7 @@ export async function renameEntry (entry) {
   $selected = null;
   await writeTask(
     {
-      icon  : 'lucide:pencil',
+      icon  : 'edit',
       label : `Rename ${entry.name} to ${name}`,
     },
     at,
@@ -318,7 +313,7 @@ export async function deleteEntry (entry) {
   const at     = entry.path ?? $path;
   $selected = null;
   RAT.app.toggle('context', false);
-  await writeTask({ icon: 'lucide:trash-2', label: `Delete ${entry.name}` }, at, () => fs.remove(handle, at, entry.name));
+  await writeTask({ icon: 'delete', label: `Delete ${entry.name}` }, at, () => fs.remove(handle, at, entry.name));
 }
 
 export function pick (mode, entry) {
@@ -334,14 +329,13 @@ export async function paste () {
   const items  = board.items.toArray();
   const target = $path;
   const what   = items.length === 1 ? items[0].name : `${items.length} items`;
-  const verb   = board.mode === 'move' ? 'move' : 'copy';
-  const icon   = ICON[verb];
+  const verb   = board.mode === 'move' ? 'move' : 'copy';   // the name of its icon as well
   if (board.mode === 'move') transfer.clear();
   else transfer.placed();
 
   // listed anew whether it worked or not: a part may have arrived
   try {
-    await run({ icon, label: `${verb} ${what} to /${target}`, lane: 'write' },
+    await run({ icon: verb, label: `${verb} ${what} to /${target}`, lane: 'write' },
       ({ progress, signal }) => transfer.transfer(handle, items, board.mode, target, { onProgress: progress, signal }));
   }
   finally {
@@ -411,7 +405,7 @@ export async function sendEntry (entry) {
 export async function newFolderType (at) {
   const label = await dialogs.prompt({ message: 'Name of the new foldertype', ok: 'Next', title: 'Foldertype' });
   if (!label) return;
-  const icon = await dialogs.prompt({ message: 'Its icon (an iconify id)', ok: 'Create', title: label, value: 'lucide:folder' }) || 'lucide:folder';
+  const icon = await dialogs.prompt({ message: 'Its icon (an iconify id)', ok: 'Create', title: label, value: 'folder' }) || 'folder';
   places.setFolderType(at, places.addFolderType({ icon, label }));
 }
 

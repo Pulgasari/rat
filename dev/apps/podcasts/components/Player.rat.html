@@ -25,13 +25,13 @@
     </div.meta>
 
     <div.controls>
-      <btn-icon icon='mdi:rewind-15' label='Back 15s' onclick={() => player.skip(-15)} />
+      <btn-icon icon='back-15' label='Back 15s' onclick={() => player.skip(-15)} />
       <btn-icon.play
-        icon={player.waiting.value ? 'loading' : player.playing.value ? 'mdi:pause' : 'mdi:play'}
+        icon={player.waiting.value ? 'loading' : player.playing.value ? 'pause' : 'play'}
         title={player.playing.value ? 'Pause' : 'Play'}
         onclick={player.toggle}
       />
-      <btn-icon icon='mdi:fast-forward-30' label='Forward 30s' onclick={() => player.skip(30)} />
+      <btn-icon icon='ahead-30' label='Forward 30s' onclick={() => player.skip(30)} />
     </div.controls>
 
     <div.scrub>
@@ -47,7 +47,7 @@
     <div.right>
       <button.rate title='Playback speed' onclick={player.cycleRate}>{player.rate.value}</button.rate>
       <btn-icon
-        icon={$done ? 'mdi:check-circle' : 'mdi:check-circle-outline'}
+        icon={$done ? 'played' : 'unplayed'}
         label='Mark as done'
         aria-pressed={$done}
         onclick={() => library.toggleDone($episode.id)}

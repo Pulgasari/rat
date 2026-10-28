@@ -94,10 +94,10 @@ app.dialogs = {
 
 // a detail view keeps the item of the list it was opened from
 const dockItems = [
-  { label: 'Episodes', icon: 'mdi:playlist-play',     view: 'latest'                        },
-  { label: 'Podcasts', icon: 'mdi:view-grid-outline', view: 'podcasts'                      },
+  { label: 'Episodes', icon: 'episodes',     view: 'latest'                        },
+  { label: 'Podcasts', icon: 'grid', view: 'podcasts'                      },
   { label: 'Later',    icon: 'bookmarks',             view: 'saved'                         },
-  { label: 'Explore',  icon: 'mdi:compass-outline',   view: 'explore'                       },
+  { label: 'Explore',  icon: 'explore',   view: 'explore'                       },
   { label: 'Settings', icon: 'settings',              onClick: () => area('config')?.toggle() },
 ];
 
