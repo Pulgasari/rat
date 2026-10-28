@@ -1,0 +1,422 @@
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+
+
+/* ── TO STYLE: what every app shares ─────────────────────────────────────────
+   (n) = how many apps use it
+
+   frame
+   - rat-app
+   - rat-area, by name: main | menu (dock=start, a drawer where narrow) |
+     config (dock=end) | context (dock=bottom, a sheet). open, :state(overlay)
+   - rat-view, its glide transition
+   - rat-view > header: ViewHeader (.ViewBack, h1, .ViewTools) or the app's own (12)
+   - rat-view > main
+   - app-panel (5), app-config (Config, 13), app-float (1)
+
+   navigation
+   - Dock: .dock > btn-tap.col, .active, aria-current (6)
+   - the menu area's content: .sidebar / .menu, .nav-item, .brand (feeds, audio,
+     todo, notes, prompts, files), each its own markup for now
+   - nav-crumbs (2), nav-toc (notes)
+
+   controls
+   - btn-icon (11), btn-push (8), btn-tap
+   - native button / input / select / textarea: no font inherited (arial)
+   - input-value + input-option, the combobox and segments looks (Picker, Config)
+   - input-text, input-search, SearchPanel .search-panel (5)
+   - input-number (Slider), input-file look=dropzone (Dropzone), input-bool,
+     input-date / -time / -datetime, input-chips, input-url, input-password
+   - .chip, .chip.active (4)
+
+   content
+   - data-index + data-item, aufbau-index + aufbau-item: list and grid
+   - data-tree (Tree, FolderTree with .reconnect)
+   - output-md (Reader), write-md
+   - aufbau-progress, media-file
+   - svg-icon, its sizes in buttons, headers, lists
+
+   feedback
+   - pop-toast (toast(), every app)
+   - pop-modal / Modal .modal-backdrop, pop-prompt (prompt, confirm)
+   - .empty (Empty, 9), Loading, .booting (6, each its own spinner)
+   - .install-tip (InstallTip, 6), Brand
+*/
+
+html, body { height: 100%; }
+body { overflow: hidden; overscroll-behavior: none; }
+
+/* with areas rat-app is their grid (its own css), an app without areas gets a column */
+rat-app {
+  height   : 100dvh;
+  overflow : hidden;
+
+  &:not(:has(> rat-area)) { display: flex; flex-flow: column; }
+}
+
+rat-view {
+  display: flex;
+  flex-direction: column;
+}
+rat-view > header {
+  --bg  : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --gap : small;
+  --pad : normal;
+  display: flex; justify-content: space-between;
+  position: sticky; top: 0;
+  text-transform: uppercase;
+
+  button { text-transform: uppercase; }
+  > h1   { flex: 1 1 auto; }   /* next to the back button, the tools at the end */
+}
+rat-view > main {
+  justify-content: safe center;
+  display: flex;
+  flex: 1;
+}
+rat-view .empty {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-flow: column;
+  --gap: normal;
+}
+
+rat-view .empty   { text-align: center; }
+rat-view .empty * { text-align: center; }
+
+/* ── the dock, the Dock component: a row of btn-tap, icon over label ─────── */
+
+.dock {
+  --bg       : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  border-top : 1px solid var(--line);
+  display    : flex;
+  flex       : none;
+  text-transform: uppercase;
+
+  > btn-tap {
+    --bg           : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+    flex           : 1 1 0;
+    flex-direction : column;
+    font-size      : 1rem;
+    gap            : calc(var(--unit, 0.25rem) * 2);
+    gap            : --space(small);
+    padding        : calc(var(--unit, 0.25rem) * 2);
+    padding        : --space(small);
+    opacity        : 0.5;
+
+    &:hover       { opacity: 1; }
+    &.active      { opacity: 1; color: var(--color-ink); color: --color(ink); }
+    &::part(icon) { font-size: 2rem; }
+  }
+}
+
+/* ── tokens ─────────────────────────────────────────────────────── */
+
+body {
+  --hover   :  color-mix(in oklch, var(--color-fg) 90%, transparent);
+  --line    :  color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --panel   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  --panel-2 : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --zebra   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  /* --radius  : 0.5rem; */
+}
+
+/* ── mobile / android  ─────────────────────────────────────────────────────── */
+
+/*
+safe-area insets. non-zero where the page runs edge-to-edge:
+the capacitor wrappers (android 15+ enforces it, viewport-fit=cover opts in) and notched screens.      
+body's background covers the canvas behind the system bars, rat-app keeps clear
+*/
+
+body {
+  --safe-top    : env(safe-area-inset-top,    0px);
+  --safe-right  : env(safe-area-inset-right,  0px);
+  --safe-bottom : env(safe-area-inset-bottom, 0px);
+  --safe-left   : env(safe-area-inset-left,   0px);
+}
+
+:root rat-app {
+  background-clip : content-box;
+  padding         : var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+
+/* CUSTOM PROPS */
+
+
+/* TYPO */
+
+/*
+:root {
+  --font      : "Manrope";
+  --font-code : "JetBrains Mono", monospace;
+  --font-size : 12px;
+}
+*          { font-family : var(--font); }
+html, body { font-size   : var(--font-size); }
+*/
+
+/* move to: gestalt/packages/css/mobile.css */
+
+/* ::selection { background: var(--accent-25); } */
+
+/* ── oled fix (temp) ─────────────────────────────────────────────────────── */
+
+/* move to: zugriff/apps/podcasts/app.css
+or move to: gestalt/packages/css/surfaces.css */
+
+@container style(--palette: oled) {
+  body {
+    --line: color-mix(in oklch, var(--color-fg) 25%, transparent);
+  }
+  rat-app {
+    rat-view > header { border-bottom : 1px solid var(--line); }
+    .dock             { border-top    : 1px solid var(--line); }
+    data-item         { border-bottom : 1px solid var(--line); }
+  }
+}
+/* prompts — app specific css.
+   the app links .shared/css/base.css (reset + theme tokens + #app frame); it
+   does NOT get the tools shell, so the search + zebra rules it used to inherit
+   from components.css / layout.css are inlined at the bottom of this file. */
+
+/*
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+*/
+/* ── frame ──
+   #app is the <app-root>: the list in <app-area name="menu"> at the start, a
+   sidebar where there is room, a drawer where not. the prompt in the main area */
+
+rat-area[name="menu"] { --area-size: min(85vw, 280px); }
+
+.detail { block-size: 100%; display: flex; flex-direction: column; min-block-size: 0; }
+
+/* ── sidebar ── */
+.sidebar {
+  display: flex; flex-direction: column; gap: .65rem;
+  padding: 1rem .75rem;
+  overflow: hidden; min-height: 0; height: 100%;
+}
+
+.sidebar-top { flex-shrink: 0; }
+
+/* ── tag filter ── */
+.tag-filter { display: flex; flex-direction: column; gap: .4rem; flex-shrink: 0; }
+
+.tag-filter-header { display: flex; align-items: center; justify-content: space-between; }
+
+.tag-filter-list { display: flex; flex-wrap: wrap; gap: .3rem; }
+
+.tag-filter-btn {
+  padding: .2rem .55rem; border-radius: 2rem; font-size: .75rem;
+  border: 1px solid currentcolor;
+  background: transparent; color: var(--color-fg); cursor: pointer;
+  transition: border-color .12s, color .12s, background .12s;
+  
+}
+
+.tag-filter-btn:hover  { color: var(--tag-color, var(--color-ink)); }
+
+.tag-filter-btn.active { color: var(--tag-color, var(--color-ink)); font-weight: 600; }
+
+/* ── sort (buttons are now a shared <${Picker}>) ── */
+.sort-row { display: flex; align-items: center; gap: .35rem; flex-shrink: 0; }
+.sort-row input-value { flex: 1 1 auto; font-size: .75rem; min-inline-size: 0; }
+
+/* ── section label ── */
+.section-label {
+  font-size: .7rem; font-weight: 600; opacity: .45;
+  text-transform: uppercase; letter-spacing: .05em; flex-shrink: 0;
+}
+
+/* ── prompt list ── */
+.prompt-list { 
+  flex: 1; 
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.prompt-item {
+  padding: 0.75rem; border-radius: .45rem; cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .12s, border-color .12s;
+}
+
+.prompt-item:hover  { background: color-mix(in srgb, var(--color-fg) 6%, transparent); }
+
+.prompt-item.active { background: color-mix(in srgb, var(--color-ink) 10%, transparent); border-color: color-mix(in srgb, var(--color-ink) 30%, transparent); }
+
+.prompt-item-title { font-size: .875rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.prompt-item-tags  { display: flex; gap: .25rem; flex-wrap: wrap; margin-top: .25rem; }
+
+.prompt-item-meta  { font-size: .7rem; opacity: .35; margin-top: .2rem; font-variant-numeric: tabular-nums; }
+
+/* ── tag badge ── */
+.tag-badge {
+  display: inline-flex; align-items: center; gap: .2rem;
+  padding: .1rem .45rem; border-radius: 2rem; font-size: .7rem; font-weight: 500;
+  background: color-mix(in srgb, var(--tag-color, var(--color-ink)) 20%, transparent);
+  color: var(--tag-color, var(--color-ink));
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--color-ink)) 30%, transparent);
+}
+
+.tag-remove {
+  background: transparent; border: none; color: inherit; cursor: pointer;
+  display: flex; align-items: center; padding: 0; opacity: .6;
+}
+
+.tag-remove:hover { opacity: 1; }
+
+/* ── tag manager ── */
+.tag-manager {
+  border: 1px solid color-mix(in srgb, var(--color-fg) 10%, transparent);
+  border-radius: .5rem; padding: .6rem; display: flex; flex-direction: column; gap: .5rem;
+  background: color-mix(in srgb, var(--color-fg) 3%, transparent);
+}
+
+.tag-manager-header { display: flex; justify-content: space-between; align-items: center; font-size: .8rem; font-weight: 600; }
+
+.tag-manager-list   { display: flex; flex-direction: column; gap: .3rem; max-height: 120px; overflow-y: auto; }
+
+.tag-manager-row    { display: flex; align-items: center; gap: .4rem; }
+
+.tag-manager-row .tag-badge { flex: 1; }
+
+.tag-manager-add    { display: flex; align-items: center; gap: .35rem; }
+
+.tag-name-input {
+  /* border/background/:focus come from the shared .field class */
+  flex: 1; padding: .25rem .4rem; border-radius: .35rem; font-size: .8rem;
+}
+
+.tag-color-input {
+  width: 2rem; height: 1.8rem; border-radius: .3rem; border: none;
+  padding: 0; cursor: pointer; background: transparent;
+}
+
+/* ── detail panel ── */
+.detail-empty {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: .65rem; opacity: .25; font-size: .9rem;
+}
+
+.detail-view, .detail-edit {
+  display: flex; flex-direction: column; gap: .85rem;
+  padding: 0 1.25rem 1.25rem; overflow-y: auto;
+}
+
+.detail-header {
+  display: flex; align-items: flex-start; gap: .75rem; flex-shrink: 0; padding: 1.25rem 1.25rem .85rem;
+}
+
+.detail-header-actions { display: flex; gap: .2rem; margin-left: auto; flex-shrink: 0; }
+
+.detail-title {
+  font-size: 1.2rem; font-weight: 600; flex: 1; line-height: 1.3;
+}
+
+.detail-tags { display: flex; flex-wrap: wrap; gap: .35rem; flex-shrink: 0; }
+
+.detail-meta { font-size: .75rem; opacity: .35; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+.detail-content {
+  flex: 1; white-space: pre-wrap; word-break: break-word;
+  font-family: system-ui, sans-serif; font-size: .9rem; line-height: 1.65;
+  padding: .85rem; border-radius: .5rem;
+  background: color-mix(in srgb, var(--color-fg) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-fg) 8%, transparent);
+}
+
+/* ── edit form ── */
+.edit-title-input {
+  flex: 1; font-size: 1.1rem; font-weight: 600; padding: .35rem .5rem;
+  border: none; border-bottom: 2px solid color-mix(in srgb, var(--color-fg) 15%, transparent);
+  background: transparent; color: var(--color-fg); outline: none;
+  transition: border-color .15s;
+}
+
+.edit-title-input:focus { border-color: var(--color-ink); }
+
+.edit-title-input::placeholder { opacity: .3; }
+
+.edit-tag-picker { display: flex; flex-wrap: wrap; gap: .35rem; flex-shrink: 0; }
+
+.tag-toggle {
+  display: flex; align-items: center; gap: .3rem;
+  padding: .2rem .6rem; border-radius: 2rem; font-size: .78rem; font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--tag-color, var(--color-ink)) 35%, transparent);
+  background: transparent; color: var(--color-fg); cursor: pointer; opacity: .55;
+  transition: opacity .12s, background .12s, color .12s;
+}
+
+.tag-toggle:hover  { opacity: .85; }
+
+.tag-toggle.active {
+  opacity: 1;
+  background: color-mix(in srgb, var(--tag-color, var(--color-ink)) 20%, transparent);
+  color: var(--tag-color, var(--color-ink));
+  border-color: color-mix(in srgb, var(--tag-color, var(--color-ink)) 50%, transparent);
+}
+
+.edit-content {
+  flex: 1; resize: none; padding: .85rem; border-radius: .5rem; font-size: .9rem;
+  font-family: system-ui, sans-serif; line-height: 1.65; min-height: 240px;
+  border: 1px solid color-mix(in srgb, var(--color-fg) 15%, transparent);
+  background: color-mix(in srgb, var(--color-fg) 4%, transparent); color: var(--color-fg);
+  transition: border-color .15s;
+}
+
+.edit-content:focus   { outline: none; border-color: var(--color-ink); }
+
+.edit-content::placeholder { opacity: .3; }
+
+.edit-actions { display: flex; gap: .5rem; flex-shrink: 0; flex-wrap: wrap; }
+
+/* ── buttons ── */
+/* .btn.sm, .btn.full, .btn.danger and the .icon-btn.remove hover live in
+   shared/css/components.css now */
+
+.empty-hint { font-size: .8rem; opacity: .35; padding: .35rem 0; }
+
+/* ── narrow: the list is a drawer, the prompt has a way back to it ── */
+.mobile-only { display: none; }
+
+#app:has(> rat-area[name="menu"]:state(overlay)) {
+  .mobile-only               { display: flex; }
+  .detail-header             { padding: .85rem .85rem .6rem; }
+  .detail-view, .detail-edit { padding: 0 .85rem .85rem; }
+}
+
+/* ── inherited-from-shell rules ──────────────────────────────────────────────
+   as a tool this app got these from shared/css/components.css + layout.css.
+   an app links only base.css, so they are inlined here to stay self-contained. */
+
+.search-row {
+  display       : flex;
+  align-items   : center;
+  gap           : 0.4rem;
+  flex-shrink   : 0;
+  background    : color-mix(in srgb, var(--color-fg) 6%, transparent);
+  border-radius : 0.4rem;
+  padding       : 0.3rem 0.5rem;
+}
+.search-icon { opacity: 0.4; }
+.search-input {
+  flex       : 1;
+  background : transparent;
+  border     : none;
+  outline    : none;
+  color      : var(--color-fg);
+  font-size  : 0.85rem;
+}
+.search-input::placeholder { opacity: 0.35; }
+
+.zebra > * {
+  border-radius: 0.25rem;
+  &:nth-child(2n+1) { background: var(--zebra); }
+}

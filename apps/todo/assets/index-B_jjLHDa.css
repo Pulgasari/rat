@@ -1,0 +1,438 @@
+@import url('https://code.pulgasari.dev/gestalt/packages/css/gestalt.css');
+
+
+/* ── TO STYLE: what every app shares ─────────────────────────────────────────
+   (n) = how many apps use it
+
+   frame
+   - rat-app
+   - rat-area, by name: main | menu (dock=start, a drawer where narrow) |
+     config (dock=end) | context (dock=bottom, a sheet). open, :state(overlay)
+   - rat-view, its glide transition
+   - rat-view > header: ViewHeader (.ViewBack, h1, .ViewTools) or the app's own (12)
+   - rat-view > main
+   - app-panel (5), app-config (Config, 13), app-float (1)
+
+   navigation
+   - Dock: .dock > btn-tap.col, .active, aria-current (6)
+   - the menu area's content: .sidebar / .menu, .nav-item, .brand (feeds, audio,
+     todo, notes, prompts, files), each its own markup for now
+   - nav-crumbs (2), nav-toc (notes)
+
+   controls
+   - btn-icon (11), btn-push (8), btn-tap
+   - native button / input / select / textarea: no font inherited (arial)
+   - input-value + input-option, the combobox and segments looks (Picker, Config)
+   - input-text, input-search, SearchPanel .search-panel (5)
+   - input-number (Slider), input-file look=dropzone (Dropzone), input-bool,
+     input-date / -time / -datetime, input-chips, input-url, input-password
+   - .chip, .chip.active (4)
+
+   content
+   - data-index + data-item, aufbau-index + aufbau-item: list and grid
+   - data-tree (Tree, FolderTree with .reconnect)
+   - output-md (Reader), write-md
+   - aufbau-progress, media-file
+   - svg-icon, its sizes in buttons, headers, lists
+
+   feedback
+   - pop-toast (toast(), every app)
+   - pop-modal / Modal .modal-backdrop, pop-prompt (prompt, confirm)
+   - .empty (Empty, 9), Loading, .booting (6, each its own spinner)
+   - .install-tip (InstallTip, 6), Brand
+*/
+
+html, body { height: 100%; }
+body { overflow: hidden; overscroll-behavior: none; }
+
+/* with areas rat-app is their grid (its own css), an app without areas gets a column */
+rat-app {
+  height   : 100dvh;
+  overflow : hidden;
+
+  &:not(:has(> rat-area)) { display: flex; flex-flow: column; }
+}
+
+rat-view {
+  display: flex;
+  flex-direction: column;
+}
+rat-view > header {
+  --bg  : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --gap : small;
+  --pad : normal;
+  display: flex; justify-content: space-between;
+  position: sticky; top: 0;
+  text-transform: uppercase;
+
+  button { text-transform: uppercase; }
+  > h1   { flex: 1 1 auto; }   /* next to the back button, the tools at the end */
+}
+rat-view > main {
+  justify-content: safe center;
+  display: flex;
+  flex: 1;
+}
+rat-view .empty {
+  align-items: center;
+  align-self: center;
+  display: flex;
+  flex-flow: column;
+  --gap: normal;
+}
+
+rat-view .empty   { text-align: center; }
+rat-view .empty * { text-align: center; }
+
+/* ── the dock, the Dock component: a row of btn-tap, icon over label ─────── */
+
+.dock {
+  --bg       : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  border-top : 1px solid var(--line);
+  display    : flex;
+  flex       : none;
+  text-transform: uppercase;
+
+  > btn-tap {
+    --bg           : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+    flex           : 1 1 0;
+    flex-direction : column;
+    font-size      : 1rem;
+    gap            : calc(var(--unit, 0.25rem) * 2);
+    gap            : --space(small);
+    padding        : calc(var(--unit, 0.25rem) * 2);
+    padding        : --space(small);
+    opacity        : 0.5;
+
+    &:hover       { opacity: 1; }
+    &.active      { opacity: 1; color: var(--color-ink); color: --color(ink); }
+    &::part(icon) { font-size: 2rem; }
+  }
+}
+
+/* ── tokens ─────────────────────────────────────────────────────── */
+
+body {
+  --hover   :  color-mix(in oklch, var(--color-fg) 90%, transparent);
+  --line    :  color-mix(in oklch, var(--color-fg) 50%, transparent);
+  --panel   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  --panel-2 : oklch(from var(--color-bg) max(0, l - 0.2) c h / alpha);
+  --zebra   : oklch(from var(--color-bg) max(0, l - 0.1) c h / alpha);
+  /* --radius  : 0.5rem; */
+}
+
+/* ── mobile / android  ─────────────────────────────────────────────────────── */
+
+/*
+safe-area insets. non-zero where the page runs edge-to-edge:
+the capacitor wrappers (android 15+ enforces it, viewport-fit=cover opts in) and notched screens.      
+body's background covers the canvas behind the system bars, rat-app keeps clear
+*/
+
+body {
+  --safe-top    : env(safe-area-inset-top,    0px);
+  --safe-right  : env(safe-area-inset-right,  0px);
+  --safe-bottom : env(safe-area-inset-bottom, 0px);
+  --safe-left   : env(safe-area-inset-left,   0px);
+}
+
+:root rat-app {
+  background-clip : content-box;
+  padding         : var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+
+/* CUSTOM PROPS */
+
+
+/* TYPO */
+
+/*
+:root {
+  --font      : "Manrope";
+  --font-code : "JetBrains Mono", monospace;
+  --font-size : 12px;
+}
+*          { font-family : var(--font); }
+html, body { font-size   : var(--font-size); }
+*/
+
+/* move to: gestalt/packages/css/mobile.css */
+
+/* ::selection { background: var(--accent-25); } */
+
+/* ── oled fix (temp) ─────────────────────────────────────────────────────── */
+
+/* move to: zugriff/apps/podcasts/app.css
+or move to: gestalt/packages/css/surfaces.css */
+
+@container style(--palette: oled) {
+  body {
+    --line: color-mix(in oklch, var(--color-fg) 25%, transparent);
+  }
+  rat-app {
+    rat-view > header { border-bottom : 1px solid var(--line); }
+    .dock             { border-top    : 1px solid var(--line); }
+    data-item         { border-bottom : 1px solid var(--line); }
+  }
+}
+/* the frame is #app, the <app-root>, with <app-area name="main"> (the views and the dock),
+   <app-area name="menu"> (lists and tags), <app-area name="context"> (the task
+   being edited) and <app-area name="config">. menu and config are sidebars where
+   there is room and drawers where there is not, the context a sheet */
+
+/* ── menu ────────────────────────────────────────────────────────────────── */
+
+rat-area[name="menu"] { --area-size: min(85vw, 18rem); }
+
+.menu {
+  block-size     : 100%;
+  display        : flex;
+  flex-direction : column;
+  gap            : 0.25rem;
+  min-block-size : 0;
+  overflow-y     : auto;
+  padding-block  : 0.5rem;
+
+  > :not(.side-foot) { flex: none; }
+  .side-foot         { margin-block-start: auto; padding: 0.5rem; }
+}
+
+.menu-head {
+  align-items     : center;
+  display         : flex;
+  font-size       : 0.75rem;
+  justify-content : space-between;
+  letter-spacing  : 0.05em;
+  margin          : 0.75rem 0.75rem 0;
+  opacity         : 0.6;
+  text-transform  : uppercase;
+}
+
+.nav-item {
+  align-items : center;
+  display     : flex;
+
+  > btn-icon { opacity: 0; }
+  &:hover > btn-icon, &:focus-within > btn-icon { opacity: 1; }
+  &[aria-current="page"] .nav-link { background: color-mix(in srgb, currentColor 12%, transparent); }
+}
+
+.nav-link {
+  align-items     : center;
+  background      : none;
+  border          : 0;
+  border-radius   : var(--radius, 0.5rem);
+  color           : inherit;
+  cursor          : pointer;
+  display         : flex;
+  flex            : 1 1 auto;
+  font            : inherit;
+  gap             : 0.6rem;
+  margin-inline   : 0.25rem;
+  min-inline-size : 0;
+  padding         : 0.45rem 0.75rem;
+  text-align      : start;
+
+  &:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+  > span:first-of-type { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.count { font-size: 0.8em; font-variant-numeric: tabular-nums; opacity: 0.6; }
+
+/* ── the dock, on narrow screens only: wider ones have the sidebar ───────── */
+
+@media (min-width: 821px) { #app-dock { display: none; } }
+
+/* ── a view: header, the add field, the groups ───────────────────────────── */
+
+rat-view > header {
+  align-items   : center;
+  block-size    : 3rem;
+  border-bottom : 1px solid var(--line);
+  display       : flex;
+  flex          : none;
+  gap           : 0.5rem;
+  padding       : 0 0.75rem;
+
+  > h2 { flex: 1 1 auto; font-size: 1.1rem; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+.groups {
+  flex       : 1 1 auto;
+  overflow-y : auto;
+  padding    : 0.5rem 0.75rem 6rem;
+}
+
+.group {
+  margin-block-end : 1rem;
+
+  > h3 { font-size: 0.8rem; margin: 0.5rem 0 0.25rem; }
+  > h3 > button {
+    align-items    : center;
+    background     : none;
+    border         : 0;
+    color          : inherit;
+    cursor         : pointer;
+    display        : flex;
+    font           : inherit;
+    gap            : 0.5rem;
+    letter-spacing : 0.05em;
+    opacity        : 0.7;
+    padding        : 0;
+    text-transform : uppercase;
+  }
+}
+
+.hint { font-size: 0.9rem; margin: 0.5rem 0; opacity: 0.6; }
+
+/* ── the add field and its chips ─────────────────────────────────────────── */
+
+.add {
+  display        : flex;
+  flex-direction : column;
+  gap            : 0.4rem;
+  padding        : 0.75rem 0.75rem 0;
+}
+
+.add-field {
+  align-items   : center;
+  background    : color-mix(in srgb, currentColor 6%, transparent);
+  border-radius : var(--radius, 0.5rem);
+  display       : flex;
+  gap           : 0.5rem;
+  padding       : 0 0.75rem;
+
+  > input {
+    background      : none;
+    border          : 0;
+    color           : inherit;
+    flex            : 1 1 auto;
+    font            : inherit;
+    min-inline-size : 0;
+    outline         : none;
+    padding         : 0.65rem 0;
+  }
+  &:focus-within { outline: 2px solid var(--accent-25, currentColor); }
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+
+.chip {
+  align-items   : center;
+  background    : color-mix(in srgb, currentColor 12%, transparent);
+  border        : 0;
+  border-radius : 999px;
+  color         : inherit;
+  cursor        : pointer;
+  display       : inline-flex;
+  font          : inherit;
+  font-size     : 0.8rem;
+  gap           : 0.25rem;
+  padding       : 0.15rem 0.6rem;
+
+  &[data-kind="priority"] { background: color-mix(in srgb, var(--color-error, red) 25%, transparent); }
+  svg-icon { opacity: 0.6; }
+}
+
+/* ── a task ──────────────────────────────────────────────────────────────── */
+
+.task {
+  align-items   : start;
+  background    : var(--color-bg);
+  border-bottom : 1px solid var(--line);
+  display       : flex;
+  gap           : 0.25rem;
+  outline       : none;
+  touch-action  : pan-y;
+
+  &[aria-current="true"], &:focus-visible { background: color-mix(in srgb, currentColor 10%, var(--color-bg)); }
+  &[data-done] .title { opacity: 0.5; text-decoration: line-through; }
+
+  &[data-priority="1"] .check { color: #8be9fd; }
+  &[data-priority="2"] .check { color: #ffb86c; }
+  &[data-priority="3"] .check { color: #ff5555; }
+
+  > button {
+    background : none;
+    border     : 0;
+    color      : inherit;
+    cursor     : pointer;
+    font       : inherit;
+    padding    : 0.6rem 0.25rem;
+    text-align : start;
+  }
+
+  > .check { flex: none; font-size: 1.25rem; line-height: 1; }
+  > .body  { display: flex; flex: 1 1 auto; flex-direction: column; gap: 0.2rem; min-inline-size: 0; }
+}
+
+.title { overflow-wrap: anywhere; }
+
+.meta {
+  display   : flex;
+  flex-wrap : wrap;
+  font-size : 0.75rem;
+  gap       : 0.6rem;
+  opacity   : 0.7;
+
+  > span   { align-items: center; display: inline-flex; gap: 0.2rem; }
+  .overdue { color: var(--color-error, #ff5555); opacity: 1; }
+  .list    { font-weight: 600; }
+}
+
+/* ── the editor ──────────────────────────────────────────────────────────── */
+
+rat-area[name="context"] { --area-size: min(80vh, 40rem); }
+
+.editor {
+  display           : flex;
+  flex-direction    : column;
+  gap               : 0.75rem;
+  padding-block-end : 2rem;
+
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; > * { flex: 1 1 10rem; } }
+  .actions { display: flex; gap: 0.5rem; justify-content: space-between; }
+  small { opacity: 0.6; }
+}
+
+.field {
+  display        : flex;
+  flex-direction : column;
+  gap            : 0.3rem;
+
+  > span { font-size: 0.75rem; letter-spacing: 0.05em; opacity: 0.6; text-transform: uppercase; }
+}
+
+.subtasks {
+  > h4 { font-size: 0.75rem; letter-spacing: 0.05em; margin: 0; opacity: 0.6; text-transform: uppercase; }
+  .add { padding: 0.5rem 0 0; }
+}
+
+/* ── settings ────────────────────────────────────────────────────────────── */
+
+.config-section {
+  border-top  : 1px solid var(--line);
+  margin-top  : 1rem;
+  padding-top : 0.75rem;
+
+  > h4 { font-size: 0.75rem; letter-spacing: 0.05em; margin: 0 0 0.5rem; opacity: 0.6; text-transform: uppercase; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+}
+
+/* ── the undo in a toast ─────────────────────────────────────────────────── */
+
+pop-toast .undo {
+  background      : none;
+  border          : 0;
+  color           : inherit;
+  cursor          : pointer;
+  font            : inherit;
+  font-weight     : 700;
+  padding         : 0;
+  text-decoration : underline;
+}
+
+/* a button's text is centered by default, a row reads from the start */
+.task .body, .nav-link { justify-items: start; text-align: start; }
+.menu .search { inline-size: 100%; }
