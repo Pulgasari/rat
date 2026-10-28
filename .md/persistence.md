@@ -268,3 +268,37 @@ an app: which values are worth keeping.
 3. **keys as functions**, followed like a computed: `stored({ key: () => `bookmarks:${$folderId}` }, …)`.
 4. **`in: 'secure'`**: keychain / keystore drivers.
 5. **devtools**: every kept value with key, place and size.
+
+---
+
+# anmerkungen
+
+bin einverstanden, können wir bauen. anmerkungen:
+
+(1) grundsätzlich würde ich sagen 
+- `b` und `c` sind quasi der "mature" weg
+- `d` ist der "magic" weg
+- `a` ist der "primitive" weg (vielleicht auch quasi der "core" bzzgl implementierung)
+
+in der praxis nimmt meistens sicherlich d, b, c.
+
+aber statt `stored` und `persist` sollte man 1 vokabel nehmen. ich tendiere zu `stored`.
+
+(2) also das is sicherlich nicht die beste lösung ^^
+
+> "the key is the name without $. collisions between modules: two $tabs! in one app share one key. either that is the point (the same value), or one of them writes its key out."
+
+für den anfang ist das sicherlich okay.
+
+für ne höhere stufe wäre hier vermutlich erster nutzen für wasich schon so halbim hinterkopf hatte, als ich bei views, panels usw direkt `name` props zum weg machte:
+
+so könnten `$tabs!` in mehrere views automatisch keys bekommen:
+
+```
+<rat-view name='podcasts' /> // myapp:podcasts:tabs
+<rat-view name='search'   /> // myapp:search:tabs
+```
+
+(3) ja, type-based defaults. `Table` gehört nich in localStorage (selbse wenn wir das easy könnten) ^^
+
+(4) `in url` weiss ich noch nich
