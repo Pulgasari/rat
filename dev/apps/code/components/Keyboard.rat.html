@@ -10,8 +10,8 @@
   import { enableAndroidKeyboard } from '../modules/keyboard.js';
 
   const LAYOUT = {
-    regular : ['qwertzuiopü', 'asdfghjklöä', '-yxcvbnm-'],
-    shift   : ['QWERTZUIOPÜ', 'ASDFGHJKLÖÄ', '-YXCVBNM-'],
+    regular : ['qwertzuiopü', 'asdfghjklöä', '--yxcvbnm--'],
+    shift   : ['QWERTZUIOPÜ', 'ASDFGHJKLÖÄ', '--YXCVBNM--'],
     symbols : [`([{<?.,'$#=+*12345`, `)]}>!:;"&|_-/67890`],
   };
 
@@ -63,8 +63,8 @@
   effect(() => () => { if (!$config.disableAndroidKeyboard) enableAndroidKeyboard(); });
 </script>
 
-@fragment key (name, icon, wide)
-  <button.key class:wide={wide} class:active={(name === 'shift' && $shift) || (name === 'capslock' && $caps)} tabindex='-1' onmousedown={event => press(event, name)}>
+@fragment key (name, icon, width)
+  <button.key class={width} class:active={(name === 'shift' && $shift) || (name === 'capslock' && $caps)} tabindex='-1' onmousedown={event => press(event, name)}>
     @if (icon): <svg-icon icon={icon} />
     @else: {name}
   </button.key>
@@ -73,24 +73,26 @@
   <div.symbols>
     @for (row of LAYOUT.symbols)
       <div.row>
-        @for (char of [...row]): {key(char, null, false)}
+        @for (char of [...row]): {key(char, null, 'symbol')}
       </div.row>
   </div.symbols>
   <div.keys>
     @for (row, index of $rows)
       <div.row>
-        {key(EDGES[index][0], EDGES[index][0], true)}
+        {key(EDGES[index][0], EDGES[index][0], 'w-2')}
         @for (char of [...row])
           @if (char === '-'): <span.spacer></span>
-          @else: {key(char, null, false)}
-        {key(EDGES[index][1], EDGES[index][1], true)}
+          @else: {key(char, null, '')}
+        {key(EDGES[index][1], EDGES[index][1], 'w-2')}
       </div.row>
     <div.row>
-      {key('space', 'space', true)}
-      {key('up', 'arrow-up', false)}
-      {key('down', 'arrow-down', false)}
-      {key('left', 'arrow-left', false)}
-      {key('right', 'arrow-right', false)}
+      <button.key.w-2 disabled tabindex='-1'>ctrl</button.key>
+      <button.key.w-2 disabled tabindex='-1'>alt</button.key>
+      {key('space', 'space', 'w-7')}
+      {key('up', 'arrow-up', '')}
+      {key('down', 'arrow-down', '')}
+      {key('left', 'arrow-left', '')}
+      {key('right', 'arrow-right', '')}
     </div.row>
   </div.keys>
 </div.keyboard>

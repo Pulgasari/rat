@@ -21,15 +21,22 @@
 
 <footer.statusbar>
   @if ($current)
-    @if ($current.where): <span.item.where title={$current.where}>{$current.where}</span>
-    <span.item>{$current.language}</span>
+    @if ($current.where)
+      <span.item.where title={$current.where}>{$current.where}</span>
+      <span.sep>·</span>
+    <span.item.language>{$current.language}</span>
+    <span.sep>·</span>
     <button.item onclick={cycle}>{sizeOf($current.content, $config.fileSizeFormat)}</button>
+    <span.sep>·</span>
     <button.item onclick='settings'>{$options.insertSpaces ? `Spaces: ${$options.tabSize}` : 'Tabs'}</button>
   @else
     <span.item>No file</span>
   <span.spacer></span>
   <button.item onclick={() => toggle('wordWrap')}>Wrap: {$options.wordWrap}</button>
+  <span.sep>·</span>
   <button.item onclick={() => toggle('minimap')}>Map: {onOff($options.minimap)}</button>
+  <span.sep>·</span>
   <button.item onclick={() => toggle('lineNumbers')}>Lines: {onOff($options.lineNumbers)}</button>
+  <span.sep>·</span>
   <span.item>{$options.fontSize}px</span>
 </footer.statusbar>
