@@ -31,12 +31,14 @@
   const wide   = matchMedia('(min-width: 48rem)').matches;
 </script>
 
+@fragment pageLink (page) {
+  <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
+}
+
 <rat-area id|name='menu' dock='start' open={wide}>
   <nav>
     <a.brand href='../../'>RAT</a>
-    @for (page of PAGES2) {
-      <a href={'#/' + page.name} class:active={$page === page.name} onclick={picked}>{page.title}</a>
-    }
+    @for (page of PAGES2): @fragment pageLink(page)
     <a href='../../demos/'>Demos</a>
     <a href='https://github.com/pulgasari/rat'>GitHub</a>
   </nav>
@@ -47,10 +49,24 @@
     <button aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
     <span>RAT docs</span>
     </header>
+  
   <main>
     <output-md
       src={$src}
       on:output-md-rendered={codeBlocks}
     />
   </main>
+
+  <footer>
+    <div.prev><a href='#'>prev</a></div>
+    <div>{$page}</div>
+    <div.next><a href='#'>next</a></div>
+  </footer>
 </rat-view>
+
+<style>
+  #page footer {
+    display: flex; flex-flow: row nowrap; align-items: center: justify-content: space-between;
+    /*flow: flex row nowrap center space-between;*/
+  }
+</style>
