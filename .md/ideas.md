@@ -330,6 +330,13 @@ maybe gonna add one of those?
 Interface
 Struct
 URL
+
+History
+Queue
+
+Store
+DeepStore
+FlatStore
 ```
 
 ---
