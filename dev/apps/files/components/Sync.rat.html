@@ -3,8 +3,7 @@
   // one sent to before), collect files (picked, or sent here from the library), send. the transfer is a task.
   // auto sync keeps a folder sent in the background. outside the android app the view says why it is empty
 
-  import fmt       from '../../.shared/fmt.js';
-  import { toast } from '../../.shared/toast.js';
+  import fmt from '../../.shared/fmt.js';
 
   import * as sync from '../modules/sync.rat.js';
 
@@ -24,7 +23,6 @@
 
   const isChosen = target => Boolean($current) && sync.sameTarget($current, target);
   const iconOf   = target => target.deviceType === 'mobile' ? 'lucide:smartphone' : 'lucide:monitor';
-  const run      = work   => Promise.resolve().then(work).catch(toast.error);
 
   function choose (target) {
     $chosen  = target;
@@ -117,8 +115,8 @@
       @else
         <p.hint>Pick files, or send them from the library: their details have a "send" button.</p.hint>
       <div-x.actions>
-        <Action icon='lucide:file-plus' label='pick files' onclick={() => run(sync.pickFiles)} />
-        <button.action.primary type='button' disabled={!$files.length || !$current} onclick={() => run(() => sync.send($current, $files, $pin))}>
+        <Action icon='lucide:file-plus' label='pick files' onclick={sync.pickFiles} />
+        <button.action.primary type='button' disabled={!$files.length || !$current} onclick={() => sync.send($current, $files, $pin)}>
           <svg-icon icon='lucide:send' /> {sendLabel($files, $size)}
         </button.action.primary>
       </div-x.actions>
@@ -134,12 +132,12 @@
       }} />
       @if (!$auto.enabled): <input-text placeholder='only on this wi-fi (ssid), optional' bind:value={$ssid} />
       <div-x.actions>
-        <Action icon='lucide:folder-search' label='folder' onclick={() => run(sync.pickSyncFolder)} />
+        <Action icon='lucide:folder-search' label='folder' onclick={sync.pickSyncFolder} />
         @if ($auto.enabled)
-          <Action icon='lucide:refresh-cw' label='now' onclick={() => run(sync.syncNow)} />
-          <Action icon='lucide:pause' label='turn off' onclick={() => run(sync.stopAutoSync)} />
+          <Action icon='lucide:refresh-cw' label='now' onclick={sync.syncNow} />
+          <Action icon='lucide:pause' label='turn off' onclick={sync.stopAutoSync} />
         @else
-          <Action icon='lucide:play' label='turn on' disabled={!$auto.tree || !$current} onclick={() => run(() => sync.startAutoSync($current, { pin: $pin, ssid: $ssid }))} />
+          <Action icon='lucide:play' label='turn on' disabled={!$auto.tree || !$current} onclick={() => sync.startAutoSync($current, { pin: $pin, ssid: $ssid })} />
       </div-x.actions>
     </section>
   </div.scroll>

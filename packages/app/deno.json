@@ -10,6 +10,7 @@
   "imports": {
     "@aufbau/gestures": "jsr:@aufbau/gestures@^2.1.0",
     "@bunker/db": "jsr:@bunker/db@^0.2.0",
+    "@domina/dom": "jsr:@domina/dom@^0.1.0",
     "@domina/element": "jsr:@domina/element@^0.1.0",
     "@domina/observer": "jsr:@domina/observer@^0.1.0",
     "@domina/proxy": "jsr:@domina/proxy@^0.1.0",

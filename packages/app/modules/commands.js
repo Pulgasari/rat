@@ -28,8 +28,8 @@ class Commands extends $Dict {
       if (!entry) return;
       event.stopPropagation();
       const from = event.composedPath()[0];
-      try { entry.exec(...args, origin)?.catch?.(error => raise(from, error)); }
-      catch (error) { raise(from, error); }
+      try { entry.exec(...args, origin)?.catch?.(error => raise(from, error, 'handler')); }
+      catch (error) { raise(from, error, 'handler'); }
     };
     root.addEventListener(COMMAND, handle);
     return () => root.removeEventListener(COMMAND, handle);

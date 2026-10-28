@@ -132,12 +132,22 @@ else the view `name="x"`.
 | `name`, `transition` | for `go[name]`, and its own transition |
 | `[active]` | set by the router only. an inactive view is inert and hidden, a mounted `src` stays |
 | `view.on('leave', fn, { unload })` | a guard, asked when a navigation takes the view away. `event.preventDefault()` keeps it, async is fine. returns its stop |
+| `view.on('enter' \| 'left' \| 'mount', fn)` | its own events: fn gets the value (`{ params }` on enter), returns the stop |
 | `view.retry()` | after an error, loads `src` again |
-| `rat:enter`, `rat:leave`, `rat:mount`, `rat:error` | events |
+| `rat:enter`, `rat:leave`, `rat:mount`, `rat:error` | the same as dom events, through `RAT.dom(view).on(…)` |
+
+**`on()` of rat's elements** is about their own events, not the dom's: the handler gets the value,
+not an event object, and `on()` returns the stop (`events.js`). `RAT.app.on('error' | 'mount' |
+'navigate' | 'ready')`, `view.on(…)` above, `area.on('toggle')`, `part.on('mount')`. dom events go
+through `RAT.dom` (`@domina/dom`): `RAT.dom(element).on('click', …)`. an unknown type throws.
+
+`RAT.app.on('error', fn)` gets every failed action: an event handler or command that threw, a promise
+nobody awaited, a failed `app.hold()`. the view stays as it is (a render error still replaces it).
+without a listener the app shows its error popover.
 
 `<rat-area>`: `dock` (`start`, `end`, `bottom`, `none` = main), `open`, `expanded`, `peek`,
 `overlay` (`auto` below `breakpoint`, `always`, `never`), `show()`, `hide()`, `toggle()`,
-`expand()`, a drag on its handle. the port of `<app-area>`.
+`expand()`, a drag on its handle, `area.on('toggle', ({ open, expanded }) => …)`. the port of `<app-area>`.
 
 ## config, `RAT`, mods
 

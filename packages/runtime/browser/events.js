@@ -23,7 +23,7 @@ import { matchesCombos, parseCombos } from './keys.js';
 
 // a string handler names a command, resolved when the event fires: the value
 // may come from an expression (onclick={item.command}). an error of the handler,
-// thrown or a rejected promise, is raised from the element (errors.js)
+// thrown or a rejected promise, is raised from the element as a handler's (errors.js)
 function listener (handler, { keys = null, prevent = false, times = 0 } = {}) {
   const combos = keys ? parseCombos(keys) : null;
   let   left   = times;
@@ -35,9 +35,9 @@ function listener (handler, { keys = null, prevent = false, times = 0 } = {}) {
     if (times) left--;
     try {
       const result = (typeof handler === 'string' ? commandListener(handler) : handler).call(this, event);
-      if (typeof result?.catch === 'function') result.catch(error => raise(this, error));
+      if (typeof result?.catch === 'function') result.catch(error => raise(this, error, 'handler'));
     }
-    catch (error) { raise(this, error); }
+    catch (error) { raise(this, error, 'handler'); }
   };
 }
 

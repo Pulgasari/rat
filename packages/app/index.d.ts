@@ -52,7 +52,7 @@ export class RatApp extends HTMLElement {
   toggle (name: string, force?: boolean): RatArea | null;
   /** The views of a path, the outermost first, and the params of all levels. */
   match (path: string): { params: Record<string, string>; views: RatView[] };
-  /** ready() waits for it too. */
+  /** ready() waits for it too, a failure goes to fail(). */
   hold<T> (promise: Promise<T>): Promise<T>;
   /** Loads src (or the module of the importer handed over) and mounts its component in place of what the app holds. */
   start (importer?: () => Promise<object>, config?: Record<string, any>): Promise<void>;
@@ -60,6 +60,12 @@ export class RatApp extends HTMLElement {
   run (importer: () => Promise<object>, config?: Record<string, any>): Promise<void>;
   /** The last error boundary: shows an error in a popover over the app. */
   report (error: unknown): void;
+  /** Its own events, fn gets the value, returns the stop. error: a failed action (a handler or command that threw, a promise nobody awaited); without a listener report(). DOM events: RAT.dom(app).on(…). */
+  on (type: 'error', fn: (error: unknown) => void): () => void;
+  on (type: 'mount' | 'ready', fn: () => void): () => void;
+  on (type: 'navigate', fn: (navigation: { from: string | null; to: string | null; path: string; params: Record<string, string> }) => void): () => void;
+  /** A failed action: to on('error'), else report(). An AbortError goes nowhere. */
+  fail (error: unknown): void;
   /** Loads config.rat.js once (or takes the config handed over): RAT and the mods. */
   configure (config?: Record<string, any>): Promise<Record<string, any>>;
   /** Ends [loading], in a view transition. */
@@ -75,9 +81,10 @@ export class RatView extends HTMLElement {
   transition? : string;
   readonly app    : RatApp | null;
   readonly loaded : boolean;
-  /** A leave guard, returns its stop. Any other type is an event listener. */
+  /** Its own events, fn gets the value, returns the stop. leave is a guard. DOM events: RAT.dom(view).on(…). */
   on (type: 'leave', fn: (event: import('./modules/router.js').LeaveEvent) => unknown, options?: { unload?: boolean }): () => void;
-  on (type: string, ...args: unknown[]): this;
+  on (type: 'enter', fn: (entered: { params: Record<string, string> }) => void): () => void;
+  on (type: 'left' | 'mount', fn: () => void): () => void;
 }
 
 /** A region of the app: sidebar, drawer, bottom sheet, or main. */
@@ -95,6 +102,8 @@ export class RatArea extends HTMLElement {
   hide (): this;
   toggle (force?: boolean): this;
   expand (force?: boolean): this;
+  /** Its own events, fn gets the value, returns the stop. DOM events: RAT.dom(area).on(…). */
+  on (type: 'toggle', fn: (state: { expanded: boolean; open: boolean }) => void): () => void;
 }
 
 /** The app from anywhere. */
@@ -102,6 +111,8 @@ export class RatArea extends HTMLElement {
 export const rat: {
   readonly app    : RatApp | null;
   readonly config : Record<string, any> | null;
+  /** @domina/dom: RAT.dom('.card').on('click', …), RAT.dom.addEventListener(…), like document. */
+  readonly dom    : typeof import('@domina/dom').dom;
   toggle (name: string, force?: boolean): RatArea | null;
 };
 

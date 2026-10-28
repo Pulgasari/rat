@@ -6,7 +6,7 @@
   "main"         : "./index.js",
   "types"        : "./index.d.ts",
   "exports"      : { ".": "./index.js", "./host/deno.js": "./host/deno.js", "./run.js": "./run/run.js" },
-  "dependencies" : { "@domina/element": "*", "@gestalt/core": "*", "@rat/bunker": "0.0.1", "@rat/compiler": "0.0.1", "@rat/runtime": "0.0.1", "@rat/types": "0.0.1", "acorn": "^8.14.0" },
+  "dependencies" : { "@domina/dom": "*", "@domina/element": "*", "@gestalt/core": "*", "@rat/bunker": "0.0.1", "@rat/compiler": "0.0.1", "@rat/runtime": "0.0.1", "@rat/types": "0.0.1", "acorn": "^8.14.0" },
   "sideEffects"  : ["./elements/*.js", "./index.js", "./run/run.js"],
   "license"      : "MIT"
 }

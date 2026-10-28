@@ -256,41 +256,38 @@ export function openTasks () {
 // :::::: WRITE
 // the folder is granted read only. a write asks for more on the click that wants it, then runs as a
 // task in the write lane: the app stays usable meanwhile, and two writes never run into each other.
-// a server's handle has nothing to ask: its credentials are the permission
+// a server's handle has nothing to ask: its credentials are the permission. a failure is not caught
+// here: it goes up to the click, and from there to the app's catch() (app.rat.html)
 
 async function writable () {
   const handle = rootHandle();
-  const state  = handle?.requestPermission ? await handle.requestPermission({ mode: 'readwrite' }).catch(() => 'denied') : handle ? 'granted' : 'denied';
-  if (state === 'granted') return handle;
-  toast.error('No permission to change this folder');
-  return null;
+  if (!handle) throw new Error('No folder open');
+  const state = handle.requestPermission ? await handle.requestPermission({ mode: 'readwrite' }).catch(() => 'denied') : 'granted';
+  if (state !== 'granted') throw new Error('No permission to change this folder');
+  return handle;
 }
 
 // a write as a task. once it is done, the folder it changed is listed anew if it is still on screen
-function writeTask (task, at, work) {
-  const same = () => at.join('/') === $path.join('/');
-  run({ ...task, lane: 'write' }, work)
-    .then(() => { if (same()) goTo([...at]); })
-    .catch(toast.error);
+async function writeTask (task, at, work) {
+  await run({ ...task, lane: 'write' }, work);
+  if (at.join('/') === $path.join('/')) goTo([...at]);
 }
 
 export async function newFolder () {
   const name = await dialogs.prompt({ message: 'Name of the new folder', ok: 'Create', title: 'New folder' });
   if (!name) return;
   const handle = await writable();
-  if (!handle) return;
-  const at = $path;
-  writeTask({ icon: 'lucide:folder-plus', label: `New folder ${name}` }, at, () => fs.mkdir(handle, at, name));
+  const at     = $path;
+  await writeTask({ icon: 'lucide:folder-plus', label: `New folder ${name}` }, at, () => fs.mkdir(handle, at, name));
 }
 
 export async function renameEntry (entry) {
   const name = await dialogs.prompt({ message: 'New name', ok: 'Rename', title: entry.name, value: entry.name });
   if (!name || name === entry.name) return;
   const handle = await writable();
-  if (!handle) return;
-  const at = entry.path ?? $path;
+  const at     = entry.path ?? $path;
   $selected = null;
-  writeTask(
+  await writeTask(
     {
       icon  : 'lucide:pencil',
       label : `Rename ${entry.name} to ${name}`,
@@ -303,11 +300,10 @@ export async function renameEntry (entry) {
 export async function deleteEntry (entry) {
   if (!await dialogs.confirm({ message: `Delete “${entry.name}”? This removes it from your disk.`, ok: 'Delete', title: 'Delete' })) return;
   const handle = await writable();
-  if (!handle) return;
-  const at = entry.path ?? $path;
+  const at     = entry.path ?? $path;
   $selected = null;
   RAT.app.toggle('context', false);
-  writeTask({ icon: 'lucide:trash-2', label: `Delete ${entry.name}` }, at, () => fs.remove(handle, at, entry.name));
+  await writeTask({ icon: 'lucide:trash-2', label: `Delete ${entry.name}` }, at, () => fs.remove(handle, at, entry.name));
 }
 
 export function pick (mode, entry) {
@@ -317,8 +313,9 @@ export function pick (mode, entry) {
 
 // what the pickboard holds goes into the folder on screen, as one task
 export async function paste () {
-  const board  = $pickboard;       if (!board)  return;
-  const handle = await writable(); if (!handle) return;
+  const board = $pickboard;
+  if (!board) return;
+  const handle = await writable();
   const items  = board.items.toArray();
   const target = [...$path];
   const what   = items.length === 1 ? items[0].name : `${items.length} items`;
@@ -327,11 +324,14 @@ export async function paste () {
   if (board.mode === 'move') transfer.clear();
   else transfer.placed();
 
-  const done = () => { if (target.join('/') === $path.join('/')) goTo([...target]); };
-  run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
-    ({ progress, signal }) => transfer.transfer(handle, items, board.mode, target, { onProgress: progress, signal }))
-    .then(done)
-    .catch(error => { if (error?.name !== 'AbortError') toast.error(error); done(); });
+  // listed anew whether it worked or not: a part may have arrived
+  try {
+    await run({ icon, label: `${verb} ${what} to /${target.join('/')}`, lane: 'write' },
+      ({ progress, signal }) => transfer.transfer(handle, items, board.mode, target, { onProgress: progress, signal }));
+  }
+  finally {
+    if (target.join('/') === $path.join('/')) goTo([...target]);
+  }
 }
 
 export async function download (entry) {
@@ -344,18 +344,15 @@ export async function download (entry) {
 // :::::: THE FOLDER, granted and let go
 
 export async function chooseFolder () {
-  if (!root.supported) return toast.error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
-  try {
-    if (!await root.grant()) return;
-    setTabs([{ path: [] }], 0);
-    router.go('/');
-  }
-  catch (error) { toast.error(error); }
+  if (!root.supported) throw new Error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
+  if (!await root.grant()) return;
+  setTabs([{ path: [] }], 0);
+  router.go('/');
 }
 
 export async function reconnect () {
   const { granted } = await root.reconnect();
-  if (!granted) return chooseFolder();
+  if (!granted) await chooseFolder();
 }
 
 export async function closeFolder () {
@@ -389,10 +386,10 @@ export async function forgetRemote (connection) {
 
 // :::::: SEND, a file of the folder into the outbox, the view opens
 
-export function sendEntry (entry) {
-  sync.addEntry($handle, entry.path ?? $path, entry)
-    .then(() => { RAT.app.toggle('context', false); router.go('/sync'); })
-    .catch(toast.error);
+export async function sendEntry (entry) {
+  await sync.addEntry($handle, entry.path ?? $path, entry);
+  RAT.app.toggle('context', false);
+  router.go('/sync');
 }
 
 // :::::: FOLDERTYPES

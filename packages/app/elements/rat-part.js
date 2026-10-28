@@ -14,10 +14,12 @@ resolves against the page, a new src mounts the new component.
 
 a piece of a page, an island in astro's words (ideas/parts.md). while loading
 it has [loading] and in data-status what it is doing. an error boundary
-(../boundary.js): an error of the component, while loading, rendering, in an
-effect or an event handler, replaces it with the message and a retry, [error]
-is set. props: element.props = { … } before it mounts. events: rat:mount,
-rat:error (from @rat/runtime, detail { error, boundary }).
+(../boundary.js): an error of the component, while loading, rendering or in an
+effect, replaces it with the message and a retry, [error] is set. a failed event
+handler goes on to the app. props: element.props = { … } before it mounts.
+
+on('mount', fn) (../events.js): the component mounted, on() returns the stop.
+as dom events: rat:mount, rat:error (from @rat/runtime, detail { error, boundary, source }).
 */
 
 // :::::: IMPORT
@@ -25,6 +27,7 @@ rat:error (from @rat/runtime, detail { error, boundary }).
 import { mount, raise } from '@rat/runtime';
 
 import { catchErrors, showError } from '../boundary.js';
+import { ownEvents }              from '../events.js';
 import { componentOf, load }      from '../run/loader.js';
 
 const idle = fn => globalThis.requestIdleCallback ? requestIdleCallback(fn) : setTimeout(fn, 1);
@@ -41,6 +44,10 @@ class RatPart extends HTMLElement {
   #uncatch = null;
 
   props = {};
+
+  #events = ownEvents(this, { mount: 'rat:mount' });
+
+  on (type, fn, options) { return this.#events(type, fn, options); }
 
   get mode () { return this.getAttribute('load') ?? 'eager'; }
 
