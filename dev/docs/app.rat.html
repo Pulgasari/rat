@@ -13,7 +13,7 @@
   const TOPICS = ['welcome', 'config', 'components', 'comptime', 'directives', 'dom', 'htx', 'modules', 'operators', 'persistence', 'schemas', 'signals', 'styles', 'types'];
   const PAGES2 = TOPICS.map :: item => ({ name: item, title: item });
   const $page  = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
-  const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
+  const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./content/${$page}.md`, import.meta.url).href;
 
   // the pages before and after the one on screen, in the order of the menu
   const $at   = PAGES2.findIndex(page => page.name === $page);
