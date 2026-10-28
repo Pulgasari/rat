@@ -1,0 +1,37 @@
+<script>
+  // <TagManager onclose={fn} />: the tags, one gone with a click, a new one with a name and a color
+
+  import { addTag, removeTag, tags } from './../state.rat.js';
+
+  let $name  = '';
+  let $color = '#457b9d';
+
+  async function add () {
+    if (!$name.trim()) return;
+    await addTag($name, $color);
+    $name = '';
+  }
+</script>
+
+<div.TagManager>
+  <header>
+    <span>Manage tags</span>
+    <btn-icon icon='close' label='close' onclick={props.onclose} />
+  </header>
+
+  <div.tag-manager-list>
+    @for (tag of tags)
+      <div.tag-manager-row>
+        <span.tag-badge style={{ '--tag-color': tag.color }}>{tag.name}</span>
+        <btn-icon icon='delete' label='delete' onclick={() => removeTag(tag.id)} />
+      </div.tag-manager-row>
+    @else
+      <span.empty-hint>No tags yet</span>
+  </div.tag-manager-list>
+
+  <div.tag-manager-add>
+    <input.field.tag-name-input type='text' placeholder='Tag name' bind:value={$name} on:keydown[enter]={add} />
+    <input.tag-color-input type='color' bind:value={$color} />
+    <btn-push icon='add' label='add' disabled={!$name.trim()} onclick={add} />
+  </div.tag-manager-add>
+</div.TagManager>

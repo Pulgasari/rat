@@ -1,0 +1,42 @@
+<script>
+  // <Sidebar />: a new prompt, search, the tags as a filter and their manager, sorting, the list
+
+  import { $search, $shown, $sortBy, $tag, SORTS, create, tags } from './../state.rat.js';
+
+  let $managing = false;
+</script>
+
+<div.sidebar>
+  <div.sidebar-top>
+    <btn-push icon='add' label='New prompt' onclick={create} />
+  </div.sidebar-top>
+
+  <div.search-row>
+    <svg-icon.search-icon icon='search' />
+    <input.search-input type='text' placeholder='Search …' bind:value={$search} />
+    @if ($search): <btn-icon icon='close' label='clear' onclick={() => $search = ''} />
+  </div.search-row>
+
+  <div.tag-filter>
+    <div.tag-filter-header>
+      <span.section-label>Tags</span>
+      <btn-icon icon='tags' label='manage tags' onclick={() => $managing = !$managing} />
+    </div.tag-filter-header>
+    @if ($managing): <TagManager onclose={() => $managing = false} />
+    <div.tag-filter-list>
+      <button.tag-filter-btn class:active={!$tag} onclick={() => $tag = null}>All</button>
+      @for (tag of tags)
+        <button.tag-filter-btn class:active={$tag === tag.id} style={{ '--tag-color': tag.color }} onclick={() => $tag = $tag === tag.id ? null : tag.id}>{tag.name}</button>
+    </div.tag-filter-list>
+  </div.tag-filter>
+
+  <div.sort-row>
+    <span.section-label>Sort</span>
+    <Picker look='segments' options={SORTS} value={$sortBy} onchange={value => $sortBy = value} />
+  </div.sort-row>
+
+  <div.prompt-list.zebra>
+    @for (prompt of $shown): <PromptItem prompt={prompt} />
+    @else: <div.empty-hint>No prompts found</div>
+  </div.prompt-list>
+</div.sidebar>

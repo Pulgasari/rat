@@ -1,0 +1,13 @@
+<script>
+  // <TagBadge id={tag id} />, <TagBadge id={…} onremove={fn} />: a tag in its color
+
+  import { tagOf } from './../state.rat.js';
+
+  const $tag = tagOf(props.id);
+</script>
+
+@if ($tag)
+  <span.tag-badge style={{ '--tag-color': $tag.color }}>
+    {$tag.name}
+    @if (props.onremove): <btn-icon icon='close' label='remove' onclick={event => { event.stopPropagation(); props.onremove(props.id); }} />
+  </span.tag-badge>

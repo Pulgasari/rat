@@ -1,0 +1,14 @@
+<script>
+  import './state.rat.js';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  RAT.app.on('error', toast.error);
+  hint('Prompts');
+</script>
+
+<!-- the list: out from the start, a drawer closes once a prompt is picked (state.rat.js) -->
+<rat-area name='menu' dock='start' open><Sidebar /></rat-area>
+
+<rat-area name='main'><Detail /></rat-area>
