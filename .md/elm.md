@@ -394,12 +394,12 @@ gives: the log and one error handler. does not give: one update, undo.
 
 **level 2: commands with arguments for the app's actions** · uses what exists
 
-the app's actions become commands. the markup names them, the registry is the one place that maps
+the app's actions become commands (`run` stands for `RAT.app.commands.run`). the markup names them, the registry is the one place that maps
 names to code, and the commands get the log and the error handling from level 1 in one spot:
 
 ```html
-<btn-icon label='more' onclick={send('about', entry)} />
-<Action label='delete' onclick={send('delete', $entry)} />
+<btn-icon label='more' onclick={() => run('about', entry)} />
+<Action label='delete' onclick={() => run('delete', $entry)} />
 ```
 
 gives: one vocabulary for clicks, keys, the menu and a palette. still functions behind the names.
