@@ -1,0 +1,1 @@
+var t=Object.defineProperty;var a=(p,r)=>t(p,"name",{value:r,configurable:!0});import{p as o}from"./_capacitor-9HBST7L5.js";const c=a(()=>o("Browser","@capacitor/browser"),"Browser"),e=a(()=>o("AppLauncher","@capacitor/app-launcher"),"AppLauncher"),i=a(async p=>/^https?:/i.test(p)?(await c()).open({url:p}):(await e()).openUrl({url:p}),"open");export{i as open};

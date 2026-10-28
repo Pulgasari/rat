@@ -1,4 +1,0 @@
-var i=Object.defineProperty;var a=(r,e)=>i(r,"name",{value:e,configurable:!0});import{r as n,p as o}from"./index-BL4eRE5A.js";import"./withControl-CDr4_Pqh.js";import"https://esm.sh/jsr/@pulgasari/logger";import"https://esm.sh/jsr/@pulgasari/str";import"./index-CgHh2HpB.js";import"https://esm.sh/jsr/@pulgasari/is";const s="triangles",$="Triangles",l={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:24,min:4,max:100,step:1,bake:!0}};function b(r={}){const e=n(l,r),t=Number(e.size);return o(s,t,`
-    <rect width="${t}" height="${t}" fill="${e.bg}"/>
-    <path d="M0,${t} L${t/2},0 L${t},${t} Z" fill="${e.fg}"/>
-  `,e.rotate,r)}a(b,"triangles");export{b as default,s as id,$ as name,l as vars};

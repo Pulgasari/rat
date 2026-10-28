@@ -1,0 +1,4 @@
+var a=Object.defineProperty;var i=(r,t)=>a(r,"name",{value:t,configurable:!0});import{r as o,p as s}from"./index-BJDb1BqT.js";import"./index-ObIB6YZN.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";const m="rings",b="Rings",p={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:24,min:6,max:100,step:1,bake:!0},width:{type:"number",default:2,min:.5,max:12,step:.5,bake:!0,unit:"px"}};function $(r={}){const t=o(p,r),e=Number(t.size),n=e/2-Number(t.width);return s(m,e,`
+    <rect width="${e}" height="${e}" fill="${t.bg}"/>
+    <circle cx="${e/2}" cy="${e/2}" r="${n}" fill="none" stroke="${t.fg}" stroke-width="${t.width}"/>
+  `,t.rotate,r)}i($,"rings");export{$ as default,m as id,b as name,p as vars};

@@ -1,0 +1,4 @@
+var i=Object.defineProperty;var a=(e,t)=>i(e,"name",{value:t,configurable:!0});import{r as s,p as o}from"./index-qboi3IS9.js";import"./withControl-Br8gmZRb.js";import"https://esm.sh/jsr/@pulgasari/logger";import"https://esm.sh/jsr/@pulgasari/str";import"./index-CgHh2HpB.js";import"https://esm.sh/jsr/@pulgasari/is";const p="stripes",b="Stripes",n={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:20,min:4,max:100,step:1,bake:!0},width:{type:"number",default:4,min:1,max:20,step:1,bake:!0,unit:"px"}};function x(e={}){const t=s(n,e),r=t.size;return o(p,r,`
+    <rect width="${r}" height="${r}" fill="${t.bg}"/>
+    <line x1="0" y1="0" x2="0" y2="${r}" stroke="${t.fg}" stroke-width="${t.width}"/>
+  `,t.rotate,e)}a(x,"stripes");export{x as default,p as id,b as name,n as vars};

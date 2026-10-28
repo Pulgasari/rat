@@ -1,0 +1,1 @@
+var e=Object.defineProperty;var i=(r,a)=>e(r,"name",{value:a,configurable:!0});const d={read:!0,write:!0},b=i(()=>globalThis.bindings["rat:clipboard.read"](),"read"),l=i(r=>globalThis.bindings["rat:clipboard.write"](r),"write");export{d as can,b as read,l as write};
