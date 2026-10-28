@@ -8,4 +8,6 @@
 [icons](https://code.pulgasari.dev/rat/apps/icons/) ·
 [noisy](https://code.pulgasari.dev/rat/apps/noisy/) ·
 [notes](https://code.pulgasari.dev/rat/apps/notes/) ·
+[podcasts](https://code.pulgasari.dev/rat/apps/podcasts/) ·
+[prompts](https://code.pulgasari.dev/rat/apps/prompts/) ·
 [vectorizer](https://code.pulgasari.dev/rat/apps/vectorizer/) ·
