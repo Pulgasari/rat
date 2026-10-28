@@ -5,7 +5,7 @@ a value made of parts with a separator between them: a key like 'rat:noisy:theme
 special/Path.js), a version. made from the string or from the parts, it is a value: never changed, a
 change gives a new one. called, it is the schema: a string, the parts or Segments, made Segments.
 
-  const Key = Segments(':');                      // the schema, ':' by default: { key: Key } in a Record
+  const Key = Segments(':');                      // the schema, ':' by default. { key: Segments } as a field is Segments()
 
   const key = Segments.from('rat:noisy:theme');   // separator ':' by default
   const ver = Segments.from('1.4.2', '.');
@@ -23,7 +23,7 @@ change gives a new one. called, it is the schema: a string, the parts or Segment
 empty parts are dropped: 'a::b' and ':a:b:' are a:b.
 */
 
-import { Schema, typed } from './schema.js';
+import { Schema, bare, typed } from './schema.js';
 
 const partsOf = (value, separator) => {
   if (value instanceof SegmentsType) return value.segments;
@@ -80,12 +80,12 @@ const isInput = value => typeof value === 'string' || Array.isArray(value) || va
 // a value of the schema is Segments already: create() hands it on
 const ofValue = (Type, schema, value = schema.initial) => schema.parse(value);
 
-const Segments = typed(SegmentsType, (separator = ':') => new Schema({
+const Segments = bare(typed(SegmentsType, (separator = ':') => new Schema({
   describe : { separator },
   initial  : '',
   kind     : 'segments',
   run      : (value, path) => isInput(value) ? { value: SegmentsType.from(value, separator) } : { issues: [{ message: 'expected a string or its parts', path }] },
-}), ofValue);
+}), ofValue));
 
 // :::::: EXPORT
 

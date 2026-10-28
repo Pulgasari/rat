@@ -15,31 +15,34 @@ a tuple is frozen: fixed length, fixed values. a change is a new tuple, so
 there is no reactive variant, a signal holding a tuple is reactive enough.
 */
 
-import { Schema, typed } from './schema.js';
+import { Schema, schemaOf, typed } from './schema.js';
 
 // ::: the schema
 
 // an array or a Tuple of exactly these items, each checked and coerced
-const tupleOf = (...items) => new Schema({
-  describe : { items: items.map(item => item.describe) },
-  initial  : items.map(item => item.initial),
-  kind     : 'tuple',
-  parts    : items,
-  run      : (value, path) => {
-    const tuple = value instanceof TupleType;
-    if (!tuple && !Array.isArray(value)) return { issues: [{ message: 'expected a tuple', path }] };
-    if (value.length !== items.length)   return { issues: [{ message: `expected ${items.length} items`, path }] };
-    const issues = [];
-    const out    = items.map((item, index) => {
-      const result = item.validate(value[index], [...path, index]);
-      if (result.issues) issues.push(...result.issues);
-      return result.value;
-    });
-    if (issues.length) return { issues };
-    if (!out.some((entry, index) => entry !== value[index])) return { value };
-    return { value: tuple ? new TupleType(...out) : out };
-  },
-});
+function tupleOf (...given) {
+  const items = given.map(schemaOf);
+  return new Schema({
+    describe : { items: items.map(item => item.describe) },
+    initial  : items.map(item => item.initial),
+    kind     : 'tuple',
+    parts    : items,
+    run      : (value, path) => {
+      const tuple = value instanceof TupleType;
+      if (!tuple && !Array.isArray(value)) return { issues: [{ message: 'expected a tuple', path }] };
+      if (value.length !== items.length)   return { issues: [{ message: `expected ${items.length} items`, path }] };
+      const issues = [];
+      const out    = items.map((item, index) => {
+        const result = item.validate(value[index], [...path, index]);
+        if (result.issues) issues.push(...result.issues);
+        return result.value;
+      });
+      if (issues.length) return { issues };
+      if (!out.some((entry, index) => entry !== value[index])) return { value };
+      return { value: tuple ? new TupleType(...out) : out };
+    },
+  });
+}
 
 // ::: the data type
 

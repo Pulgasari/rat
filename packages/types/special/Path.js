@@ -18,15 +18,15 @@ computed of a path only reports a real change.
   String(path)              // 'photos/2024/beach.jpg', no leading slash. JSON as well
   Path.root                 // the root, ''
 
-called, it is the schema: a string, the names or a Path, made a Path. so a Record or a Table field holds
-a Path and stores it as 'a/b':
+called, it is the schema: a string, the names or a Path, made a Path. as a field it stands for its
+schema without the call, so a Record or a Table field holds a Path and stores it as 'a/b':
 
-  const Bookmark = { name: Str, path: Path() };
+  const Bookmark = { name: Str, path: Path };   // the same as path: Path()
 
 the rest is Segments (../Segments.js): segments, length, at(), slice(), with(), equals(), toArray().
 */
 
-import { Schema, typed }                       from '../schema.js';
+import { Schema, bare, typed }                 from '../schema.js';
 import { Segments, isInput, ofValue, partsOf } from '../Segments.js';
 import { FileExt }                             from './FileExt.js';
 
@@ -57,11 +57,11 @@ Object.defineProperty(PathType, 'name', { value: 'Path' });
 
 // ::: the schema
 
-const Path = typed(PathType, () => new Schema({
+const Path = bare(typed(PathType, () => new Schema({
   initial : '',
   kind    : 'path',
   run     : (value, path) => isInput(value) ? { value: PathType.from(value) } : { issues: [{ message: 'expected a path', path }] },
-}), ofValue);
+}), ofValue));
 
 // :::::: EXPORT
 

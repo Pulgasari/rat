@@ -31,7 +31,7 @@ drop and toggle change the list by a test, like where and without read it:
 
 import { reactive, register } from '@rat/signals';
 import { by, has, keyBy, one, pluck, where, without } from './query.js';
-import { Schema, typed } from './schema.js';
+import { Schema, schemaOf, typed } from './schema.js';
 
 // ::: the data type
 
@@ -117,25 +117,28 @@ class ListSchema extends Schema {
 
 // an array or a List, every item checked and coerced. a new one (of the same kind) only when an item changed,
 // so an unchanged list stays the same object
-const listOf = item => new ListSchema({
-  describe : { item: item.describe },
-  initial  : [],
-  kind     : 'list',
-  run      : (value, path) => {
-    const list = value instanceof ListType;
-    if (!list && !Array.isArray(value)) return { issues: [{ message: 'expected a list', path }] };
-    const items  = list ? value.toArray() : value;
-    const issues = [];
-    const out    = items.map((entry, index) => {
-      const result = item.validate(entry, [...path, index]);
-      if (result.issues) issues.push(...result.issues);
-      return result.value;
-    });
-    if (issues.length) return { issues };
-    if (!out.some((entry, index) => entry !== items[index])) return { value };
-    return { value: list ? new value.constructor(out) : out };
-  },
-});
+function listOf (given) {
+  const item = schemaOf(given);
+  return new ListSchema({
+    describe : { item: item.describe },
+    initial  : [],
+    kind     : 'list',
+    run      : (value, path) => {
+      const list = value instanceof ListType;
+      if (!list && !Array.isArray(value)) return { issues: [{ message: 'expected a list', path }] };
+      const items  = list ? value.toArray() : value;
+      const issues = [];
+      const out    = items.map((entry, index) => {
+        const result = item.validate(entry, [...path, index]);
+        if (result.issues) issues.push(...result.issues);
+        return result.value;
+      });
+      if (issues.length) return { issues };
+      if (!out.some((entry, index) => entry !== items[index])) return { value };
+      return { value: list ? new value.constructor(out) : out };
+    },
+  });
+}
 
 
 // ::: List + $List

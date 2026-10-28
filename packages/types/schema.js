@@ -112,9 +112,16 @@ function typed (Class, toSchema, make = byConstructor) {
   return Type;
 }
 
+// a type whose schema takes nothing stands for it where a schema is asked: { path: Path } is { path: Path() }.
+// bare() marks such a type (Color, Path …), schemaOf() calls it, a structure asks it for each of its parts
+const BARE = Symbol('rat.bare');
+
+const bare     = Type  => Object.defineProperty(Type, BARE, { value: true });
+const schemaOf = value => typeof value === 'function' && value[BARE] ? value() : value;
+
 // a structure's input: a plain object, not an array, a class instance counts (a Record does)
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 // :::::: EXPORT
 
-export { Bool, Num, Schema, isObject, isSchema, scalar, typed };
+export { Bool, Num, Schema, bare, isObject, isSchema, scalar, schemaOf, typed };

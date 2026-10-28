@@ -100,7 +100,7 @@ $size     = null;    // { width, height } of the image in the preview
 
 // :::::: TABS, each a $Record { path, source }
 
-const Tab = $Record({ path: Path(), '?source': Str });
+const Tab = $Record({ path: Path, '?source': Str });
 
 const tabOf = (tab = {}) => Tab.create({ path: tab.path ?? Path.root, source: tab.source ?? null });
 

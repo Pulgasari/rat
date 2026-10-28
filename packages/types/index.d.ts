@@ -109,6 +109,10 @@ export const $Dict : DictConstructor;
 export const Schema: new (definition: object) => Schema<unknown>;
 
 export function isSchema (value: unknown): value is Schema<unknown>;
+/** Marks a type whose schema takes nothing (Color, Path …): where a schema is asked, the type stands for it. */
+export function bare<T extends Function> (Type: T): T;
+/** A bare type as its schema (Path -> Path()), anything else as it is. Records, lists, dicts, tuples and unions ask it for their parts. */
+export function schemaOf<T> (value: T): T extends () => infer S ? S : T;
 
 /** A list: length is a getter, at(i) / set(i, v) replace [i]. $List is the same, reactive. */
 export interface List<T> extends Iterable<T> {

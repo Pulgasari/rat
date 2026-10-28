@@ -24,7 +24,7 @@ import { $folder }  from './root.rat.js';
 // ::::::
 
 const // ::: schemas
-Bookmark   = { folder: Str, name: Str, path: Path() },
+Bookmark   = { folder: Str, name: Str, path: Path },
 Foldertype = { icon: Str, label: Str };
 
 const // ::: signals (stored)

@@ -2,7 +2,7 @@
 
 export {
   Bool, Num,
-  Schema, isSchema,
+  Schema, bare, isSchema, schemaOf,
 } from './schema.js';
 
 export {

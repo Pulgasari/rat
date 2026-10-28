@@ -190,7 +190,7 @@ path.ext               // FileExt jpg
 String(path)           // 'photos/2024/beach.jpg', no leading slash
 Path.root              // ''
 
-const Bookmark = { name: Str, path: Path() };   // called, the schema: the field holds a Path, stored as 'a/b'
+const Bookmark = { name: Str, path: Path };   // as a field the schema (Path()): it holds a Path, stored as 'a/b'
 ```
 
 ## FileExt
@@ -205,7 +205,7 @@ ext.value              // 'jpg'
 ext.mimeType           // 'image/jpeg', 'application/octet-stream' when unknown
 ext.is('jpg', 'jpeg')  // true
 
-const Upload = { name: Str, ext: FileExt() };   // called, the schema: 'jpg' or '.JPG' made a FileExt
+const Upload = { name: Str, ext: FileExt };   // as a field the schema (FileExt()): 'jpg' or '.JPG' made a FileExt
 ```
 
 ## Tree

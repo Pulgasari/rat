@@ -13,12 +13,13 @@ have none (''). knows the usual mime types.
   ext.is('jpg', 'jpeg')      // true
   String(ext)                // 'jpg'
 
-called, it is the schema: an extension ('jpg', '.JPG') or a FileExt, made a FileExt.
+called, it is the schema: an extension ('jpg', '.JPG') or a FileExt, made a FileExt. as a field it stands
+for its schema without the call:
 
-  const Upload = { name: Str, ext: FileExt() };
+  const Upload = { name: Str, ext: FileExt };
 */
 
-import { Schema, typed } from '../schema.js';
+import { Schema, bare, typed } from '../schema.js';
 
 const MIME = {
   '7z'  : 'application/x-7z-compressed',
@@ -110,14 +111,14 @@ Object.defineProperty(FileExtType, 'name', { value: 'FileExt' });
 
 const ofValue = (Type, schema, value = schema.initial) => schema.parse(value);
 
-const FileExt = typed(FileExtType, () => new Schema({
+const FileExt = bare(typed(FileExtType, () => new Schema({
   initial : '',
   kind    : 'fileext',
   run     : (value, path) => {
     if (value instanceof FileExtType) return { value };
     return typeof value === 'string' ? { value: new FileExtType(value) } : { issues: [{ message: 'expected an extension', path }] };
   },
-}), ofValue);
+}), ofValue));
 
 // :::::: EXPORT
 
