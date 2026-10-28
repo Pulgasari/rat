@@ -518,7 +518,7 @@ let $bookmarks = [] @stored('bookmarks');
 
 ### 2 objects in signals, changed by copying
 
-**status:** partly: places (`$Table`, `$Dict`), tasks (`$Record`s in `$List`s), the pickboard and the settings (`$Record`) are done. the tabs and sync's `$autoSync` are left.
+**status:** partly: places (`$Table`, `$Dict`), tasks (`$Record`s in `$List`s), the pickboard, the settings (`$Record`) and the tabs (`$List` of `$Record`s) are done. sync's `$autoSync` is left.
 
 `rat` `lib` · a signal only notices a new object, so changing one field means copying the whole.
 
@@ -833,6 +833,8 @@ const facts = { files: files.length, mostly: mostly(files)?.label, … };
 ```
 
 ### 14 tabs
+
+**status:** done. a tab is a `$Record` `{ path: Path(), '?source': Str }`, the tabs a `$List`, the one on screen `$tab` the tab itself: no `setTabs`, no clamping, `goTo` writes `$tab.path`, the views hand tabs over instead of positions. `HOME` is gone, `resetTabs()` covers the fresh start.
 
 `app` · the clamp twice, the home tab four times.
 

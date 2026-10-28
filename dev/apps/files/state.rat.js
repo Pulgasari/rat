@@ -13,9 +13,9 @@ of a server.
 // :::::: IMPORT
 
 import dom from '@domina/dom';
-import { effect, untrack }    from '@rat/signals';
-import { $Record, Enum, Str } from '@rat/types';
-import { Path }               from '@rat/types/Path';
+import { effect, untrack }           from '@rat/signals';
+import { $List, $Record, Enum, Str } from '@rat/types';
+import { Path }                      from '@rat/types/Path';
 
 import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
@@ -98,52 +98,64 @@ $selected = null,    // the entry the context area is about
 $sheet    = null,    // what the context area shows instead: 'tasks', 'remotes'
 $size     = null;    // { width, height } of the image in the preview
 
-// :::::: TABS, each { path, source }
+// :::::: TABS, each a $Record { path, source }
 
-const HOME = { path: Path.root, source: null };
+const Tab = $Record({ path: Path(), '?source': Str });
 
-// the paths are kept as 'a/b' (an older tab as ['a', 'b'])
+const tabOf = (tab = {}) => Tab.create({ path: tab.path ?? Path.root, source: tab.source ?? null });
+
+// kept as { index, list }, the paths as 'a/b' (an older tab's as ['a', 'b'])
 const stored = read('files:tabs', { index: 0, list: [] });
 
-let $tabState = { index: stored.index, list: stored.list.map(tab => ({ path: Path.from(tab.path), source: tab.source ?? null })) };
+export const $tabs = new $List(stored.list.map(tabOf));
+if (!$tabs.length) $tabs.push(tabOf());
 
-effect(() => write('files:tabs', $tabState));
+// the tab on screen, the tab itself: it can not point past the end of the list
+export let $tab = $tabs.at(stored.index) ?? $tabs.at(0);
+
+effect(() => write('files:tabs', { index: $tabs.indexOf($tab), list: $tabs }));
 
 export const
-$tabs     = $tabState.list?.length ? $tabState.list : [HOME],
-$tabIndex = Math.min(Math.max(0, $tabState.index ?? 0), $tabs.length - 1),
-$path     = $tabs[$tabIndex].path,
-$source   = $tabs[$tabIndex].source ?? null;
+$path   = $tab.path,
+$source = $tab.source;
 
-const scrollTop = new Map;   // per tab, for the session
+const scrollTop = new WeakMap;   // per tab, for the session
 const scroller  = () => document.querySelector('rat-view[name="library"] .listing');
 
-function setTabs (list, index = $tabIndex) {
-  $tabState = { index: Math.min(Math.max(0, index), list.length - 1), list };
-}
-
 // from switches the tab to another source, undefined keeps its own
-export function goTo (next, from) {
-  setTabs($tabs.map((tab, position) => position === $tabIndex ? { path: next, source: from === undefined ? tab.source ?? null : from } : tab));
+export function goTo (path, from) {
+  $tab.path = path;
+  if (from !== undefined) $tab.source = from;
   $selected = null;
   $filter   = '';
 }
 
-export function openTab (at = $path, from = $source) {
-  const list = [...$tabs, { path: at, source: from }];
-  setTabs(list, list.length - 1);
+export function openTab (path = $path, from = $source) {
+  $tab = tabOf({ path, source: from });
+  $tabs.push($tab);
   $selected = null;
 }
 
-export function closeTab (position) {
-  if ($tabs.length === 1) return goTo(Path.root);
-  setTabs($tabs.filter((_, other) => other !== position), position < $tabIndex ? $tabIndex - 1 : $tabIndex);
+// the next tab takes over, the one before at the end. the last one stays and goes home
+export function closeTab (tab) {
+  if ($tabs.length === 1) {
+    goTo(Path.root);
+    return;
+  }
+  if (tab === $tab) $tab = $tabs.at($tabs.indexOf(tab) + 1) ?? $tabs.at(-2);
+  $tabs.remove(tab);
 }
 
-export function switchTab (position) {
-  scrollTop.set($tabIndex, scroller()?.scrollTop ?? 0);
-  setTabs($tabs, position);
+export function switchTab (tab) {
+  scrollTop.set($tab, scroller()?.scrollTop ?? 0);
+  $tab      = tab;
   $selected = null;
+}
+
+// these tabs or a fresh one at home, the tab on screen stays where it is among them
+function resetTabs (tabs = []) {
+  $tabs.replace(tabs.length ? tabs : [tabOf()]);
+  if (!$tabs.includes($tab)) $tab = $tabs.at(0);
 }
 
 export const tabName = tab => tab.path.name || sourceName(tab.source);
@@ -183,7 +195,7 @@ effect(() => {
     .then(list => {
       if (mine !== request) return;
       $entries = list;
-      requestAnimationFrame(() => { const element = scroller(); if (element) element.scrollTop = scrollTop.get(untrack(() => $tabIndex)) ?? 0; });
+      requestAnimationFrame(() => { const element = scroller(); if (element) element.scrollTop = scrollTop.get(untrack(() => $tab)) ?? 0; });
     })
     .catch(error => { if (mine === request) toast.error(error); })
     .finally(() => { if (mine === request) $loading = false; });
@@ -350,7 +362,7 @@ export async function download (entry) {
 export async function chooseFolder () {
   if (!root.supported) throw new Error('This browser can’t open folders: try Chrome, Edge or another Chromium browser.');
   if (!await root.grant()) return;
-  setTabs([HOME], 0);
+  resetTabs();
   router.go('/');
 }
 
@@ -364,7 +376,7 @@ export async function closeFolder () {
   await scan.forget($folder);
   scanned = null;
   await root.forget();
-  setTabs([HOME], 0);
+  resetTabs();
 }
 
 // :::::: SERVERS, each opens in a tab of its own
@@ -384,8 +396,7 @@ export function manageRemotes () {
 export async function forgetRemote (connection) {
   if (!await dialogs.confirm({ message: `Forget “${connection.name}”? The files on the server stay.`, ok: 'Forget', title: connection.name })) return;
   await remotes.remove(connection.id);
-  const left = $tabs.filter(tab => tab.source !== connection.id);
-  setTabs(left.length ? left : [HOME], 0);
+  resetTabs($tabs.filter(tab => tab.source !== connection.id).toArray());
 }
 
 // :::::: SEND, a file of the folder into the outbox, the view opens
