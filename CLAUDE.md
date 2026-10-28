@@ -8,3 +8,4 @@ project-specific rules only. everything general belongs in `pulgasari/agents`.
 
 - docs: `.md/` (`concept.md`, `compiler.md`, `decisions.md`, `syntax/`, `ideas/`, `todo.md`)
 - apps and their todo: `dev/apps/README.md` (the sources). `apps/` holds them built
+- android apps of wallpaperfx: `dev/android/README.md` (the sources), built into `../wallpaperfx/apps/<app>/www`
