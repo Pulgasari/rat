@@ -1,4 +1,6 @@
-# Types | `@rat/types`
+# Types
+
+types and schemas sit in the `@rat/types` package.
 
 ## overview
 
@@ -8,6 +10,7 @@
 [Enum](#enum) ·
 [List](#list) ·
 [Point](#point) ·
+[Segments](#segments) ·
 [Str](#str) ·
 [Tree](#tree) ·
 [Union](#union)
@@ -23,6 +26,14 @@
 [$Point](#point) ·
 [$Set](#) ·
 [$Tree](#)
+
+### Special
+[Color](#color) ·
+[FileExt](#fileext) ·
+[Path](#path)
+
+#### CaseTypes
+[KebabCase](#kebabcase)
 
 ---
 
