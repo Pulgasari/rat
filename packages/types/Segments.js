@@ -3,7 +3,9 @@
 /*
 a value made of parts with a separator between them: a key like 'rat:noisy:theme', a path (Path,
 special/Path.js), a version. made from the string or from the parts, it is a value: never changed, a
-change gives a new one.
+change gives a new one. called, it is the schema: a string, the parts or Segments, made Segments.
+
+  const Key = Segments(':');                      // the schema, ':' by default: { key: Key } in a Record
 
   const key = Segments.from('rat:noisy:theme');   // separator ':' by default
   const ver = Segments.from('1.4.2', '.');
@@ -21,13 +23,17 @@ change gives a new one.
 empty parts are dropped: 'a::b' and ':a:b:' are a:b.
 */
 
+import { Schema, typed } from './schema.js';
+
 const partsOf = (value, separator) => {
-  if (value instanceof Segments) return value.segments;
+  if (value instanceof SegmentsType) return value.segments;
   const parts = Array.isArray(value) ? value.map(String) : String(value ?? '').split(separator);
   return parts.filter(part => part !== '');
 };
 
-class Segments {
+// ::: the data type
+
+class SegmentsType {
   constructor (value = [], separator = ':') {
     this.separator = separator;
     this.segments  = Object.freeze(partsOf(value, separator));
@@ -65,6 +71,22 @@ class Segments {
   [Symbol.iterator] () { return this.segments[Symbol.iterator](); }
 }
 
+Object.defineProperty(SegmentsType, 'name', { value: 'Segments' });
+
+// ::: the schema
+
+const isInput = value => typeof value === 'string' || Array.isArray(value) || value instanceof SegmentsType;
+
+// a value of the schema is Segments already: create() hands it on
+const ofValue = (Type, schema, value = schema.initial) => schema.parse(value);
+
+const Segments = typed(SegmentsType, (separator = ':') => new Schema({
+  describe : { separator },
+  initial  : '',
+  kind     : 'segments',
+  run      : (value, path) => isInput(value) ? { value: SegmentsType.from(value, separator) } : { issues: [{ message: 'expected a string or its parts', path }] },
+}), ofValue);
+
 // :::::: EXPORT
 
-export { Segments, partsOf };
+export { Segments, isInput, ofValue, partsOf };

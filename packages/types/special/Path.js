@@ -18,25 +18,33 @@ computed of a path only reports a real change.
   String(path)              // 'photos/2024/beach.jpg', no leading slash. JSON as well
   Path.root                 // the root, ''
 
+called, it is the schema: a string, the names or a Path, made a Path. so a Record or a Table field holds
+a Path and stores it as 'a/b':
+
+  const Bookmark = { name: Str, path: Path() };
+
 the rest is Segments (../Segments.js): segments, length, at(), slice(), with(), equals(), toArray().
 */
 
-import { Segments, partsOf } from '../Segments.js';
-import { FileExt }           from './FileExt.js';
+import { Schema, typed }                       from '../schema.js';
+import { Segments, isInput, ofValue, partsOf } from '../Segments.js';
+import { FileExt }                             from './FileExt.js';
 
 const known = new Map;   // 'a/b' -> its Path
 
-class Path extends Segments {
+// ::: the data type
+
+class PathType extends Segments {
   constructor (value = []) { super(value, '/'); }
 
   static from (value) {
-    if (value instanceof Path) return value;
+    if (value instanceof PathType) return value;
     const key = partsOf(value, '/').join('/');
-    if (!known.has(key)) known.set(key, new Path(key));
+    if (!known.has(key)) known.set(key, new PathType(key));
     return known.get(key);
   }
 
-  static get root () { return Path.from(''); }
+  static get root () { return PathType.from(''); }
 
   get name   () { return this.at(-1) ?? ''; }
   get parent () { return this.length ? this.slice(0, -1) : null; }
@@ -44,6 +52,16 @@ class Path extends Segments {
 
   child (name) { return this.with(name); }
 }
+
+Object.defineProperty(PathType, 'name', { value: 'Path' });
+
+// ::: the schema
+
+const Path = typed(PathType, () => new Schema({
+  initial : '',
+  kind    : 'path',
+  run     : (value, path) => isInput(value) ? { value: PathType.from(value) } : { issues: [{ message: 'expected a path', path }] },
+}), ofValue);
 
 // :::::: EXPORT
 

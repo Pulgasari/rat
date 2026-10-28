@@ -12,7 +12,13 @@ have none (''). knows the usual mime types.
   ext.mimeType               // 'image/jpeg', 'application/octet-stream' when unknown
   ext.is('jpg', 'jpeg')      // true
   String(ext)                // 'jpg'
+
+called, it is the schema: an extension ('jpg', '.JPG') or a FileExt, made a FileExt.
+
+  const Upload = { name: Str, ext: FileExt() };
 */
+
+import { Schema, typed } from '../schema.js';
 
 const MIME = {
   '7z'  : 'application/x-7z-compressed',
@@ -80,13 +86,15 @@ function extOf (value) {
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
 }
 
-class FileExt {
+// ::: the data type
+
+class FileExtType {
   constructor (value = '') {
     this.value = String(value).replace(/^\./, '').toLowerCase();
     Object.freeze(this);
   }
 
-  static from (name) { return name instanceof FileExt ? name : new FileExt(extOf(name)); }
+  static from (name) { return name instanceof FileExtType ? name : new FileExtType(extOf(name)); }
 
   get mimeType () { return MIME[this.value] ?? 'application/octet-stream'; }
 
@@ -95,6 +103,21 @@ class FileExt {
   toJSON   () { return this.value; }
   toString () { return this.value; }
 }
+
+Object.defineProperty(FileExtType, 'name', { value: 'FileExt' });
+
+// ::: the schema
+
+const ofValue = (Type, schema, value = schema.initial) => schema.parse(value);
+
+const FileExt = typed(FileExtType, () => new Schema({
+  initial : '',
+  kind    : 'fileext',
+  run     : (value, path) => {
+    if (value instanceof FileExtType) return { value };
+    return typeof value === 'string' ? { value: new FileExtType(value) } : { issues: [{ message: 'expected an extension', path }] };
+  },
+}), ofValue);
 
 // :::::: EXPORT
 

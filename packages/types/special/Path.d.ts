@@ -1,10 +1,8 @@
-import type { Segments } from '../index.d.ts';
-import type { FileExt }  from './FileExt.d.ts';
+import type { Segments, SegmentsInput, TypedSchema } from '../index.d.ts';
+import type { FileExt }                              from './FileExt.d.ts';
 
 /** A path of names below a root, '/' between them. One instance per path: === compares. */
-export declare class Path extends Segments {
-  static from (value: string | readonly string[] | Segments): Path;
-  static readonly root: Path;
+export interface Path extends Segments {
   /** The last name, '' for the root. */
   readonly name   : string;
   readonly parent : Path | null;
@@ -12,4 +10,13 @@ export declare class Path extends Segments {
   child (name: string): Path;
 }
 
+export interface PathConstructor {
+  new (value?: SegmentsInput): Path;
+  /** The schema: a string, the names or a Path, made a Path. Stored as 'a/b'. */
+  (): TypedSchema<Path, Path>;
+  from (value: SegmentsInput): Path;
+  readonly root: Path;
+}
+
+export const Path: PathConstructor;
 export default Path;

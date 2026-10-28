@@ -24,14 +24,11 @@ import { $folder }  from './root.rat.js';
 // ::::::
 
 const // ::: schemas
-Bookmark   = { folder: Str, name: Str, path: Str },
+Bookmark   = { folder: Str, name: Str, path: Path() },
 Foldertype = { icon: Str, label: Str };
 
-// a bookmark keeps its path as 'a/b' (an older one as ['a', 'b'])
-const stored = (bookmark) => ({ ...bookmark, path: String(Path.from(bookmark.path)) });
-
 const // ::: signals (stored)
-$bookmarks      = $Table (Bookmark)        .create :: storage.read('files:bookmarks',   []).map(stored),   // [{ folder, name, path }]
+$bookmarks      = $Table (Bookmark)        .create :: storage.read('files:bookmarks',   []),   // [{ folder, name, path }], path stored as 'a/b'
 $folderTyped    = $Dict  (Str, Str)        .create :: storage.read('files:folderTyped', {}),   // 'folder:a/b' -> foldertype id
 $ownFolderTypes = $Dict  (Str, Foldertype) .create :: storage.read('files:folderTypes', {});   // id -> { icon, label }
 
@@ -84,10 +81,9 @@ export function suggestFolderType (entries, categoryOf) {
 
 // :::::: BOOKMARKS
 
-// the bookmarks of the folder, each with its path as a Path
 export const
-bookmarks      = ()           => $bookmarks.where  ({ folder: $folderId }).map(bookmark => ({ ...bookmark, path: Path.from(bookmark.path) })),
-isBookmarked   = (path)       => $bookmarks.has    ({ folder: $folderId, path: String(path) }),
-toggleBookmark = (path, name) => $bookmarks.toggle ({ folder: $folderId, name, path: String(path) }, { folder: $folderId, path: String(path) });
+bookmarks      = ()           => $bookmarks.where  ({ folder: $folderId }),
+isBookmarked   = (path)       => $bookmarks.has    ({ folder: $folderId, path }),
+toggleBookmark = (path, name) => $bookmarks.toggle ({ folder: $folderId, name, path }, { folder: $folderId, path });
 
 

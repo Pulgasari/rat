@@ -170,6 +170,8 @@ key.with('dark')       // rat:noisy:theme:dark
 key.startsWith('rat')  // true, part by part: 'ra' is no start
 key.equals('rat:noisy:theme')
 String(key)            // 'rat:noisy:theme', JSON as well
+
+const Key = Segments(':');   // called, the schema: a string, the parts or Segments, made Segments
 ```
 
 ## Path
@@ -187,6 +189,8 @@ path.child('raw')      // photos/2024/beach.jpg/raw
 path.ext               // FileExt jpg
 String(path)           // 'photos/2024/beach.jpg', no leading slash
 Path.root              // ''
+
+const Bookmark = { name: Str, path: Path() };   // called, the schema: the field holds a Path, stored as 'a/b'
 ```
 
 ## FileExt
@@ -200,6 +204,8 @@ const ext = FileExt.from('Beach.JPG');   // or a Path, or 'a/b/beach.jpg'
 ext.value              // 'jpg'
 ext.mimeType           // 'image/jpeg', 'application/octet-stream' when unknown
 ext.is('jpg', 'jpeg')  // true
+
+const Upload = { name: Str, ext: FileExt() };   // called, the schema: 'jpg' or '.JPG' made a FileExt
 ```
 
 ## Tree

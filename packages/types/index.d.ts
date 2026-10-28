@@ -390,21 +390,29 @@ export declare function pattern (test: Test, guard?: ((value: any, parts: Record
 /** The end of a tuple: at least as many items, the rest handed out as name. */
 export declare function rest (name?: string | null): Test;
 
+export type SegmentsInput = string | readonly string[] | Segments;
+
 /** Parts with a separator: 'rat:noisy:theme'. A value, a change gives a new one. Empty parts are dropped. */
-export declare class Segments implements Iterable<string> {
-  constructor (value?: string | readonly string[] | Segments, separator?: string);
-  static from<T extends Segments> (this: new (...args: any[]) => T, value: string | readonly string[] | Segments, separator?: string): T;
+export interface Segments extends Iterable<string> {
   readonly segments  : readonly string[];
   readonly separator : string;
   readonly length    : number;
   at (index: number): string | undefined;
   slice (start?: number, end?: number): this;
-  with (...parts: (string | readonly string[] | Segments)[]): this;
-  equals (other: string | readonly string[] | Segments): boolean;
+  with (...parts: SegmentsInput[]): this;
+  equals (other: SegmentsInput): boolean;
   /** other is the beginning of this one, part by part. */
-  startsWith (other: string | readonly string[] | Segments): boolean;
+  startsWith (other: SegmentsInput): boolean;
   toArray (): string[];
   toJSON (): string;
   toString (): string;
-  [Symbol.iterator] (): Iterator<string>;
 }
+
+export interface SegmentsConstructor {
+  new (value?: SegmentsInput, separator?: string): Segments;
+  /** The schema: a string, the parts or Segments, made Segments with separator (':' by default). */
+  (separator?: string): TypedSchema<Segments, Segments>;
+  from (value: SegmentsInput, separator?: string): Segments;
+}
+
+export const Segments: SegmentsConstructor;
