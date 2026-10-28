@@ -290,3 +290,19 @@ in der praxis nimmt meistens sicherlich d, b, c
   - `$$theme = ...`
   - `#$theme = ...`
 
+(3) also das is sicherlich nicht die beste lösung ^^
+
+> "the key is the name without $. collisions between modules: two $tabs! in one app share one key. either that is the point (the same value), or one of them writes its key out."
+
+für den anfang ist das sicherlich okay.
+
+für ne höhere stufe wäre hier vermutlich erster nutzen für wasich schon so halbim hinterkopf hatte, als ich bei views, panels usw direkt `name` props zum weg machte:
+
+so könnten `$tabs!` in mehrere views automatisch keys bekommen:
+
+```
+<rat-view name='podcasts' /> // myapp:podcasts:tabs
+<rat-view name='search'   /> // myapp:search:tabs
+```
+
+
