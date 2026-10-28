@@ -1,26 +1,25 @@
 # rat :: persistence
 
-status: **concept**, nothing built.
+status: **built**: the store reads ahead, `stored` in `@rat/types`, `$name!` in the compiler. later: keys
+per view, `in: 'url'`, a table by rows, keys as functions, `in: 'secure'`.
 
-a value that outlives the page: a setting, the open tabs, bookmarks, a draft. today every app does it by
+a value that outlives the page: a setting, the open tabs, bookmarks, a draft. before, every app did it by
 hand (`cleanup.md` 1): a key, a read, an effect that writes, a revive for what JSON can not carry. this
-paper collects what persistence has to answer, what rat already has for it, the forms it could take, and
-a proposal.
+paper collects what persistence has to answer, what rat has for it, the forms it takes, and what is built.
 
-the frame: **no compiler magic for the mechanism**. everything works as plain runtime api; syntax is only
-allowed on top, where it is really good (`$theme!`).
+the frame: **no compiler magic for the mechanism**. everything works as plain runtime api; syntax only on
+top, where it is really good (`$theme!`).
 
 - [what it has to answer](#what-it-has-to-answer)
-- [what rat already has](#what-rat-already-has)
+- [what rat has](#what-rat-has)
 - [the hard part: sync or async](#the-hard-part-sync-or-async)
-- [the forms](#the-forms)
+- [one word, three ways](#one-word-three-ways)
 - [where the options live](#where-the-options-live)
 - [the `!`](#the-)
 - [variants: records, lists, tables](#variants-records-lists-tables)
-- [the rest: timing, tabs, migration, scope, secrets, reset](#the-rest)
-- [proposal](#proposal)
+- [the rest: timing, tabs, migration, reset](#the-rest)
 - [the files app with it](#the-files-app-with-it)
-- [open questions](#open-questions)
+- [later](#later)
 
 ---
 
@@ -29,141 +28,116 @@ allowed on top, where it is really good (`$theme!`).
 | question | examples |
 |---|---|
 | **where** | localStorage, sessionStorage, indexeddb, android preferences, a file, the url, a server |
-| **under which key** | `theme`, `files:settings`, `bookmarks:<folder>` |
+| **under which key** | `theme`, `settings`, `bookmarks` |
 | **in which form** | the value as json, and how it comes back: a `Path` from `'a/b'`, an `Enum` from `'oled'` |
 | **when written** | on every change, debounced, batched, on leaving the page |
 | **when read** | before the first paint (a theme), or whenever it arrives (a big table) |
 | **what if it changed elsewhere** | another tab, another device |
 | **what if its shape changed** | an older version stored `path: ['a', 'b']` |
-| **for whom** | the app, a folder, a user, a server connection |
+| **for whom** | the app, a view, a folder, a user, a server connection |
 | **how sensitive** | a theme is not, a server password is |
 
-## what rat already has
+## what rat has
 
 | piece | gives |
 |---|---|
-| `RAT.app.store` (`@rat/bunker` `createStore`) | keys and values, named after the app (the prefix), one driver per platform: localStorage in the browser, preferences on android and ios, sqlite on the desktop. `getSync` / `setSync` for sync drivers, `on('change')` incl. other tabs |
+| `RAT.app.store` (`@rat/bunker` `createStore`) | keys and values, named after the app (the prefix), one driver per platform: localStorage in the browser, preferences on android and ios, sqlite on the desktop. `load()` / `peek()`, `on('change')` incl. other tabs |
 | `RAT.app.database` | tables with schemas, indexeddb / sqlite |
-| `RAT.app.files` | files of the app (json, text) |
-| schemas of `@rat/types` | `parse` (coerce, check, fill defaults) and `toJSON` on the types: the codec in both directions. `Path` comes back as a `Path`, a record gets missing fields from its defaults |
+| schemas of `@rat/types` | `validate` (coerce, check, fill defaults) and `toJSON` on the types: the codec in both directions |
 | typed signals | `let $view = Enum('grid', 'list')`: the signal knows its schema |
 | reactive variants | `$Record`, `$List`, `$Table`, `$Dict`: change in place, report every change |
 
-the pieces are all there: a place (store), a codec (schema), a change signal (signals, variants). what is
-missing is the glue, and that glue is what every app writes by hand today.
+a place (store), a codec (schema), a change signal (signals, variants). `stored` is the glue.
 
 ## the hard part: sync or async
 
 localStorage answers at once: a value read at module start is there before the first paint. preferences
-on android, indexeddb and files answer later. a persisted value that arrives later has two bad options:
+on android, indexeddb and files answer later. a kept value that arrives later has two bad options:
 
 - start with the default and switch when the stored value arrives: the theme flashes, the tabs jump.
 - `await` at module start: works (`.rat.js` has top-level await), but every module that persists
-  something gets async, and slow.
+  something gets async. not the `await` costs (a microtask), but what it does to the module graph: a
+  module with top-level await holds back every module that imports it, so the reads line up one after
+  the other along the imports instead of running once, together. each read pays its own round trip (an
+  indexeddb transaction, a crossing of the native bridge: a few ms each), and the first paint waits for
+  the whole chain.
 
-the way out: **the store reads ahead**. `configure()` already runs, and is awaited, before the app's code
-loads (the mods). if the store loads its keys there into memory, every read after is sync on every
-platform, and writes go through to the driver in the background:
+the way out: **the store reads ahead**. `configure()` runs, and is awaited, before the app's modules load.
+the store loads every key there into memory (one read, not one per key), every read after is sync on every
+platform, writes go to memory at once and to the driver behind it:
 
 ```js
-// @rat/app, configure(): before the app's modules run
-await RAT.app.store.load();          // every key into a cache
+// @rat/app, configure(): after the mods, before the app's modules (stored.js)
+await RAT.app.store.load();          // every key into memory
 
 // then, anywhere, on every platform
-RAT.app.store.peek('theme');         // sync, from the cache
-RAT.app.store.set('theme', 'oled');  // the cache at once, the driver after
+RAT.app.store.peek('theme');         // sync, from memory
+RAT.app.store.set('theme', 'oled');  // memory at once, the driver after
 ```
 
-this is the one change that makes everything below simple. it fits values a store holds (settings,
-tabs, small lists). big data (a table of thousands of rows) stays async and belongs in the database.
+it fits what a store holds (settings, tabs, small lists). the database place is read on first use: a table
+arrives a moment later, its writes wait until it has.
 
-## the forms
+## one word, three ways
 
-### a) a function, no syntax
+one vocabulary: **`stored`**, from the primitive to the sugar.
 
 ```js
-import { stored } from '@rat/app';
+// the primitive (the core): a key and a value, plain js
+let   $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));    // a signal
+const $tabs  = stored('tabs', $List(Tab).create());                  // the variant, kept in place
 
-let $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));
+// the mature way: on the schema, the options travel with the type
+let   $theme    = Enum.from(gestalt.themes).stored({ key: 'custom-key', in: 'session' });   // $() makes the signal
+const $settings = $Record(Settings).stored('settings').create();                           // create() the variant
+
+// the magic way: in a declaration, the key is the name
+let   $theme!    = Enum('zombie', 'oled', 'rainbow');
+const $settings! = $Record(Settings).create();
 ```
 
-the key is written out. honest, explicit, works in plain js.
-
-### b) on the schema
+in practice the declaration and the schema, combined where the options matter:
 
 ```js
-let $theme = Enum('zombie', 'oled', 'rainbow').persist('theme');
-let $theme = Enum.from(gestalt.themes).persist({ key: 'theme', in: 'session' });
+let $theme! = Enum.from(gestalt.themes).stored({ in: 'session' });   // the key from the name, the rest from the schema
 ```
 
-the schema carries where and how; the signal made from it (a typed signal, `$$.$(schema)`) reads and
-writes. fits `@rat/types` (`todo.md`: "extend schema for persistence") and `concept.md` ("schemas …
-persist"). a schema does not know the variable's name: the key is written out, or comes from the `!`.
+| way | key | options | compiler |
+|---|---|---|---|
+| `stored(key, init)` | written | argument | no |
+| `schema.stored(…)` | written or from `!` | on the schema | no |
+| `$name!` | the name | from the schema or the defaults | one rewrite |
 
-### c) on a variant
+what `stored` takes and gives:
 
-```js
-export const $settings = $Record(Settings).create().persist('settings');
-```
-
-the instance persists itself: reads what is stored over its defaults, writes on every change.
-
-### d) the `!`
-
-```js
-let $theme! = Enum('zombie', 'oled', 'rainbow');
-```
-
-the compiler hands the name over as the key, nothing else. see [below](#the-).
-
-### e) in the config
-
-```js
-// config.rat.js
-persist : { theme: 'local', tabs: 'local', bookmarks: 'database' },
-```
-
-the app lists what it keeps. good as an overview, bad as the only place: a module's value and its
-persistence are written in two files.
-
-### f) a decorator after the declaration (ideas.md, property wrappers)
-
-```js
-let $theme = 'zombie' @stored('theme');
-```
-
-needs its own syntax for every kind of wrapper; `!` and `.persist()` cover the same with less.
-
-| form | key | driver and options | compiler | fits |
-|---|---|---|---|---|
-| a) `stored(key, init)` | written | argument | no | every file |
-| b) `schema.persist(…)` | written or from `!` | on the schema | no | typed signals |
-| c) `variant.persist(…)` | written or from `!` | on the call | no | records, lists, tables |
-| d) `$name!` | the name | from b), c) or the default | one rewrite | declarations |
-| e) config | the config key | config | no | overview |
-
-they are not exclusive: **b and c are the mechanism, d is the sugar, a is the escape hatch.**
+| init | gives |
+|---|---|
+| a value | a signal (`$()` of it: an array becomes a `$List` as always) |
+| a schema | a typed signal |
+| a variant (`$Record`, `$List`, `$Table`, `$Dict` …) | the variant itself, restored in place and written on change |
+| a signal | the signal, kept |
 
 ## where the options live
 
 one place answers each question, in this order:
 
-1. **the call**: `.persist({ key, in, debounce, sync, version, migrate })`
-2. **the type**: a default a type brings. a `$Table` is big, it could default to the database; a scalar
-   to the store
-3. **the app**: `config.rat.js`, `persist: { in: 'store' }`, the default for all
-4. **rat**: `RAT.app.store`
+1. **the call**: `stored({ key, in, debounce, sync, version, migrate }, …)`, or `schema.stored(…)`
+2. **the type**: a `Table` is many rows, it goes to the database. everything else to the store
+3. **the app**: `config.rat.js`, `stored: { in: 'store' }`, the default for all
+4. **rat**: `'store'`
 
 `in` names the place:
 
-| `in` | where | sync | for |
+| `in` | where | answers | for |
 |---|---|---|---|
-| `'store'` (default) | `RAT.app.store`: localStorage / preferences / sqlite | yes, with read-ahead | settings, tabs, small lists |
-| `'session'` | sessionStorage | yes | per tab, gone with it |
-| `'database'` | a table of `RAT.app.database` | no | many rows |
-| `'files'` | a json file of `RAT.app.files` | no | documents, an index |
-| `'url'` | the query or the hash | yes | state worth a link: the open folder, a filter (`cleanup.md` 29) |
-| `'secure'` | keychain / keystore (a native driver) | no | passwords, tokens |
+| `'store'` (default) | `RAT.app.store`: localStorage / preferences / sqlite | at once, read ahead | settings, tabs, small lists |
+| `'database'` | the table `stored` of the app's database: indexeddb / sqlite | after its first read | tables |
+| `'session'` | sessionStorage | at once | per tab, gone with it |
+| `'memory'` | a Map | at once | tests |
+
+`stored.place(name, place)` adds one: a `@rat/bunker` store is a place, or any `{ peek | get, set, delete,
+on? }`. without `@rat/app`: `'store'` is localStorage, `'session'` sessionStorage, `'database'` falls back to
+`'store'` with a warning.
 
 ## the `!`
 
@@ -171,8 +145,8 @@ one place answers each question, in this order:
 let $theme!         = Enum('zombie', 'oled', 'rainbow');   // key 'theme'
 export let $tabs!   = …;                                   // key 'tabs'
 $draft!             = '';                                  // .rat: an implicit let, key 'draft'
-let $theme!         = Enum(…).persist({ in: 'session' });   // the options from the schema, the key from the name
-let $theme!         = Enum(…).persist({ key: 'look' });     // a written key wins
+let $theme!         = Enum(…).stored({ in: 'session' });   // the options from the schema, the key from the name
+let $theme!         = Enum(…).stored({ key: 'look' });     // a written key wins
 ```
 
 what the compiler does, and nothing more:
@@ -180,93 +154,68 @@ what the compiler does, and nothing more:
 ```js
 let $theme! = Enum('zombie', 'oled', 'rainbow');
 // ->
-let $theme = $$.$(Enum('zombie', 'oled', 'rainbow'), { persist: 'theme' });
+let $theme = $$.stored('theme', Enum('zombie', 'oled', 'rainbow'));
 ```
-
-`$$.$` already picks the variant of a value and checks a schema; with `persist` it asks the store for the
-key, parses what it finds through the schema (or takes the initial value), and writes on change. the same
-call is open to plain js: `$(Enum(…), { persist: 'theme' })`.
 
 rules:
 
-- only in a declaration: after `let` / `const` / `export let`, or at the start of an implicit `let` line in a
-  `.rat` file. a read is `$theme`, never `$theme!`.
-- `$theme!=` at such a place is a persisted declaration, not `!=`: a comparison as a whole statement does
-  nothing anyway.
-- the key is the name without `$`. collisions between modules: two `$tabs!` in one app share one key.
-  either that is the point (the same value), or one of them writes its key out.
+- only in a declaration of the top level: after `let` / `const` / `var` or a comma of one, or at the start
+  of an implicit `let` line in a `.rat` file. a read is `$theme`, never `$theme!`.
+- `$theme!=` at such a place is a kept declaration, not `!=`: a comparison as a whole statement does
+  nothing anyway. anywhere else `$x!= y` is the comparison.
+- `const $x! = …` is a variant, or an error: a computed is made from others, there is nothing to keep.
+- the key is the name without `$`. the same key in the same place twice is the same signal (two modules,
+  two instances of a component). a variant can not be shared that way: both are kept and warned about.
 
-alternatives to `!`, if it reads too loud:
+the next step for keys: views and parts have names (`<rat-view name='podcasts'>`). a kept value of a
+component inside a view gets the view's name in its key:
 
-| | reads |
-|---|---|
-| `$theme!` | "keep this", short, unambiguous in a declaration |
-| `$theme^` | "lifted out", but `^` is xor |
-| `$theme@` | "at a place", but `@` is the behaviors' sign |
-| `let! $theme` | on the keyword: `let!` "a let that stays", one place for all names of the line |
+```html
+<rat-view name='podcasts' />   <!-- myapp:podcasts:tabs -->
+<rat-view name='search'   />   <!-- myapp:search:tabs -->
+```
 
 ## variants: records, lists, tables
 
-a variant changes in place, so "on change" is its version signal. persisted:
+a variant changes in place, so "on change" is its version signal.
 
 ```js
 export const $settings! = $Record(Settings).create();
-// $$.persist($Record(Settings).create(), 'settings'):
-//   read:  the stored value parsed over the defaults, assigned into the record
-//   write: on every change, toJSON
+// read:  the stored value field by field through the schema, assigned into the record
+// write: on every change, toJSON
 ```
 
 - the schema of the variant is the codec: a `Path` field comes back as a `Path`, an older array included.
-- a variant that comes from somewhere else (a computed, a parameter) is not persisted: only declarations.
-- big tables: `.persist({ in: 'database' })` writes rows, not the whole list. that is more than "write on
-  change", it needs the table to report which rows changed: later.
+  `create()` remembers the schema a variant was made by.
+- a record takes field by field: a field that is gone is dropped, a new one starts at its initial value, a
+  value that no longer fits as well.
+- a list whose items are a data type (`$List(Tab)`) gets them back as one: `$Record`s, not plain objects.
+- how it is put back: `assign` (a record), `replace` (a list, a table), `clear` + `set` (a dict, a map),
+  `value` (an enum, a color).
+- a table goes to the database as a whole value under its key. by rows is later: it needs the table to
+  report which rows changed.
 
 ## the rest
 
-**timing.** writes batched per microtask; `debounce` for values that change fast (a slider); a flush on
-`pagehide` so nothing is lost when the tab closes.
+**timing.** a change is written once per microtask; `debounce` for values that change fast (a slider).
+pending writes run on `pagehide` and when the page is hidden (android does not always fire `pagehide`).
+an unchanged value is not written, the initial one neither.
 
-**other tabs.** `sync: true` subscribes to `store.on('change')`: another tab sets the theme, this one
+**other tabs.** `sync: true` follows `on('change')` of the place: another tab sets the theme, this one
 follows. off by default (two tabs writing the same list fight).
 
 **migration.** most of it is the schema: defaults fill new fields, coercion reads old shapes (`Path` from
-arrays). for real breaks: `version` and `migrate(old, version)`.
+arrays). for real breaks `version` and `migrate(old, version)`: kept as `{ '~version': n, value }`, an
+older one goes through `migrate`, the result is written back.
 
-**scope.** a key may depend on state: the bookmarks of the open folder. a function as key, followed like a
-computed; when it changes the value is read anew under the new key:
+**reset.** `stored.forget('theme')`: back to the initial value, gone from its place.
 
-```js
-let $bookmarks = $Table(Bookmark).create().persist({ key: () => `bookmarks:${$folderId}` });
-```
-
-**secrets.** `in: 'secure'` or not at all. a password in localStorage is readable by every script of the
-origin. today `remotes.json` holds them in plain text.
-
-**reset.** `$$.forget($theme)`: the stored value goes, the signal goes back to its initial value. and
-`RAT.app.store.clear()` for all.
-
-**devtools.** every persisted value is known to the runtime: a list of them with key, place and size is
-a small panel.
-
-## proposal
-
-three layers, each usable without the next:
-
-1. **the store reads ahead** (`@rat/app`, `configure()`): `RAT.app.store.load()`, then `peek()` / `set()`
-   sync on every platform. the precondition for everything else.
-2. **the mechanism, plain runtime**:
-   - `$(init, { persist })` in `@rat/signals` / `@rat/app`: a signal, typed or not, read from and written to
-     the store
-   - `schema.persist(options)` in `@rat/types`: the options on the schema, the codec is the schema itself
-   - `variant.persist(options)`: records, lists, dicts, tables
-3. **the sugar**: `$name!` in declarations, the compiler only adds `{ persist: 'name' }`.
-
-later, each on its own: `in: 'url'`, `in: 'database'` by rows, `sync: true`, keys as functions,
-`in: 'secure'`.
+**secrets.** not in the store: a password in localStorage is readable by every script of the origin.
+`in: 'secure'` (keychain / keystore) is later; the remotes of files keep their own file until then.
 
 ## the files app with it
 
-today (`state.rat.js`, `places.rat.js`, `tasks.rat.js`):
+before (`state.rat.js`, `places.rat.js`, `tasks.rat.js`, `sync.rat.js`):
 
 ```js
 export const $settings = $Record(Settings).create(read('files:settings', {}));
@@ -279,27 +228,37 @@ effect(() => write('files:tabs', { index: $tabs.indexOf($tab), list: $tabs }));
 
 $bookmarks = $Table(Bookmark).create :: storage.read('files:bookmarks', []),
 effect(() => storage.write('files:bookmarks', $bookmarks));
+
+const persist = () => write(STORAGE, { folderName, targets: $targets });   // and persist() after every change
 ```
 
-with it:
+now:
 
 ```js
-export const $settings!  = $Record(Settings).create();
-export const $tabs!      = $List(Tab).create([Tab.create()]);
-export let   $tab!       = 0;                                   // the index, a tab can not be stored as itself
-const        $bookmarks! = $Table(Bookmark).create();
-const        $history!   = $List(Task).create().persist({ debounce: 500 });
+export const $settings! = $Record(Settings).create();
+
+export const $tabs! = $List(Tab).create([tabOf()]);
+let $tabIndex! = 0;
+export const $tab = $tabs.at($tabIndex) ?? $tabs.at(0);   // the tab on screen, a computed of the index
+
+$bookmarks!      = $Table(Bookmark).create(),             // a table: in the database
+$folderTyped!    = $Dict(Str, Str).create(),
+$ownFolderTypes! = $Dict(Str, Foldertype).create();
+
+$ended! = new $List;
+
+export let $targets! = [];
+let $folderName!     = '';
 ```
 
-the reads, the effects, the keys and `.shared/storage.js` are gone. what stays to decide in the app:
-which values are worth keeping.
+the reads, the effects, the keys, `persist()` and `.shared/storage.js` are gone. what is left to decide in
+an app: which values are worth keeping.
 
-## open questions
+## later
 
-1. **the sign**: `$theme!`, `let! $theme`, or another?
-2. **the default place**: `RAT.app.store` for everything small, or a type-based default (tables to the
-   database)?
-3. **read-ahead**: all keys of the store at `configure()`, or only the ones declared persisted (they are
-   known only once the modules run, after `configure()`)?
-4. **collisions**: a shared key for equal names across modules on purpose, or a prefix per module?
-5. **`in: 'url'`** as part of this, or the router's business (`cleanup.md` 29)?
+1. **keys per view**: a kept value inside a named view or part gets its name in the key (above).
+2. **`in: 'url'`**: state worth a link (the open folder, a filter), or the router's business (`cleanup.md` 29).
+3. **a table by rows** in the database, instead of one value.
+4. **keys as functions**, followed like a computed: `stored({ key: () => `bookmarks:${$folderId}` }, …)`.
+5. **`in: 'secure'`**: keychain / keystore drivers.
+6. **devtools**: every kept value with key, place and size.

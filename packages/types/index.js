@@ -29,6 +29,9 @@ export { Union           } from './Union.js';
 // Additional DataTypes + their reactive variant
 export { Color, $Color }   from './Color.js';
 
+// kept beyond the page
+export { stored } from './stored.js';
+
 // match
 export { NONE, any, either, is, match, part, pass, pattern, rest, which } from './match.js';
 

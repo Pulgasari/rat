@@ -17,9 +17,8 @@ a file of the folder becomes an outbox entry through its uri: the content:// uri
 carries, or the file:// of a handle with a path. the receiver may want a pin: send() asks and tries once more.
 */
 
-import { read, write } from '../../.shared/storage.js';
-import { dirAt }       from './fs.js';
-import { run }         from './tasks.rat.js';
+import { dirAt } from './fs.js';
+import { run }   from './tasks.rat.js';
 
 const { dialogs } = RAT.app;
 
@@ -31,20 +30,16 @@ export const available = () => Boolean(plugin());
 
 export const PROTOCOLS = ['https', 'http'];
 
-const PORT    = 53317;
-const STORAGE = 'files:sync';
-const stored  = read(STORAGE, {});
+const PORT = 53317;
 
 export let $autoSync = null;
 export let $devices  = [];
 export let $identity = null;
 export let $outbox   = [];
-export let $targets  = Array.isArray(stored.targets) ? stored.targets : [];
+export let $targets! = [];
 
 // the native side keeps the auto sync folder as a uri only, its name is kept here
-let folderName = stored.folderName ?? '';
-
-const persist = () => write(STORAGE, { folderName, targets: $targets });
+let $folderName! = '';
 
 // :::::: TARGETS
 
@@ -83,12 +78,10 @@ export const targetOf = device => ({
 function remember (target) {
   const rest = $targets.filter(other => !sameTarget(other, target));
   $targets = [{ alias: target.alias, fingerprint: target.fingerprint, host: target.host, port: target.port, protocol: target.protocol }, ...rest].slice(0, 8);
-  persist();
 }
 
 export function forget (target) {
   $targets = $targets.filter(other => !sameTarget(other, target));
-  persist();
 }
 
 // :::::: DISCOVERY, while the view is on screen: it costs battery
@@ -172,15 +165,14 @@ export function send (target, files = $outbox, pin = '') {
 
 export async function refreshAutoSync () {
   const state = await plugin()?.getAutoSyncState().catch(() => null) ?? null;
-  $autoSync = state && { ...state, name: state.tree ? folderName : '' };
+  $autoSync = state && { ...state, name: state.tree ? $folderName : '' };
 }
 
 export async function pickSyncFolder () {
   const { name, uri } = await plugin().pickFolder();
   if (!uri) return;
-  folderName = name ?? '';
-  $autoSync  = { ...$autoSync, name: folderName, tree: uri };
-  persist();
+  $folderName = name ?? '';
+  $autoSync   = { ...$autoSync, name: $folderName, tree: uri };
 }
 
 export async function startAutoSync (target, { pin = '', ssid = '' } = {}) {

@@ -184,7 +184,7 @@ what a schema should do:
 | `validate` / `coerce` | input, storage, network |
 | `default` | initial values, reset |
 | `reactive()` | turns the schema into a reactive type (`$Record`, `$List` …) with fitting verbs (`toggle`, `cycle`, `push`) |
-| `persist` | through `@bunker` |
+| `stored` | kept beyond the page: `schema.stored()`, `let $x! = …` ([persistence.md](persistence.md)) |
 | `describe` | introspection: generate forms, devtools, `@aufbau/gui` controls |
 | statically readable | the compiler knows the shape: completion, warnings, targeted updates |
 
@@ -254,6 +254,6 @@ more inspiration, sorted by what rat could take: [ideas/](ideas/README.md).
 3. scope analysis in the compiler (shadowing, warn on unknown `$` names), source maps.
 4. ~~commands, hotkeys~~ (modules of `@rat/app`), router: `<app-root>` from aufbau is tried first.
 5. `@rat/types` v1: schemas + reactive variants, wired to `$` declarations. ~~schemas, wired
-   to `$` declarations~~ (v0); reactive variants, persist and static reading are next.
+   to `$` declarations~~ (v0), ~~reactive variants~~, ~~kept values (`stored`)~~; static reading is next.
 6. build adapters (vite, esbuild, node hook). ~~`dom:clone` target~~: the `dom` target clones since it renders through `@domina/render`.
 7. a first real app (candidate: a small zugriff tool) entirely in rat.

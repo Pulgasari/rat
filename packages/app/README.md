@@ -162,7 +162,8 @@ export default {
   name     : 'icons',
   database : { schema: { favs: { name: Id } } },               // RAT.app.database (@rat/bunker)
   files    : true,                                              // RAT.app.files, opfs
-  store    : { driver: 'local' },                               // RAT.app.store
+  store    : { driver: 'local' },                               // RAT.app.store, there without it too
+  stored   : { in: 'store' },                                   // where kept values go (stored, @rat/types)
   hotkeys  : { 'ctrl+k|/': 'go[search]', 'escape': 'rat:toggle[context]' },
 };
 ```
@@ -178,6 +179,7 @@ export default {
 | mods | the parts rat provides that not every app needs, each a module of `@rat/app` (`clipboard`, `database`, `dialogs`, `external`, `files`, `folders`, `hotkeys`, `notifications`, `offline`, `store`, `thumbnails`, listed in `mods.js`), named by their key in the config beside the others, loaded only when named. each lands on the app under its name, in the order written. `true` takes the defaults, `false` leaves it out. what the app builds itself (a player …) is its own code, no mod |
 | `folders` | folders the user grants, in the database's table `folders` (`schema: { folders: FOLDERS }`, the database first). `createFolders` and `FOLDERS` from `@rat/app/modules/folders.js` |
 | `database`, `store` | named after the app (`name`, else `id`). `schema`: table → its fields, `'indexed-db'` is `'indexeddb'` |
+| `stored` | the places of kept values (`let $theme! = …`, `stored()` of `@rat/types`), set up after the mods, before the app's modules run (`stored.js`): `'store'` is `RAT.app.store` (made when no mod named it), read ahead, so a kept value is there before the first paint on every platform; `'database'` a store in the app's database (table `stored`), read on first use, where a `Table` goes. `stored: { in }` is the place of everything that names none |
 | `hotkeys` | a string is a command as in markup: `go[x]`, `rat:toggle[x]`, a name of `app.commands` |
 | `thumbnails` | small webp copies of images in opfs (`createThumbs`, `@rat/app/modules/thumbnails.js`): `RAT.app.thumbnails.request(url)` gives an object url, `peek(url)` at once from memory. options: `proxy` (a template with `{url}`), `resizer`, `width`, `maxBytes` |
 | `offline` | a service worker: the app works offline once it was open, and browsers offer to install it. it needs a `sw.js` next to the app (`importScripts('../../packages/app/run/sw.js')`): a worker reaches only the pages below its own folder. a file with a version in its url (esm.sh/x@1.2) cache first, every other one network first |

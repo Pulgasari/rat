@@ -373,7 +373,39 @@ $query.clear();
 
 `let $view = Enum('grid', 'list')` is a signal holding a string: `$view` reads `'grid'`, a write is checked. `new $Enum('grid', 'list')` is an object: `$view.value` reads, `$view.cycle()` moves on. the first fits a value that is only set, the second one that is stepped through.
 
-not yet: `persist` through `@bunker`, the compiler reading a static schema, the
+### stored
+
+a value kept beyond the page (`stored.js`, [persistence.md](../../.md/persistence.md)): read back when it
+is made, written on every change. one word, three ways to say it:
+
+```js
+// the primitive: a key and a value
+let   $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));   // a signal
+const $tabs  = stored('tabs', $List(Tab).create());                 // the variant, kept in place
+
+// on the schema: the options travel with the type
+let   $theme    = Enum.from(gestalt.themes).stored({ key: 'look', in: 'session' });
+const $settings = $Record(Settings).stored('settings').create();
+
+// in a declaration (the compiler): the key is the name
+let   $theme!    = Enum('zombie', 'oled', 'rainbow');
+const $settings! = $Record(Settings).create();
+```
+
+| option | |
+|---|---|
+| `key` | what it is kept under. one written on the schema wins over the name |
+| `in` | the place: the call, else the type (a `Table` goes to `'database'`), else `stored.defaults.in` (config: `stored: { in }`), else `'store'`. without `@rat/app`: `'store'` localStorage, `'session'` sessionStorage, `'memory'`; `stored.place(name, place)` adds one, a `@rat/bunker` store is one |
+| `debounce` | ms after a change before it is written, default once per microtask. pending writes run on `pagehide` and when the page is hidden |
+| `sync` | a change from elsewhere (another tab) comes in |
+| `version`, `migrate` | what was kept under another version goes through `migrate(old, version)` |
+
+what is read goes through the schema: coerced (a `Path` from `'a/b'`), missing fields at their initial
+value, a field that no longer fits as well; items of a list that are a data type (`$List(Tab)`) come back as
+one. what is written is what `toJSON` gives. the same key in the same place twice is the same signal.
+`stored.forget(key)` sets it back and removes it.
+
+not yet: the compiler reading a static schema, the
 sketch below (unique values, optionally sorted) as options on `List`.
 
 ---

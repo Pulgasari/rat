@@ -15,7 +15,7 @@
 ## syntax | schema | types
 - [ ] the "comptime" idea from [ideas.md](ideas.md)
 - [ ] extend schema for elements-hints (control-elements)
-- [ ] extend schema for persistence
+- [x] extend schema for persistence (`schema.stored()`, `.md/persistence.md`)
 
 ---
 

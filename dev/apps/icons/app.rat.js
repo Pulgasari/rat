@@ -16,9 +16,8 @@ import Empty    from '../.shared/components/Empty.rat.html';
 import Loading  from '../.shared/components/Loading.rat.html';
 import Settings from '../.shared/components/Settings.rat.html';
 
-import { hint }        from '../.shared/install.js';
-import { read, write } from '../.shared/storage.js';
-import { toast }       from '../.shared/toast.js';
+import { hint }  from '../.shared/install.js';
+import { toast } from '../.shared/toast.js';
 
 import * as api from './iconify.js';
 
@@ -34,14 +33,10 @@ let $results     = null;   // the icon names of the search | null
 let $searching   = false;
 let $detail      = null;   // the icon in the context area | null
 
-// kept by hand until persistence is decided
-let $setFilter = read('icons:setFilter', '');
-let $query     = read('icons:query', '');
-let $itemSize  = read('icons:itemSize', 88);
-
-effect(() => write('icons:setFilter', $setFilter));
-effect(() => write('icons:query', $query));
-effect(() => write('icons:itemSize', $itemSize));
+// kept across visits
+let $setFilter! = '';
+let $query!     = '';
+let $itemSize!  = 88;
 
 // the set of the route /set/:prefix
 const $prefix = /^\/set\/(.+)$/.exec(RAT.app.router.$path.value)?.[1] ?? null;

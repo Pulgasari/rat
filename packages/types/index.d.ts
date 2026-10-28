@@ -33,9 +33,58 @@ export interface Schema<T> {
   /** This schema's check, then made into target and checked by it: Str.to(KebabCase). */
   to<U> (target: Schema<U>): Schema<U>;
 
-  /** A value of the data type this schema was made by. A schema of plain js values (Str, Num …) throws. */
+  /** A value of the data type this schema was made by. A schema of plain js values (Str, Num …) throws. Kept after stored(). */
   create (value?: unknown): unknown;
+
+  /** Kept beyond the page: $() makes a kept signal of it, create() a kept variant. See stored(). */
+  stored (options?: string | StoredOptions): this;
 }
+
+export interface StoredOptions {
+  /** What it is kept under. A key written on the schema wins over the one of the call (the name of $x!). */
+  key?      : string;
+  /** The place: 'store', 'session', 'database', 'memory' or one of stored.place(). Default: by the type (a Table: 'database'), else stored.defaults.in, else 'store'. */
+  in?       : string;
+  /** Ms after a change before it is written. Default: once per microtask. */
+  debounce? : number;
+  /** A change from elsewhere (another tab) comes in. */
+  sync?     : boolean;
+  /** The version of the shape: what was kept under another goes through migrate. */
+  version?  : number;
+  /** The value in today's shape, undefined drops it. */
+  migrate?  : (old: unknown, version: number) => unknown;
+}
+
+/** Where kept values live: a @rat/bunker store is one. Answers at once through peek, else through get. */
+export interface Place {
+  peek?   (key: string): unknown;
+  get?    (key: string): Promise<unknown>;
+  set     (key: string, value: unknown): unknown;
+  delete  (key: string): unknown;
+  on?     (type: 'change', fn: (change: { keys: string[], type: string }) => void): () => void;
+  load?   (): Promise<void>;
+  loaded? : boolean;
+  sync?   : boolean;
+}
+
+/**
+ * A value kept beyond the page: read back now, written on every change. A schema or a plain value gives a
+ * signal (the same key twice: the same signal), a reactive variant is kept in place and returned.
+ * The compiler's let $name! = … is stored('name', …).
+ */
+export declare const stored: {
+  <T>(options: string | StoredOptions, init: Schema<T>): import('@rat/signals').Signal<T>;
+  <V extends object>(options: string | StoredOptions, init: V): V;
+  <T>(options: string | StoredOptions, init?: T): import('@rat/signals').Signal<T>;
+  /** Back to its initial value and gone from its place: in names one place, else every place. */
+  forget (key: string, options?: { in?: string }): Promise<unknown[]>;
+  /** A place under its name: @rat/app sets 'store' (RAT.app.store, read ahead) and 'database'. */
+  place (name: string, place: Place): void;
+  /** The place of everything that names none (config.rat.js: stored: { in }). */
+  defaults : { in: string | null };
+  /** Every pending write, now (pagehide and a hidden page do it). */
+  flush (): void;
+};
 
 /** The schema of a data type: create() makes a value of it, $Dict(…).create() a reactive one. */
 export interface TypedSchema<T, I> extends Schema<T> {

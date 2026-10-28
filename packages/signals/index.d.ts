@@ -57,3 +57,6 @@ export const $: {
 };
 
 export const REACTIVE: unique symbol;
+
+/** A value with a method under this symbol makes its own signal in $(): a schema with .stored() one that is kept. */
+export const SIGNAL: unique symbol;

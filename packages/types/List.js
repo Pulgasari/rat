@@ -123,6 +123,7 @@ function listOf (given) {
     describe : { item: item.describe },
     initial  : [],
     kind     : 'list',
+    parts    : { item },
     run      : (value, path) => {
       const list = value instanceof ListType;
       if (!list && !Array.isArray(value)) return { issues: [{ message: 'expected a list', path }] };

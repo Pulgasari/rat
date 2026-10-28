@@ -1,7 +1,7 @@
 // @rat/runtime
 
 export * from '@rat/signals';
-export { NONE, any, either, is, match, part, pass, pattern, rest } from '@rat/types';
+export { NONE, any, either, is, match, part, pass, pattern, rest, stored } from '@rat/types';
 
 export * from './common/destructure.js';
 export * from './common/imported.js';

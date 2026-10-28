@@ -37,8 +37,16 @@ export interface StoreOptions {
 export declare class Store<V = any> {
   constructor (options?: StoreOptions);
   readonly driver : Driver;
+  /** load() is done: every read answers from memory. */
+  readonly loaded : boolean;
   readonly sync   : boolean;
   readonly schema : StoreOptions['schema'];
+
+  /** Every key into memory, once: any driver reads sync after it. */
+  load (): Promise<void>;
+  /** From memory, a sync driver straight from it without load(). */
+  peek (key: Key): V | undefined;
+  peek<F> (key: Key, fallback: F): V | F;
 
   get (key: Key): Promise<V | undefined>;
   get<F> (key: Key, fallback: F): Promise<V | F>;
