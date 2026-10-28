@@ -1,0 +1,24 @@
+<script>
+  // <LibraryView />: the clips of the granted folders as a grid of posters, one opens in the player
+
+  import { gallery, posterOf } from '../library.js';
+  import { load }              from '../player.rat.js';
+
+  import toast from '../../.shared/toast.js';
+
+  async function open (clip) {
+    try {
+      load(await gallery.open(clip));
+      RAT.app.router.go('/player');
+    }
+    catch (error) { toast.error(error); }
+  }
+</script>
+
+<ViewHeader title='videos'>
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</ViewHeader>
+
+<main>
+  <Gallery gallery={gallery} thumb={posterOf} onopen={open} noun='clips' icon='video' />
+</main>

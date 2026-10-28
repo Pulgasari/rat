@@ -1,0 +1,165 @@
+<script>
+  // <Gallery gallery={gallery} thumb={item => url} onopen={item => …} noun='images' icon='image' />
+  // the files of the granted folders as a grid: a search, chips per folder, a bar for folders to
+  // reconnect, an empty state that offers a folder. a thumbnail is asked for once its cell nears the
+  // view, thumb gives a url or null (the icon stays)
+
+  import toast from '../toast.js';
+
+  const folders = RAT.app.folders;
+  const gallery = props.gallery;
+
+  let $query  = '';
+  let $folder = '';   // '' all, else a source id
+
+  const $sources  = folders.sources.value;
+  const $perms    = folders.perms.value;
+  const $scanning = Object.values(folders.scanning.value).some(Boolean);
+  const $stale    = $sources.filter(source => $perms[source.id] && $perms[source.id] !== 'granted');
+
+  const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+
+  const $shown = (() => {
+    const query = $query.trim().toLowerCase();
+    return gallery.items.value
+      .filter(item => (!$folder || item.sourceId === $folder) && (!query || item.name.toLowerCase().includes(query) || item.path.toLowerCase().includes(query)))
+      .sort(byName);
+  })();
+
+  async function add () {
+    try { await gallery.add(); }
+    catch (error) { toast.error(error); }
+  }
+
+  async function reconnect (source) {
+    const result = await folders.reconnect(source.id);
+    if (!result?.granted) toast.error(`Reconnect failed, try “Choose folder”.`);
+  }
+
+  async function repick (source) {
+    if (!await folders.repick(source.id)) toast.error(`Could not open ${source.name}`);
+  }
+
+  // the thumbnail of a cell, asked for once it is near the view
+  function lazy (element, item) {
+    const observer = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      observer.disconnect();
+      Promise.resolve(props.thumb(item)).then(url => {
+        if (!url) return;
+        const image = Object.assign(document.createElement('img'), { alt: item.name, loading: 'lazy', src: url });
+        element.querySelector('.placeholder')?.replaceWith(image);
+      }).catch(() => {});
+    }, { rootMargin: '300px' });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }
+</script>
+
+<div.gallery>
+  <header.gallery-head>
+    @if ($scanning): <span.scan-note><svg-icon icon='loading' /> scanning …</span>
+    <label.gallery-search>
+      <svg-icon icon='search' />
+      <input type='search' placeholder={`Search ${props.noun} …`} value={$query} oninput={event => $query = event.currentTarget.value} />
+      @if ($query): <btn-icon icon='close' label='clear' onclick={() => $query = ''} />
+    </label.gallery-search>
+    @if ($sources.length): <btn-icon icon='refresh' label='Rescan folders' onclick={() => gallery.rescan()} />
+    <btn-push icon='folder-add' label='Add folder' onclick={add} />
+  </header.gallery-head>
+
+  @if ($stale.length)
+    <div.reconnect>
+      <svg-icon icon='folder-alert' />
+      <span>{$stale.length} folder{$stale.length === 1 ? '' : 's'} need reconnecting to read on this device.</span>
+      @for (source of $stale)
+        <div.reconnect-item>
+          <span.reconnect-name>{source.name}</span>
+          <btn-push icon='folder-key' label='Reconnect' onclick={() => reconnect(source)} />
+          <btn-push icon='folder-search' label='Choose folder' onclick={() => repick(source)} />
+        </div.reconnect-item>
+    </div.reconnect>
+
+  @if ($sources.length): <InstallTip />
+
+  @if ($sources.length > 1)
+    <div.folder-chips>
+      <button.chip class:active={$folder === ''} onclick={() => $folder = ''}>All</button>
+      @for (source of $sources): <button.chip class:active={$folder === source.id} onclick={() => $folder = source.id}>{source.name}</button>
+    </div.folder-chips>
+
+  @if (!$sources.length)
+    <Empty icon={props.icon} title={`Browse a folder of ${props.noun}`} hint={`Grant a folder off your device and browse it as a gallery. Nothing is uploaded, only the folder permission is remembered.`}>
+      <btn-push icon='folder-add' label='Add a folder' onclick={add} />
+    </Empty>
+  @else if ($shown.length)
+    <div.gallery-grid>
+      @for (item of $shown)
+        <button.thumb title={item.path} onclick={() => props.onopen(item)} @lazy={item}>
+          <span.placeholder><svg-icon icon={props.icon} /></span>
+          <span.thumb-name>{item.name}</span>
+        </button.thumb>
+    </div.gallery-grid>
+  @else
+    <Empty icon={$query ? 'no-results' : props.icon} title={$query ? 'Nothing matches your search' : `No ${props.noun} here yet`} hint={$query ? '' : 'Scanning may still be running, or this folder has none.'} />
+</div.gallery>
+
+<style>
+  .gallery { display: flex; flex-direction: column; gap: 0.75rem; min-block-size: 0; padding: 0.75rem; }
+
+  .gallery-head { align-items: center; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .scan-note    { align-items: center; display: inline-flex; gap: 0.35rem; opacity: 0.7; }
+
+  .gallery-search {
+    align-items   : center;
+    border        : 1px solid var(--line);
+    border-radius : 999px;
+    display       : flex;
+    flex          : 1 1 12rem;
+    gap           : 0.4rem;
+    padding       : 0.15rem 0.5rem 0.15rem 0.75rem;
+
+    > input { background: none; border: 0; color: inherit; flex: 1; font: inherit; min-inline-size: 0; outline: none; padding: 0.35rem 0; }
+  }
+
+  .reconnect { align-items: center; border: 1px solid var(--line); border-radius: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 0.75rem; }
+  .reconnect-item { align-items: center; display: flex; flex-wrap: wrap; gap: 0.5rem; inline-size: 100%; }
+  .reconnect-name { font-weight: 600; margin-inline-end: auto; }
+
+  .folder-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .chip { background: none; border: 1px solid var(--line); border-radius: 999px; color: inherit; cursor: pointer; font: inherit; padding: 0.25rem 0.75rem; }
+  .chip.active { background: var(--color-ink); border-color: var(--color-ink); color: var(--color-bg); }
+
+  .gallery-grid { display: grid; gap: 0.6rem; grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size, 140px), 1fr)); }
+
+  .thumb {
+    aspect-ratio  : 1;
+    background    : var(--panel, rgb(255 255 255 / 0.05));
+    border        : 0;
+    border-radius : 0.5rem;
+    color         : inherit;
+    cursor        : pointer;
+    display       : grid;
+    font          : inherit;
+    overflow      : hidden;
+    padding       : 0;
+    position      : relative;
+
+    > img, > .placeholder { grid-area: 1 / 1; block-size: 100%; inline-size: 100%; }
+    > img          { object-fit: cover; }
+    > .placeholder { align-items: center; display: flex; font-size: 2rem; justify-content: center; opacity: 0.35; }
+
+    > .thumb-name {
+      background    : linear-gradient(transparent, rgb(0 0 0 / 0.6));
+      color         : white;
+      font-size     : 0.75rem;
+      inset         : auto 0 0 0;
+      overflow      : hidden;
+      padding       : 1rem 0.4rem 0.3rem;
+      position      : absolute;
+      text-align    : start;
+      text-overflow : ellipsis;
+      white-space   : nowrap;
+    }
+  }
+</style>

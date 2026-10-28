@@ -1,0 +1,121 @@
+/* videos :: app.css. the library is the shared <Gallery>, this is the player: the stage takes the
+   room, the controls sit below it, a double tap folds the bars away */
+
+rat-view[name='library'] > main { display: block; }
+
+/* :::::: PLAYER */
+
+.player {
+  background     : #000;
+  display        : flex;
+  flex           : 1 1 auto;
+  flex-direction : column;
+  min-block-size : 0;
+  padding        : 0;
+}
+
+.stage {
+  background  : #000;
+  display     : grid;
+  grid-template : minmax(0, 1fr) / minmax(0, 1fr);   /* the video's own size does not stretch the stage */
+  flex        : 1 1 auto;
+  min-height  : 0;
+  overflow    : hidden;
+  place-items : center;
+  position    : relative;
+}
+
+.frame {
+  block-size  : 100%;
+  min-block-size  : 0;
+  min-inline-size : 0;
+  display     : grid;
+  inline-size : 100%;
+  place-items : center;
+
+  /* a forced aspect ratio shrinks the frame to that shape, centered */
+  &.framed { aspect-ratio: var(--aspect); block-size: auto; inline-size: auto; max-block-size: 100%; max-inline-size: 100%; }
+}
+
+.video {
+  background  : #000;
+  block-size  : 100%;
+  inline-size : 100%;
+  object-fit  : var(--fit, contain);
+  transition  : transform 0.2s ease;
+}
+
+/* no clip: the whole stage opens one */
+.stage > .open {
+  align-items     : center;
+  background      : var(--color-bg);
+  border          : 0;
+  color           : inherit;
+  cursor          : pointer;
+  display         : flex;
+  flex-direction  : column;
+  font            : inherit;
+  gap             : 0.4rem;
+  inset           : 0;
+  justify-content : center;
+  position        : absolute;
+
+  > svg-icon { font-size: 3rem; opacity: 0.6; }
+  > span     { font-size: 1.1rem; font-weight: 600; }
+  > small    { opacity: 0.6; }
+}
+
+.controls {
+  background     : var(--panel, var(--color-bg));
+  border-top     : 1px solid var(--line);
+  display        : flex;
+  flex           : none;
+  flex-direction : column;
+  gap            : 0.35rem;
+  padding        : 0.5rem 0.4rem;
+
+  > .row { align-items: center; display: flex; gap: 0.2rem; justify-content: space-around; }
+}
+
+.control {
+  background    : transparent;
+  border        : 0;
+  border-radius : 0.5rem;
+  color         : inherit;
+  cursor        : pointer;
+  display       : grid;
+  font-size     : 1.25rem;
+  min-block-size  : 2.75rem;
+  min-inline-size : 2.75rem;
+  place-items   : center;
+
+  &:disabled { cursor: default; opacity: 0.35; }
+  &.active   { color: var(--color-ink); }
+
+  /* play and pause carry the transport row */
+  &.big { background: var(--color-ink); border-radius: 999px; color: var(--color-bg); font-size: 1.6rem; min-block-size: 3.5rem; min-inline-size: 3.5rem; }
+}
+
+.progress {
+  align-items : center;
+  display     : flex;
+  gap         : 0.6rem;
+  padding     : 0 0.5rem;
+
+  > .scrub { accent-color: var(--color-ink); flex: 1; min-inline-size: 0; }
+  > .time  { font-size: 0.8rem; font-variant-numeric: tabular-nums; min-inline-size: 3ch; opacity: 0.75; text-align: center; }
+}
+
+/* :::::: EDIT */
+
+.planned {
+  display    : grid;
+  gap        : 0.5rem;
+  list-style : none;
+  margin     : 0.5rem 0 0;
+  padding    : 0;
+  text-align : start;
+
+  > li { align-items: center; display: flex; gap: 0.5rem; opacity: 0.8; }
+  svg-icon { font-size: 1.25rem; }
+}

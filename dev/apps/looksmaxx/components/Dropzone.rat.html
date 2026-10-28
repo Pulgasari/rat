@@ -1,0 +1,17 @@
+<script>
+  // <Dropzone />: no photo yet. drop one or choose it
+
+  import { usePhoto } from '../state.rat.js';
+
+  function dropped (event) {
+    event.preventDefault();
+    usePhoto(event.dataTransfer.files?.[0]);
+  }
+</script>
+
+<label.drop ondragover={event => event.preventDefault()} ondrop={dropped}>
+  <svg-icon icon='image-add' />
+  <strong>Drop a photo</strong>
+  <span>or tap to choose: a clear, front-facing portrait works best. Nothing leaves your device.</span>
+  <input type='file' accept='image/*' hidden onchange={event => { usePhoto(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
+</label.drop>

@@ -1,0 +1,38 @@
+<script>
+  // <Controls />: transport, the time line, and how the clip is shown
+
+  import {
+    $aspect, $current, $duration, $fit, $flipped, $loop, $playing, $reversed, $rotation, $src,
+    cycleAspect, format, rotate, seek, skip, step, toggle, toggleCrop, toggleFlip, toggleLoop, toggleReverse,
+  } from '../player.rat.js';
+
+  const $off = !$src;
+</script>
+
+@fragment control (icon, label, run, active, big)
+  <button.control class:active={active} class:big={big} title={label} aria-label={label} disabled={$off} onclick={run}><svg-icon icon={icon} /></button>
+
+<div.controls>
+  <div.row>
+    {control('rewind-10', 'Back 10s', () => skip(-10), false, false)}
+    {control('frame-back', 'Frame back', () => step(-1), false, false)}
+    {control($playing ? 'pause' : 'play', $playing ? 'Pause' : 'Play', toggle, false, true)}
+    {control('frame-forward', 'Frame forward', () => step(1), false, false)}
+    {control('forward-10', 'Forward 10s', () => skip(10), false, false)}
+  </div.row>
+
+  <div.progress>
+    <span.time>{format($current)}</span>
+    <input.scrub type='range' min='0' max={$duration || 0} step='0.01' value={$current} disabled={$off} oninput={event => seek(parseFloat(event.currentTarget.value))} />
+    <span.time>{format($duration)}</span>
+  </div.progress>
+
+  <div.row>
+    {control($loop ? 'repeat' : 'repeat-off', 'Loop', toggleLoop, $loop, false)}
+    {control('aspect', 'Aspect ratio', cycleAspect, $aspect != null, false)}
+    {control('crop', 'Crop to fill', toggleCrop, $fit === 'cover', false)}
+    {control('reverse', 'Reverse', toggleReverse, $reversed, false)}
+    {control('mirror', 'Mirror', toggleFlip, $flipped, false)}
+    {control('rotate', 'Rotate', rotate, $rotation !== 0, false)}
+  </div.row>
+</div.controls>
