@@ -42,6 +42,7 @@ const token = mapper({
   'keyword'                              : 'keyword',
   'keyword.control.block'                : 'keyword.block',
   'keyword.operator'                     : 'delimiter.operator',
+  'keyword.operator.kept'                : 'keyword.kept',
   'keyword.operator.pipe'                : 'keyword.pipe',
   'keyword.operator.range'               : 'keyword.range',
   'keyword.other.directive'              : 'keyword.directive',

@@ -75,6 +75,8 @@ export function commandListener (name: string): (event: Event) => void;
 
 /** Mounts a component. The first call throws, later errors (effects, rows) are raised from target. */
 export function mount (component: Component, target: string | Element, props?: Props): () => void;
+/** While a component is built: where, the host of the mount first, then the anchors (comments) of the parts around it, the innermost last. */
+export function building (): Node[];
 
 /** 'rat:error'. */
 export const ERROR: 'rat:error';

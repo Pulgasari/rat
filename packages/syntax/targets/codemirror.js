@@ -40,6 +40,7 @@ const tag = mapper({
   'keyword.control'                      : 'controlKeyword',
   'keyword.control.block'                : 'controlKeyword.special',
   'keyword.operator'                     : 'operator',
+  'keyword.operator.kept'                : 'modifier',
   'keyword.operator.pipe'                : 'operatorKeyword',
   'keyword.operator.range'               : 'operatorKeyword',
   'keyword.other.directive'              : 'modifier',

@@ -1,7 +1,7 @@
 # rat :: persistence
 
-status: **built**: the store reads ahead, `stored` in `@rat/types`, `$name!` in the compiler. later: keys
-per view, `in: 'url'`, a table by rows, keys as functions, `in: 'secure'`.
+status: **built**: the store reads ahead, `stored` in `@rat/types`, `$name!` in the compiler, keys per view.
+later: `in: 'url'`, a table by rows, keys as functions, `in: 'secure'`.
 
 a value that outlives the page: a setting, the open tabs, bookmarks, a draft. before, every app did it by
 hand (`cleanup.md` 1): a key, a read, an effect that writes, a revive for what JSON can not carry. this
@@ -167,13 +167,20 @@ rules:
 - the key is the name without `$`. the same key in the same place twice is the same signal (two modules,
   two instances of a component). a variant can not be shared that way: both are kept and warned about.
 
-the next step for keys: views and parts have names (`<rat-view name='podcasts'>`). a kept value of a
-component inside a view gets the view's name in its key:
+**keys per view.** views, parts and areas have names. a kept value made in a component inside named ones
+gets their names in its key, the outermost first:
 
 ```html
-<rat-view name='podcasts' />   <!-- myapp:podcasts:tabs -->
-<rat-view name='search'   />   <!-- myapp:search:tabs -->
+<rat-view name='podcasts'><Feed /></rat-view>   <!-- let $tabs! in Feed: myapp:podcasts:tabs -->
+<rat-view name='search'><Feed /></rat-view>     <!-- myapp:search:tabs -->
 ```
+
+one made in a module (`state.rat.js`) or in the app's own component keeps its name as it is.
+`scope: false` keeps it as it is anywhere. how it finds the names: `@domina/render` hands `scope(fn,
+anchor)` the comment a part starts at, the runtime keeps those of what is being built (`building()`), and
+`@rat/app` walks from them to the named `rat-view`, `rat-part` and `rat-area` around (`stored.scope()`).
+the anchor of a nested component lies in a fragment not in the page yet, the anchors before it say
+where that fragment goes.
 
 ## variants: records, lists, tables
 
@@ -256,9 +263,8 @@ an app: which values are worth keeping.
 
 ## later
 
-1. **keys per view**: a kept value inside a named view or part gets its name in the key (above).
-2. **`in: 'url'`**: state worth a link (the open folder, a filter), or the router's business (`cleanup.md` 29).
-3. **a table by rows** in the database, instead of one value.
-4. **keys as functions**, followed like a computed: `stored({ key: () => `bookmarks:${$folderId}` }, …)`.
-5. **`in: 'secure'`**: keychain / keystore drivers.
-6. **devtools**: every kept value with key, place and size.
+1. **`in: 'url'`**: state worth a link (the open folder, a filter), or the router's business (`cleanup.md` 29).
+2. **a table by rows** in the database, instead of one value.
+3. **keys as functions**, followed like a computed: `stored({ key: () => `bookmarks:${$folderId}` }, …)`.
+4. **`in: 'secure'`**: keychain / keystore drivers.
+5. **devtools**: every kept value with key, place and size.

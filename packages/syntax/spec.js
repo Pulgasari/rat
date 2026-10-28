@@ -155,6 +155,8 @@ const states = {
     { begin: '"',                    token: 'string.quoted.double', state: 'stringDouble' },
     { begin: "'",                    token: 'string.quoted.single', state: 'stringSingle' },
     { match: NUMBER,                 token: 'constant.numeric' },
+    // $theme! = …: kept beyond the page, the ! where a declaration goes on (=, not ==), ends or lists
+    { match: [`(?<![\\w$])\\$[A-Za-z_][\\w$]*`, '!(?=\\s*(?:=(?!=)|[;,]|$))'], token: ['variable.other.reactive', 'keyword.operator.kept'] },
     { match: `(?<![\\w$])\\$[A-Za-z_][\\w$]*`, token: 'variable.other.reactive' },
     { match: word(words.constants),  token: 'constant.language' },
     { match: word(words.language),   token: 'variable.language' },

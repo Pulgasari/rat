@@ -307,6 +307,17 @@
           "name": "constant.numeric"
         },
         {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
+        },
+        {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
           "name": "variable.other.reactive"
         },
@@ -514,6 +525,17 @@
         {
           "match": "(?<![\\w$])(?:0[xX][\\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d+)?n?|\\.\\d[\\d_]*(?:[eE][+-]?\\d+)?)",
           "name": "constant.numeric"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
         },
         {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
@@ -897,6 +919,17 @@
           "name": "constant.numeric"
         },
         {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
+        },
+        {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
           "name": "variable.other.reactive"
         },
@@ -1106,6 +1139,17 @@
           "name": "constant.numeric"
         },
         {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
+        },
+        {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
           "name": "variable.other.reactive"
         },
@@ -1208,6 +1252,17 @@
         {
           "match": "(?<![\\w$])(?:0[xX][\\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d+)?n?|\\.\\d[\\d_]*(?:[eE][+-]?\\d+)?)",
           "name": "constant.numeric"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
         },
         {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
@@ -1419,6 +1474,17 @@
           "name": "constant.numeric"
         },
         {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
+        },
+        {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
           "name": "variable.other.reactive"
         },
@@ -1626,6 +1692,17 @@
         {
           "match": "(?<![\\w$])(?:0[xX][\\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d+)?n?|\\.\\d[\\d_]*(?:[eE][+-]?\\d+)?)",
           "name": "constant.numeric"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
         },
         {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",
@@ -1882,6 +1959,17 @@
         {
           "match": "(?<![\\w$])(?:0[xX][\\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d+)?n?|\\.\\d[\\d_]*(?:[eE][+-]?\\d+)?)",
           "name": "constant.numeric"
+        },
+        {
+          "captures": {
+            "1": {
+              "name": "variable.other.reactive"
+            },
+            "2": {
+              "name": "keyword.operator.kept"
+            }
+          },
+          "match": "((?<![\\w$])\\$[A-Za-z_][\\w$]*)(!(?=\\s*(?:=(?!=)|[;,]|$)))"
         },
         {
           "match": "(?<![\\w$])\\$[A-Za-z_][\\w$]*",

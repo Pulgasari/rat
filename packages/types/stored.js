@@ -18,6 +18,8 @@ ways to say it:
 
 options, a key or
   key        what it is kept under. a key written on the schema wins over the one of the call
+  scope      false: the key as it is. else made inside a named view, part or area, their names go
+             before it (stored.scope(), set by @rat/app): podcasts:tabs, search:tabs
   in         the place, see below
   debounce   ms after a change before it is written, default: once per microtask
   sync       true: a change from elsewhere (another tab) comes in
@@ -133,7 +135,9 @@ function stored (options, init) {
   const given  = optionsOf(options);
   const schema = isSchema(init) ? init : init !== null && typeof init === 'object' ? madeBy(init) ?? init.schema : undefined;
   const own    = schema?.[STORED] ?? null;
-  return keep({ ...own, ...given, key: own?.key ?? given.key }, init, schema);
+  const key    = own?.key ?? given.key;
+  const scope  = (own?.scope ?? given.scope) === false || !key ? [] : stored.scope();
+  return keep({ ...own, ...given, key: [...scope, key].join(':') }, init, schema);
 }
 
 function keep (options, init, schema) {
@@ -249,6 +253,9 @@ function keep (options, init, schema) {
 stored.forget = (key, { in: name } = {}) => Promise.all([...kept].filter(([id]) => name ? id === `${name}:${key}` : id.endsWith(`:${key}`)).map(([, entry]) => entry.reset()));
 
 stored.place = (name, place) => { places[name] = place; };
+
+// the names a key gets before it, where it is made: none without @rat/app
+stored.scope = () => [];
 
 stored.defaults = defaults;
 stored.flush    = flush;

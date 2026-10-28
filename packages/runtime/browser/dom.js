@@ -37,12 +37,25 @@ function render (target, value, options) {
   return renderInto(target, value, merged);
 }
 
+// where the parts being built sit, the host of the mount first, the innermost last. a component
+// asks building() while it runs: the comment its part starts at may lie in a fragment not in the
+// page yet, the ones before it say where that fragment goes
+const anchors = [];
+
+function at (anchor, fn) {
+  anchors.push(anchor);
+  try     { return fn(); }
+  finally { anchors.pop(); }
+}
+
+const building = () => [...anchors];
+
 // a component runs once, untracked, in a scope of its own. what throws later, in
 // its effects and rows, is raised from host (errors.js); the first call throws
 function mount (Component, target, props = {}) {
   const host    = isString(target) ? document.querySelector(target) : target;
-  const options = { effect: fn => effect(guard(fn, host), null), scope: fn => scope(guard(fn, host), null) };
-  const [, dispose] = scope(() => render(host, Component(props), options), null);
+  const options = { effect: fn => effect(guard(fn, host), null), scope: (fn, anchor) => scope(guard(() => at(anchor, fn), host), null) };
+  const [, dispose] = scope(() => at(host, () => render(host, Component(props), options)), null);
   return () => { unrender(host); dispose(); };
 }
 
@@ -169,4 +182,4 @@ function indexed (items, row, otherwise = null) {
   return each(source, item => item, item => row(item, indexes.get(item)), otherwise);
 }
 
-export { aria, bind, each, html, indexed, mount, raw, ref, render, sheet, style, unrender, use, when };
+export { aria, bind, building, each, html, indexed, mount, raw, ref, render, sheet, style, unrender, use, when };

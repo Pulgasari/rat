@@ -1,13 +1,13 @@
 (() => {
   // spec.js
   var words = {
-    blocks: ["case", "default", "else", "for", "if", "switch"],
+    blocks: ["await", "case", "catch", "default", "else", "for", "fragment", "if", "match", "pending", "var"],
     // as @if, @for …
     constants: ["Infinity", "NaN", "false", "null", "true", "undefined"],
     control: ["await", "break", "case", "catch", "continue", "default", "do", "else", "finally", "for", "if", "return", "switch", "throw", "try", "while", "yield"],
-    directives: ["bind", "class", "on", "style", "use"],
+    directives: ["bind", "class", "on", "once", "style", "use"],
     // as on:click, bind:value, use:tooltip …
-    keywords: ["as", "async", "delete", "export", "extends", "from", "import", "in", "instanceof", "new", "of", "typeof", "void"],
+    keywords: ["as", "async", "delete", "export", "extends", "from", "import", "in", "instanceof", "is", "new", "of", "typeof", "void"],
     language: ["props", "super", "this"],
     storage: ["class", "const", "function", "let", "var"]
   };
@@ -55,6 +55,7 @@
     "..."
   ];
   var pipe = "|>";
+  var apply = ["<|", "::"];
   var templateTags = ["html", "htx", "rat"];
   var files = {
     rat: { extensions: ["rat"], name: "RAT", root: "markup", scopeName: "source.rat" },
@@ -134,6 +135,8 @@
       { begin: '"', token: "string.quoted.double", state: "stringDouble" },
       { begin: "'", token: "string.quoted.single", state: "stringSingle" },
       { match: NUMBER, token: "constant.numeric" },
+      // $theme! = …: kept beyond the page, the ! where a declaration goes on (=, not ==), ends or lists
+      { match: [`(?<![\\w$])\\$[A-Za-z_][\\w$]*`, "!(?=\\s*(?:=(?!=)|[;,]|$))"], token: ["variable.other.reactive", "keyword.operator.kept"] },
       { match: `(?<![\\w$])\\$[A-Za-z_][\\w$]*`, token: "variable.other.reactive" },
       { match: word(words.constants), token: "constant.language" },
       { match: word(words.language), token: "variable.language" },
@@ -143,6 +146,7 @@
       { match: `${IDENT}(?=\\s*\\()`, token: "entity.name.function" },
       { match: IDENT, token: "variable.other" },
       { match: escape(pipe), token: "keyword.operator.pipe" },
+      { match: either(apply), token: "keyword.operator.pipe" },
       { match: "(?<!\\.)\\.\\.(?!\\.)", token: "keyword.operator.range" },
       { match: "#(?![\\w$])", token: "variable.language.topic" },
       { match: either(operators), token: "keyword.operator" },
@@ -228,6 +232,7 @@
     "keyword.control": "controlKeyword",
     "keyword.control.block": "controlKeyword.special",
     "keyword.operator": "operator",
+    "keyword.operator.kept": "modifier",
     "keyword.operator.pipe": "operatorKeyword",
     "keyword.operator.range": "operatorKeyword",
     "keyword.other.directive": "modifier",

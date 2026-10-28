@@ -45,6 +45,8 @@ export interface StoredOptions {
   key?      : string;
   /** The place: 'store', 'session', 'database', 'memory' or one of stored.place(). Default: by the type (a Table: 'database'), else stored.defaults.in, else 'store'. */
   in?       : string;
+  /** false: the key as it is. Else, made inside a named view, part or area, their names go before it: podcasts:tabs. */
+  scope?    : boolean;
   /** Ms after a change before it is written. Default: once per microtask. */
   debounce? : number;
   /** A change from elsewhere (another tab) comes in. */
@@ -80,6 +82,8 @@ export declare const stored: {
   forget (key: string, options?: { in?: string }): Promise<unknown[]>;
   /** A place under its name: @rat/app sets 'store' (RAT.app.store, read ahead) and 'database'. */
   place (name: string, place: Place): void;
+  /** The names a key gets before it, where it is made. @rat/app: the named views, parts and areas around the component. */
+  scope (): string[];
   /** The place of everything that names none (config.rat.js: stored: { in }). */
   defaults : { in: string | null };
   /** Every pending write, now (pagehide and a hidden page do it). */
