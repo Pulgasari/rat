@@ -19,9 +19,9 @@ import { Path }                      from '@rat/types/Path';
 
 import { toast } from '../.shared/toast.js';
 
-import * as fs       from './modules/fs.js';
+import * as fs       from '../.shared/fs.js';
 import * as places   from './modules/places.rat.js';
-import * as remotes  from './modules/remotes.rat.js';
+import * as remotes  from '../.shared/webdav/remotes.rat.js';
 import * as root     from './modules/root.rat.js';
 import * as scan     from './modules/scan.rat.js';
 import * as sync     from './modules/sync.rat.js';

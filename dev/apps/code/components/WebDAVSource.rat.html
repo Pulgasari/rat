@@ -1,0 +1,32 @@
+<script>
+  // <WebDAVSource />: the servers, the same ones as in files (.shared/webdav/remotes.rat.js). the
+  // browser reaches a server directly, so it has to send cors headers: a nextcloud or owncloud with
+  // cors on, rclone serve webdav --cors. an app password where the server has one
+
+  import { add, remove } from '../../.shared/webdav/remotes.rat.js';
+
+  import { $servers } from '../modules/sources.rat.js';
+
+  let $adding = false;
+
+  async function submit (event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    $adding = true;
+    try     { await add(Object.fromEntries(new FormData(form))); form.reset(); }
+    finally { $adding = false; }
+  }
+</script>
+
+@for (server of $servers)
+  <Root handle={server.handle} id={server.id} name={server.name}>
+    <btn-icon icon='close' label='forget' onclick={() => remove(server.source)} />
+  </Root>
+
+<form.connect onsubmit={submit}>
+  <input name='name'     placeholder='Name (optional)' />
+  <input name='url'      placeholder='https://cloud.example.com/remote.php/dav/files/me/' type='url' required />
+  <input name='username' placeholder='Username' autocomplete='username' />
+  <input name='password' placeholder='Password or app password' type='password' autocomplete='current-password' />
+  <btn-push type='submit' icon='cloud' label={$adding ? 'Connecting …' : 'Connect'} disabled={$adding} />
+</form.connect>

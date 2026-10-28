@@ -42,6 +42,7 @@ export default {
   archive         : 'lucide:file-archive',
   audio           : 'lucide:music',
   bookmark        : 'lucide:bookmark',
+  cloud           : 'lucide:cloud',
   document        : 'lucide:file-text',
   file            : 'lucide:file',
   folder          : 'lucide:folder',

@@ -1,0 +1,22 @@
+<script>
+  // <Toolbar />: the editor's actions at hand, above the keyboard
+
+  import { run } from '../modules/commands.rat.js';
+
+  const ACTIONS = [
+    { command: 'save',           icon: 'save',           label: 'save'           },
+    { command: 'copy',           icon: 'copy',           label: 'copy'           },
+    { command: 'cut',            icon: 'cut',            label: 'cut'            },
+    { command: 'paste',          icon: 'paste',          label: 'paste'          },
+    { command: 'select-all',     icon: 'select-all',     label: 'select all'     },
+    { command: 'duplicate-line', icon: 'duplicate-line', label: 'duplicate line' },
+    { command: 'move-line-down', icon: 'move-line-down', label: 'move line down' },
+    { command: 'move-line-up',   icon: 'move-line-up',   label: 'move line up'   },
+    { command: 'join-lines',     icon: 'join-lines',     label: 'join lines'     },
+    { command: 'sort-lines-asc', icon: 'sort-lines',     label: 'sort lines'     },
+  ];
+</script>
+
+<div.toolbar>
+  @for (action of ACTIONS): <btn-icon icon={action.icon} label={action.label} onclick={() => run(action.command)} />
+</div.toolbar>

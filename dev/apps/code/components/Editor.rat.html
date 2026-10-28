@@ -1,0 +1,70 @@
+<script>
+  // <Editor />: monaco, made once, the current document in it. what is typed goes into the document,
+  // a document brought up goes into monaco: the two never echo each other (writing)
+
+  import { effect, untrack } from '@rat/runtime';
+
+  import { $current } from '../modules/documents.rat.js';
+  import { $options, applyTheme, loadMonaco, optionsOf, setInstance } from '../modules/editor.rat.js';
+
+  let $box    = null;
+  let $editor = null;
+  let writing = false;
+
+  effect(() => {
+    const box = $box;
+    if (!box) return;
+    let alive = true;
+    let made  = null;
+
+    loadMonaco().then(monaco => {
+      if (!alive) return;
+      made = monaco.editor.create(box, untrack(() => optionsOf($options.toJSON())));
+      made.onDidChangeModelContent(() => {
+        const document = untrack(() => $current);
+        if (writing || !document) return;
+        document.content = made.getValue();
+        document.dirty   = true;
+      });
+      $editor = made;
+      setInstance(made);
+    });
+
+    return () => {
+      alive = false;
+      made?.dispose();
+      $editor = null;
+      setInstance(null);
+    };
+  });
+
+  // the document brought up: its text, its language, read only or not
+  effect(() => {
+    const editor = $editor, document = $current;
+    if (!editor || !document) return;
+    untrack(() => {
+      if (editor.getValue() !== document.content) {
+        writing = true;
+        editor.setValue(document.content);
+        writing = false;
+      }
+      globalThis.monaco.editor.setModelLanguage(editor.getModel(), document.language);
+      editor.updateOptions({ readOnly: document.readOnly || $options.readOnly });
+    });
+  });
+
+  effect(() => {
+    const options = optionsOf($options.toJSON());
+    $editor?.updateOptions({ ...options, readOnly: untrack(() => $current?.readOnly) || options.readOnly });
+  });
+
+  // a computed: the record has one version for all its fields, the theme alone changes this
+  const $theme = $options.theme;
+
+  effect(() => { if ($editor) applyTheme($theme); });
+</script>
+
+<div.editor>
+  @if (!$current): <Welcome />
+  <div.monaco ref={$box} hidden={!$current}></div>
+</div.editor>

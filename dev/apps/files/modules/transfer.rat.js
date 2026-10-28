@@ -17,7 +17,7 @@ and delete. files are copied as streams.
 // :::::: IMPORT
 
 import { $List, $Record } from '@rat/types';
-import { copyFile, copyTree, dirAt } from './fs.js';
+import { copyFile, copyTree, dirAt } from '../../.shared/fs.js';
 
 // ::::::
 

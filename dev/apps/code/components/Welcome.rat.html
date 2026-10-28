@@ -1,0 +1,13 @@
+<script>
+  // <Welcome />: the editor without a document
+
+  const LOGO = new URL('../app.svg', import.meta.url).href;   // an asset of the build
+</script>
+
+<div.welcome>
+  <img src={LOGO} alt='Code' width='160' height='160' />
+  <button.hint onclick='files'>
+    <svg-icon icon='info' />
+    <span>No file open: open a folder, a repository or a server to start.</span>
+  </button>
+</div.welcome>

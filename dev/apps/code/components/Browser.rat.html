@@ -1,0 +1,12 @@
+<script>
+  // <Browser />: the current document as a page, when it is html
+
+  import { $current } from '../modules/documents.rat.js';
+</script>
+
+<div.browser>
+  @if ($current?.language === 'html')
+    <iframe title='preview' sandbox='allow-scripts' srcdoc={$current.content}></iframe>
+  @else
+    <p.none>A preview for html documents</p.none>
+</div.browser>

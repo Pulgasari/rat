@@ -1,0 +1,42 @@
+<script>
+  // <Commands />: the palette. every command by its title, the starred ones first
+
+  import { $favourites, all, run, star } from '../modules/commands.rat.js';
+  import { close } from '../state.rat.js';
+
+  const COMMANDS = all();
+
+  let $query = '';
+
+  const $shown   = COMMANDS.filter(({ name, title }) => `${title} ${name}`.toLowerCase().includes($query.trim().toLowerCase()));
+  const $starred = $shown.filter(command =>  $favourites.includes(command.name));
+  const $rest    = $shown.filter(command => !$favourites.includes(command.name));
+
+  function go (name) {
+    close();
+    run(name);
+  }
+</script>
+
+@fragment row (command)
+  <li>
+    <button.run onclick={() => go(command.name)}>
+      <strong>{command.title}</strong>
+      <small>{command.name}</small>
+    </button.run>
+    <btn-icon icon={$favourites.includes(command.name) ? 'starred' : 'star'} label='favourite' onclick={() => star(command.name)} />
+  </li>
+
+<section.commands>
+  <input type='search' placeholder='Search commands …' bind:value={$query} />
+  @if ($starred.length)
+    <h3>Favourites</h3>
+    <ul>
+      @for (command of $starred): {row(command)}
+    </ul>
+  <h3>All</h3>
+  <ul>
+    @for (command of $rest): {row(command)}
+  </ul>
+  @if (!$shown.length): <p.none>No command matches</p.none>
+</section.commands>

@@ -1,0 +1,78 @@
+<script>
+  // <GitHubSource />: a token to reach your own repos, public ones pinned to read, the repo and branch
+  // to work in. saving a file of it commits
+
+  import { effect, untrack } from '@rat/runtime';
+
+  import {
+    $branch, $busy, $error, $pinned, $repo, $repos, $root, $user, $writable,
+    TOKEN_URL, branches, choose, chooseBranch, connect, disconnect, pin, unpin,
+  } from '../modules/github.rat.js';
+
+  let $choosing = false;
+  let $filter   = '';
+  let $list     = [];
+
+  const $shown = $repos.filter(repo => repo.full.toLowerCase().includes($filter.trim().toLowerCase()));
+
+  // the branches of the repo chosen, once per repo
+  effect(() => {
+    const repo = $repo;
+    $list = repo ? [repo.branch] : [];
+    if (repo) branches().then(list => { if (repo === untrack(() => $repo)) $list = list; }, () => {});
+  });
+
+  const pick = repo => { choose(repo); $choosing = false; };
+
+  async function submit (event, fn) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    await fn(new FormData(form).get('value'));
+    form.reset();
+  }
+</script>
+
+@if ($user)
+  <div.account>
+    <svg-icon icon='github' />
+    <span>{$user.login}</span>
+    <btn-push label='Disconnect' onclick={disconnect} />
+  </div.account>
+
+@if ($error): <p.error><svg-icon icon='warning' /> {$error}</p.error>
+
+@if ($repo && !$choosing)
+  <div.repo>
+    <btn-push icon={$repo.readOnly ? 'web' : 'folder-open'} label={$repo.full} onclick={() => { $choosing = true; }} />
+    <select value={$branch} onchange={event => chooseBranch(event.target.value)}>
+      @for (name of $list): <option value={name} selected={name === $branch}>{name}</option>
+    </select>
+  </div.repo>
+  <Root handle={$root} id={`gh:${$repo.full}@${$branch}`} name={$repo.full} readOnly={!$writable} />
+@else
+  @if (!$user)
+    <form.connect onsubmit={event => submit(event, connect)}>
+      <p>A <strong>fine-grained personal access token</strong> with <em>contents: read and write</em> edits your own repositories. A public one below reads without.</p>
+      <Link href={TOKEN_URL} label='Create a token' />
+      <input name='value' type='password' placeholder='github_pat_…' />
+      <btn-push type='submit' label={$busy || 'Connect'} disabled={Boolean($busy)} />
+    </form.connect>
+
+  <form.connect onsubmit={event => submit(event, pin)}>
+    <input name='value' placeholder='A public repo: owner/name or its url' />
+    <btn-push type='submit' label='Pin' disabled={Boolean($busy)} />
+  </form.connect>
+
+  <ul.repos>
+    @for (repo of $pinned)
+      <li>
+        <button onclick={() => pick(repo)}><svg-icon icon='web' /> {repo.full} <small>read only</small></button>
+        <btn-icon icon='close' label='unpin' onclick={() => unpin(repo.full)} />
+      </li>
+  </ul.repos>
+
+  @if ($user)
+    <input type='search' placeholder='Filter repositories …' bind:value={$filter} />
+    <ul.repos>
+      @for (repo of $shown): <li><button onclick={() => pick(repo)}><svg-icon icon={repo.private ? 'lock' : 'web'} /> {repo.full}</button></li>
+    </ul.repos>

@@ -17,7 +17,7 @@ a file of the folder becomes an outbox entry through its uri: the content:// uri
 carries, or the file:// of a handle with a path. the receiver may want a pin: send() asks and tries once more.
 */
 
-import { dirAt } from './fs.js';
+import { dirAt } from '../../.shared/fs.js';
 import { run }   from './tasks.rat.js';
 
 const { dialogs } = RAT.app;

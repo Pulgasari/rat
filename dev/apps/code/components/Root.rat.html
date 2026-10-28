@@ -1,0 +1,23 @@
+<script>
+  // <Root handle={dir} id='local:…' name='src'>its own actions</Root>: a source's root, its tree below.
+  // without a handle (a folder without permission) only the head. a read-only root changes nothing
+
+  import { $clipboard, create, paste } from '../modules/tree.rat.js';
+
+  let $open = true;
+</script>
+
+<div.root>
+  <div.head>
+    <button.name onclick={() => { $open = !$open; }}>
+      <svg-icon icon={$open ? 'chevron-down' : 'chevron-right'} />
+      <span>{props.name}</span>
+    </button.name>
+    @if (props.handle && !props.readOnly)
+      <btn-icon icon='file-add'   label='new file'   onclick={() => create('file', props.handle)} />
+      <btn-icon icon='folder-add' label='new folder' onclick={() => create('directory', props.handle)} />
+      @if ($clipboard): <btn-icon icon='paste' label='paste' onclick={() => paste(props.handle)} />
+    <slot />
+  </div.head>
+  @if (props.handle && $open): <Tree dir={props.handle} id={props.id} where={props.name} readOnly={props.readOnly} />
+</div.root>

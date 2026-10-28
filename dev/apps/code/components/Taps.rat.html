@@ -1,0 +1,29 @@
+<script>
+  // <Taps />: the bar at the bottom. the panels on the left, undo, commands and redo in the middle,
+  // what the screen shows on the right
+
+  import { $config, $panel } from '../state.rat.js';
+
+  import { $kind } from '../modules/sources.rat.js';
+
+  const showing = kind => $panel === 'files' && $kind === kind;
+</script>
+
+<nav.taps>
+  <div.section>
+    <btn-icon icon='settings'    label='settings' class:active={$panel === 'settings'} onclick='settings' />
+    <btn-icon icon='folder-tree' label='folders'  class:active={showing('local')}      onclick='files' />
+    <btn-icon icon='github'      label='github'   class:active={showing('github')}     onclick='github' />
+    <btn-icon icon='cloud'       label='webdav'   class:active={showing('webdav')}     onclick='webdav' />
+  </div.section>
+  <div.section>
+    <btn-icon icon='undo'     label='undo'     onclick='undo' />
+    <btn-icon icon='commands' label='commands' class:active={$panel === 'commands'} onclick='commands' />
+    <btn-icon icon='redo'     label='redo'     onclick='redo' />
+  </div.section>
+  <div.section>
+    <btn-icon icon='web'      label='browser'  class:active={$config.showBrowser}  onclick='toggle-browser' />
+    <btn-icon icon='keyboard' label='keyboard' class:active={$config.showKeyboard} onclick='toggle-keyboard' />
+    <btn-icon icon='toolbar'  label='toolbar'  class:active={$config.showToolbar}  onclick='toggle-toolbar' />
+  </div.section>
+</nav.taps>

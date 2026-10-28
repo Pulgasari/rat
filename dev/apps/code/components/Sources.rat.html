@@ -1,0 +1,14 @@
+<script>
+  // <Sources />: the files area, one source at a time: the folders, github, webdav
+
+  import { $kind, show } from '../modules/sources.rat.js';
+
+  const KINDS = [['local', 'Folders'], ['github', 'GitHub'], ['webdav', 'WebDAV']];
+</script>
+
+<section.sources>
+  <Picker look='segments' options={KINDS} value={$kind} onchange={show} />
+  @if ($kind === 'github'): <GitHubSource />
+  @else if ($kind === 'webdav'): <WebDAVSource />
+  @else: <LocalSource />
+</section.sources>

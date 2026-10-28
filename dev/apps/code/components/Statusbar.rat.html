@@ -1,0 +1,35 @@
+<script>
+  // <Statusbar />: where the document is from, its language and size, the indent, and switches for
+  // wrap, minimap and line numbers
+
+  import { bytes } from '../../.shared/fmt.js';
+
+  import { $config } from '../state.rat.js';
+
+  import { $current }          from '../modules/documents.rat.js';
+  import { $options, toggle } from '../modules/editor.rat.js';
+
+  const FORMATS = ['formatted', 'bytes', 'chars'];
+
+  const sizeOf = (text, format) => format === 'chars' ? `${text.length} chars`
+    : format === 'bytes' ? `${new Blob([text]).size} B`
+    : bytes(new Blob([text]).size);
+
+  const cycle  = () => { $config.fileSizeFormat = FORMATS[(FORMATS.indexOf($config.fileSizeFormat) + 1) % FORMATS.length]; };
+  const onOff  = value => value ? 'on' : 'off';
+</script>
+
+<footer.statusbar>
+  @if ($current)
+    @if ($current.where): <span.item.where title={$current.where}>{$current.where}</span>
+    <span.item>{$current.language}</span>
+    <button.item onclick={cycle}>{sizeOf($current.content, $config.fileSizeFormat)}</button>
+    <button.item onclick='settings'>{$options.insertSpaces ? `Spaces: ${$options.tabSize}` : 'Tabs'}</button>
+  @else
+    <span.item>No file</span>
+  <span.spacer></span>
+  <button.item onclick={() => toggle('wordWrap')}>Wrap: {$options.wordWrap}</button>
+  <button.item onclick={() => toggle('minimap')}>Map: {onOff($options.minimap)}</button>
+  <button.item onclick={() => toggle('lineNumbers')}>Lines: {onOff($options.lineNumbers)}</button>
+  <span.item>{$options.fontSize}px</span>
+</footer.statusbar>
