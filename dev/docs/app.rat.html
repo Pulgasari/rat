@@ -1,5 +1,5 @@
 <script>
-  // the docs: one markdown file per page, in the order of PAGES
+  // new URL('../../packages/types/README.md', import.meta.url).href
 
   import { autoloader } from '@aufbau/elements';
   import dom            from '@domina/dom';
@@ -9,24 +9,13 @@
 
   // the languages of rat as modules of this app, not a specifier <write-code> imports by its name: a build has no import map
   customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
-  /*
-  const PAGES = [
-    { name: 'welcome',         title: 'welcome' },
-    { name: 'components',      title: 'Components'      },
-    { name: 'signals',         title: 'Signals'         },
-    { name: 'control-flow',    title: 'Control flow'    },
-    { name: 'types',           title: 'Types',          path: new URL('../../packages/types/README.md', import.meta.url).href },
-  ];
-  */
+  
   const TOPICS = ['welcome', 'config', 'components', 'comptime', 'directives', 'htx', 'modules', 'operators', 'schemas', 'signals', 'types'];
   const PAGES2 = TOPICS.map(item => ({ name: item, title: item }));
+  const $page  = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
+  const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
 
-  // a page is <name>.md next to this file, or its own path. new URL(…, import.meta.url): the loader
-  // gives it this file's url, a build copies the files it names
-  const $page = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
-  const $src  = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
-
-  // a fenced code block becomes a <write-code> of aufbau, once the page is rendered: highlighted, rat and ratjs known
+  // a fenced code block becomes a <write-code> of aufbau, once the page is rendered
   function codeBlocks (root) {
     const ctx = root.currentTarget;
     for (const code of ctx.querySelectorAll('pre > code')) {
@@ -36,7 +25,7 @@
     }
   }
 
-  // a narrow screen has the menu as a drawer: closed at first, closed again once a page is picked
+  // a narrow screen has the menu as a drawer
   const menu   = () => RAT.app.area('menu');
   const picked = () => { if (menu()?.isOverlay) menu().hide(); };
   const wide   = matchMedia('(min-width: 48rem)').matches;
@@ -54,10 +43,10 @@
 </rat-area>
 
 <rat-view route='/*' id|name='page'>
-  <header#bar>
+  <header id='bar'>
     <button aria-label='menu' onclick='rat:toggle[menu]'>☰</button>
     <span>RAT docs</span>
-    </header#bar>
+    </header>
   <main>
     <output-md
       src={$src}
