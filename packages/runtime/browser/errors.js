@@ -13,8 +13,8 @@ reportError(), the console as for any uncaught error.
 
 detail.source says where it came from: 'render' (rendering, an effect, a row),
 or 'handler' (an event handler, a command). a failed handler leaves its
-component intact: views and parts let it pass, <rat-app> hands it to the
-app's catch() (a toast) instead of taking the view down.
+component intact: views and parts let it pass, <rat-app> hands it to
+app.on('error', fn) (a toast) instead of taking the view down.
 
   app.addEventListener('rat:error', ({ detail }) => log(detail.error, detail.source, detail.boundary));
 */

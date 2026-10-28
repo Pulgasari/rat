@@ -708,7 +708,7 @@ export async function newFolder () {
 
 ### 8 errors to the toast
 
-**status:** done. an error of an event handler or command is raised with `source: 'handler'`, views and parts let it pass, `<rat-app>` hands it to `RAT.app.catch(fn)` (files: `toast.error`). a promise nobody awaited and one given to `app.hold()` land there too, an `AbortError` nowhere. the actions in files catch nothing anymore.
+**status:** done. an error of an event handler or command is raised with `source: 'handler'`, views and parts let it pass, `<rat-app>` hands it to `RAT.app.on('error', fn)` (files: `toast.error`). a promise nobody awaited and one given to `app.hold()` land there too, an `AbortError` nowhere. the actions in files catch nothing anymore.
 
 `rat` `lib` · every action catches for itself.
 

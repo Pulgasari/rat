@@ -9,10 +9,18 @@ a region of <rat-app>, which lays them out in its grid. a docked area is
 beside main from the breakpoint on and an overlay (drawer, sheet) below it,
 overlay="always" | "never" fixes that. open, expanded and peek say how far it
 is out; show(), hide(), toggle(), expand() and a drag on its handle change it,
-escape and the scrim close an overlay. emits toggle with { open, expanded }.
+escape and the scrim close an overlay.
+
+on(type, fn) (../events.js), fn gets the value, on() returns the stop:
+
+  toggle   it opened, closed, expanded or shrank: { expanded, open }
+
+as a dom event: toggle (ontoggle={…} in markup, RAT.dom(area).on(…)).
 */
 
 import { DominaElement } from '@domina/element';
+
+import { ownEvents } from '../events.js';
 
 // how far a drag has to go before it switches, in px
 const DRAG_THRESHOLD = 64;
@@ -20,6 +28,10 @@ const DRAG_THRESHOLD = 64;
 export class RatArea extends DominaElement {
 
   static shadow = true;
+
+  #events = ownEvents(this, { toggle: 'toggle' });
+
+  on (type, fn, options) { return this.#events(type, fn, options); }
 
   static props = {
     breakpoint : { type: String, default: '48rem', reflect: false },

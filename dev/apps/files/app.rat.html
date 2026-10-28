@@ -8,7 +8,7 @@
   import { toast } from '../.shared/toast.js';
 
   // what fails in an action ends here, the actions catch nothing themselves
-  RAT.app.catch <| toast.error;
+  RAT.app.on('error', toast.error);
 
   // the splash stays until the folder is known
   RAT.app.hold <| load();

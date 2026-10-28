@@ -12,14 +12,21 @@ and mounts its component with the params of the route as props (and the view
 itself as props.view). other params remount it. without src the view shows
 what it holds.
 
-an error boundary: an error of its component (loading, rendering, effects,
-event handlers) replaces the component, [error] is set, retry() loads it again.
+an error boundary: an error of its component (loading, rendering, effects)
+replaces the component, [error] is set, retry() loads it again. a failed event
+handler leaves it as it is and goes on to the app (on('error') of <rat-app>).
+
+on(type, fn) (../events.js), fn gets the value, on() returns the stop:
+
+  enter   it became active: { params }
+  left    it is inactive again
+  mount   the component of src mounted
+  leave   a guard, asked when a navigation would take this view away:
 
   view.on('leave', async event => { if (!await ask()) event.preventDefault(); });
   view.on('leave', guard, { unload: true });   // closing the tab asks too, synchronously
 
-a leave guard is asked when a navigation would take this view away, it returns
-its stop. any other type is an event listener as on every element.
+as dom events: rat:enter, rat:leave, rat:mount (RAT.dom(view).on(…)).
 */
 
 // :::::: IMPORT
@@ -28,6 +35,7 @@ import { DominaElement } from '@domina/element';
 import { mount, raise }  from '@rat/runtime';
 
 import { catchErrors, showError } from '../boundary.js';
+import { ownEvents }              from '../events.js';
 import { componentOf, load }      from '../run/loader.js';
 
 const sameParams = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -71,12 +79,16 @@ export class RatView extends DominaElement {
 
   // :::::: GUARDS
 
-  on (type, fn, options = {}) {
-    if (type !== 'leave') return super.on(type, fn, options);
-    const guard = { fn, unload: Boolean(options.unload) };
-    this.#guards.add(guard);
-    return () => this.#guards.delete(guard);
-  }
+  // its own events (../events.js): enter, left, mount, and the guard leave
+  #events = ownEvents(this, { enter: 'rat:enter', left: 'rat:leave', mount: 'rat:mount' }, {
+    leave: (fn, options = {}) => {
+      const guard = { fn, unload: Boolean(options.unload) };
+      this.#guards.add(guard);
+      return () => this.#guards.delete(guard);
+    },
+  });
+
+  on (type, fn, options) { return this.#events(type, fn, options); }
 
   // every guard in turn, until one prevents. on unload only those that asked for it, without waiting
   async ask (event) {

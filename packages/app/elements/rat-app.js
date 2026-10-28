@@ -47,12 +47,20 @@ transition. density, geometry, layout, look, mode, palette and skin go to
 
 the last error boundary: an error no view or part took shows in a popover over
 the app (see ../boundary.js and errors.js of @rat/runtime). what failed in an
-event handler, or in a promise nobody waited for, goes to catch(fn) instead,
-the views stay as they are. an abort (AbortError) is no error and goes nowhere:
+event handler, or in a promise nobody waited for, goes to on('error', fn)
+instead, the views stay as they are. an abort (AbortError) is no error and
+goes nowhere:
 
-  RAT.app.catch(toast.error);   // app.rat.html, once: the actions catch nothing themselves
+  RAT.app.on('error', toast.error);   // app.rat.html, once: the actions catch nothing themselves
 
-events: rat:ready, rat:navigate ({ from, to, path, params }), rat:error.
+on(type, fn) (../events.js), fn gets the value, on() returns the stop:
+
+  error      a failed action (above), the error
+  mount      the component of src mounted
+  navigate   { from, to, path, params }
+  ready      the first views are in, [loading] is over
+
+as dom events: rat:mount, rat:navigate, rat:ready, rat:error (RAT.dom(app).on(…)).
 */
 
 // :::::: IMPORT
@@ -64,7 +72,10 @@ import { Enum }           from '@rat/types';
 
 import { createRouter, fill, join, matchRoute, segmentsOf } from '../modules/router.js';
 
+import { dom }               from '@domina/dom';
 import { ERROR, RAT, mount } from '@rat/runtime';
+
+import { ownEvents }                     from '../events.js';
 
 import { catchErrors, showError }        from '../boundary.js';
 import { autoImport, componentOf, load } from '../run/loader.js';
@@ -218,7 +229,7 @@ export class RatApp extends DominaElement {
     this.observe.removed('rat-view', () => this.schedule());
     this.track(catchErrors(this, (error, source) => source === 'handler' ? this.fail(error) : this.report(error), { handlers: true }));
     this.track(this.#strays());
-    this.on('rat:toggle', ({ detail }) => this.toggle(...detail.args));
+    dom(this).on('rat:toggle', ({ detail }) => this.toggle(...detail.args), { signal: this.signal });
   }
 
   onDisconnected () {
@@ -433,23 +444,26 @@ export class RatApp extends DominaElement {
 
   // :::::: ERRORS
 
-  #catcher = null;
+  #catchers = new Set;   // on('error', fn)
 
-  // where the failed actions go: a handler that threw, a promise nobody waited for
-  catch (fn) {
-    this.#catcher = fn;
-    return this;
-  }
+  #events = ownEvents(this, { mount: 'rat:mount', navigate: 'rat:navigate', ready: 'rat:ready' }, {
+    error: fn => {
+      this.#catchers.add(fn);
+      return () => this.#catchers.delete(fn);
+    },
+  });
 
-  // an action that failed: to catch(), without one the popover
+  on (type, fn, options) { return this.#events(type, fn, options); }
+
+  // an action that failed: to on('error'), without a listener the popover
   fail (error) {
     if (error?.name === 'AbortError') return;
-    if (this.#catcher) this.#catcher(error);
+    if (this.#catchers.size) for (const fn of this.#catchers) fn(error);
     else this.report(error);
   }
 
   // failed actions that do not bubble through the app: a handler whose element is gone (raised on the
-  // document), and, once catch() is set, a rejected promise nobody awaited
+  // document), and, once on('error') is heard, a rejected promise nobody awaited
   #strays () {
     const orphan = event => {
       if (event.defaultPrevented || event.detail.source !== 'handler') return;
@@ -457,7 +471,7 @@ export class RatApp extends DominaElement {
       this.fail(event.detail.error);
     };
     const rejected = event => {
-      if (!this.#catcher) return;
+      if (!this.#catchers.size) return;
       event.preventDefault();
       this.fail(event.reason);
     };
@@ -512,10 +526,11 @@ export class RatApp extends DominaElement {
 
 RatApp.init('rat-app');
 
-// the app from anywhere, on the global RAT of the runtime: RAT.app, RAT.toggle('menu')
+// the app from anywhere, on the global RAT of the runtime: RAT.app, RAT.toggle('menu'), RAT.dom (@domina/dom)
 Object.defineProperties(RAT, {
   app      : { configurable: true, enumerable: true, get: () => current },
   config   : { configurable: true, enumerable: true, get: () => current?.config ?? null },
+  dom      : { configurable: true, enumerable: true, value: dom },
   platform : { configurable: true, enumerable: true, value: platform },
   toggle   : { configurable: true, enumerable: true, value: (name, force) => current?.toggle(name, force) ?? null },
 });
