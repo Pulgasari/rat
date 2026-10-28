@@ -11,7 +11,7 @@
   customElements.whenDefined('write-code').then(WriteCode => WriteCode.registerLanguage('rat', rat).registerLanguage('ratjs', ratjs));
   
   const TOPICS = ['welcome', 'config', 'components', 'comptime', 'directives', 'htx', 'modules', 'operators', 'schemas', 'signals', 'types'];
-  const PAGES2 = TOPICS.map(item => ({ name: item, title: item }));
+  const PAGES2 = TOPICS.map :: item => ({ name: item, title: item });
   const $page  = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
   const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
 
