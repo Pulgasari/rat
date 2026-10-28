@@ -15,6 +15,11 @@
   const $page  = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome'; // PAGES2[0].name;
   const $src   = PAGES2.find(page => page.name === $page)?.path ?? new URL(`./${$page}.md`, import.meta.url).href;
 
+  // the pages before and after the one on screen, in the order of the menu
+  const $at   = PAGES2.findIndex(page => page.name === $page);
+  const $prev = PAGES2[$at - 1] ?? null;
+  const $next = PAGES2[$at + 1] ?? null;
+
   // a fenced code block becomes a <write-code> of aufbau, once the page is rendered
   function codeBlocks (root) {
     const ctx = root.currentTarget;
@@ -38,7 +43,7 @@
 <rat-area id|name='menu' dock='start' open={wide}>
   <nav>
     <a.brand href='../../'>RAT</a>
-    @for (page of PAGES2): @fragment pageLink(page)
+    @for (page of PAGES2): {pageLink(page)}
     <a href='../../demos/'>Demos</a>
     <a href='https://github.com/pulgasari/rat'>GitHub</a>
   </nav>
@@ -58,15 +63,19 @@
   </main>
 
   <footer>
-    <div.prev><a href='#'>prev</a></div>
+    <div.prev>@if ($prev): <a href={'#/' + $prev.name} rel='prev'>← {$prev.title}</a></div>
     <div>{$page}</div>
-    <div.next><a href='#'>next</a></div>
+    <div.next>@if ($next): <a href={'#/' + $next.name} rel='next'>{$next.title} →</a></div>
   </footer>
 </rat-view>
 
 <style>
   #page footer {
-    display: flex; flex-flow: row nowrap; align-items: center: justify-content: space-between;
+    display: flex; flex-flow: row nowrap; align-items: center; justify-content: space-between;
     /*flow: flex row nowrap center space-between;*/
   }
+
+  /* prev and next as wide as each other, the page between them stays in the middle */
+  #page footer :is(.prev, .next) { flex: 1 1 0; }
+  #page footer .next             { text-align: end; }
 </style>
