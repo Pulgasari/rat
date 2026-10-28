@@ -13,6 +13,7 @@
 built (`apps/`, `rat build`, the build workflow):
 [cli](https://code.pulgasari.dev/rat/apps/cli/) ·
 [code](https://code.pulgasari.dev/rat/apps/code/) ·
+[downloader](https://code.pulgasari.dev/rat/apps/downloader/) ·
 [ebooks](https://code.pulgasari.dev/rat/apps/ebooks/) ·
 [feeds](https://code.pulgasari.dev/rat/apps/feeds/) ·
 [files](https://code.pulgasari.dev/rat/apps/files/) ·

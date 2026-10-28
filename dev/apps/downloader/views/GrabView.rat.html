@@ -1,0 +1,62 @@
+<script>
+  // <GrabView />: links in, packages out. a field to paste into, the clipboard, and what the plugins
+  // found, grouped, to look through before it starts
+
+  import { toast } from './../../.shared/toast.js';
+
+  import * as engine  from './../modules/engine.js';
+  import * as grabber from './../modules/grabber.js';
+  import { $settings } from './../settings.rat.js';
+  import { grabText }  from './../state.rat.js';
+
+  let $text = '';
+
+  const $found = grabber.found.value;
+  const $busy  = grabber.busy.value;
+
+  async function submit (event) {
+    event?.preventDefault();
+    if (await grabText($text)) $text = '';
+  }
+
+  async function fromClipboard () {
+    let text;
+    try   { text = await navigator.clipboard.readText(); }
+    catch { return toast('the clipboard can not be read here, paste into the field'); }
+    await grabText(text);
+  }
+
+  const startAll = () => $found.forEach(group => start(group, $settings.target));
+
+  async function start (group, target) {
+    const entries = group.entries.filter(entry => entry.selected);
+    if (!entries.length) return;
+    await engine.add({ entries, name: group.name, target });
+    grabber.drop(group.id);
+    if (!grabber.found.peek().length) RAT.app.router.go('/');
+  }
+</script>
+
+<ViewHeader title='grabber'>
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</ViewHeader>
+
+<main.list>
+  <form.grab onsubmit={submit}>
+    <textarea rows='4' placeholder='paste links, one or many, in any text' bind:value={$text}></textarea>
+    <div.actions>
+      <btn-push icon='paste' label='from the clipboard' onclick={fromClipboard} />
+      <btn-push icon='search' label={$busy ? `finding … ${grabber.pending.value}` : 'find links'} disabled={!$text.trim() || $busy} onclick={submit} />
+    </div.actions>
+  </form.grab>
+
+  @if ($found.length)
+    <div.found-head>
+      <span>{$found.length} {$found.length === 1 ? 'package' : 'packages'}</span>
+      <btn-push icon='download' label='start all' onclick={startAll} />
+      <btn-push icon='close' label='clear' onclick={grabber.clear} />
+    </div.found-head>
+    @for (group of $found): <FoundPackage group={group} onstart={start} />
+  @else
+    <Empty icon='link' title='No links yet' hint='paste them above, drop them on the app or share them into it' />
+</main.list>

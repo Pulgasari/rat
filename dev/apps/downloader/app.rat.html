@@ -1,0 +1,44 @@
+<script>
+  import { effect } from '@rat/runtime';
+
+  import * as engine from './modules/engine.js';
+  import { usePlugins } from './modules/plugins.js';
+
+  import { $plugins } from './settings.rat.js';
+  import { $totals, closeDetail, fromShare } from './state.rat.js';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  RAT.app.on('error', toast.error);
+
+  // the splash stays until the queue is read, the queue goes on by itself (autostart)
+  RAT.app.hold <| engine.load();
+  usePlugins([...$plugins]);
+  RAT.app.on('ready', fromShare);
+  hint('Downloader');
+
+  // the tab says how many run
+  effect(() => { document.title = $totals.running ? `(${$totals.running}) Downloader` : 'Downloader'; });
+
+  const DOCK = [
+    { icon: 'queue',    label: 'queue',    to: '/' },
+    { icon: 'link',     label: 'grabber',  to: '/grab' },
+    { icon: 'library',  label: 'library',  to: '/library' },
+    { icon: 'settings', label: 'settings', onclick: () => RAT.app.toggle('config') },
+  ];
+
+  const ontoggle = event => { if (!event.detail?.open) closeDetail(); };
+</script>
+
+<rat-view name='queue' route='/'><QueueView /></rat-view>
+<rat-view name|route='grab'><GrabView /></rat-view>
+<rat-view name|route='library'><LibraryView /></rat-view>
+
+<rat-area name='dock' dock='bottom' overlay='never' open><Dock items={DOCK} /></rat-area>
+
+<rat-area name='context' dock='bottom' overlay='always' ontoggle={ontoggle}><Detail /></rat-area>
+
+<rat-area name='config' dock='end' ontoggle={() => engine.pump()}>
+  <Settings name='Downloader'><Preferences /></Settings>
+</rat-area>
