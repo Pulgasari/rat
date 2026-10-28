@@ -20,6 +20,17 @@
   const $prev = PAGES2[$at - 1] ?? null;
   const $next = PAGES2[$at + 1] ?? null;
 
+  /*
+  const
+  href  = (name) => new URL(`./content/${name}.md`, import.meta.url).href,
+  PAGES = List.create('welcome', 'config', 'components', 'comptime', 'directives', 'dom', 'htx', 'import', 'modules', 'operators', 'persistence', 'schemas', 'signals', 'styles', 'types'),       
+  $page = RAT.app.router.$path.value.replace(/^\//, '') || 'welcome',
+  $src  = href($page),
+  $at1  = PAGES.indexOf($page),
+  $prev = PAGES.at($at - 1) ?? null,
+  $next = PAGES.at($at + 1) ?? null;
+  */
+
   // a fenced code block becomes a <write-code> of aufbau, once the page is rendered
   function codeBlocks (root) {
     const ctx = root.currentTarget;
