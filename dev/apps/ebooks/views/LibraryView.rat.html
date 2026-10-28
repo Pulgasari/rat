@@ -44,7 +44,7 @@
       <h2>All books <span>{$visible.length}</span></h2>
       @if ($visible.length)
         <data-index viewmode='grid' item-size='150px' gap='1rem'>
-          @for (book of $visible): <aufbau-item><BookItem book={book} /></aufbau-item>
+          @for (book of $visible): <data-item><BookItem book={book} /></data-item>
         </data-index>
       @else if ($search)
         <Empty icon='no-results' title='Nothing matches your search' />

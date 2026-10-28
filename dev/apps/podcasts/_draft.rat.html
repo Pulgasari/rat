@@ -1,0 +1,143 @@
+<!-- podcasts :: _draft.rat.html: the sketch app.rat.html was, kept for its syntax ideas. not built, app.rat.html is the app -->
+
+<!-- rat:root -->
+<script>
+
+// :::::: IMPORT :::::::::::::::::::::::::::::::::::::::::::::::
+
+import { createThumbCache } from '/.shared/js/thumbs.js';
+
+// ::: modules
+import library   from './library.js';
+import player    from './player.js';
+import { state } from './state.js';
+
+// :::::: APP ::::::::::::::::::::::::::::::::::::::::::::::::::
+
+// ::: mods | enabled and configured in config.rat.js
+// >> RAT.app.commands
+// >> RAT.app.database;
+// >> RAT.app.hotkeys
+// >> RAT.app.thumbnails;
+
+const { app } = RAT;
+
+app.player = player;
+
+// :::: STATE
+
+$busy     = RAT.Str (''),
+$search   = RAT.Str (''),
+$progress = RAT.Record ({}),
+
+this.data['menu-position']   = { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' };
+this.data['player-position'] = { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' };
+
+// the db is the library; only the schema and the progress table are read up front.
+// a storage failure must not blank the app — it mounts either way, just empty.
+await app.library.load().catch(error => app.toast.error(error));
+RAT.app.database.podcasts.as(List['value']).then(rows => app.thumbs.prewarm(rows.map(podcast => podcast.image)));
+RAT.app.database.podcasts.as(List['value']).then(rows => pipe(rows.map('[image]'), RAT.app.thumbs.prewarm));
+RAT.app.database.podcasts.as(List['value']).then(rows => rows.map('[image]') |> RAT.app.thumbnails.prewarm);
+RAT.app.database.podcasts.as(List['value']).then |> #.map('[image]') |> RAT.app.thumbnails.prewarm;
+
+// :::::: ACTIONS
+
+async function refreshAll () {
+  if (!await app.db.podcasts.count()) { $dialog = 'add'; return; }
+  $busy = 'Refreshing…';
+  try {&&&&
+    const results = await app.library.refreshAll((n, total) => $busy = `Refreshing ${n}/${total}…`);
+    const added   = results.reduce((sum, r) => sum + (r.added || 0), 0);
+    const failed  = results.filter('[error]').length;
+    const type    = failed ? 'error' : 'success';
+    const message = `${added} new episode(s), ${failed} feed(s) failed.`;
+    RAT.app.toast({ message, type });
+  }
+  finally { $busy = ''; }
+}
+
+RAT.app.commands['close-dialog']  = () => $dialog = null;
+RAT.app.commands['refresh-all']   = refreshAll;
+RAT.app.commands['add-podcast']   = () => RAT.app.state.dialog = 'add';
+RAT.app.commands['open-settings'] = () => area('config')?.show();
+RAT.app.commands['toggle-play']   = () => !!RAT.app.player.episode && RAT.app.player.toggle();
+RAT.app.commands['skip-back']     = () => RAT.app.player.skip(-15);
+RAT.app.commands['skip-forward']  = () => RAT.app.player.skip(30);
+
+// :::::: HOTKEYS
+
+RAT.app.hotkeys['escape']      = RAT.Command ('close-dialog');
+RAT.app.hotkeys['space']       = RAT.Command ('toggle-play');
+RAT.app.hotkeys['arrow-left']  = RAT.Command ('skip-back');
+RAT.app.hotkeys['arrow-right'] = RAT.Command ('skip-forward');
+
+// :::::: EFFECTS
+
+const $app = document.getElementById('app');
+$my.effect(() => {
+  $data.menu   = $menuPosition;
+  $data.player = $playerPosition;
+  $my.data.menu   = $menuPosition;
+  $my.data.player = $playerPosition;
+});
+
+// :::::: FRAME ::::::::::::::::::::::::::::::::::::::::::::::
+
+app.views = {
+  episode           : 'EpisodeDetailView',
+  podcast           : 'PodcastDetailView',
+  'explore-podcast' : 'ExplorePodcastView',
+};
+
+app.dialogs = {
+  add : 'AddPodcastDialog',
+};
+
+// a detail view keeps the item of the list it was opened from
+const dockItems = [
+  { label: 'Episodes', icon: 'episodes',     view: 'latest'                        },
+  { label: 'Podcasts', icon: 'grid', view: 'podcasts'                      },
+  { label: 'Later',    icon: 'bookmarks',             view: 'saved'                         },
+  { label: 'Explore',  icon: 'explore',   view: 'explore'                       },
+  { label: 'Settings', icon: 'settings',              onClick: () => area('config')?.toggle() },
+];
+
+</script>
+
+<>
+  <app-area name='main'>
+    <rat-views transition-on='glide'>
+      <rat-view id='latest' route='/' />
+      <rat-view id|route='podcasts'   />
+      <rat-view id|route='saved'      />
+      <rat-view id|route='explore'    />
+    </rat-views>
+    
+    <PlayerPanel />
+    <Dock items={dockItems} />
+    <Slot map={app.dialogs} name={RAT.app.$dialog} load='dialog' />
+  </app-area>
+      
+  <app-area name='config' dock='end'>
+    <Settings name='Podcasts'><Export /></Settings>
+  </app-area>
+</>
+
+<style>
+</style>
+
+
+<!-- SYNTAX-IDEEN:
+
+- $attr, $data, $props, $style sind innerhalb von `.rat`-files automatisch vorhanden
+- aber eigtl auch bissl magisch. vllt eher $this|$self|$me|$i|$ich|$host für selbstbezug, oder gar `$`
+-->
+
+
+  
+
+
+
+
+

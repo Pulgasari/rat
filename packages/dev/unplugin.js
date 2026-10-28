@@ -25,6 +25,7 @@ rat in a build: one plugin for vite, rollup, rolldown, esbuild and webpack.
   import of it              the modules the app runs first (its elements …): imported by the entry
   target                     the platform of the build (web, android, ios, desktop: an option, or RAT_TARGET),
                              __RAT_TARGET__ in the code: only the drivers of its shell are part of it
+  sw.js, app.svg             beside the page, they go along: both are named at runtime only
   index.html (vite)          the script of run.js becomes the entry of the build: it imports @rat/app,
                              config.rat.js and its import, and hands the config and the src of <rat-app>
                              over (app.run): the mods are there before the app's code runs
@@ -252,9 +253,13 @@ const unplugin = createUnplugin(({ importmap = IMPORTMAP, outDir, target = proce
     },
 
     // sw.js beside a page goes along (the offline mod registers it at runtime, vite does not see it). a local
-    // importScripts in it is inlined: its path into the rat repo is not there after the build
+    // importScripts in it is inlined: its path into the rat repo is not there after the build. app.svg goes
+    // along as it is: the app's own icon, named at runtime (<Brand icon='./app.svg'>)
     async generateBundle () {
       for (const id of pages.keys()) {
+        const icon = await readFile(resolve(dirname(id), 'app.svg')).catch(() => null);
+        if (icon) this.emitFile({ fileName: 'app.svg', source: icon, type: 'asset' });
+
         const file = resolve(dirname(id), 'sw.js');
         const code = await readFile(file, 'utf8').catch(() => null);
         if (code == null) continue;

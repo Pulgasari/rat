@@ -1,0 +1,112 @@
+<script>
+  // <Editor />: the task in the context area. every field writes on change, an undo takes the last
+  // change back. subtasks below, with an add field of their own
+
+  import { dueDay, dueTime, repeatLabel } from './../modules/dates.js';
+  import * as store from './../modules/store.js';
+  import { $selected, closeEditor, removeTask } from './../state.rat.js';
+
+  const PRIORITIES = [['0', 'none'], ['1', 'low'], ['2', 'medium'], ['3', 'high']];
+  const UNITS      = [['', 'never'], ['day', 'days'], ['week', 'weeks'], ['month', 'months'], ['year', 'years']];
+
+  let $subtask = '';
+
+  const $task     = store.tasks.value.find(item => item.id === $selected) ?? null;
+  const $subtasks = $task ? store.tasks.value.filter(item => item.parent === $task.id).sort(store.byOrder) : [];
+
+  const valueOf = event => event.currentTarget.value ?? '';
+  const set     = changes => store.update($task.id, changes);
+
+  const setDue = (day, time) => set({ due: day ? (time ? `${day}T${time}` : day) : null });
+
+  function changeRepeat (changes) {
+    const next = { every: 1, from: 'due', on: null, ...$task.repeat ?? {}, ...changes };
+    set({ repeat: next.unit ? next : null });
+  }
+
+  async function addSubtask (event) {
+    event.preventDefault();
+    if (!$subtask.trim()) return;
+    await store.add({ title: $subtask.trim() }, { list: $task.list, parent: $task.id });
+    $subtask = '';
+  }
+
+  function remove () {
+    removeTask($task.id);
+    closeEditor();
+  }
+</script>
+
+@if ($task)
+  <div.editor>
+    <label.field>
+      <span>title</span>
+      <input-text value={$task.title} onchange={event => valueOf(event).trim() && set({ title: valueOf(event).trim() })}></input-text>
+    </label.field>
+
+    <div.row>
+      <label.field>
+        <span>due</span>
+        <input-date value={dueDay($task.due) ?? ''} onchange={event => setDue(valueOf(event), dueTime($task.due))}></input-date>
+      </label.field>
+      <label.field>
+        <span>time</span>
+        <input-time value={dueTime($task.due) ?? ''} onchange={event => setDue(dueDay($task.due) || store.today(), valueOf(event))}></input-time>
+      </label.field>
+    </div.row>
+
+    <label.field>
+      <span>repeat</span>
+      <div.row>
+        <input-number min='1' max='99' value={String($task.repeat?.every ?? 1)} onchange={event => changeRepeat({ every: Math.max(1, Number(valueOf(event)) || 1) })}></input-number>
+        <Picker look='combobox' options={UNITS} value={$task.repeat?.unit ?? ''} onchange={value => changeRepeat({ on: null, unit: value || null })} />
+      </div.row>
+      @if ($task.repeat)
+        <Picker look='segments' options={[['due', 'from the due date'], ['done', 'from when done']]} value={$task.repeat.from ?? 'due'} onchange={value => changeRepeat({ from: value })} />
+        <small>{repeatLabel($task.repeat)}</small>
+    </label.field>
+
+    <label.field>
+      <span>remind</span>
+      <input-datetime value={$task.remind ?? ''} onchange={event => set({ remind: valueOf(event) || null })}></input-datetime>
+    </label.field>
+
+    <label.field>
+      <span>priority</span>
+      <Picker look='segments' options={PRIORITIES} value={String($task.priority ?? 0)} onchange={value => set({ priority: Number(value) || 0 })} />
+    </label.field>
+
+    <label.field>
+      <span>list</span>
+      <Picker look='combobox' options={store.lists.value.map(list => [list.id, list.name])} value={$task.list} onchange={value => value && set({ list: value })} />
+    </label.field>
+
+    <label.field>
+      <span>tags</span>
+      <input-chips value={$task.tags.join(',')} suggestions={store.tags.value.join(', ')} onchange={event => set({ tags: [...new Set(event.currentTarget.values.map(name => name.toLowerCase()))] })}></input-chips>
+    </label.field>
+
+    <label.field>
+      <span>notes</span>
+      <write-md value={$task.notes} placeholder='notes, markdown' onchange={event => set({ notes: valueOf(event) })}></write-md>
+    </label.field>
+
+    @if (!$task.parent)
+      <section.subtasks>
+        <h4>subtasks</h4>
+        @for (item of $subtasks): <TaskRow task={item} />
+        <form.add onsubmit={addSubtask}>
+          <div.add-field>
+            <svg-icon icon='add' />
+            <input type='text' placeholder='add a subtask' bind:value={$subtask} />
+          </div.add-field>
+        </form.add>
+      </section.subtasks>
+
+    <div.actions>
+      <btn-push icon='delete' label='delete' onclick={remove} />
+      <btn-push icon='check' label='close' onclick={closeEditor} />
+    </div.actions>
+  </div.editor>
+@else
+  <p.hint>Pick a task to edit it.</p.hint>

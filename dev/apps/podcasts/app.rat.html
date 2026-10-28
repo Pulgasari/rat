@@ -1,141 +1,73 @@
-<!-- rat:root -->
 <script>
+  import { state } from './state.js';
 
-// :::::: IMPORT :::::::::::::::::::::::::::::::::::::::::::::::
+  import library from './library.js';
+  import player  from './player.js';
+  import './settings.rat.js';
 
-import { createThumbCache } from '/.shared/js/thumbs.js';
+  import EpisodeDetailView  from './views/EpisodeDetailView.rat.html';
+  import ExplorePodcastView from './views/ExplorePodcastView.rat.html';
+  import PodcastDetailView  from './views/PodcastDetailView.rat.html';
 
-// ::: modules
-import library   from './library.js';
-import player    from './player.js';
-import { state } from './state.js';
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
 
-// :::::: APP ::::::::::::::::::::::::::::::::::::::::::::::::::
+  let { $busy, $dialog } = state;
 
-// ::: mods | enabled and configured in config.rat.js
-// >> RAT.app.commands
-// >> RAT.app.database;
-// >> RAT.app.hotkeys
-// >> RAT.app.thumbnails;
+  RAT.app.on('error', toast.error);
 
-const { app } = RAT;
+  // the splash stays until the progress is read, the lists read the database themselves
+  RAT.app.hold <| library.load();
+  hint('Podcasts');
 
-app.player = player;
-
-// :::: STATE
-
-$busy     = RAT.Str (''),
-$search   = RAT.Str (''),
-$progress = RAT.Record ({}),
-
-this.data['menu-position']   = { type: RAT.Enum('bottom', 'top'), label: 'Menu',   look: 'segments' };
-this.data['player-position'] = { type: RAT.Enum('bottom', 'top'), label: 'Player', look: 'segments' };
-
-// the db is the library; only the schema and the progress table are read up front.
-// a storage failure must not blank the app — it mounts either way, just empty.
-await app.library.load().catch(error => app.toast.error(error));
-RAT.app.database.podcasts.as(List['value']).then(rows => app.thumbs.prewarm(rows.map(podcast => podcast.image)));
-RAT.app.database.podcasts.as(List['value']).then(rows => pipe(rows.map('[image]'), RAT.app.thumbs.prewarm));
-RAT.app.database.podcasts.as(List['value']).then(rows => rows.map('[image]') |> RAT.app.thumbnails.prewarm);
-RAT.app.database.podcasts.as(List['value']).then |> #.map('[image]') |> RAT.app.thumbnails.prewarm;
-
-// :::::: ACTIONS
-
-async function refreshAll () {
-  if (!await app.db.podcasts.count()) { $dialog = 'add'; return; }
-  $busy = 'Refreshing…';
-  try {&&&&
-    const results = await app.library.refreshAll((n, total) => $busy = `Refreshing ${n}/${total}…`);
-    const added   = results.reduce((sum, r) => sum + (r.added || 0), 0);
-    const failed  = results.filter('[error]').length;
-    const type    = failed ? 'error' : 'success';
-    const message = `${added} new episode(s), ${failed} feed(s) failed.`;
-    RAT.app.toast({ message, type });
+  async function refreshAll () {
+    if (!(await RAT.app.database.podcasts.keys()).length) { $dialog = 'add'; return; }
+    $busy = 'Refreshing …';
+    try {
+      const results = await library.refreshAll((count, total) => { $busy = `Refreshing ${count}/${total} …`; });
+      const added   = results.reduce((sum, result) => sum + (result.added || 0), 0);
+      const failed  = results.filter(result => result.error).length;
+      toast(`${added} new episode(s), ${failed} feed(s) failed`, { type: failed ? 'error' : 'success' });
+    }
+    finally { $busy = ''; }
   }
-  finally { $busy = ''; }
-}
 
-RAT.app.commands['close-dialog']  = () => $dialog = null;
-RAT.app.commands['refresh-all']   = refreshAll;
-RAT.app.commands['add-podcast']   = () => RAT.app.state.dialog = 'add';
-RAT.app.commands['open-settings'] = () => area('config')?.show();
-RAT.app.commands['toggle-play']   = () => !!RAT.app.player.episode && RAT.app.player.toggle();
-RAT.app.commands['skip-back']     = () => RAT.app.player.skip(-15);
-RAT.app.commands['skip-forward']  = () => RAT.app.player.skip(30);
+  // markup and the hotkeys of config.rat.js fire these by name
+  RAT.app.commands.assign({
+    'add-podcast'  : () => { $dialog = 'add'; },
+    'close-dialog' : () => { $dialog = null; },
+    'refresh-all'  : refreshAll,
+    'skip-back'    : () => player.skip(-15),
+    'skip-forward' : () => player.skip(30),
+    'toggle-play'  : () => { if (player.episode.value) player.toggle(); },
+  });
 
-// :::::: HOTKEYS
-
-RAT.app.hotkeys['escape']      = RAT.Command ('close-dialog');
-RAT.app.hotkeys['space']       = RAT.Command ('toggle-play');
-RAT.app.hotkeys['arrow-left']  = RAT.Command ('skip-back');
-RAT.app.hotkeys['arrow-right'] = RAT.Command ('skip-forward');
-
-// :::::: EFFECTS
-
-const $app = document.getElementById('app');
-$my.effect(() => {
-  $data.menu   = $menuPosition;
-  $data.player = $playerPosition;
-  $my.data.menu   = $menuPosition;
-  $my.data.player = $playerPosition;
-});
-
-// :::::: FRAME ::::::::::::::::::::::::::::::::::::::::::::::
-
-app.views = {
-  episode           : 'EpisodeDetailView',
-  podcast           : 'PodcastDetailView',
-  'explore-podcast' : 'ExplorePodcastView',
-};
-
-app.dialogs = {
-  add : 'AddPodcastDialog',
-};
-
-// a detail view keeps the item of the list it was opened from
-const dockItems = [
-  { label: 'Episodes', icon: 'episodes',     view: 'latest'                        },
-  { label: 'Podcasts', icon: 'grid', view: 'podcasts'                      },
-  { label: 'Later',    icon: 'bookmarks',             view: 'saved'                         },
-  { label: 'Explore',  icon: 'explore',   view: 'explore'                       },
-  { label: 'Settings', icon: 'settings',              onClick: () => area('config')?.toggle() },
-];
-
+  // a detail keeps the item of the list it was opened from
+  const DOCK = [
+    { icon: 'episodes', label: 'Episodes', match: ['/episode'],                to: '/' },
+    { icon: 'grid',     label: 'Podcasts', match: ['/podcast'],                to: '/podcasts' },
+    { icon: 'bookmark', label: 'Later',                                        to: '/saved' },
+    { icon: 'explore',  label: 'Explore',  match: ['/explore-podcast'],        to: '/explore' },
+    { icon: 'settings', label: 'Settings', onclick: () => RAT.app.toggle('config') },
+  ];
 </script>
 
-<>
-  <app-area name='main'>
-    <rat-views transition-on='glide'>
-      <rat-view id='latest' route='/' />
-      <rat-view id|route='podcasts'   />
-      <rat-view id|route='saved'      />
-      <rat-view id|route='explore'    />
-    </rat-views>
-    
-    <PlayerPanel />
-    <Dock items={dockItems} />
-    <Slot map={app.dialogs} name={RAT.app.$dialog} load='dialog' />
-  </app-area>
-      
-  <app-area name='config' dock='end'>
-    <Settings name='Podcasts'><Export /></Settings>
-  </app-area>
-</>
+<rat-view name='latest' route='/'><LatestView /></rat-view>
+<rat-view name|route='podcasts'><PodcastsView /></rat-view>
+<rat-view name|route='saved'><SavedView /></rat-view>
+<rat-view name|route='explore'><ExploreView /></rat-view>
 
-<style>
-</style>
+<rat-view name='episode' route='/episode/:id' component={EpisodeDetailView} transition='slide' />
+<rat-view name='podcast' route='/podcast/:id' component={PodcastDetailView} transition='slide' />
+<rat-view name='explore-podcast' route='/explore-podcast/:id' component={ExplorePodcastView} transition='slide' />
 
+@if ($dialog === 'add'): <AddPodcastDialog />
 
-<!-- SYNTAX-IDEEN:
+<rat-area name='dock' dock='bottom' overlay='never' open>
+  <Player />
+  <Dock items={DOCK} />
+</rat-area>
 
-- $attr, $data, $props, $style sind innerhalb von `.rat`-files automatisch vorhanden
-- aber eigtl auch bissl magisch. vllt eher $this|$self|$me|$i|$ich|$host für selbstbezug, oder gar `$`
--->
-
-
-  
-
-
-
-
-
+<rat-area name='config' dock='end'>
+  <Settings name='Podcasts'><Preferences /></Settings>
+</rat-area>

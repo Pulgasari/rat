@@ -1,0 +1,96 @@
+<script>
+  // <Detail />: the download in the context area: where it comes from, how far it is, what went
+  // wrong, and a finished file of the library shown by <media-file>
+
+  import { effect } from '@rat/runtime';
+
+  import { bytes } from './../../.shared/fmt.js';
+  import { toast } from './../../.shared/toast.js';
+
+  import * as engine from './../modules/engine.js';
+  import { $selected, closeDetail } from './../state.rat.js';
+  import { progressOf, seconds } from './DownloadRow.rat.html';
+
+  let $preview = null;
+
+  const $download = engine.downloads.value.find(item => item.id === $selected) ?? null;
+  const $meter    = $download ? engine.live.value[$download.id] : null;
+  const $pack     = $download ? engine.packages.value.find(item => item.id === $download.package) : null;
+  const $inLibrary = $download?.state === 'done' && $download.place === 'library';
+
+  // the file of the library as an object url, gone with the download shown
+  effect(() => {
+    const download = $download;
+    $preview = null;
+    if (!download || download.state !== 'done' || download.place !== 'library') return;
+    let made  = null;
+    let alive = true;
+    engine.fileOf(download.id).then(file => {
+      if (!alive || !file?.size) return;
+      made = URL.createObjectURL(file.type || !download.type ? file : new File([file], download.name, { type: download.type }));
+      $preview = made;
+    });
+    return () => { alive = false; if (made) URL.revokeObjectURL(made); };
+  });
+
+  function factsOf (download, meter, pack) {
+    const progress = progressOf(download, meter);
+    return [
+      ['state',     download.state + (progress != null && download.state !== 'done' ? ` · ${Math.round(progress * 100)} %` : '')],
+      ['error',     download.error],
+      ['speed',     meter?.speed ? `${bytes(meter.speed)}/s${meter.eta ? ` · ${seconds(meter.eta)} left` : ''}` : null],
+      ['size',      download.size ? bytes(download.size) : null],
+      ['received',  download.state !== 'done' && download.received ? bytes(meter?.received ?? download.received) : null],
+      ['segments',  download.segments ? `${download.segment ?? 0} of ${download.segments}` : null],
+      ['package',   pack?.name],
+      ['target',    download.target],
+      ['saved to',  download.place],
+      ['type',      download.type],
+      ['transport', download.transport],
+      ['plugin',    download.plugin],
+      ['hash',      download.hash ? `${download.hash.algorithm} ${download.hash.value}` : null],
+      ['attempts',  download.attempts || null],
+      ['etag',      download.etag],
+      ['added',     new Date(download.created).toLocaleString()],
+    ].filter(([, value]) => value != null && value !== '');
+  }
+
+  async function saveFile (download) {
+    const file = await engine.fileOf(download.id);
+    if (!file) throw new Error('the file is not in the library anymore');
+    engine.save(file, download.name);
+  }
+
+  async function copy (text) {
+    await navigator.clipboard.writeText(text);
+    toast.success('copied');
+  }
+
+  function remove (download) {
+    engine.remove(download.id);
+    closeDetail();
+  }
+</script>
+
+@if ($download)
+  <div.detail>
+    <h3>{$download.name}</h3>
+    @if ($inLibrary && $preview): <media-file src={$preview} type={$download.type ?? ''} label={$download.name}></media-file>
+    <a.url href={$download.url} target='_blank' rel='noopener noreferrer'>{$download.url}</a>
+    <dl>
+      @for (fact of factsOf($download, $meter, $pack))
+        <dt>{fact[0]}</dt>
+        <dd>{fact[1]}</dd>
+    </dl>
+    <div.actions>
+      @if ($download.state === 'running' || $download.state === 'queued'): <btn-push icon='pause' label='pause' onclick={() => engine.pause($download.id)} />
+      @if ($download.state === 'paused'): <btn-push icon='play' label='resume' onclick={() => engine.resume($download.id)} />
+      @if (['cancelled', 'done', 'failed'].includes($download.state)): <btn-push icon='retry' label={$download.state === 'done' ? 'again' : 'retry'} onclick={() => engine.retry($download.id)} />
+      @if ($download.state !== 'done' && $download.state !== 'cancelled'): <btn-push icon='cancelled' label='cancel' onclick={() => engine.cancel($download.id)} />
+      @if ($inLibrary): <btn-push icon='save' label='save' onclick={() => saveFile($download)} />
+      <btn-push icon='copy' label='copy link' onclick={() => copy($download.url)} />
+      <btn-push icon='delete' label='remove' onclick={() => remove($download)} />
+    </div.actions>
+  </div.detail>
+@else
+  <p.hint>Pick a download to see it here.</p.hint>

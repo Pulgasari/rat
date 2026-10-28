@@ -1,0 +1,16 @@
+<script>
+  // <PromptItem prompt={prompt} />: a row of the list, a click opens it
+
+  import { $currentId, open } from './../state.rat.js';
+
+  const prompt = props.prompt;
+</script>
+
+<div.prompt-item class:active={$currentId === prompt.id} onclick={() => open(prompt.id)}>
+  <div.prompt-item-title>{prompt.title || 'Untitled'}</div.prompt-item-title>
+  @if (prompt.tags?.length)
+    <div.prompt-item-tags>
+      @for (id of prompt.tags): <TagBadge id={id} />
+    </div.prompt-item-tags>
+  <div.prompt-item-meta>{new Date(prompt.updatedAt).toLocaleDateString()}</div.prompt-item-meta>
+</div.prompt-item>

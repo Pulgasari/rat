@@ -14,7 +14,7 @@
     $broken = false;
     if (!src) { $url = null; return; }
 
-    const thumbs = RAT.app.thumbs;
+    const thumbs = RAT.app.thumbnails;
     if (!thumbs) { $url = src; return; }
 
     const cached = thumbs.peek(src);

@@ -1,0 +1,29 @@
+<script>
+  // <PackageCard pack={pack} rows={rows} />: a package and its downloads
+
+  import { bytes } from './../../.shared/fmt.js';
+
+  import * as engine from './../modules/engine.js';
+
+  let { $pack, $rows } = this.props;
+
+  const $live     = engine.live.value;
+  const $received = $rows.reduce((sum, row) => sum + ($live[row.id]?.received ?? row.received ?? 0), 0);
+  const $total    = $rows.reduce((sum, row) => sum + (row.size ?? 0), 0);
+  const $done     = $rows.filter(row => row.state === 'done').length;
+  const $running  = $rows.some(row => row.state === 'running' || row.state === 'queued');
+  const $stopped  = $rows.some(row => row.state === 'paused' || row.state === 'failed');
+</script>
+
+<section.package>
+  <header>
+    <svg-icon icon='package' />
+    <span.name>{$pack?.name ?? 'downloads'}</span>
+    <span.status>{$done}/{$rows.length}{$total ? ` · ${bytes($received)} of ${bytes($total)}` : ''}</span>
+    @if ($pack)
+      @if ($running): <btn-icon icon='pause' label='pause all' onclick={() => engine.pausePackage($pack.id)} />
+      @if ($stopped && !$running): <btn-icon icon='play' label='resume all' onclick={() => engine.resumePackage($pack.id)} />
+      <btn-icon icon='delete' label='remove the package' onclick={() => engine.removePackage($pack.id)} />
+  </header>
+  @for (row of $rows): <DownloadRow download={row} />
+</section.package>

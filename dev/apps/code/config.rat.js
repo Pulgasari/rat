@@ -56,7 +56,6 @@ export default {
     'move-line-down' : 'lucide:move-down',
     'move-line-up'   : 'lucide:move-up',
     redo             : 'lucide:redo-2',
-    save             : 'lucide:save',
     'select-all'     : 'lucide:text-select',
     shift            : 'lucide:arrow-big-up',
     'sort-lines'     : 'lucide:arrow-down-a-z',

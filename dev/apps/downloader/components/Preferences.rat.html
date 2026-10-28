@@ -1,0 +1,117 @@
+<script>
+  // <Preferences />: the queue, the places a file goes to, the user's plugins, what the library takes
+  // up. above the shared settings in <Settings>
+
+  import { effect } from '@rat/runtime';
+
+  import { bytes } from './../../.shared/fmt.js';
+  import { test }  from './../../.shared/webdav/client.js';
+  import { toast } from './../../.shared/toast.js';
+
+  import * as engine  from './../modules/engine.js';
+  import * as plugins from './../modules/plugins.js';
+  import { $plugins, $settings, $webdav, TARGETS } from './../settings.rat.js';
+
+  const { dialogs, folders } = RAT.app;
+  const { $perms, $sources } = folders;
+
+  // the numbers of the queue: label, field, the values offered
+  const NUMBERS = [
+    ['At once',          'parallel', [1, 2, 3, 4, 6, 8]],
+    ['At once per host', 'perHost',  [1, 2, 3, 4]],
+    ['Tries',            'retries',  [1, 3, 5, 10]],
+    ['Limit, KiB/s',     'limit',    [0, 256, 1024, 4096, 20480]],
+  ];
+
+  const BOOL = [['true', 'on'], ['false', 'off']];
+
+  let $estimate = null;
+
+  const $folder = $sources[0] ?? null;
+  const $done   = engine.downloads.value.filter(item => item.state === 'done' && item.place === 'library').length;
+
+  effect(() => { $done; engine.storage().then(estimate => $estimate = estimate); });
+
+  // a new folder replaces the one there
+  async function pickFolder () {
+    const before = $sources.map(source => source.id);
+    if (!await folders.add()) return;
+    for (const id of before) await folders.remove(id);
+  }
+
+  async function addDav () {
+    const ask  = (message, value = '') => dialogs.prompt({ message, title: 'webdav place', value });
+    const url  = await ask('the url of the server', 'https://');
+    if (!url) return;
+    const place = { password: await ask('password') ?? '', path: await ask('the folder on the server', 'downloads') ?? '', url, username: await ask('username') ?? '' };
+    await test(place);
+    $webdav = place;
+    toast.success('webdav place added');
+  }
+
+  async function addPlugin () {
+    const url = await dialogs.prompt({ message: 'the url of a plugin module', title: 'plugin', value: 'https://' });
+    if (!url) return;
+    $plugins = [...$plugins, url];
+    const [result] = (await plugins.usePlugins([...$plugins])).slice(-1);
+    if (result?.status === 'rejected') throw new Error(`the plugin did not load: ${result.reason?.message ?? result.reason}`);
+  }
+
+  function removePlugin (url) {
+    $plugins = $plugins.filter(other => other !== url);
+    plugins.usePlugins([...$plugins]);
+  }
+</script>
+
+<section>
+  <h3>queue</h3>
+  @for (number of NUMBERS)
+    <label>
+      <span>{number[0]}</span>
+      <Picker look='segments' options={number[2]} value={String($settings[number[1]])} onchange={value => $settings[number[1]] = Number(value)} />
+    </label>
+  <label>
+    <span>Target</span>
+    <Picker look='segments' options={TARGETS} value={$settings.target} onchange={value => $settings.target = value} />
+  </label>
+  <label>
+    <span>A folder per package</span>
+    <Picker look='segments' options={BOOL} value={String($settings.subfolders)} onchange={value => $settings.subfolders = value === 'true'} />
+  </label>
+  <label>
+    <span>Go on at start</span>
+    <Picker look='segments' options={BOOL} value={String($settings.autostart)} onchange={value => $settings.autostart = value === 'true'} />
+  </label>
+</section>
+
+<section>
+  <h3>targets</h3>
+  <div.target>
+    <span><b>folder</b> {$folder?.name ?? 'none yet'}</span>
+    @if ($folder && $perms[$folder.id] !== 'granted'): <btn-push icon='folder-key' label='reconnect' onclick={() => folders.reconnect($folder.id)} />
+    <btn-push icon='folder' label={$folder ? 'change' : 'choose'} onclick={pickFolder} />
+    @if ($folder): <btn-icon icon='close' label='forget' onclick={() => folders.remove($folder.id)} />
+  </div.target>
+  <div.target>
+    <span><b>webdav</b> {$webdav ? `${$webdav.url} ${$webdav.path}` : 'none yet'}</span>
+    <btn-push icon='cloud' label={$webdav ? 'change' : 'add'} onclick={addDav} />
+    @if ($webdav): <btn-icon icon='close' label='forget' onclick={() => $webdav = null} />
+  </div.target>
+</section>
+
+<section>
+  <h3>plugins</h3>
+  <p.hint>built in: {plugins.BUILT_IN.map(plugin => plugin.name).join(', ')}. your own run in a worker each, away from the page.</p.hint>
+  @for (url of $plugins)
+    <div.target><span>{url}</span><btn-icon icon='close' label='remove' onclick={() => removePlugin(url)} /></div.target>
+  <btn-push icon='add' label='add a plugin' onclick={addPlugin} />
+</section>
+
+<section>
+  <h3>storage</h3>
+  <p.hint>
+    {$done} {$done === 1 ? 'file' : 'files'} in the library
+    @if ($estimate): <br />{bytes($estimate.usage)} of {bytes($estimate.quota)} used by this site
+  </p.hint>
+  <btn-push icon='clear' label='clear failed and cancelled' onclick={() => engine.clearEnded()} />
+</section>

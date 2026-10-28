@@ -1,0 +1,14 @@
+<script>
+  // <LibraryView />: the packages that are done
+
+  import { $library } from './../state.rat.js';
+</script>
+
+<ViewHeader title='library'>
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</ViewHeader>
+
+<main.list>
+  @for (group of $library): <PackageCard pack={group.pack} rows={group.rows} />
+  @else: <Empty icon='library' title='Nothing done yet' hint='finished downloads show here' />
+</main.list>

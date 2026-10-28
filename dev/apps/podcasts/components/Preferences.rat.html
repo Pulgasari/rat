@@ -1,0 +1,18 @@
+<script>
+  // <Preferences />: the app's settings and its backup, above the shared ones in <Settings>
+
+  import { $settings } from './../settings.rat.js';
+</script>
+
+<section>
+  <h3>podcasts</h3>
+  <label>
+    <span>Menu</span>
+    <Picker look='segments' options={['bottom', 'top']} value={$settings.menu} onchange={value => $settings.menu = value} />
+  </label>
+  <label>
+    <span>Player</span>
+    <Picker look='segments' options={['bottom', 'top']} value={$settings.player} onchange={value => $settings.player = value} />
+  </label>
+  <Export />
+</section>

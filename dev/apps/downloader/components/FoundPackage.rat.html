@@ -1,0 +1,42 @@
+<script>
+  // <FoundPackage group={group} onstart={(group, target) => …} />: what the plugins found for one
+  // package: its entries to pick, its name, where it goes
+
+  import { bytes } from './../../.shared/fmt.js';
+
+  import * as grabber from './../modules/grabber.js';
+  import { $settings, TARGETS } from './../settings.rat.js';
+
+  let { $group } = this.props;
+
+  let $target = $settings.target;
+
+  const $chosen = $group.entries.filter(entry => entry.selected);
+  const $size   = $chosen.reduce((sum, entry) => sum + (entry.size ?? 0), 0);
+  const $all    = $chosen.length === $group.entries.length;
+
+  const toggleAll = () => $group.entries.forEach(entry => grabber.update($group.id, entry.id, { selected: !$all }));
+
+  const statusOf = entry => entry.error ?? [entry.kind === 'hls' ? 'hls stream' : '', entry.size ? bytes(entry.size) : '', entry.plugin ?? new URL(entry.url).hostname].filter(Boolean).join(' · ');
+</script>
+
+<section.package.found>
+  <header>
+    <input type='checkbox' checked={$all} title='all' onchange={toggleAll} />
+    <input.name type='text' value={$group.name} onchange={event => grabber.update($group.id, null, { name: event.currentTarget.value })} />
+    <span.status>{$chosen.length}/{$group.entries.length}{$size ? ` · ${bytes($size)}` : ''}</span>
+    <btn-icon icon='close' label='drop' onclick={() => grabber.drop($group.id)} />
+  </header>
+  @for (entry of $group.entries)
+    <label.entry data-error={entry.error ? '' : null}>
+      <input type='checkbox' checked={entry.selected} disabled={Boolean(entry.error)} onchange={() => grabber.update($group.id, entry.id, { selected: !entry.selected })} />
+      <span.body>
+        <span.name>{entry.name}</span>
+        <span.status>{statusOf(entry)}</span>
+      </span.body>
+    </label.entry>
+  <footer>
+    <Picker look='segments' options={TARGETS} value={$target} onchange={value => $target = value} />
+    <btn-push icon='download' label='start' disabled={!$chosen.length} onclick={() => props.onstart($group, $target)} />
+  </footer>
+</section.package.found>

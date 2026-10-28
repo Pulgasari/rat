@@ -41,10 +41,6 @@ function toText (htmlish, max = 320) {
 }
 
 function imageFrom (node) {
-  const $node = target(node);
-  const media = $node('thumbnail') . find (el => el.getAttribute('url'));    
-             || $node('group').flatMap(g => target(g)('thumbnail')).find(el => el.getAttribute('url'));
-  
   const media = local(node, 'thumbnail').find(el => el.getAttribute('url'))
              || local(node, 'group').flatMap(g => local(g, 'thumbnail')).find(el => el.getAttribute('url'));
   if (media) return media.getAttribute('url');

@@ -17,6 +17,7 @@ export default {
   paste         : 'lucide:clipboard-paste',
   refresh       : 'lucide:refresh-cw',
   remove        : 'lucide:minus',
+  save          : 'lucide:save',
   send          : 'lucide:send',
   upload        : 'lucide:upload',
 

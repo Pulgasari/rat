@@ -1,0 +1,94 @@
+<script module>
+  // what a row and the detail both say about a download
+
+  import { bytes } from './../../.shared/fmt.js';
+
+  export const STATES = {
+    cancelled : 'cancelled',
+    done      : 'done',
+    failed    : 'failed',
+    paused    : 'paused',
+    queued    : 'queued',
+    running   : 'running',
+  };
+
+  // 0..1, or null while the size is not known
+  export function progressOf (download, meter) {
+    if (download.state === 'done') return 1;
+    if (download.kind === 'hls' && download.segments) return (download.segment ?? 0) / download.segments;
+    const received = meter?.received ?? download.received ?? 0;
+    const total    = meter?.total ?? download.size;
+    return total ? Math.min(1, received / total) : null;
+  }
+
+  export function seconds (value) {
+    if (value == null || !isFinite(value)) return '';
+    const total = Math.round(value);
+    if (total < 60)   return `${total} s`;
+    if (total < 3600) return `${Math.floor(total / 60)} min ${total % 60} s`;
+    return `${Math.floor(total / 3600)} h ${Math.floor(total / 60) % 60} min`;
+  }
+
+  export function statusOf (download, meter) {
+    if (download.state === 'running' && meter) {
+      const received = bytes(meter.received ?? download.received);
+      const total    = meter.total ?? download.size;
+      return [total ? `${received} of ${bytes(total)}` : received, meter.speed ? `${bytes(meter.speed)}/s` : '', meter.eta ? seconds(meter.eta) : ''].filter(Boolean).join(' · ');
+    }
+    if (download.state === 'done') return [bytes(download.size ?? download.received), download.place].filter(Boolean).join(' · ');
+    if (download.error)            return download.error;
+    if (download.kind === 'hls' && download.segments) return `${download.segment ?? 0} of ${download.segments} segments`;
+    if (download.received)         return `${bytes(download.received)}${download.size ? ` of ${bytes(download.size)}` : ''}`;
+    return download.state;
+  }
+</script>
+
+<script>
+  // <DownloadRow download={row} />: a download, a swipe left removes it with its bytes. a pan that
+  // moved the row is no click on it
+
+  import { dismissable } from '@aufbau/gestures';
+  import { effect }      from '@rat/runtime';
+
+  import * as engine from './../modules/engine.js';
+  import { $selected, inspect } from './../state.rat.js';
+
+  let { $download } = this.props;
+
+  let $row = null;
+
+  const $meter = engine.live.value[$download.id];
+
+  effect(() => {
+    const node = $row;
+    const id   = $download.id;
+    if (!node) return;
+    let moved = false;
+    const handle = dismissable(node, { directions: ['left'], onDismiss: () => engine.remove(id), onMove: ({ offset }) => { if (Math.abs(offset) > 8) moved = true; } });
+    const down   = () => { moved = false; };
+    const click  = event => { if (moved) { event.stopPropagation(); moved = false; } };
+    node.addEventListener('pointerdown', down, true);
+    node.addEventListener('click', click, true);
+    return () => {
+      handle.destroy();
+      node.removeEventListener('pointerdown', down, true);
+      node.removeEventListener('click', click, true);
+    };
+  });
+
+</script>
+
+<div.download ref={$row} data-state={$download.state} aria-current={$selected === $download.id ? 'true' : null}>
+  <svg-icon icon={STATES[$download.state]} />
+  <button.body type='button' onclick={() => inspect($download.id)}>
+    <span.name>{$download.name}</span>
+    <span.status>{statusOf($download, $meter)}</span>
+    @if ($download.state !== 'done'): <progress max='1' value={progressOf($download, $meter) ?? undefined}></progress>
+  </button.body>
+  <span.actions>
+    @if ($download.state === 'running' || $download.state === 'queued'): <btn-icon icon='pause' label='pause' onclick={() => engine.pause($download.id)} />
+    @if ($download.state === 'paused'): <btn-icon icon='play' label='resume' onclick={() => engine.resume($download.id)} />
+    @if ($download.state === 'failed' || $download.state === 'cancelled'): <btn-icon icon='retry' label='retry' onclick={() => engine.retry($download.id)} />
+    <btn-icon icon='close' label='remove' onclick={() => engine.remove($download.id)} />
+  </span.actions>
+</div.download>

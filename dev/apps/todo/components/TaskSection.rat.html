@@ -1,0 +1,14 @@
+<script>
+  // <TaskSection title='today' tasks={tasks} empty='nothing due' collapsed />: a titled group of rows
+
+  let $open = !props.collapsed;
+</script>
+
+@if (props.tasks.length || props.empty)
+  <section.group>
+    @if (props.title)
+      <h3><button type='button' onclick={() => $open = !$open}>{props.title}<span.count>{props.tasks.length || ''}</span></button></h3>
+    @if ($open)
+      @for (task of props.tasks): <TaskRow task={task} />
+      @else: <p.hint>{props.empty}</p.hint>
+  </section.group>

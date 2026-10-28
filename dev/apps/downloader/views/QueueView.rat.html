@@ -1,0 +1,22 @@
+<script>
+  // <QueueView />: the packages with something left to do
+
+  import { bytes } from './../../.shared/fmt.js';
+
+  import * as engine from './../modules/engine.js';
+  import { $queued, $totals } from './../state.rat.js';
+</script>
+
+<ViewHeader title='queue'>
+  @if ($totals.running): <span.status>{$totals.running} running · {bytes($totals.speed)}/s</span>
+  @if (engine.active.value.length): <btn-icon icon='pause' label='pause all' onclick='pause-all' />
+  <btn-icon icon='settings' label='settings' onclick={() => RAT.app.toggle('config')} />
+</ViewHeader>
+
+<main.list>
+  @for (group of $queued): <PackageCard pack={group.pack} rows={group.rows} />
+  @else
+    <Empty icon='download' title='Nothing in the queue' hint='paste links anywhere, or add them in the grabber'>
+      <btn-push icon='link' label='add links' onclick='grab' />
+    </Empty>
+</main.list>

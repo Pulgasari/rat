@@ -1,0 +1,82 @@
+<script>
+  // <Detail />: the prompt picked, to read (copy, edit, delete), or the form (a new one, or the
+  // one picked). the form takes its fields when it opens
+
+  import { effect, untrack } from '@rat/runtime';
+
+  import { $current, $editing, cancel, edit, remove, save, showList, tags } from './../state.rat.js';
+
+  let $content = '';
+  let $copied  = false;
+  let $chosen  = [];
+  let $title   = '';
+
+  effect(() => {
+    if (!$editing) return;
+    const prompt = untrack(() => $current);
+    $title   = prompt?.title   ?? '';
+    $content = prompt?.content ?? '';
+    $chosen  = [...prompt?.tags ?? []];
+  });
+
+  async function copy (text) {
+    await navigator.clipboard.writeText(text);
+    $copied = true;
+    setTimeout(() => $copied = false, 1500);
+  }
+
+  const toggle = id => { $chosen = $chosen.includes(id) ? $chosen.filter(other => other !== id) : [...$chosen, id]; };
+  const stamp  = time => new Date(time).toLocaleString();
+</script>
+
+<div.detail>
+  @if ($editing)
+    <header.detail-header>
+      <input.edit-title-input type='text' placeholder='Prompt title …' bind:value={$title} />
+      <div.detail-header-actions>
+        <btn-icon.mobile-only icon='back' label='the list' onclick={showList} />
+      </div.detail-header-actions>
+    </header.detail-header>
+
+    <main.detail-edit>
+      <div.edit-tag-picker>
+        @for (tag of tags)
+          <button.tag-toggle class:active={$chosen.includes(tag.id)} style={{ '--tag-color': tag.color }} onclick={() => toggle(tag.id)}>
+            <svg-icon icon={$chosen.includes(tag.id) ? 'check' : 'tag'} /> {tag.name}
+          </button.tag-toggle>
+        @else
+          <span.empty-hint>No tags: make some in the list</span>
+      </div.edit-tag-picker>
+
+      <textarea.edit-content placeholder='Prompt content …' bind:value={$content}></textarea>
+
+      <div.edit-actions>
+        <btn-push icon='save' label='Save' disabled={!$content.trim()} onclick={() => save({ content: $content, tags: $chosen, title: $title })} />
+        <btn-push label='Cancel' onclick={cancel} />
+        @if ($current): <btn-push icon='delete' label='Delete' onclick={() => remove($current)} />
+      </div.edit-actions>
+    </main.detail-edit>
+
+  @else if ($current)
+    <header.detail-header>
+      <h2.detail-title>{$current.title || 'Untitled'}</h2.detail-title>
+      <div.detail-header-actions>
+        <btn-icon icon={$copied ? 'check' : 'copy'} label='copy' onclick={() => copy($current.content)} />
+        <btn-icon icon='edit' label='edit' onclick={edit} />
+        <btn-icon icon='delete' label='delete' onclick={() => remove($current)} />
+        <btn-icon.mobile-only icon='back' label='the list' onclick={showList} />
+      </div.detail-header-actions>
+    </header.detail-header>
+
+    <main.detail-view>
+      @if ($current.tags?.length)
+        <div.detail-tags>
+          @for (id of $current.tags): <TagBadge id={id} />
+        </div.detail-tags>
+      <div.detail-meta>Created {stamp($current.createdAt)} · Updated {stamp($current.updatedAt)}</div.detail-meta>
+      <pre.detail-content>{$current.content}</pre.detail-content>
+    </main.detail-view>
+
+  @else
+    <Empty icon='prompt' title='Select a prompt or make a new one' />
+</div.detail>

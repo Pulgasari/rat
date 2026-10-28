@@ -1,0 +1,48 @@
+<script>
+  import { closeEditor } from './state.rat.js';
+
+  import reminders  from './modules/reminders.js';
+  import * as store from './modules/store.js';
+  import sync       from './modules/sync.js';
+
+  import { hint }  from '../.shared/install.js';
+  import { toast } from '../.shared/toast.js';
+
+  RAT.app.on('error', toast.error);
+
+  // the splash stays until the tasks are read. the sync place reads them again from its file
+  RAT.app.hold <| store.load().then(async () => {
+    await sync.restore();
+    sync.watch();
+    sync.pull();
+    reminders.start();
+  });
+  hint('Todo');
+
+  const DOCK = [
+    { icon: 'today',    label: 'today',    to: '/' },
+    { icon: 'calendar', label: 'upcoming', to: '/upcoming' },
+    { icon: 'list',     label: 'lists',    match: ['/list', '/tag', '/someday', '/done'], onclick: () => RAT.app.toggle('menu') },
+    { icon: 'settings', label: 'settings', onclick: () => RAT.app.toggle('config') },
+  ];
+
+  const ontoggle = event => { if (!event.detail?.open) closeEditor(); };
+</script>
+
+<rat-area name='menu' dock='start' open><Menu /></rat-area>
+
+<rat-view name='today' route='/'><TaskView name='today' /></rat-view>
+<rat-view name|route='upcoming'><TaskView name='upcoming' /></rat-view>
+<rat-view name|route='someday'><TaskView name='someday' /></rat-view>
+<rat-view name|route='list'><TaskView name='list' /></rat-view>
+<rat-view name|route='tag'><TaskView name='tag' /></rat-view>
+<rat-view name|route='done'><TaskView name='done' /></rat-view>
+<rat-view name|route='search'><TaskView name='search' /></rat-view>
+
+<rat-area name='dock' dock='bottom' overlay='never' open><Dock items={DOCK} /></rat-area>
+
+<rat-area name='context' dock='bottom' overlay='always' ontoggle={ontoggle}><Editor /></rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name='Todo'><Preferences /></Settings>
+</rat-area>
