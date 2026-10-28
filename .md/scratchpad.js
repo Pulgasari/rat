@@ -132,3 +132,96 @@ processLabel (123)|
 const processLabel = match ({
   ...
 });
+
+
+
+
+
+
+<rat-area name='menu' dock='start'><Menu /></rat-area>
+
+<rat-view name='dashboard' route='/'><Dashboard /></rat-view>
+<rat-view name|route='library'><Library /></rat-view>
+<rat-view name|route='preview' transition='slide'><Preview /></rat-view>
+<rat-view name|route='sync'><Sync /></rat-view>
+
+<rat-area name='context' dock='bottom' peek ontoggle={ontoggle}>
+  <div.context><Context /></div.context>
+</rat-area>
+
+<rat-area name='config' dock='end'>
+  <Settings name='Files'>
+    <Preferences />
+  </Settings>
+</rat-area>
+
+<!-- scratch 1 -->
+<!--
+<rat-area name='menu' src='views/menu.rat' dock='start' />
+
+<rat-view name='dashboard'     src='views/dashboard.rat' route='/' />
+<rat-view name|route='library' src='views/library.rat' />
+<rat-view name|route='preview' src='views/preview.rat' transition='slide' />
+<rat-view name|route='sync'    src='views/sync.rat' />
+
+<rat-area name='context'  src='areas/context.rat'  dock='bottom' peek ontoggle={ontoggle} />     
+<rat-area name='settings' src='areas/settings.rat' dock='end' />
+-->
+
+<!-- scratch 2 -->
+<!--
+<rat-area name|src='menu' dock='start' />
+
+<rat-view name|src='dashboard' route='/' />
+<rat-view name|route|src='library' />
+<rat-view name|route|src='preview' transition='slide' />
+<rat-view name|route|src='sync' />
+
+<rat-area name|src='context'  dock='bottom' peek {ontoggle} />     
+<rat-area name|src='settings' dock='end' />
+-->
+
+<!-- scratch 3 -->
+<!--
+<< rat-area name|src='menu' dock='start'
+
+<< rat-view name|src='dashboard' route='/'
+<< rat-view name|route|src='library'
+<< rat-view name|route|src='preview' transition='slide'
+<< rat-view name|route|src='sync'
+
+<< rat-area name|src='context'  dock='bottom' peek {ontoggle}
+<< rat-area name|src='settings' dock='end'
+-->
+
+<!-- scratch 4 -->
+<!--
+{@html}
+rat-area name|src='menu' dock='start'
+
+rat-views
+:: rat-view name|src='dashboard' route='/'
+:: rat-view name|route|src='library'
+:: rat-view name|route|src='preview' transition='slide'
+:: rat-view name|route|src='sync'
+
+rat-area name|src='context'  dock='bottom' peek {ontoggle}
+rat-area name|src='settings' dock='end'
+{/@html}
+-->
+
+<!-- scratch 4 -->
+<!--
+{@html}
+rat-area name|src='menu' dock='start'
+
+app:views
+  app:view name|src='dashboard' route='/'
+  app:view name|route|src='library'
+  app:view name|route|src='preview' transition='slide'
+  app:view name|route|src='sync'
+
+rat-area name|src='context'  dock='bottom' peek {ontoggle}
+rat-area name|src='settings' dock='end'
+{/@html}
+-->
