@@ -12,7 +12,8 @@ a tab is { path, source }: source null is the granted folder, else the id of a s
 // :::::: IMPORT
 
 import dom from '@domina/dom';
-import { effect, untrack } from '@rat/signals';
+import { effect, untrack }    from '@rat/signals';
+import { $Record, Enum, Str } from '@rat/types';
 
 import { read, write } from '../.shared/storage.js';
 import { toast }       from '../.shared/toast.js';
@@ -41,30 +42,20 @@ const ICON = {
 
 export const PATTERNS = ['pattern-bg', 'pattern-tile'];
 
-// :::::: SETTINGS, kept across visits, each under files:<name>
+// :::::: SETTINGS, kept across visits under files:settings
 
-const DEFAULTS = {
-  open           : 'auto',     // auto, single (a tap), double (a double click)
-  'pattern-bg'   : '',         // a pattern behind the app: 'dots 8%', '' for none
-  'pattern-tile' : '',         // a pattern on the tiles and cards
-  searchbar      : 'bottom',   // bottom, top
-  tabbar         : 'bottom',   // bottom, top
-  viewmode       : 'list',     // list, grid
+const Settings = {
+  open           : Enum('auto', 'single', 'double'),   // a tap opens, a double click, or by the pointer
+  'pattern-bg'   : Str,                                // a pattern behind the app: 'dots 8%', '' for none
+  'pattern-tile' : Str,                                // a pattern on the tiles and cards
+  searchbar      : Enum('bottom', 'top'),
+  tabbar         : Enum('bottom', 'top'),
+  viewmode       : Enum('list', 'grid'),
 };
 
-/*
-const
-fromEntries = Object.fromEntries,
-  toEntries = Object.entries;
+export const $settings = $Record(Settings).create(read('files:settings', {}));
 
-export let $settings = fromEntries <| toEntries(DEFAULTS).map :: ([name, fallback]) => [name, read(`files:${name}`, fallback)];
-*/
-
-export let $settings = Object.fromEntries(Object.entries(DEFAULTS).map(([name, fallback]) => [name, read(`files:${name}`, fallback)]));
-
-effect(() => { for (const [name, value] of Object.entries($settings)) write(`files:${name}`, value); });
-
-export const setting = (name, value) => { $settings = { ...$settings, [name]: value }; };
+effect(() => write('files:settings', $settings));
 
 effect(() => {
   const element = document.documentElement;

@@ -244,6 +244,22 @@ const $count = $tasks.length;   // $tasks.value.length
 $tasks = [];                    // $tasks.value = []
 ```
 
+an exported reactive variant (`$Record`, `$List` …) is imported the same way and used as it is, no
+`.value`, changed through its methods:
+
+```js
+// state.rat.js
+export const $settings = $Record(Settings).create(stored);
+
+// Library.rat.html
+import { $settings } from './state.rat.js';
+$settings.viewmode = 'grid';
+```
+
+the compiler renames the import (`$settings as $settings$import`) and reads it through
+`$$.imported(() => $settings$import)`: a signal gives its value, a variant itself, asked on the first read
+(a cycle of imports finds the module initialized).
+
 a namespace import (`tasks.$queue`) is the signal itself. `peek()` has no sugar: `untrack(() => $queue)`
 of `@rat/signals`.
 

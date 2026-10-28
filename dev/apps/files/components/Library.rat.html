@@ -4,7 +4,7 @@
 
   import {
     $filter, $loading, $path, $settings, $visible,
-    folderName, goTo, newFolder, rootHandle, setting
+    folderName, goTo, newFolder, rootHandle
   } from '../state.rat.js';
 
   const $ready = Boolean(rootHandle());
@@ -12,7 +12,7 @@
 
   const crumb      = (event) => goTo(event.detail.path.split('/').filter(Boolean));
   const search     = (text)  => $filter = text;
-  const toggleView = ()      => setting('viewmode', $grid ? 'list' : 'grid');
+  const toggleView = ()      => $settings.viewmode = $grid ? 'list' : 'grid';
 
   function up () {
     if ($path.length) goTo($path.slice(0, -1));

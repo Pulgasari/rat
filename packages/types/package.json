@@ -5,7 +5,7 @@
   "type"        : "module",
   "main"        : "./index.js",
   "types"       : "./index.d.ts",
-  "exports"     : { ".": "./index.js" },
+  "exports"     : { ".": "./index.js", "./FileExt": "./special/FileExt.js", "./Path": "./special/Path.js" },
   "dependencies": { "@rat/signals": "0.0.1" },
   "sideEffects" : ["./index.js", "./reactive.js"],
   "license"     : "MIT"

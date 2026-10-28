@@ -16,6 +16,8 @@ running one. dot folders and node_modules are skipped.
   entry       { name, path: ['a', 'b'], size, lastModified, type }
 */
 
+import { FileExt } from '@rat/types/FileExt';
+
 // :::::: CATEGORIES
 
 export const CATEGORIES = [
@@ -27,19 +29,18 @@ export const CATEGORIES = [
   { icon: 'lucide:file',         id: 'other',     label: 'Other'     },
 ];
 
-const DOCUMENTS = /^(pdf|txt|md|rtf|odt|doc|docx|xls|xlsx|ods|ppt|pptx|odp|csv|epub|html?|json|xml)$/;
-const ARCHIVES  = /^(zip|rar|7z|tar|gz|bz2|xz|zst)$/;
+const DOCUMENTS = ['csv', 'doc', 'docx', 'epub', 'htm', 'html', 'json', 'md', 'odp', 'ods', 'odt', 'pdf', 'ppt', 'pptx', 'rtf', 'txt', 'xls', 'xlsx', 'xml'];
+const ARCHIVES  = ['7z', 'bz2', 'gz', 'rar', 'tar', 'xz', 'zip', 'zst'];
 
-const extOf = name => { const dot = name.lastIndexOf('.'); return dot > 0 ? name.slice(dot + 1).toLowerCase() : ''; };
-
-// by its mime type and, where that is empty, its extension
-export function categoryOf ({ name, type = '' }) {
-  const ext = extOf(name);
-  if (type.startsWith('image/')) return 'images';
-  if (type.startsWith('audio/')) return 'audio';
-  if (type.startsWith('video/')) return 'video';
-  if (type.startsWith('text/') || DOCUMENTS.test(ext)) return 'documents';
-  if (ARCHIVES.test(ext)) return 'archives';
+// by its mime type and, where the file has none, the one of its extension
+export function categoryOf ({ name, type }) {
+  const ext  = FileExt.from(name);
+  const mime = type || ext.mimeType;
+  if (mime.startsWith('image/')) return 'images';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('text/') || ext.is(...DOCUMENTS)) return 'documents';
+  if (ext.is(...ARCHIVES)) return 'archives';
   return 'other';
 }
 

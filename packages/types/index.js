@@ -20,6 +20,7 @@ export { Enum,   $Enum   } from './Enum.js';
 export { List,   $List   } from './List.js';
 export {         $Map    } from './Map.js';
 export { Record, $Record } from './Record.js';
+export { Segments        } from './Segments.js';
 export { Table,  $Table  } from './Table.js';
 export {         $Set    } from './Set.js';
 export { Tuple           } from './Tuple.js';

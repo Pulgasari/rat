@@ -895,11 +895,15 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
 
   for (const name of declared.names) names.add(name);
 
-  // an imported $name is a signal of another module, read and written the same way ($List and the other
-  // $Names are classes and stay as written)
+  // an imported $name is a signal or a reactive variant of another module ($List and the other $Names are
+  // classes and stay as written): renamed in the import, read through $$.imported(), read and written as $x.value
+  const reimported = new Map;   // import node -> { text, declarations }
   for (const node of program.body) {
     if (node.type !== 'ImportDeclaration') continue;
-    for (const { local } of node.specifiers) if (/^\$[a-z_]/.test(local.name)) names.add(local.name);
+    const found = node.specifiers.filter(({ local }) => /^\$[a-z_]/.test(local.name));
+    if (!found.length) continue;
+    for (const { local } of found) names.add(local.name);
+    reimported.set(node, reimport(node, found, sugared, runtime));
   }
 
   const target = reassigned(program, declared.variants);
@@ -909,9 +913,13 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
   const imports = [];
 
   for (const node of program.body) {
+    const renamed = reimported.get(node);
     if (lift && node.type === 'ImportDeclaration') {
-      imports.push(sugared.slice(node.start, node.end));
-      edits.push({ end: node.end, pos: node.start, text: '' });
+      imports.push(renamed?.text ?? sugared.slice(node.start, node.end));
+      edits.push({ end: node.end, pos: node.start, text: renamed?.declarations ?? '' });
+    }
+    else if (renamed) {
+      edits.push({ end: node.end, pos: node.start, text: `${renamed.text}\n${renamed.declarations}` });
     }
     else if (lift && node.type.startsWith('Export')) {
       throw new CompileError('an export goes in <script module>, the component body has none', { filename, index: offset + node.start, source });
@@ -924,6 +932,22 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
   if (extraEdits) edits.push(...extraEdits(program, sugared, names, cases));
 
   return { code: applyEdits(sugared, edits), imports, program };
+}
+
+// an import with $names: its text with each one renamed ($x -> $x$import), and the declarations that
+// read them through the runtime (const $x = $$.imported(() => $x$import))
+function reimport (node, specifiers, code, runtime) {
+  const parts = [];
+  let   at    = node.start;
+  for (const specifier of specifiers) {
+    const { local } = specifier;
+    const shorthand = specifier.type === 'ImportSpecifier' && specifier.imported.start === local.start;
+    parts.push(code.slice(at, local.start), shorthand ? `${local.name} as ${local.name}$import` : `${local.name}$import`);
+    at = local.end;
+  }
+  parts.push(code.slice(at, node.end));
+  const declarations = specifiers.map(({ local }) => `const ${local.name} = ${runtime}.imported(() => ${local.name}$import);`).join('\n');
+  return { declarations, text: parts.join('') };
 }
 
 // a single expression from the markup: a hole, a condition, an attribute value
