@@ -1,0 +1,65 @@
+<script>
+  // <ActionSheet />: what can be done with the app or the folder a long press was on
+
+  import {
+    $folders, $subject, closeSheet, createFolder, deleteFolder, folderOf, isPinned, launch,
+    leaveFolder, moveToFolder, openFolder, pin, renameFolder, unpin,
+  } from '../state.rat.js';
+
+  import { toast } from '../../.shared/toast.js';
+
+  const { dialogs } = RAT.app;
+
+  const ask = value => dialogs.prompt({ cancel: 'Abbrechen', message: 'Ordnername', ok: 'OK', title: 'Ordner', value });
+
+  function appActions (app) {
+    const name    = app.packageName;
+    const current = folderOf(name);
+    const pinned  = isPinned(name);
+    return [
+      { icon: 'open', label: 'Öffnen', run: () => launch(name) },
+      !current && !pinned && { icon: 'pin', label: 'Zum Homescreen hinzufügen', run: () => { pin(name); toast('zum homescreen hinzugefügt'); } },
+      ...$folders.filter(folder => folder.id !== current?.id).map(folder => ({
+        icon : 'folder', label: `In "${folder.name}" verschieben`, run: () => { moveToFolder(name, folder.id); toast(`in ${folder.name} verschoben`); },
+      })),
+      { icon: 'add', label: 'Neuer Ordner mit App', run: async () => {
+        const title = await ask('Ordner');
+        if (title == null) return;
+        moveToFolder(name, createFolder(title.trim() || 'Ordner').id);
+      } },
+      // out of a folder it stays on the home screen, as a pin
+      current && { icon: 'back', label: `Aus "${current.name}" entfernen`, run: () => { leaveFolder(name); pin(name); } },
+      (current || pinned) && { danger: true, icon: 'close', label: 'Vom Homescreen entfernen', run: () => { leaveFolder(name); unpin(name); toast('vom homescreen entfernt'); } },
+    ].filter(Boolean);
+  }
+
+  const folderActions = folder => [
+    { icon: 'open', label: 'Öffnen', run: () => openFolder(folder) },
+    { icon: 'edit', label: 'Umbenennen', run: async () => {
+      const title = await ask(folder.name);
+      if (title != null) renameFolder(folder.id, title.trim());
+    } },
+    { danger: true, icon: 'trash', label: 'Ordner löschen', run: () => deleteFolder(folder.id) },
+  ];
+
+  const $title   = $subject?.app?.label ?? $subject?.folder?.name ?? '';
+  const $actions = $subject?.app ? appActions($subject.app) : $subject?.folder ? folderActions($subject.folder) : [];
+
+  // the sheet goes first: an action may open the next one (a folder)
+  function run (action) {
+    closeSheet();
+    action.run();
+  }
+</script>
+
+<section.action-sheet aria-label='Aktionen'>
+  <div.sheet-title>{$title}</div>
+  <div.sheet-actions>
+    @for (action of $actions)
+      <button.sheet-btn class:danger={action.danger} onclick={() => run(action)}>
+        <svg-icon icon={action.icon} />
+        <span>{action.label}</span>
+      </button.sheet-btn>
+  </div.sheet-actions>
+  <button.sheet-cancel onclick={closeSheet}>Abbrechen</button>
+</section.action-sheet>

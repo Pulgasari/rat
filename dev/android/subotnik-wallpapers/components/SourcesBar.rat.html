@@ -1,0 +1,36 @@
+<script>
+  // <SourcesBar />: the mode, four actions (add, clear, full screen, save) and the media of the mode
+  // as a strip of tiles: drag to reorder, the corner toggles and removes. full screen it is a grid
+
+  import { nameOf, srcOf } from '../modules/wallpaper.js';
+  import { reorder }       from '../modules/reorder.js';
+
+  import { $config, $overlay, $sources, addSources, clearSources, moveSource, removeSource, save, set, toggleOverlay, toggleSource } from '../state.rat.js';
+
+  const MODES = [['video', 'Video'], ['images', 'Bilder']];
+</script>
+
+<section.sources-bar class:fullscreen={$overlay === 'sources'}>
+  <div.sources-lead>
+    <div.seg.mode-seg role='tablist'>
+      @for (mode of MODES): <button.seg-btn class:active={$config.mode === mode[0]} role='tab' onclick={() => set('mode', mode[0])}>{mode[1]}</button>
+    </div.seg>
+    <div.source-actions aria-label='Quellen-Aktionen'>
+      <button aria-label='Hinzufügen' onclick={addSources}><svg-icon icon='add' /></button>
+      <button aria-label='Alle entfernen' onclick={clearSources}><svg-icon icon='clear' /></button>
+      <button aria-label='Vollbild' onclick={() => toggleOverlay('sources')}><svg-icon icon={$overlay === 'sources' ? 'collapse' : 'expand'} /></button>
+      <button aria-label='Speichern' onclick={save}><svg-icon icon='save' /></button>
+    </div.source-actions>
+  </div.sources-lead>
+
+  <div.source-strip @reorder={{ move: moveSource }}>
+    @for (item, index of $sources)
+      <div.tile class={$config.mode === 'video' ? 'video-tile' : 'image-tile'} class:disabled={!item.enabled} data-index={index}>
+        @if ($config.mode === 'video'): <span.tile-label>▶ {nameOf(item.path)}</span>
+        @else: <img src={srcOf(item.path)} alt='' loading='lazy' />
+        <button.tile-toggle class:on={item.enabled} type='button' title='aktiv' onclick={() => toggleSource(index)}></button>
+        <button.tile-x type='button' title='entfernen' onclick={() => removeSource(index)}>✕</button>
+      </div.tile>
+    <button.tile.tile-add type='button' title={$config.mode === 'video' ? 'videos hinzufügen' : 'bilder hinzufügen'} onclick={addSources}>+</button>
+  </div.source-strip>
+</section.sources-bar>

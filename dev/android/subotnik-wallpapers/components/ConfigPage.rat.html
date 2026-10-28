@@ -1,0 +1,31 @@
+<script>
+  // <ConfigPage />: how the videos or the images play, and the mirroring
+
+  import { $config, set } from '../state.rat.js';
+
+  const ORDER = [['loop', 'Loop (der Reihe nach)'], ['loop-random', 'Loop zufällig']];
+  const SCALE = [['cover', 'Cover (ausfüllen, beschneiden)'], ['fit', 'Fit (einpassen, ränder)']];
+</script>
+
+@if ($config.mode === 'video')
+  <section.panel>
+    <Choice label='Modus' value={$config.videoOrder} options={[...ORDER, ['single', 'Einzeln (ein Video, zufällig)']]} onchange={value => set('videoOrder', value)} />
+    <Toggle label='Position merken' value={$config.resumeVideo} onchange={on => set('resumeVideo', on)} />
+    <Choice label='Skalierung' value={$config.videoScale} options={SCALE} onchange={value => set('videoScale', value)} />
+    <Range label='Geschwindigkeit' unit='x' value={$config.videoSpeed} min={0.25} max={3} step={0.05} onchange={value => set('videoSpeed', value)} />
+    <Range label='Offset X' value={$config.videoOffsetX} min={-1} max={1} step={0.01} onchange={value => set('videoOffsetX', value)} />
+    <Range label='Offset Y' value={$config.videoOffsetY} min={-1} max={1} step={0.01} onchange={value => set('videoOffsetY', value)} />
+  </section.panel>
+@else
+  <section.panel>
+    <Choice label='Modus' value={$config.imageOrder} options={[...ORDER, ['single', 'Einzeln (ein Bild, zufällig)']]} onchange={value => set('imageOrder', value)} />
+    <Range label='Anzeigedauer' unit=' s' digits={1} scale={1000} value={$config.imageDurationMs} min={100} max={60000} step={100} onchange={value => set('imageDurationMs', value)} />
+    <Range label='Überblendung' unit=' s' digits={1} scale={1000} value={$config.imageTransitionMs} min={0} max={3000} step={100} onchange={value => set('imageTransitionMs', value)} />
+    <Choice label='Skalierung' value={$config.imageScale} options={SCALE} onchange={value => set('imageScale', value)} />
+    <Range label='Offset X' value={$config.imageOffsetX} min={-1} max={1} step={0.01} onchange={value => set('imageOffsetX', value)} />
+    <Range label='Offset Y' value={$config.imageOffsetY} min={-1} max={1} step={0.01} onchange={value => set('imageOffsetY', value)} />
+  </section.panel>
+
+<div.subhead>Spiegeln</div>
+<Toggle label='X-Achse (horizontal)' value={$config.flipX} onchange={on => set('flipX', on)} />
+<Toggle label='Y-Achse (vertikal)' value={$config.flipY} onchange={on => set('flipY', on)} />

@@ -1,0 +1,13 @@
+<script>
+  // <Sheet title='Presets'>…</Sheet>: an overlay from the bottom, over the backdrop
+
+  import { closeOverlay } from '../state.rat.js';
+</script>
+
+<section.overlay-sheet aria-label={props.title}>
+  <div.overlay-head>
+    <span.overlay-title>{props.title}</span>
+    <button.tb-btn aria-label='Schließen' onclick={closeOverlay}><svg-icon icon='close' /></button>
+  </div.overlay-head>
+  <div.overlay-body><slot /></div.overlay-body>
+</section.overlay-sheet>

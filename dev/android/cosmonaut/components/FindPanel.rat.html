@@ -1,0 +1,35 @@
+<script>
+  // <FindPanel />: a bar, the page stays visible behind it. native highlights the matches and reports
+  // them as "find" events. clearing them when it closes is state.rat.js'
+
+  import { onCleanup } from '@rat/signals';
+
+  import { call, plugin } from '../modules/browser.js';
+
+  import { close } from '../state.rat.js';
+
+  let $count = '';
+  let $input = null;
+
+  setTimeout(() => $input?.focus(), 30);
+
+  const listener = plugin.addListener('find', ({ count: total, done, index } = {}) => {
+    $count = total ? `${index + 1}/${total}` : done ? '0/0' : '';
+  });
+  onCleanup(() => Promise.resolve(listener).then(handle => handle?.remove?.()));
+
+  function next (event) {
+    event.preventDefault();
+    call('findNext', { forward: true });
+  }
+</script>
+
+<section.panel.find aria-label='Find in page'>
+  <form.findbar onsubmit={next}>
+    <input.find-input type='text' autocapitalize='off' autocomplete='off' spellcheck='false' placeholder='Find in page' ref={$input} oninput={event => call('findInPage', { query: event.currentTarget.value })} />
+    <span.find-count>{$count}</span>
+    <button.ic type='button' aria-label='Previous' onclick={() => call('findNext', { forward: false })}>‹</button>
+    <button.ic type='submit' aria-label='Next'>›</button>
+    <button.ic type='button' aria-label='Close' onclick={close}>×</button>
+  </form.findbar>
+</section.panel>

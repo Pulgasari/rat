@@ -1,0 +1,18 @@
+<script>
+  // <TopBar />: the app's settings on the left, presets, sources, applying and saving on the right
+
+  import { apply, save, toggleOverlay } from '../state.rat.js';
+</script>
+
+<header.topbar>
+  <div.topbar-left>
+    <button.tb-btn aria-label='App-Einstellungen' onclick={() => toggleOverlay('settings')}><svg-icon icon='settings' /></button>
+    <span.app-name>Subotnik Wallpapers</span>
+  </div.topbar-left>
+  <div.topbar-right>
+    <button.tb-btn aria-label='Presets' onclick={() => toggleOverlay('presets')}><svg-icon icon='presets' /></button>
+    <button.tb-btn aria-label='Quellen' onclick={() => toggleOverlay('sources')}><svg-icon icon='sources' /></button>
+    <button.tb-btn aria-label='Als Wallpaper setzen' onclick={apply}><svg-icon icon='wallpaper' /></button>
+    <button.tb-btn.accent aria-label='Speichern' onclick={save}><svg-icon icon='save' /></button>
+  </div.topbar-right>
+</header.topbar>

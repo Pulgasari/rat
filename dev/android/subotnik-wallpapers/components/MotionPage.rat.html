@@ -1,0 +1,13 @@
+<script>
+  // <MotionPage />: a movement of the picture
+
+  import { $config, set } from '../state.rat.js';
+
+  const TYPES = [['none', 'Kein'], ['zoom', 'Zoom (rein/raus)'], ['breathe', 'Atmen'], ['drift', 'Drift'], ['sway', 'Schaukeln'], ['shake', 'Wackeln']];
+</script>
+
+<Choice label='Typ' value={$config.motionType} options={TYPES} onchange={value => set('motionType', value)} />
+@if ($config.motionType !== 'none')
+  <Range label='Stärke' value={$config.motionAmount} min={0} max={1} step={0.01} onchange={value => set('motionAmount', value)} />
+  <Range label='Tempo' value={$config.motionSpeed} min={0} max={1} step={0.01} onchange={value => set('motionSpeed', value)} />
+  <p.muted>bewegung rendert kontinuierlich solange sichtbar, verbraucht mehr akku.</p>

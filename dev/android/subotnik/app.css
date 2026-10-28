@@ -1,0 +1,358 @@
+/* subotnik :: app.css. dark, minimal. the look comes from css variables and body classes that
+   state.rat.js sets from $look (live preview). the whole home screen is this page */
+
+:root {
+  --bg: #0d0d10;
+  --fg: #e8e8ec;
+  --muted: #8a8a93;
+  --line: rgba(255, 255, 255, 0.10);
+  --sheet: rgba(20, 20, 26, 0.97);
+  --accent: #4f8cff;
+  --danger: #ff5d5d;
+
+  /* set live by state.rat.js, the defaults keep the first paint sane */
+  --cols: 4;
+  --glyph-color: #e6e6e6;
+  --gap: 8px;
+  --cell-pad: 12px;
+  --cell-radius: 32%;
+  --cell-border: 0px;
+  --cell-border-color: rgba(255, 255, 255, 0.10);
+  --cell-bg: rgba(255, 255, 255, 0.05);
+  --page-bg: #0d0d10;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+
+html { background: transparent; }
+html, body { margin: 0; height: 100%; }
+rat-app { display: block; height: 100%; }
+body {
+  background: var(--page-bg);
+  color: var(--fg);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ===== home / grid ===== */
+
+.home {
+  height: 100%;
+  overflow-y: auto;
+  padding: max(28px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  gap: var(--gap);
+  align-content: start;
+}
+.grid-in-folder { padding-top: 4px; }
+.empty, .muted {
+  grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 24px 0;
+}
+
+/* ===== tile ===== */
+
+.tile {
+  background: none; border: 0; padding: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  cursor: pointer; color: var(--fg);
+  transition: transform 0.08s;
+}
+.tile:active { transform: scale(0.92); }
+
+.tile-icon {
+  width: 100%; max-width: 64px; aspect-ratio: 1; margin: 0 auto;
+  padding: var(--cell-pad);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--glyph-color);
+  border-radius: var(--cell-radius);
+  border: var(--cell-border) solid var(--cell-border-color);
+  background: var(--cell-bg);
+}
+.tile-icon svg-icon { --icon-size: 100%; }
+
+.tile-label {
+  font-size: 11px; line-height: 1.2; max-width: 100%; text-align: center;
+  color: var(--fg); opacity: 0.9;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+}
+body.no-label .tile-label { display: none; }
+body.uppercase .tile-label { text-transform: uppercase; }
+body.multiline .tile-label { -webkit-line-clamp: 2; }
+
+/* folder preview: 2x2 mini grid inside the cell */
+.folder-icon { display: grid; grid-template-columns: 1fr 1fr; gap: 12%; }
+.folder-icon .mini { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.folder-icon .mini svg-icon { inline-size: 100%; block-size: auto; aspect-ratio: 1; }
+.folder-icon > .whole { grid-column: 1 / -1; grid-row: 1 / -1; }
+
+/* ===== settings fab ===== */
+
+.fab {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--sheet);
+  color: var(--fg); display: flex; align-items: center; justify-content: center; cursor: pointer;
+  z-index: 15;
+}
+.fab svg-icon { --icon-size: 22px; }
+
+/* drawer button: bottom center, same look as the settings fab */
+.fab-drawer { right: auto; left: 50%; transform: translateX(-50%); }
+
+/* ===== app drawer ===== */
+/* full-screen layer above the home screen and fabs, below backdrop + sheets so
+   long-press actions still stack on top. grid scrolls, bars stay pinned. */
+
+.drawer {
+  position: fixed; inset: 0; z-index: 16;
+  display: flex; flex-direction: column;
+  background: var(--sheet);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  padding-top: env(safe-area-inset-top);
+  animation: rise 0.2s ease;
+}
+.drawer-handle {
+  flex: 0 0 auto; display: flex; justify-content: center; align-items: center;
+  height: 28px; border: 0; background: none; cursor: pointer;
+}
+.drawer-handle span { width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
+.drawer-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 12px 12px; }
+
+.drawer-bars {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 12px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+
+/* bars on top (setting): handle, then bars, then the list. dom order stays
+   handle/list/bars; flex `order` does the rest. per-bar order is set inline. */
+body.drawer-bars-top .drawer-handle { order: -2; }
+body.drawer-bars-top .drawer-bars {
+  order: -1;
+  padding: 4px 12px 10px;
+  border-top: 0; border-bottom: 1px solid var(--line);
+}
+body.drawer-bars-top .drawer-scroll { padding-top: 12px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+
+/* bar 1: categories, horizontally scrollable chips */
+.cat-bar {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+  margin: 0 -12px; padding: 0 12px;
+}
+.cat-bar::-webkit-scrollbar { display: none; }
+.cat-chip {
+  flex: 0 0 auto; padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04);
+  color: var(--fg); font-size: 13px; white-space: nowrap; cursor: pointer;
+}
+.cat-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* bar 2: first letters, all 27 fit the width; drag a finger along to scrub */
+.letter-bar { display: flex; touch-action: none; }
+.letter {
+  flex: 1 1 0; min-width: 0; padding: 7px 0; border: 0; border-radius: 6px;
+  background: none; color: var(--fg); font-size: 11px; font-weight: 600; cursor: pointer;
+}
+.letter:disabled { color: var(--muted); opacity: 0.35; cursor: default; }
+.letter.active { background: var(--accent); color: #fff; }
+
+/* optional two-row layout: 27 letters as 14 + 13, larger targets */
+body.letters-two-rows .letter-bar { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); row-gap: 2px; }
+body.letters-two-rows .letter { padding: 9px 0; font-size: 13px; }
+
+/* bar 3: search */
+.search-bar {
+  display: flex; align-items: center; gap: 4px;
+  border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, 0.04);
+  padding: 0 4px 0 12px;
+}
+.search-bar input {
+  flex: 1; min-width: 0; height: 42px; border: 0; background: none; outline: none;
+  color: var(--fg); font: inherit; font-size: 15px;
+  user-select: text; -webkit-user-select: text;
+}
+.search-bar input::-webkit-search-cancel-button { display: none; }
+.search-bar input::placeholder { color: var(--muted); }
+
+/* ===== backdrop + overlays ===== */
+
+.backdrop {
+  position: fixed; inset: 0; z-index: 18;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+
+.overlay-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  max-height: 82vh; overflow-y: auto;
+  background: var(--sheet);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid var(--line); border-radius: 20px 20px 0 0;
+  padding: 14px 16px max(20px, env(safe-area-inset-bottom));
+  animation: rise 0.2s ease;
+}
+/* settings: no blur, near-opaque, so the grid above stays crisp for live preview */
+.overlay-sheet.settings { backdrop-filter: none; -webkit-backdrop-filter: none; max-height: 74vh; }
+
+@keyframes rise { from { transform: translateY(20px); opacity: 0; } }
+
+.overlay-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.overlay-title { font-size: 16px; font-weight: 600; }
+.group-title { margin: 20px 2px 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.overlay-head + .group-title { margin-top: 6px; }
+
+.icon-btn {
+  background: none; border: 0; color: var(--fg);
+  width: 34px; height: 34px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.icon-btn:active { background: rgba(255, 255, 255, 0.08); }
+.icon-btn.danger { color: var(--danger); }
+.icon-btn svg-icon, .sheet-btn svg-icon, .folder-row-name svg-icon, .chip svg-icon { --icon-size: 20px; }
+.chip svg-icon { --icon-size: 16px; }
+
+/* ===== fields / controls ===== */
+
+.field { margin-bottom: 14px; }
+.field > label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+.field > label b { color: var(--fg); font-weight: 600; float: right; }
+.field-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.field-head label { color: var(--muted); font-size: 12px; }
+.row-field { display: flex; align-items: center; justify-content: space-between; }
+.row-field > label { margin: 0; }
+.hint { color: var(--muted); font-size: 11px; margin: -6px 2px 4px; }
+
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.range-field input { margin-top: 2px; }
+
+.seg { display: flex; gap: 6px; }
+.seg-btn {
+  flex: 1; padding: 10px 0; border-radius: 10px;
+  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04);
+  color: var(--fg); font-size: 13px; cursor: pointer;
+}
+.seg-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.color-row { display: flex; align-items: center; gap: 12px; }
+input[type=color] {
+  width: 46px; height: 34px; padding: 0; border: 1px solid var(--line);
+  border-radius: 8px; background: none; cursor: pointer;
+}
+.color-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; }
+.swatch.active { border-color: var(--fg); }
+
+.switch-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 2px; cursor: pointer;
+}
+.switch-row > span { font-size: 14px; }
+input[type=checkbox] {
+  width: 40px; height: 22px; appearance: none; -webkit-appearance: none;
+  background: var(--line); border-radius: 999px; position: relative; cursor: pointer; transition: background .15s; flex: 0 0 auto;
+}
+input[type=checkbox]:checked { background: var(--accent); }
+input[type=checkbox]::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+  background: #fff; border-radius: 50%; transition: left .15s;
+}
+input[type=checkbox]:checked::after { left: 20px; }
+
+.css-area {
+  width: 100%; min-height: 96px; resize: vertical;
+  border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, 0.04);
+  color: var(--fg); padding: 10px 12px; font: 12px/1.5 ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* ===== drawer bar order ===== */
+
+.order-list { list-style: none; margin: 0; padding: 0; }
+.order-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+.order-row .icon-btn:disabled { opacity: 0.25; cursor: default; }
+.row-actions { display: flex; gap: 2px; }
+
+/* ===== folder manager ===== */
+
+.folder-list { list-style: none; margin: 0; padding: 0; }
+.folder-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); }
+.folder-row-name { display: flex; align-items: center; gap: 8px; }
+.folder-row-name em { color: var(--muted); font-style: normal; font-size: 12px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: var(--fg); font-size: 12px; cursor: pointer;
+}
+
+/* ===== action sheet ===== */
+
+.action-sheet {
+  position: fixed; left: 10px; right: 10px; bottom: max(12px, env(safe-area-inset-bottom)); z-index: 30;
+  background: var(--sheet); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--line); border-radius: 18px; padding: 12px; animation: rise 0.18s ease;
+}
+.sheet-title { text-align: center; color: var(--muted); font-size: 12px; padding: 4px 0 10px; }
+.sheet-actions { display: flex; flex-direction: column; gap: 2px; }
+.sheet-btn {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 12px;
+  border: 0; border-radius: 12px; background: none; color: var(--fg); font-size: 15px; text-align: left; cursor: pointer;
+}
+.sheet-btn:active { background: rgba(255, 255, 255, 0.08); }
+.sheet-btn.danger { color: var(--danger); }
+.sheet-cancel {
+  width: 100%; margin-top: 8px; padding: 13px; border: 0; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06); color: var(--fg); font-size: 15px; font-weight: 600; cursor: pointer;
+}
+
+/* ===== dialogs (RAT.app.dialogs, the web driver) ===== */
+
+.rat-dialog {
+  width: min(360px, calc(100vw - 32px)); padding: 18px 16px 14px;
+  border: 1px solid var(--line); border-radius: 18px;
+  background: var(--sheet); color: var(--fg);
+}
+.rat-dialog::backdrop { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+.rat-dialog h2 { margin: 0 0 6px; font-size: 16px; }
+.rat-dialog p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+.rat-dialog input {
+  width: 100%; height: 42px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 12px; outline: none;
+  background: rgba(255, 255, 255, 0.04); color: var(--fg); font: inherit; font-size: 15px;
+  user-select: text; -webkit-user-select: text;
+}
+.rat-dialog input:focus { border-color: var(--accent); }
+.rat-dialog menu { display: flex; justify-content: flex-end; gap: 8px; margin: 14px 0 0; padding: 0; }
+.rat-dialog button {
+  padding: 10px 16px; border: 0; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06); color: var(--fg); font: inherit; font-weight: 600; cursor: pointer;
+}
+.rat-dialog button[value=ok] { background: var(--accent); color: #fff; }
+
+/* ===== toasts (pop-toast): above the fabs, centered ===== */
+
+body [data-pop-toasts] {
+  inset: auto auto max(84px, calc(env(safe-area-inset-bottom) + 72px)) 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+body pop-toast {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--fg);
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  padding: 10px 16px;
+}

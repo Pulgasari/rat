@@ -1,0 +1,8 @@
+<script>
+  // <ParallaxPage />: the picture follows the home screen's pages
+
+  import { $config, set } from '../state.rat.js';
+</script>
+
+<Toggle label='Beim Wischen bewegen' value={$config.parallaxEnabled} onchange={on => set('parallaxEnabled', on)} />
+<Range label='Stärke' value={$config.parallaxAmount} min={0} max={0.5} step={0.01} onchange={value => set('parallaxAmount', value)} />

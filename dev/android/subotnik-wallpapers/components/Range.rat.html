@@ -1,0 +1,10 @@
+<script>
+  // <Range label='Stärke' value={x} min={0} max={1} step={0.01} digits={2} unit='s' scale={1000} onchange={value => …} />
+  // a slider with its value beside the label. scale divides what is shown (ms as s), format replaces it
+  const shown = value => props.format ? props.format(value) : (value / (props.scale ?? 1)).toFixed(props.digits ?? 2);
+</script>
+
+<label.field>
+  <span>{props.label} <em>{shown(props.value)}{props.unit ?? ''}</em></span>
+  <input type='range' min={props.min} max={props.max} step={props.step} value={props.value} oninput={event => props.onchange(Number(event.currentTarget.value))} />
+</label.field>

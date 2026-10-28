@@ -1,0 +1,23 @@
+<script>
+  // <SettingsSheet />: the look of the app and the preview's quality
+
+  import { $look } from '../state.rat.js';
+
+  const MODES   = [['system', 'System'], ['dark', 'Dunkel'], ['light', 'Hell']];
+  const QUALITY = [[0.75, 'Niedrig (spart Akku)'], [1, 'Mittel'], [1.5, 'Hoch']];
+
+  const percent = value => `${Math.round(value * 100)}%`;
+</script>
+
+<Sheet title='Einstellungen'>
+  <Choice label='Theme' value={$look.mode} options={MODES} onchange={value => $look.mode = value} />
+  <label.field>
+    <span>Akzentfarbe</span>
+    <input type='color' value={$look.accent} oninput={event => $look.accent = event.currentTarget.value} />
+  </label.field>
+  <Toggle label='Abgerundet' value={$look.rounded} onchange={on => $look.rounded = on} />
+  <Range label='Kachelgröße' unit=' px' format={String} value={$look.gridSize} min={56} max={140} step={4} onchange={value => $look.gridSize = value} />
+  <Range label='Größe' format={percent} value={$look.uiScale} min={0.8} max={1.6} step={0.05} onchange={value => $look.uiScale = value} />
+  <Range label='Abstände' format={percent} value={$look.spaceScale} min={0.5} max={1.8} step={0.05} onchange={value => $look.spaceScale = value} />
+  <Choice label='Vorschau-Qualität' value={$look.quality} options={QUALITY} onchange={value => $look.quality = value} />
+</Sheet>

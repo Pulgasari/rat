@@ -1,0 +1,18 @@
+<script>
+  // <FolderSheet />: the apps of the open folder
+
+  import { $folders, $subject, appsOf, closeSheet } from '../state.rat.js';
+
+  const $folder = $folders.find(folder => folder.id === $subject);
+</script>
+
+<section.overlay-sheet aria-label='Ordner'>
+  <div.overlay-head>
+    <span.overlay-title>{$folder?.name ?? 'Ordner'}</span>
+    <button.icon-btn aria-label='Schließen' onclick={closeSheet}><svg-icon icon='close' /></button>
+  </div.overlay-head>
+  <div.grid.grid-in-folder>
+    @for (app of $folder ? appsOf($folder) : []): <AppTile app={app} />
+    @else: <p.empty>ordner ist leer</p>
+  </div.grid>
+</section.overlay-sheet>
