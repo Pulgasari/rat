@@ -31,8 +31,8 @@
 
 <main.tool.workbench>
   <div.panes>
-    <CodeInput bind:value={$input} placeholder='Paste JSON here …' filename='input.json' />
-    <CodeOutput value={$output} error={$error} filename='formatted.json' placeholder='Formatted JSON appears here …' />
+    <CodeInput bind:value={$input} lang='json' placeholder='Paste JSON here …' filename='input.json' />
+    <CodeOutput value={$output} lang='json' error={$error} filename='formatted.json' placeholder='Formatted JSON appears here …' />
   </div.panes>
 
   <div.tool-actions>

@@ -1,6 +1,7 @@
 <script>
-  // <CodeInput bind:value={$text} title='Input' placeholder='…' filename='input.json' accept='text/*' />
-  // a text pane: typed, pasted, a file or a url read into it, copied, downloaded, cleared
+  // <CodeInput bind:value={$text} lang='json' title='Input' placeholder='…' filename='input.json' accept='text/*' />
+  // a code pane (<write-code editable>, highlighted as typed): typed, pasted, a file or a url read into it,
+  // copied, downloaded, cleared
 
   import { download } from '../modules/files.js';
 
@@ -22,12 +23,9 @@
     $value = await response.text();
   }
 
-  // tab indents instead of leaving the field
-  function indent (event) {
-    if (event.key !== 'Tab') return;
-    event.preventDefault();
-    event.currentTarget.setRangeText('  ', event.currentTarget.selectionStart, event.currentTarget.selectionEnd, 'end');
-    $value = event.currentTarget.value;
+  // the text into the element only when it came from elsewhere: a write while typing would reset the caret
+  function source (element, text) {
+    if (element.code !== text) element.setAttribute('code', text);
   }
 </script>
 
@@ -43,7 +41,10 @@
         <btn-icon icon='close' label='Clear' onclick={() => $value = ''} />
     </div.pane-actions>
   </div.pane-header>
-  <textarea.code-input spellcheck='false' placeholder={props.placeholder ?? 'Paste code here …'} value={$value} oninput={event => $value = event.currentTarget.value} onkeydown={indent}></textarea.code-input>
+  <div.input-wrap>
+    <write-code editable actions='' lang={props.lang ?? 'plaintext'} @source={$value} oninput={event => $value = event.detail?.code ?? $value}></write-code>
+    @if (!$value): <span.input-placeholder>{props.placeholder ?? 'Paste code here …'}</span.input-placeholder>
+  </div.input-wrap>
   <div.pane-footer>
     @if ($value): <span.char-count>{$value.length} chars</span.char-count>
   </div.pane-footer>

@@ -4,7 +4,7 @@
 
   import { effect, untrack } from '@rat/signals';
 
-  import { workbenches } from '../specs.js';
+  import { langOf, workbenches } from '../specs.js';
   import { toolOf }      from '../tools.rat.js';
 
   const slug = props.view.getAttribute('name');
@@ -59,8 +59,8 @@
 
 <main.tool.workbench>
   <div.panes>
-    <CodeInput bind:value={$input} placeholder={spec.placeholder} filename={`input.${spec.ext}`} />
-    <CodeOutput value={$output} error={$error} stats={$stats} filename={`output.${$ext}`} />
+    <CodeInput bind:value={$input} lang={langOf(spec.ext)} placeholder={spec.placeholder} filename={`input.${spec.ext}`} />
+    <CodeOutput value={$output} lang={langOf($ext)} error={$error} stats={$stats} filename={`output.${$ext}`} />
   </div.panes>
 
   <div.tool-actions>

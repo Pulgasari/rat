@@ -14,6 +14,7 @@ export default {
     '@aufbau/elements/webcomponents/btn-tap.js',
     '@aufbau/elements/webcomponents/pop-toast.js',
     '@aufbau/elements/webcomponents/svg-icon.js',
+    '@aufbau/elements/webcomponents/write-code.js',
   ],
 
   autoImport : ['./components/', '../.shared/components/'],

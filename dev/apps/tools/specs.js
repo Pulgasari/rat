@@ -6,6 +6,9 @@
 
 const data = () => import('./modules/data.js');
 
+// the highlight.js language of a file extension
+export const langOf = ext => ({ css: 'css', html: 'xml', js: 'javascript', json: 'json', toml: 'ini', xml: 'xml', yaml: 'yaml' })[ext] ?? 'plaintext';
+
 const FORMATS = {
   csv  : { ext: 'csv',  id: 'csv',  label: 'CSV' },
   js   : { ext: 'js',   id: 'js',   label: 'JS' },

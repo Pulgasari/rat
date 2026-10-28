@@ -1,14 +1,14 @@
 <script>
-  // <CodeOutput value={text} title='Output' filename='output.json' error={message} stats={{ ratio, after }} />
-  // a read-only text pane: copied, downloaded, selected
+  // <CodeOutput value={text} lang='json' title='Output' filename='output.json' error={message} stats={{ ratio, after }} />
+  // a read-only, highlighted code pane (<write-code>): copied, downloaded, selected
 
   import { download } from '../modules/files.js';
 
-  let $pre = null;
+  let $code = null;
 
   function select () {
     const range = document.createRange();
-    range.selectNodeContents($pre);
+    range.selectNodeContents($code.querySelector('pre > code') ?? $code);
     getSelection().removeAllRanges();
     getSelection().addRange(range);
   }
@@ -26,7 +26,7 @@
   </div.pane-header>
   <div.output-wrap class:empty={!props.value}>
     @if (props.error): <div.err-block><svg-icon icon='warning' /><pre>{props.error}</pre></div.err-block>
-    @else if (props.value): <pre.output-pre ref={$pre}>{props.value}</pre.output-pre>
+    @else if (props.value): <write-code actions='' lang={props.lang ?? 'plaintext'} code={props.value} ref={$code}></write-code>
     @else: <span.placeholder>{props.placeholder ?? 'Output appears here …'}</span.placeholder>
   </div.output-wrap>
   <div.pane-footer>

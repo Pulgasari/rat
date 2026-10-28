@@ -2,7 +2,7 @@
   // <InspectorView />: data pasted in, read (specs.js, by the name of the view) and shown as a tree to
   // fold, filter and copy paths and values out of
 
-  import { inspectors } from '../specs.js';
+  import { inspectors, langOf } from '../specs.js';
   import { toolOf }     from '../tools.rat.js';
 
   const slug = props.view.getAttribute('name');
@@ -58,7 +58,7 @@
 <main.tool.inspector>
   <div.layout>
     <div.input-col>
-      <CodeInput bind:value={$input} placeholder={`Paste ${spec.label} here …`} />
+      <CodeInput bind:value={$input} lang={langOf(spec.label.toLowerCase())} placeholder={`Paste ${spec.label} here …`} />
       <div.input-actions>
         <btn-push icon='search' label='Inspect' disabled={!$input} onclick={inspect} />
         @if (spec.format && $data !== undefined): <btn-push icon='format' label='Format' onclick={tidy} />
