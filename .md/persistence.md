@@ -279,6 +279,8 @@ which values are worth keeping.
 
 # anmerkungen
 
+bin einverstanden, können wir bauen. anmerkungen:
+
 (1) grundsätzlich würde ich sagen 
 - `b` und `c` sind quasi der "mature" weg
 - `d` ist der "magic" weg
@@ -288,11 +290,7 @@ in der praxis nimmt meistens sicherlich d, b, c.
 
 aber statt `stored` und `persist` sollte man 1 vokabel nehmen. ich tendiere zu `stored`.
 
-(2) wenn es `!=` gibt,  wäre `$theme! = ...` zumindest suboptimal.
-  - `$$theme = ...`
-  - `#$theme = ...`
-
-(3) also das is sicherlich nicht die beste lösung ^^
+(2) also das is sicherlich nicht die beste lösung ^^
 
 > "the key is the name without $. collisions between modules: two $tabs! in one app share one key. either that is the point (the same value), or one of them writes its key out."
 
@@ -307,6 +305,6 @@ so könnten `$tabs!` in mehrere views automatisch keys bekommen:
 <rat-view name='search'   /> // myapp:search:tabs
 ```
 
-(4) ja, type-based defaults. `Table` gehört nich in localStorage (selbse wenn wir das easy könnten) ^^
+(3) ja, type-based defaults. `Table` gehört nich in localStorage (selbse wenn wir das easy könnten) ^^
 
-(5) `in url` weiss ich noch nich
+(4) `in url` weiss ich noch nich
