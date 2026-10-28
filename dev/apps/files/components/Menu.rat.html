@@ -2,15 +2,15 @@
   // <Menu />: the views, what is coming back, the settings
 
   const MENU = [
-    { icon: 'lucide:layout-dashboard', label: 'Dashboard', route: '/'        },
-    { icon: 'lucide:folder',           label: 'Library',   route: '/library' },
-    { icon: 'lucide:send',             label: 'Send',      route: '/sync'    },
+    { icon: 'dashboard', label: 'Dashboard', route: '/'        },
+    { icon: 'folder',           label: 'Library',   route: '/library' },
+    { icon: 'send',             label: 'Send',      route: '/sync'    },
   ];
 
   // the tools the app had before, coming back one by one
   const SOON = [
-    { icon: 'lucide:image',    label: 'Image editor' },
-    { icon: 'lucide:file-pen', label: 'Text editor'  },
+    { icon: 'image',    label: 'Image editor' },
+    { icon: 'file-edit', label: 'Text editor'  },
   ];
 
   const { $path: $route } = RAT.app.router;
@@ -30,5 +30,5 @@
   <hr />
   @for (item of SOON): <button type='button' disabled><svg-icon icon={item.icon} /> {item.label} <small>soon</small></button>
   <hr />
-  <button type='button' onclick={() => RAT.app.toggle('config', true)}><svg-icon icon='lucide:settings' /> Settings</button>
+  <button type='button' onclick={() => RAT.app.toggle('config', true)}><svg-icon icon='settings' /> Settings</button>
 </nav.menu>

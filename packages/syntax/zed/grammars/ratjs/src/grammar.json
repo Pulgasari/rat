@@ -584,7 +584,7 @@
                   "type": "TOKEN",
                   "content": {
                     "type": "PATTERN",
-                    "value": "@(if|for|switch|else[ \\t]+if)"
+                    "value": "@(if|for|match|else[ \\t]+if)"
                   }
                 },
                 "named": true,
@@ -781,6 +781,10 @@
         {
           "type": "SYMBOL",
           "name": "number"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "kept_identifier"
         },
         {
           "type": "SYMBOL",
@@ -1108,6 +1112,31 @@
         }
       }
     },
+    "kept_identifier": {
+      "type": "PREC",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "reactive_identifier"
+          },
+          {
+            "type": "ALIAS",
+            "content": {
+              "type": "IMMEDIATE_TOKEN",
+              "content": {
+                "type": "STRING",
+                "value": "!"
+              }
+            },
+            "named": true,
+            "value": "kept_marker"
+          }
+        ]
+      }
+    },
     "identifier": {
       "type": "PATTERN",
       "value": "[A-Za-z_$][\\w$]*"
@@ -1252,6 +1281,10 @@
         {
           "type": "STRING",
           "value": "instanceof"
+        },
+        {
+          "type": "STRING",
+          "value": "is"
         },
         {
           "type": "STRING",

@@ -1,5 +1,7 @@
 // zugriff.config.js
 
+import icons from './.shared/icons.js';
+
 export default {
   // app
   dir         : 'ltr',
@@ -14,6 +16,9 @@ export default {
     fit          : 'cover',
   },
   
+  // short names for <svg-icon icon='close'> (@rat/app icons), an app adds its own: { ...config.icons, … }
+  icons,
+
   // components without an import, relative to the config.rat.js of each app
   autoImport: [
     '../.shared/components/',

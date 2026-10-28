@@ -23,7 +23,7 @@
 
   const $actions = [
     {
-      icon    : $isPlaying ? 'mdi:pause' : 'mdi:play',
+      icon    : $isPlaying ? 'pause' : 'play',
       label   : $isPlaying ? 'Pause' : $state.position && !$state.done ? 'Resume' : 'Play',
       onclick : () => player.play($episode),
     },
@@ -33,11 +33,11 @@
       onclick : () => library.toggleSaved($id),
     },
     {
-      icon    : $state.done ? 'mdi:check-circle' : 'mdi:check-circle-outline',
+      icon    : $state.done ? 'played' : 'unplayed',
       label   : $state.done ? 'Mark unplayed' : 'Mark as done',
       onclick : () => library.toggleDone($id),
     },
-    $episode?.link && { icon: 'mdi:open-in-new', label: 'Episode page', href: $episode.link },
+    $episode?.link && { icon: 'external', label: 'Episode page', href: $episode.link },
   ].filter(Boolean);
 
   const $back = {
@@ -61,7 +61,7 @@
       <div.meta>
         <span>{fmt.ago($episode.pubDate)}</span>
         @if ($episode.duration): <span> {fmt.duration($episode.duration)}</span>
-        @if ($state.done): <span>· <svg-icon icon='mdi:check-circle' /> done</span>
+        @if ($state.done): <span>· <svg-icon icon='played' /> done</span>
       </div.meta>
 
       <ActionMenu items={$actions} />

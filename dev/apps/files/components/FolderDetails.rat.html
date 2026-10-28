@@ -24,7 +24,7 @@
   mostly   : $facts.mostly,
 }} />
 <div-x.actions>
-  <Action icon='lucide:folder-plus' label='new folder' onclick={newFolder} />
+  <Action icon='folder-add' label='new folder' onclick={newFolder} />
   @if ($markable): <BookmarkAction path={$path} />
 </div-x.actions>
 
@@ -35,5 +35,5 @@
   <div-x.actions>
     @for ([id, folderType] of Object.entries($folderTypes))
       <button.action type='button' aria-pressed={$folderTypeId === id} onclick={() => toggleFolderType(id)}><svg-icon icon={folderType.icon} /> {folderType.label}</button.action>
-    <Action icon='lucide:plus' label='new foldertype' onclick={() => newFolderType($path)} />
+    <Action icon='add' label='new foldertype' onclick={() => newFolderType($path)} />
   </div-x.actions>

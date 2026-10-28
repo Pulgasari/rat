@@ -7,6 +7,6 @@
 </script>
 
 @if ($scanning)
-  <p.status><svg-icon icon='lucide:loader' /> Reading the folder … {$scanning.files} files</p.status>
+  <p.status><svg-icon icon='pending' /> Reading the folder … {$scanning.files} files</p.status>
 @else if ($index)
   <p.status>{$index.total} files · {fmt.bytes($index.size)} · read {fmt.date($index.scannedAt)}</p.status>

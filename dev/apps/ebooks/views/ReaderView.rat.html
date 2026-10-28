@@ -106,18 +106,18 @@
 
   <div.reader-controls>
     @if ($ui.kind === 'pdf')
-      <btn-icon icon='mdi:minus' label='Zoom out' onclick={() => $engine?.zoomOut()} />
-      <btn-icon icon='mdi:plus'  label='Zoom in'  onclick={() => $engine?.zoomIn()} />
+      <btn-icon icon='remove' label='Zoom out' onclick={() => $engine?.zoomOut()} />
+      <btn-icon icon='add'  label='Zoom in'  onclick={() => $engine?.zoomIn()} />
     @if ($ui.kind === 'epub')
-      <btn-icon icon='mdi:format-font-size-decrease' label='Smaller text' disabled={!$engine} onclick={() => font(-1)} />
-      <btn-icon icon='mdi:format-font-size-increase' label='Larger text'  disabled={!$engine} onclick={() => font(1)} />
+      <btn-icon icon='text-smaller' label='Smaller text' disabled={!$engine} onclick={() => font(-1)} />
+      <btn-icon icon='text-larger' label='Larger text'  disabled={!$engine} onclick={() => font(1)} />
       <btn-icon
-        icon={$ui.flow === 'scrolled' ? 'mdi:book-open-page-variant-outline' : 'mdi:page-layout-body'}
+        icon={$ui.flow === 'scrolled' ? 'book-open' : 'scroll'}
         label={$ui.flow === 'scrolled' ? 'Paginated' : 'Scrolled'}
         disabled={!$engine}
         onclick={toggleFlow}
       />
-    <btn-icon icon='mdi:table-of-contents' label='Contents' aria-pressed={$ui.tocOpen} onclick={toggleToc} />
+    <btn-icon icon='contents' label='Contents' aria-pressed={$ui.tocOpen} onclick={toggleToc} />
   </div.reader-controls>
 </header.reader-bar>
 
@@ -125,19 +125,19 @@
   <div.reader-stage ref={$stage}></div>
 
   @if ($ui.tocOpen): <TocPanel items={$ui.toc} kind={$ui.kind} onpick={pick} />
-  @if (!$ui.ready && !$ui.error): <div.reader-loading><svg-icon icon='svg-spinners:bars-scale-middle' /></div>
-  @if ($ui.error): <div.reader-error><Empty icon='mdi:book-alert-outline' title='Couldn’t open this book' hint={$ui.error} /></div>
+  @if (!$ui.ready && !$ui.error): <div.reader-loading><svg-icon icon='loading' /></div>
+  @if ($ui.error): <div.reader-error><Empty icon='book-alert' title='Couldn’t open this book' hint={$ui.error} /></div>
 
   @if ($ui.kind === 'epub' && $ui.ready && !$ui.error)
-    <button.page-edge.left  aria-label='Previous' onclick={() => $engine?.prev()}><svg-icon icon='mdi:chevron-left' /></button>
-    <button.page-edge.right aria-label='Next'     onclick={() => $engine?.next()}><svg-icon icon='mdi:chevron-right' /></button>
+    <button.page-edge.left  aria-label='Previous' onclick={() => $engine?.prev()}><svg-icon icon='chevron-left' /></button>
+    <button.page-edge.right aria-label='Next'     onclick={() => $engine?.next()}><svg-icon icon='chevron-right' /></button>
 </div.reader-main>
 
 <footer.reader-foot>
   @if ($ui.kind === 'pdf' && $ui.pages)
-    <button.ibtn aria-label='Previous page' onclick={() => $engine?.prev()}><svg-icon icon='mdi:chevron-up' /></button>
+    <button.ibtn aria-label='Previous page' onclick={() => $engine?.prev()}><svg-icon icon='chevron-up' /></button>
     <span.foot-label>Page {$ui.page ?? 1} / {$ui.pages}</span>
-    <button.ibtn aria-label='Next page' onclick={() => $engine?.next()}><svg-icon icon='mdi:chevron-down' /></button>
+    <button.ibtn aria-label='Next page' onclick={() => $engine?.next()}><svg-icon icon='chevron-down' /></button>
   @else
     <span.foot-label>{$ui.percent != null ? Math.round(($ui.percent || 0) * 100) + '%' : ''}</span>
   <aufbau-progress.foot-bar value={Math.round(($ui.percent || 0) * 100)} />

@@ -22,12 +22,12 @@ import { Path }    from '@rat/types/Path';
 // :::::: CATEGORIES
 
 export const CATEGORIES = [
-  { icon: 'lucide:image',        id: 'images',    label: 'Images'    },
-  { icon: 'lucide:music',        id: 'audio',     label: 'Audio'     },
-  { icon: 'lucide:film',         id: 'video',     label: 'Videos'    },
-  { icon: 'lucide:file-text',    id: 'documents', label: 'Documents' },
-  { icon: 'lucide:file-archive', id: 'archives',  label: 'Archives'  },
-  { icon: 'lucide:file',         id: 'other',     label: 'Other'     },
+  { icon: 'image',        id: 'images',    label: 'Images'    },
+  { icon: 'audio',        id: 'audio',     label: 'Audio'     },
+  { icon: 'video',         id: 'video',     label: 'Videos'    },
+  { icon: 'document',    id: 'documents', label: 'Documents' },
+  { icon: 'archive', id: 'archives',  label: 'Archives'  },
+  { icon: 'file',         id: 'other',     label: 'Other'     },
 ];
 
 const DOCUMENTS = ['csv', 'doc', 'docx', 'epub', 'htm', 'html', 'json', 'md', 'odp', 'ods', 'odt', 'pdf', 'ppt', 'pptx', 'rtf', 'txt', 'xls', 'xlsx', 'xml'];

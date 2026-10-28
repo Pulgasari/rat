@@ -2,6 +2,8 @@
 
 import { Id } from '@rat/types';
 
+import config from './../zugriff.config.js';
+
 export default {
   name     : 'icons',
 
@@ -19,6 +21,7 @@ export default {
 
   // the icons the user hearted, by name ('mdi:home')
   database : { schema: { favs: { name: Id } } },
+  icons    : { ...config.icons, smile: 'lucide:smile' },
   hotkeys  : {
     'ctrl+k|/' : 'go[search]',
     'ctrl+1'   : 'go[/]',

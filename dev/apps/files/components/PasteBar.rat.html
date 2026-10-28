@@ -12,8 +12,8 @@
 
 @if ($board)
   <div-x.pastebar>
-    <svg-icon icon={$moving ? 'lucide:scissors' : 'lucide:copy'} />
+    <svg-icon icon={$moving ? 'move' : 'copy'} />
     <span.text><span.name>{describe($board.items)}</span.name><small>{$moving ? 'to move' : 'to copy'}</small></span.text>
-    <button.action type='button' onclick={paste}><svg-icon icon='lucide:clipboard-paste' /> here</button.action>
-    <btn-icon icon='lucide:x' label='empty the pickboard' onclick={clear} />
+    <button.action type='button' onclick={paste}><svg-icon icon='paste' /> here</button.action>
+    <btn-icon icon='close' label='empty the pickboard' onclick={clear} />
   </div-x.pastebar>

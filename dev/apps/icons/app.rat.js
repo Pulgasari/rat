@@ -191,7 +191,7 @@ const SizeControl = () => html`
 const HomeView = () => html`
   <div.home>
     <div.hero>
-      <svg-icon icon='mdi:emoticon-outline' />
+      <svg-icon icon='smile' />
       <h1>The whole Iconify library</h1>
       <p>{$collections ? 'Browse ' + count($total) + ' icons across ' + count($collections.length) + ' sets.' : 'Loading the catalogue …'}</p>
       <div.hero-actions>
@@ -303,7 +303,7 @@ const Detail = () => html`
 // :::::: APP
 
 const dock = [
-  { icon: 'mdi:home', label: 'home',     to: '/'                          },
+  { icon: 'home', label: 'home',     to: '/'                          },
   { icon: 'search',   label: 'search',   to: '/search'                    },
   { icon: 'images',   label: 'sets',     to: '/sets', match: ['/set']     },
   { icon: 'heart',    label: 'favs',     to: '/favs'                      },

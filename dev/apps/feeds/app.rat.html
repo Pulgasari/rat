@@ -39,7 +39,7 @@ function viewOf (name) {
     if (!f) return { title: 'Gone', icon: 'rss', kind: 'feed', list: [] };
     return { title: f.title, icon: f.kind === 'youtube' ? 'youtube' : 'rss', kind: f.kind, list: db.itemsByFeed.value[f.id] || [], feed: f };
   }
-  return { title: 'Latest', icon: 'mdi:playlist-star', kind: 'feed', list: db.latestArticles.value };
+  return { title: 'Latest', icon: 'latest', kind: 'feed', list: db.latestArticles.value };
 }
 
 // :::::: HELPERS
@@ -134,7 +134,7 @@ function Sidebar () {
 
       <div class="nav-scroll">
         <div class="nav-group">
-          <${NavItem} name="latest" icon="mdi:playlist-star" label="Latest"
+          <${NavItem} name="latest" icon="latest" label="Latest"
                       count=${db.unreadIn(db.latestArticles.value)} />
           ${tubes.length > 0 && html`
             <${NavItem} name="youtube" icon="youtube" label="YouTube"
@@ -213,7 +213,7 @@ function Body ({ name }) {
     const hasFeeds = db.feeds.value.length > 0;
     return html`
       <div class="empty">
-        <svg-icon icon=${hasFeeds ? 'mdi:check-all' : 'rss'} />
+        <svg-icon icon=${hasFeeds ? 'read-all' : 'rss'} />
         <p>${hasFeeds ? 'Nothing here yet — try Refresh.' : 'Follow a feed to see the latest here.'}</p>
         ${!hasFeeds && html`<button class="cta" onClick=${addFeed}>
           <svg-icon icon="plus" /> Add your first feed</button>`}
@@ -249,7 +249,7 @@ function Header ({ name }) {
 
 @else
   <div class="booting">
-    <svg-icon icon="svg-spinners:bars-scale-middle" />
+    <svg-icon icon="loading" />
   </div>
 
 @fragment feedItem (feed):
@@ -281,14 +281,14 @@ const v = viewOf(name);
       <svg-icon icon=${v.icon} class="topbar-ic" />
       <h1 title=${v.title}>${v.title}</h1>
       ${v.feed?.link && html`<a class="ibtn" href=${v.feed.link} target="_blank" rel="noopener noreferrer" title="Open site">
-        <svg-icon icon="mdi:open-in-new" /></a>`}
+        <svg-icon icon="external" /></a>`}
       
 <span class="topbar-spacer"></span>
       
 @if ($busy): <span class="topbar-busy"><svg-icon icon="loading" /> {$busy}</span>
 
 @if (v.list.length > 0):
-<btn-icon icon='mdi:check-all' title="Mark all read" onClick={() => markAllRead(name)}>
+<btn-icon icon='read-all' title="Mark all read" onClick={() => markAllRead(name)}>
 
 <btn-icon icon|title='refresh' onClick={() => refres(&&&&hView(name)} disabled={!!$busy} />
       

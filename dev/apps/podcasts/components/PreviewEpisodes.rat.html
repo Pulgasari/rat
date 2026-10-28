@@ -24,7 +24,7 @@
         </div.meta>
         <div.title>{episode.title}</div>
         @if (plain(episode.description)): <p.teaser>{plain(episode.description).slice(0, TEASER)}</p>
-        @if (episode.link): <Link href={episode.link} icon='mdi:open-in-new' label='Episode page' />
+        @if (episode.link): <Link href={episode.link} icon='external' label='Episode page' />
       </data-item>
   </data-index>
 @else

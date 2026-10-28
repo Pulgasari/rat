@@ -35,11 +35,11 @@
 <section>
   <h3>folder</h3>
   @if ($folder)
-    <p.folder><svg-icon icon='lucide:folder-open' /> {$folder.name}</p.folder>
+    <p.folder><svg-icon icon='folder-open' /> {$folder.name}</p.folder>
     <div-x.actions>
-      <Action icon='lucide:folder-sync' label='change' onclick={chooseFolder} />
-      <Action icon='lucide:x' label='close' onclick={closeFolder} />
+      <Action icon='folder-sync' label='change' onclick={chooseFolder} />
+      <Action icon='close' label='close' onclick={closeFolder} />
     </div-x.actions>
   @else
-    <Action icon='lucide:folder-plus' label='Open a folder' onclick={chooseFolder} />
+    <Action icon='folder-add' label='Open a folder' onclick={chooseFolder} />
 </section>

@@ -49,6 +49,7 @@
 (constant) @constant.builtin
 (language_variable) @variable.special
 (reactive_identifier) @variable.special
+(kept_marker) @keyword
 
 [(control_keyword) (storage_keyword) (keyword)] @keyword
 [(pipe_operator) (range_operator) (operator)] @operator

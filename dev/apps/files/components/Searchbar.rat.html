@@ -14,7 +14,7 @@
 <div.searchbar>
   <input-search placeholder={props.placeholder} value={props.value ?? ''} onsearch={search} />
   <button.tasks-button type='button' class:busy={$busy} aria-label={$label} title={$label} onclick={openTasks}>
-    <svg-icon icon={$busy ? 'lucide:loader' : 'lucide:list-checks'} />
+    <svg-icon icon={$busy ? 'pending' : 'tasks'} />
     @if ($count): <span.badge>{$count}</span.badge>
   </button.tasks-button>
 </div.searchbar>

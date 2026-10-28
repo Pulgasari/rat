@@ -25,13 +25,13 @@
   in       : '/' + $at,
 }} />
 <div-x.actions>
-  <Action icon='lucide:arrow-up-right' label='open' onclick={() => open($entry, $at)} />
-  @if ($entry.path): <Action icon='lucide:folder' label='show in folder' onclick={() => showInFolder($entry)} />
-  @if (!$folder): <Action icon='lucide:download' label='download' onclick={() => download($entry)} />
-  @if (!$folder && $local && available()): <Action icon='lucide:send' label='send' onclick={() => sendEntry($entry)} />
+  <Action icon='external' label='open' onclick={() => open($entry, $at)} />
+  @if ($entry.path): <Action icon='folder' label='show in folder' onclick={() => showInFolder($entry)} />
+  @if (!$folder): <Action icon='download' label='download' onclick={() => download($entry)} />
+  @if (!$folder && $local && available()): <Action icon='send' label='send' onclick={() => sendEntry($entry)} />
   @if ($folder && $local): <BookmarkAction path={$at.child($entry.name)} />
-  <Action icon='lucide:copy' label='copy' onclick={() => pick('copy', $entry)} />
-  <Action icon='lucide:scissors' label='move' onclick={() => pick('move', $entry)} />
-  <Action icon='lucide:pencil' label='rename' onclick={() => renameEntry($entry)} />
-  <Action icon='lucide:trash-2' label='delete' onclick={() => deleteEntry($entry)} />
+  <Action icon='copy' label='copy' onclick={() => pick('copy', $entry)} />
+  <Action icon='move' label='move' onclick={() => pick('move', $entry)} />
+  <Action icon='edit' label='rename' onclick={() => renameEntry($entry)} />
+  <Action icon='delete' label='delete' onclick={() => deleteEntry($entry)} />
 </div-x.actions>

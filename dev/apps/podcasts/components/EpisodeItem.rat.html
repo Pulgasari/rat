@@ -22,11 +22,11 @@
       onclick : () => library.toggleSaved(episode.id),
     },
     {
-      icon    : $state.done ? 'mdi:check-circle' : 'mdi:check-circle-outline',
+      icon    : $state.done ? 'played' : 'unplayed',
       label   : $state.done ? 'Mark unplayed'    : 'Mark as done',
       onclick : () => library.toggleDone(episode.id),
     },
-    { icon: 'mdi:open-in-new', href: episode.link, title: 'open episode page' },
+    { icon: 'external', href: episode.link, title: 'open episode page' },
   ];
 </script>
 

@@ -38,7 +38,7 @@ export function viewOf (name) {
     if (!feed) return { icon: 'rss', kind: 'feed', list: [], title: 'Gone' };
     return { feed, icon: feed.kind === 'youtube' ? 'youtube' : 'rss', kind: feed.kind, list: db.itemsByFeed.value[feed.id] || [], title: feed.title };
   }
-  return { icon: 'mdi:playlist-star', kind: 'feed', list: db.latestArticles.value, title: 'Latest' };
+  return { icon: 'latest', kind: 'feed', list: db.latestArticles.value, title: 'Latest' };
 }
 
 const hostOf = url => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return ''; } };

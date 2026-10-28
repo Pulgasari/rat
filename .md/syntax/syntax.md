@@ -335,7 +335,8 @@ let $look! = Enum(…).stored({ key: 'look', in: 'session' });   // the options 
 
 only in a declaration of the top level: after `let` / `const` / `var` or a comma of one, in a `.rat` file at
 the start of a statement. a read is `$theme`. `$x!= y` anywhere else is the comparison it is. a `const` that is
-no variant is a computed: there is nothing to keep, an error.
+no variant is a computed: there is nothing to keep, an error. made in a component inside a named view, part
+or area, the key gets their names before it (`podcasts:tabs`), `scope: false` keeps it as it is.
 
 ### named cases
 

@@ -14,9 +14,9 @@
 
   // places outside the granted folder: tiles that say what each would need
   const PLANNED = [
-    { icon: 'lucide:hard-drive', label: 'Google Drive', note: 'its own api, sign in with oauth' },
-    { icon: 'lucide:terminal',   label: '(S)FTP',       note: 'not from a browser, only in the android app' },
-    { icon: 'lucide:network',    label: 'LAN',          note: 'smb shares, only in the android app' },
+    { icon: 'drive', label: 'Google Drive', note: 'its own api, sign in with oauth' },
+    { icon: 'terminal',   label: '(S)FTP',       note: 'not from a browser, only in the android app' },
+    { icon: 'network',    label: 'LAN',          note: 'smb shares, only in the android app' },
   ];
 
   const $searching = $query.trim() !== '';
@@ -62,7 +62,7 @@
   @else if ($category)
     <section>
       <div-x.section-head>
-        <btn-icon icon='lucide:arrow-left' label='back' onclick={() => $category = null} />
+        <btn-icon icon='back' label='back' onclick={() => $category = null} />
         <h2>{$label}</h2>
       </div-x.section-head>
       <ul.rows>
@@ -88,7 +88,7 @@
       @if ($bookmarks.length)
         <ul.tiles>
           @for (bookmark of $bookmarks)
-            <Tile icon={folderTypeOf(bookmark.path)?.icon ?? 'lucide:bookmark'} name={bookmark.name} note={'/' + bookmark.path} onclick={() => library(bookmark.path)} />
+            <Tile icon={folderTypeOf(bookmark.path)?.icon ?? 'bookmark'} name={bookmark.name} note={'/' + bookmark.path} onclick={() => library(bookmark.path)} />
         </ul.tiles>
       @else
         <p.hint>Folders you bookmark show up here, from their details below.</p.hint>
@@ -105,7 +105,7 @@
     <section>
       <h2>Folder</h2>
       <ul.tiles>
-        <Tile icon='lucide:folder-open' name={folderName()} note={$index ? fmt.bytes($index.size) : 'the granted folder'} onclick={() => library(Path.root)} />
+        <Tile icon='folder-open' name={folderName()} note={$index ? fmt.bytes($index.size) : 'the granted folder'} onclick={() => library(Path.root)} />
       </ul.tiles>
       <Status />
     </section>
@@ -114,8 +114,8 @@
       <h2>Remote</h2>
       <ul.tiles>
         @for (server of $connections)
-          <Tile icon='lucide:cloud' name={server.name} note={hostOf(server.url)} onclick={() => openRemote(server.id)} />
-        <Tile icon='lucide:cloud-cog' name='WebDAV, Nextcloud' note={$connections.length ? 'add or remove' : 'connect a server'} onclick={manageRemotes} />
+          <Tile icon='cloud' name={server.name} note={hostOf(server.url)} onclick={() => openRemote(server.id)} />
+        <Tile icon='cloud-settings' name='WebDAV, Nextcloud' note={$connections.length ? 'add or remove' : 'connect a server'} onclick={manageRemotes} />
         @for (remote of PLANNED)
           <Tile icon={remote.icon} name={remote.label} note={'soon · ' + remote.note} title={remote.note} disabled />
       </ul.tiles>

@@ -35,6 +35,7 @@ const scope = mapper({
   'keyword.control.at-rule'              : 'keyword',
   'keyword.control.block'                : 'keyword.block',
   'keyword.operator'                     : 'operator',
+  'keyword.operator.kept'                : 'operator.kept',
   'keyword.operator.pipe'                : 'operator.pipe',
   'keyword.operator.range'               : 'operator.range',
   'keyword.other.directive'              : 'keyword.directive',

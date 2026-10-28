@@ -1,7 +1,7 @@
 # rat :: persistence
 
-status: **built**: the store reads ahead, `stored` in `@rat/types`, `$name!` in the compiler. later: keys
-per view, `in: 'url'`, a table by rows, keys as functions, `in: 'secure'`.
+status: **built**: the store reads ahead, `stored` in `@rat/types`, `$name!` in the compiler, keys per view.
+later: `in: 'url'`, a table by rows, keys as functions, `in: 'secure'`.
 
 a value that outlives the page: a setting, the open tabs, bookmarks, a draft. before, every app did it by
 hand (`cleanup.md` 1): a key, a read, an effect that writes, a revive for what JSON can not carry. this
@@ -77,7 +77,6 @@ RAT.app.store.set('theme', 'oled');  // memory at once, the driver after
 
 it fits what a store holds (settings, tabs, small lists). the database place is read on first use: a table
 arrives a moment later, its writes wait until it has.
-this is the one change that makes everything below simple. it fits values a store holds (settings, tabs, small lists). big data (a table of thousands of rows) stays async and belongs in the database.
 
 ## one word, three ways
 
@@ -98,34 +97,6 @@ const $settings! = $Record(Settings).create();
 ```
 
 in practice the declaration and the schema, combined where the options matter:
-the schema carries where and how; the signal made from it (a typed signal, `$$.$(schema)`) reads and writes. fits `@rat/types` (`todo.md`: "extend schema for persistence") and `concept.md` ("schemas … persist"). a schema does not know the variable's name: the key is written out, or comes from the `!`.
-
-### c) on a variant
-
-```js
-export const $settings = $Record(Settings).create().persist('settings');
-```
-
-the instance persists itself: reads what is stored over its defaults, writes on every change.
-
-### d) the `!`
-
-```js
-let $theme! = Enum('zombie', 'oled', 'rainbow');
-```
-
-the compiler hands the name over as the key, nothing else. see [below](#the-).
-
-### e) in the config
-
-```js
-// config.rat.js
-persist : { theme: 'local', tabs: 'local', bookmarks: 'database' },
-```
-
-the app lists what it keeps. good as an overview, bad as the only place: a module's value and its persistence are written in two files.
-
-### f) a decorator after the declaration (ideas.md, property wrappers)
 
 ```js
 let $theme! = Enum.from(gestalt.themes).stored({ in: 'session' });   // the key from the name, the rest from the schema
@@ -195,21 +166,21 @@ rules:
 - `const $x! = …` is a variant, or an error: a computed is made from others, there is nothing to keep.
 - the key is the name without `$`. the same key in the same place twice is the same signal (two modules,
   two instances of a component). a variant can not be shared that way: both are kept and warned about.
-`$$.$` already picks the variant of a value and checks a schema; with `persist` it asks the store for the key, parses what it finds through the schema (or takes the initial value), and writes on change. the same call is open to plain js: `$(Enum(…), { persist: 'theme' })`.
 
-rules:
-
-- only in a declaration: after `let` / `const` / `export let`, or at the start of an implicit `let` line in a `.rat` file. a read is `$theme`, never `$theme!`.
-- `$theme!=` at such a place is a persisted declaration, not `!=`: a comparison as a whole statement does nothing anyway.
-- the key is the name without `$`. collisions between modules: two `$tabs!` in one app share one key. either that is the point (the same value), or one of them writes its key out.
-
-the next step for keys: views and parts have names (`<rat-view name='podcasts'>`). a kept value of a
-component inside a view gets the view's name in its key:
+**keys per view.** views, parts and areas have names. a kept value made in a component inside named ones
+gets their names in its key, the outermost first:
 
 ```html
-<rat-view name='podcasts' />   <!-- myapp:podcasts:tabs -->
-<rat-view name='search'   />   <!-- myapp:search:tabs -->
+<rat-view name='podcasts'><Feed /></rat-view>   <!-- let $tabs! in Feed: myapp:podcasts:tabs -->
+<rat-view name='search'><Feed /></rat-view>     <!-- myapp:search:tabs -->
 ```
+
+one made in a module (`state.rat.js`) or in the app's own component keeps its name as it is.
+`scope: false` keeps it as it is anywhere. how it finds the names: `@domina/render` hands `scope(fn,
+anchor)` the comment a part starts at, the runtime keeps those of what is being built (`building()`), and
+`@rat/app` walks from them to the named `rat-view`, `rat-part` and `rat-area` around (`stored.scope()`).
+the anchor of a nested component lies in a fragment not in the page yet, the anchors before it say
+where that fragment goes.
 
 ## variants: records, lists, tables
 
@@ -248,43 +219,6 @@ older one goes through `migrate`, the result is written back.
 
 **secrets.** not in the store: a password in localStorage is readable by every script of the origin.
 `in: 'secure'` (keychain / keystore) is later; the remotes of files keep their own file until then.
-- a variant that comes from somewhere else (a computed, a parameter) is not persisted: only declarations.
-- big tables: `.persist({ in: 'database' })` writes rows, not the whole list. that is more than "write on change", it needs the table to report which rows changed: later.
-
-## the rest
-
-**timing.** writes batched per microtask; `debounce` for values that change fast (a slider); a flush on `pagehide` so nothing is lost when the tab closes.
-
-**other tabs.** `sync: true` subscribes to `store.on('change')`: another tab sets the theme, this one follows. off by default (two tabs writing the same list fight).
-
-**migration.** most of it is the schema: defaults fill new fields, coercion reads old shapes (`Path` from arrays). for real breaks: `version` and `migrate(old, version)`.
-
-**scope.** a key may depend on state: the bookmarks of the open folder. a function as key, followed like a computed; when it changes the value is read anew under the new key:
-
-```js
-let $bookmarks = $Table(Bookmark).create().persist({ key: () => `bookmarks:${$folderId}` });
-```
-
-**secrets.** `in: 'secure'` or not at all. a password in localStorage is readable by every script of the origin. today `remotes.json` holds them in plain text.
-
-**reset.** `$$.forget($theme)`: the stored value goes, the signal goes back to its initial value. and `RAT.app.store.clear()` for all.
-
-**devtools.** every persisted value is known to the runtime: a list of them with key, place and size is a small panel.
-
-## proposal
-
-three layers, each usable without the next:
-
-1. **the store reads ahead** (`@rat/app`, `configure()`): `RAT.app.store.load()`, then `peek()` / `set()` sync on every platform. the precondition for everything else.
-3. **the mechanism, plain runtime**:
-   - `$(init, { persist })` in `@rat/signals` / `@rat/app`: a signal, typed or not, read from and written to
-     the store
-   - `schema.persist(options)` in `@rat/types`: the options on the schema, the codec is the schema itself
-   - `variant.persist(options)`: records, lists, dicts, tables
-4. **the sugar**: `$name!` in declarations, the compiler only adds `{ persist: 'name' }`.
-
-later, each on its own: `in: 'url'`, `in: 'database'` by rows, `sync: true`, keys as functions,
-`in: 'secure'`.
 
 ## the files app with it
 
@@ -329,17 +263,11 @@ an app: which values are worth keeping.
 
 ## later
 
-1. **keys per view**: a kept value inside a named view or part gets its name in the key (above).
-2. **`in: 'url'`**: state worth a link (the open folder, a filter), or the router's business (`cleanup.md` 29).
-3. **a table by rows** in the database, instead of one value.
-4. **keys as functions**, followed like a computed: `stored({ key: () => `bookmarks:${$folderId}` }, …)`.
-5. **`in: 'secure'`**: keychain / keystore drivers.
-6. **devtools**: every kept value with key, place and size.
-1. **the sign**: `$theme!`, `let! $theme`, or another?
-2. **the default place**: `RAT.app.store` for everything small, or a type-based default (tables to the database)?
-3. **read-ahead**: all keys of the store at `configure()`, or only the ones declared persisted (they are known only once the modules run, after `configure()`)?
-4. **collisions**: a shared key for equal names across modules on purpose, or a prefix per module?
-5. **`in: 'url'`** as part of this, or the router's business (`cleanup.md` 29)?
+1. **`in: 'url'`**: state worth a link (the open folder, a filter), or the router's business (`cleanup.md` 29).
+2. **a table by rows** in the database, instead of one value.
+3. **keys as functions**, followed like a computed: `stored({ key: () => `bookmarks:${$folderId}` }, …)`.
+4. **`in: 'secure'`**: keychain / keystore drivers.
+5. **devtools**: every kept value with key, place and size.
 
 ---
 

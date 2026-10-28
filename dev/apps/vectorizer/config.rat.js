@@ -6,6 +6,12 @@ export default {
   ...config,
   name : 'vectorizer',
 
+  icons : {
+    ...config.icons,
+    'image-add' : 'lucide:image-plus',
+    vector      : 'lucide:spline',
+  },
+
   // the elements of @aufbau the app uses, defined before its code runs (no autoloader: a build takes these and no others)
   import : [
     '@aufbau/elements/webcomponents/btn-push.js',

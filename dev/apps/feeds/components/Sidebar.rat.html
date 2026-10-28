@@ -26,7 +26,7 @@
 
   <div.nav-scroll>
     <div.nav-group>
-      {navItem('latest', 'mdi:playlist-star', 'Latest', db.unreadIn(db.latestArticles.value))}
+      {navItem('latest', 'latest', 'Latest', db.unreadIn(db.latestArticles.value))}
       @if ($tubes.length): {navItem('youtube', 'youtube', 'YouTube', db.unreadIn(db.latestVideos.value))}
     </div.nav-group>
 

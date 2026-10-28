@@ -8,7 +8,7 @@
   @for (tab of $tabs)
     <div.tab class:active={tab === $tab}>
       <button type='button' role='tab' aria-selected={tab === $tab} onclick={() => switchTab(tab)}>{tabName(tab)}</button>
-      @if ($tabs.length > 1): <btn-icon icon='lucide:x' label={'close ' + tabName(tab)} onclick={() => closeTab(tab)} />
+      @if ($tabs.length > 1): <btn-icon icon='close' label={'close ' + tabName(tab)} onclick={() => closeTab(tab)} />
     </div.tab>
-  <btn-icon icon='lucide:plus' label='new tab' onclick={() => openTab()} />
+  <btn-icon icon='add' label='new tab' onclick={() => openTab()} />
 </div-x.tabs>

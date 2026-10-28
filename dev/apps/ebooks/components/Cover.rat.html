@@ -25,7 +25,7 @@
 <div.cover class={props.class} class:has-img={!!$url} style:--hue={hueOf(book.title)} style:background-image={$url ? `url("${$url}")` : null}>
   @if (!book.cover)
     <div.cover-fallback>
-      <svg-icon icon={book.kind === 'pdf' ? 'mdi:file-pdf-box' : 'mdi:book-open-page-variant-outline'} />
+      <svg-icon icon={book.kind === 'pdf' ? 'document' : 'book-open'} />
       <span.cover-title>{book.title}</span>
       @if (book.author): <span.cover-author>{book.author}</span>
     </div.cover-fallback>

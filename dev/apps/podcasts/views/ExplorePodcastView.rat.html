@@ -75,7 +75,7 @@
       <div.stats>{$data.episodes.length} episode(s)</div.stats>
       @if ($podcast.author): <div.author>{$podcast.author}</div>
       @for (paragraph of paragraphs($podcast.description)): <p.about>{paragraph}</p>
-      @if ($podcast.link): <Link href={$podcast.link} icon='mdi:web' label='Website' />
+      @if ($podcast.link): <Link href={$podcast.link} icon='web' label='Website' />
       <Link href={$url} icon='rss' label='Feed' />
     </div.info>
 
@@ -83,6 +83,6 @@
 
     <PreviewEpisodes
       episodes={sortEpisodes($data.episodes, 'newest')}
-      empty={{ icon: 'mdi:playlist-remove', title: 'This feed has no playable episodes' }}
+      empty={{ icon: 'no-episodes', title: 'This feed has no playable episodes' }}
     />
   </main>

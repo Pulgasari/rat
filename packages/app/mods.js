@@ -14,6 +14,7 @@ on the app (RAT.app.<name>), in the order written:
     files         : true,                     // the origin private file system, the app's data folder natively
     folders       : { accept: 'md, epub' },   // folders the user grants, in the database's table folders
     hotkeys       : { 'ctrl+1': 'go[podcasts]', 'space': 'toggle-player', 'escape': 'rat:toggle[context]' },
+    icons         : { close: 'lucide:x' },      // short names for <svg-icon icon='close'>
     notifications : true,                     // the system's notifications
     offline       : true,                     // a service worker: offline once open, installable (sw.js)
     store         : { driver: 'local' },      // keys and values
@@ -31,6 +32,7 @@ const MODS = {
   files         : () => import('./modules/files.js'),
   folders       : () => import('./modules/folders.js'),
   hotkeys       : () => import('./modules/hotkeys.js'),
+  icons         : () => import('./modules/icons.js'),
   notifications : () => import('./modules/notifications.js'),
   offline       : () => import('./offline.js'),
   store         : () => import('./modules/store.js'),

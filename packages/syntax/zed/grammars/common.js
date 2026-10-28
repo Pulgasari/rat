@@ -122,6 +122,7 @@ export default function define (name, root) {
         $.brackets,
         $.string,
         $.number,
+        $.kept_identifier,
         $.reactive_identifier,
         $.identifier,
         $._word,
@@ -157,6 +158,8 @@ export default function define (name, root) {
       number : $ => /0[xX][\da-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|\d[\d_]*(\.\d[\d_]*)?([eE][+-]?\d+)?n?|\.\d[\d_]*([eE][+-]?\d+)?/,
 
       reactive_identifier : $ => token(prec(1, /\$[A-Za-z_][\w$]*/)),
+      // $theme! = …: kept beyond the page. a ! right after the name, != stays the operator (the longer token)
+      kept_identifier     : $ => prec(1, seq($.reactive_identifier, alias(token.immediate('!'), $.kept_marker))),
       identifier          : $ => /[A-Za-z_$][\w$]*/,
 
       constant          : $ => choice(...vocabulary.constants),

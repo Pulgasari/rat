@@ -40,8 +40,27 @@ export default {
 
   build : { emptyOutDir: true, outDir: '../../../apps/files' },   // rat build -> apps/files
 
-  icons: {
-    copy : 'lucide:copy',
-    move : 'lucide:scissors',
+  icons : {
+    ...config.icons,
+    'bookmark-add'    : 'lucide:bookmark-plus',
+    'bookmark-remove' : 'lucide:bookmark-minus',
+    cloud             : 'lucide:cloud',
+    'cloud-settings'  : 'lucide:cloud-cog',
+    dashboard         : 'lucide:layout-dashboard',
+    desktop           : 'lucide:monitor',
+    drive             : 'lucide:hard-drive',
+    'file-add'        : 'lucide:file-plus',
+    'file-edit'       : 'lucide:file-pen',
+    'folder-sync'     : 'lucide:folder-sync',
+    history           : 'lucide:history',
+    move              : 'lucide:scissors',   // a pick to move, beside copy
+    network           : 'lucide:network',
+    phone             : 'lucide:smartphone',
+    plug              : 'lucide:plug',
+    radar             : 'lucide:radar',
+    scan              : 'lucide:scan-search',
+    tasks             : 'lucide:list-checks',
+    terminal          : 'lucide:terminal',
+    trash             : 'lucide:trash',
   },
 };
