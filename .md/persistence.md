@@ -278,7 +278,15 @@ which values are worth keeping.
 ---
 
 # anmerkungen
-- wenn es `!=` gibt,  wäre `$theme! = ...` zumindest suboptimal.
+
+(1) grundsätzlich würde ich sagen 
+- `b` und `c` sind quasi der "mature" weg
+- `d` ist der "magic" weg
+- `a` ist der "primitive" weg (vielleicht auch quasi der "core" bzzgl implementierung)
+
+in der praxis nimmt meistens sicherlich d, b, c
+
+(2) wenn es `!=` gibt,  wäre `$theme! = ...` zumindest suboptimal.
   - `$$theme = ...`
   - `#$theme = ...`
 
