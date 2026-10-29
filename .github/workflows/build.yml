@@ -5,11 +5,11 @@ name: build docs and apps
 # the run fails at the end and names it.
 #
 # the import map (packages/app/run/importmap.json) points into the repos next to this one, so
-# they are checked out side by side: rat/, aufbau/, bunker/, domina/, gestalt/, htx/, js-packages/.
-# a change there builds nothing by itself: run this by hand (actions -> build docs and apps).
+# they are checked out side by side (.github/config.js: repos). a change there builds nothing by
+# itself: run this by hand (actions -> build docs and apps).
 #
-# debounced as the css of gestalt: a push waits 7 minutes, a newer one cancels it. the commit
-# made here uses GITHUB_TOKEN, which starts no new run.
+# debounced as the css of gestalt: a push waits (.github/config.js: debounce), a newer one cancels
+# it. the commit made here uses GITHUB_TOKEN, which starts no new run.
 
 on:
   push:
@@ -20,6 +20,8 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.github/workflows/build.yml'
+      - '.github/config.js'
+      - '.github/scripts/**'
   workflow_dispatch:
 
 concurrency:
@@ -32,25 +34,22 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: wait for the last change
-        if: github.event_name == 'push'
-        run: sleep 420
-
       - uses: actions/checkout@v4
         with:
           path: rat
           ref: ${{ github.ref }}
 
-      - { uses: actions/checkout@v4, with: { path: aufbau,      repository: Pulgasari/aufbau      } }
-      - { uses: actions/checkout@v4, with: { path: bunker,      repository: Pulgasari/bunker      } }
-      - { uses: actions/checkout@v4, with: { path: domina,      repository: Pulgasari/domina      } }
-      - { uses: actions/checkout@v4, with: { path: gestalt,     repository: Pulgasari/gestalt     } }
-      - { uses: actions/checkout@v4, with: { path: htx,         repository: Pulgasari/htx         } }
-      - { uses: actions/checkout@v4, with: { path: js-packages, repository: Pulgasari/js-packages } }
+      - id: config
+        run: node rat/.github/scripts/config.mjs >> "$GITHUB_OUTPUT"
+
+      - name: wait for the last change
+        if: github.event_name == 'push'
+        run: sleep ${{ steps.config.outputs.debounce }}
+
+      - run: node rat/.github/scripts/repos.mjs
 
       - uses: actions/setup-node@v4
-        with:
-          node-version: 24
+        with: { node-version: '${{ steps.config.outputs.node }}' }
 
       - name: build
         working-directory: rat
