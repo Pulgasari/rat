@@ -15,6 +15,8 @@ List, Record and Tuple are data types as well (one file each): called they
 give a schema, with new a value.
 */
 
+// :::::: IMPORT
+
 import { Signal, SIGNAL } from '@rat/signals';
 import { stored } from './stored.js';
 
@@ -27,8 +29,21 @@ class Schema {
   // transform: how a value is made into this schema's form, for from() (a case of Str).
   // factory: (schema, value) -> a value of the data type, for create() (typed sets it). not make: Id.make() makes a key
   // [STORED]: the options of stored(), the schema makes kept values then
-  constructor ({ checks = [], describe = {}, factory = null, initial, kind, nullable = false, parts = null, run, transform = null, [STORED]: kept = null }) {
-    Object.assign(this, { checks, describe: { kind, ...describe }, factory, initial, kind, nullable, parts, run, transform, [STORED]: kept });
+  constructor ({
+    checks    = [],
+    describe  = {}, 
+    factory   = null, 
+    nullable  = false, 
+    parts     = null,
+    transform = null,
+    [STORED]: kept = null,
+    initial, kind, run,
+  }) {
+    Object.assign(this, { 
+      checks, factory, initial, kind, nullable, parts, run, transform,
+      describe: { kind, ...describe }, 
+      [STORED]: kept 
+    });
     Object.freeze(this);
   }
 
@@ -124,8 +139,10 @@ Num  = new NumSchema ({ initial: 0,     kind: 'num',  run: scalar('a number',  i
 const
 isBool     = (value) => typeof value === 'boolean',
 isBoolWord = (value) => isString(value) && value.toLowerCase() in BOOLEAN_WORDS,
+isFn       = (value) => typeof value === 'function',
 isNum      = (value) => typeof value === 'number' && Number.isFinite(value),
 isNumeric  = (value) => isString(value) && value.trim() !== '' && !isNaN(value),
+isObject   = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),
 isSchema   = (value) => value instanceof Schema,
 isString   = (value) => typeof value === 'string',
 madeBy     = (value) => MADE.get(value);
@@ -137,7 +154,7 @@ madeBy     = (value) => MADE.get(value);
 const byConstructor = (Type, schema, value) => new Type(schema, value);
 
 function typed (Class, toSchema, make = byConstructor) {
-  const Type = new Proxy(Class, { apply: (target, self, args) => toSchema(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
+  const Type = new Proxy (Class, { apply: (target, self, args) => toSchema(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
   return Type;
 }
 
@@ -145,11 +162,9 @@ function typed (Class, toSchema, make = byConstructor) {
 // bare() marks such a type (Color, Path …), schemaOf() calls it, a structure asks it for each of its parts
 const BARE = Symbol('rat.bare');
 
-const bare     = Type  => Object.defineProperty(Type, BARE, { value: true });
-const schemaOf = value => typeof value === 'function' && value[BARE] ? value() : value;
+const bare     = (Type)  => Object.defineProperty(Type, BARE, { value: true });
+const schemaOf = (value) => isFn(value) && value[BARE] ? value() : value;
 
-// a structure's input: a plain object, not an array, a class instance counts (a Record does)
-const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 // :::::: EXPORT
 
