@@ -20,8 +20,13 @@ give a schema, with new a value.
 import { Signal, SIGNAL } from '@rat/signals';
 import { stored } from './stored.js';
 
-const STORED = Symbol('rat.stored');   // the options of .stored()
-const MADE   = new WeakMap;            // a value create() made -> the schema it was made by
+// :::::: CONSTANTS | REFERNCES | SYMBOLS
+
+const BOOLEAN_WORDS = { false: false, no: false, off: false, on: true, true: true, yes: true };
+const MADE   = new WeakMap;          // a value create() made -> the schema it was made by
+const STORED = Symbol('rat.stored'); // the options of .stored()
+
+// ::::::
 
 class Schema {
   // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
@@ -125,8 +130,6 @@ class NumSchema extends Schema {
   range (min, max) { return this.min(min).max(max).derive({ initial: this.initial < min || this.initial > max ? min : this.initial }); }
   get int ()       { return this.check(Number.isInteger, 'an integer', { int: true }); }
 }
-
-const BOOLEAN_WORDS = { false: false, no: false, off: false, on: true, true: true, yes: true };
 
 const
 toBool = (value) => isBoolWord (value) ? BOOLEAN_WORDS[value.toLowerCase()] : value,
