@@ -3,7 +3,7 @@
 /*
 Tuple is a data type and, called, its schema:
 
-  const Entry = Tuple(Str, Num);          // the schema: a string, then a number
+  const Entry = Tuple(Str, Num);          // the schema: a string, then a number, made a Tuple
 
   const entry = new Tuple('rat', 3);      // a tuple
   entry[0];                               // 'rat'
@@ -15,11 +15,11 @@ a tuple is frozen: fixed length, fixed values. a change is a new tuple, so
 there is no reactive variant, a signal holding a tuple is reactive enough.
 */
 
-import { Schema, issue, partsIn, schemaOf, typed } from './schema.js';
+import { Schema, byParse, issue, partsIn, schemaOf, typed } from './schema.js';
 
 // ::: SCHEMA
 
-// an array or a Tuple of exactly these items, each checked and coerced
+// an array or a Tuple of exactly these items, each checked and coerced, a Tuple out
 function tupleOf (...given) {
   const items = given.map(schemaOf);
   return new Schema({
@@ -32,8 +32,8 @@ function tupleOf (...given) {
       if (!tuple && !Array.isArray(value)) return issue('expected a tuple', path);
       if (value.length !== items.length)   return issue(`expected ${items.length} items`, path);
       const result = partsIn(items.map((item, index) => [index, item, value[index]]), path);
-      if (result.issues || !result.changed) return result.issues ? result : { value };
-      return { value: tuple ? new TupleType(...result.values) : result.values };
+      if (result.issues) return result;
+      return { value: tuple && !result.changed ? value : new TupleType(...result.values) };
     },
   });
 }
@@ -71,10 +71,8 @@ class TupleType {
 
 // ::: Tuple
 
-// create(items): checked, then spread
-const ofItems = (Type, schema, items = schema.initial) => new Type(...schema.parse(items));
-
-const Tuple = typed(TupleType, tupleOf, { kind: 'tuple', make: ofItems, name: 'Tuple' });
+// a value of the schema is a Tuple already: create() hands it on (a tuple never changes, sharing it is safe)
+const Tuple = typed(TupleType, tupleOf, { kind: 'tuple', make: byParse, name: 'Tuple' });
 
 // :::::: EXPORT
 

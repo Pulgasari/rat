@@ -3,7 +3,7 @@
 /*
 Color is a data type and, called, its schema:
 
-  const Accent = Color();                 // the schema: anything that reads as a color
+  const Accent = Color();                 // the schema: anything that reads as a color, made a Color
 
   const accent = new Color('#ff8800');    // also 'rgb(255 136 0)', 'hsl(32 100% 50%)', [255, 136, 0],
                                           // { r, g, b }, { h, s, l }, another Color
@@ -90,7 +90,7 @@ const colorOf = (...args) => {
   return new Schema({
     initial : '#000000',
     kind    : 'color',
-    run     : (value, path) => rgba(value) ? { value } : issue('expected a color', path),
+    run     : (value, path) => value instanceof ColorType ? { value } : rgba(value) ? { value: new ColorType(value) } : issue('expected a color', path),
   });
 };
 
@@ -152,7 +152,7 @@ class ColorType {
 
 // ::: Color + $Color
 
-// create(value): checked, then made a color
+// create(value): a color of its own, also from a color (parse would hand that one on)
 const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
 const differs = name => (color, value) => !Object.is(color[name], value);
 

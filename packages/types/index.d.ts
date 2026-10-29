@@ -115,7 +115,7 @@ export interface StrSchema extends Schema<string> {
 export interface ListSchema<T> extends Schema<T[] | List<T>> {
   min (length: number): this;
   max (length: number): this;
-  /** A List of these items, checked: List(Num).create([1, 2]), a $List from $List(Num). */
+  /** A List of these items that keeps checking what comes in: List(Num).create([1, 2]), a $List from $List(Num). */
   create (items?: Iterable<unknown>): List<T>;
 }
 
@@ -170,6 +170,8 @@ export function schemaOf<T> (value: T): T extends () => infer S ? S : T;
 /** A list: length is a getter, at(i) / set(i, v) replace [i]. $List is the same, reactive. */
 export interface List<T> extends Iterable<T> {
   readonly length: number;
+  /** The schema it was made from, null for a list without one. */
+  readonly schema: ListSchema<T> | null;
   at (index: number): T | undefined;
   includes (value: T): boolean;
   indexOf (value: T): number;
@@ -224,6 +226,10 @@ export interface List<T> extends Iterable<T> {
 
 export interface ListConstructor {
   new <T>(items?: Iterable<T>): List<T>;
+  /** A list that knows its schema: what comes in is checked, an item that is a data type made one. */
+  new <T>(schema: ListSchema<T>, items?: Iterable<unknown>): List<T>;
+  /** A copy of another List, with its schema. */
+  new <T>(other: List<T>): List<T>;
   /** The schema of a list (an array or a List) whose items match item: List(Str). */
   <T>(item: Schema<T>): ListSchema<T>;
   from<T> (items: Iterable<T>): List<T>;
@@ -346,8 +352,8 @@ export interface Tuple<T extends readonly unknown[]> extends Iterable<T[number]>
 export interface TupleConstructor {
   new <const T extends readonly unknown[]>(...items: T): Tuple<T>;
   from<T> (items: Iterable<T>): Tuple<T[]>;
-  /** The schema: an array or a Tuple of exactly these items. */
-  <const S extends readonly Schema<any>[]>(...items: S): TypedSchema<{ [K in keyof S]: Infer<S[K]> }, Tuple<{ [K in keyof S]: Infer<S[K]> }>>;
+  /** The schema: an array or a Tuple of exactly these items, made a Tuple. */
+  <const S extends readonly Schema<any>[]>(...items: S): TypedSchema<Tuple<{ [K in keyof S]: Infer<S[K]> }>, Tuple<{ [K in keyof S]: Infer<S[K]> }>>;
 }
 
 export const Tuple: TupleConstructor;
@@ -382,7 +388,7 @@ export interface Color {
 export interface ColorConstructor {
   new (input?: ColorInput): Color;
   /** The schema: anything that reads as a color. */
-  (): TypedSchema<ColorInput, Color>;
+  (): TypedSchema<Color, Color>;
 }
 
 export const Color: ColorConstructor;

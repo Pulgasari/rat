@@ -19,14 +19,14 @@ for the whole table: any write updates whatever read the table.
 
 import { LIST_READS, LIST_WRITES, List } from './List.js';
 import { Record } from './Record.js';
-import { Schema, issue, typed, variant } from './schema.js';
+import { Schema, issue, partsIn, typed, variant } from './schema.js';
 
 // ::: SCHEMA
 
 // fields or a Record schema -> the schema of a row
 const rowOf = (shape) => shape instanceof Schema ? shape : Record(shape);
 
-// an array or a Table, every row checked against the row schema
+// an array or a Table, every row checked against the row schema: the rows out, a missing field at its initial value
 function tableOf (shape) {
   const row = rowOf(shape);
   if (row.kind !== 'record') throw new TypeError('[rat] a Table needs fields or a Record schema');
@@ -36,15 +36,10 @@ function tableOf (shape) {
     kind     : 'table',
     parts    : { row },
     run      : (value, path) => {
-      const table = value instanceof TableType;
-      if (!table && !Array.isArray(value)) return issue('expected a table', path);
-      const rows   = table ? value.toArray() : value;
-      const issues = [];
-      rows.forEach((entry, index) => { 
-        const result = row.validate({ ...row.initial, ...entry }, [...path, index]); 
-        if (result.issues) issues.push(...result.issues); 
-      });
-      return issues.length ? { issues } : { value };
+      if (value instanceof TableType) return { value };
+      if (!Array.isArray(value)) return issue('expected a table', path);
+      const result = partsIn(value.map((entry, index) => [index, row, { ...row.initial, ...entry }]), path);
+      return result.issues ? result : { value: result.values };
     },
   });
 }
