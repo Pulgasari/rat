@@ -5,8 +5,8 @@
 // the run fails at the end and names it
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import config from '../config.js';
@@ -70,7 +70,12 @@ for (const app of chosen()) {
 if (built.length) {
   const tag = `${PREFIX}${fill('{yyyy}{MM}{dd}{HH}{mm}', time)}`;
   gh('release', 'create', tag, ...built, '--prerelease', '--target', process.env.GITHUB_SHA ?? 'HEAD', '--title', `apks ${fill('{yyyy}-{MM}-{dd} {HH}:{mm}', time)}`, '--notes', `debug builds, signed with the throwaway key of the run: ${built.length} app(s)`);
-  console.log(`release ${tag}`);
+  const url = JSON.parse(gh('release', 'view', tag, '--json', 'url')).url;
+  console.log(`release ${tag}: ${url}`);
+
+  // the links on the page of the run
+  const summary = process.env.GITHUB_STEP_SUMMARY;
+  if (summary) appendFileSync(summary, `## [${tag}](${url})\n\n${built.map(file => `- [${basename(file)}](${url.replace('/tag/', '/download/')}/${basename(file)})`).join('\n')}\n`);
 
   // the newest keep releases of apks stay
   const tags = JSON.parse(gh('release', 'list', '--limit', '200', '--json', 'tagName')).map(release => release.tagName).filter(tag => tag.startsWith(PREFIX)).sort().reverse();
