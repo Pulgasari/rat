@@ -26,13 +26,37 @@ it doesn't provide any revolutionary ideas but it fits my personal preferences.
 </style>
 ```
 
-## topics
-[config](#/config) ·
+## Start
+
+```html
+<!-- index.html -->
+<script src='./rat/packages/app/run/run.js'></script>
+<rat-app src='app.rat'></rat-app>
+```
+
+```rat
+<!-- app.rat -->
+<script>
+  let $count = 0;
+</script>
+
+<button onclick={() => $count++}>clicked {$count} times</button>
+```
+
+No build needed: the page compiles `.rat` files as it loads them. `rat build` (vite) compiles them ahead.
+
+## Topics
 [components](#/components) ·
-[comptime](#/comptime) ·
+[signals](#/signals) ·
 [directives](#/directives) ·
 [htx](#/htx) ·
+[styles](#/styles) ·
 [modules](#/modules) ·
+[operators](#/operators) ·
 [schemas](#/schemas) ·
-[signals](#/signals) ·
-[types](#/types)
+[types](#/types) ·
+[persistence](#/persistence) ·
+[comptime](#/comptime) ·
+[config](#/config) ·
+[dom](#/dom) ·
+[import](#/import)
