@@ -174,3 +174,8 @@ the data types could then be written as codecs themselves, their pair is there a
   `inputSchema`, a form). its own draft, once this one stands.
 - **elsewhere**: zod 4.1 has the same (`z.codec(outside, inside, { decode, encode })`, `.decode()`,
   `.encode()`, `parse` kept), purify-ts has `Codec` with `decode` / `encode` and a json schema per codec.
+
+---
+
+# Anmerkungen
+
