@@ -1,4 +1,0 @@
-var s=Object.defineProperty;var a=(e,t)=>s(e,"name",{value:t,configurable:!0});import{r as i,p as o}from"./index-Dcho_3_A.js";import"./index-CtR854MK.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";const n="dots",b="Dots",u={bg:{type:"color",default:"transparent"},fg:{type:"color",default:"#000000"},radius:{type:"number",default:3,min:0,max:10,step:.5,bake:!0},rotate:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg",bake:!0},size:{type:"number",default:20,min:4,max:100,step:1,bake:!0}};function g(e={}){const t=i(u,e),r=Number(t.size)/2;return o(n,t.size,`
-    <rect width="${t.size}" height="${t.size}" fill="${t.bg}"/>
-    <circle cx="${r}" cy="${r}" r="${t.radius}" fill="${t.fg}"/>
-  `,t.rotate,e)}a(g,"dots");export{g as default,n as id,b as name,u as vars};
