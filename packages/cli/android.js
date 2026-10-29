@@ -44,6 +44,9 @@ const PLUGINS = {
   thumbnails    : ['@capacitor/filesystem'],
 };
 
+// every app loads its store at the start (rat-app, useStored), named in config.rat.js or not
+const ALWAYS = PLUGINS.store;
+
 const execute = (command, args, cwd) => new Promise((done, fail) => {
   print(color.gray(`${relative('.', cwd) || '.'} $ ${[command, ...args].join(' ')}`));
   spawn(command, args, { cwd, shell: process.platform === 'win32', stdio: 'inherit' })
@@ -61,6 +64,22 @@ export async function projectOf (root) {
   return { config: file, project, www: join(project, 'www') };
 }
 
+// the mods the code calls (RAT.app.clipboard …) without naming them: the app and the .shared beside it
+async function usedIn (dirs) {
+  const used    = new Set;
+  const pattern = new RegExp(`\\bapp\\.(${Object.keys(PLUGINS).join('|')})\\b`, 'g');
+  const walk = async dir => {
+    for (const entry of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
+      if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) await walk(path);
+      else if (/\.(html|js)$/.test(entry.name)) for (const [, mod] of (await readFile(path, 'utf8')).matchAll(pattern)) used.add(mod);
+    }
+  };
+  for (const dir of dirs) await walk(dir);
+  return used;
+}
+
 async function settingsOf (root) {
   const { file, value: android = {} } = await appConfig(root, 'android');
   const name = android.name ?? (await appConfig(root, 'name')).value ?? basename(dirname(file));
@@ -72,8 +91,9 @@ async function settingsOf (root) {
     catch { return true; }
   };
 
+  const used = await usedIn([dirname(file), join(dirname(file), '..', '.shared')]);
   const mods = [];
-  for (const mod of Object.keys(PLUGINS)) if (await named(mod)) mods.push(mod);
+  for (const mod of Object.keys(PLUGINS)) if (used.has(mod) || await named(mod)) mods.push(mod);
 
   return { android, config: file, id: android.id ?? `dev.rat.${slug}`, mods, name, native: android.plugins ?? [], slug };
 }
@@ -83,7 +103,7 @@ async function scaffold (project, { id, mods, name, slug }) {
 
   await writeFile(join(project, 'capacitor.config.json'), JSON.stringify({ appId: id, appName: name, webDir: 'www' }, null, 2) + '\n');
 
-  const plugins      = [...new Set(mods.flatMap(mod => PLUGINS[mod]))].sort();
+  const plugins      = [...new Set([...ALWAYS, ...mods.flatMap(mod => PLUGINS[mod])])].sort();
   const dependencies = { ...Object.fromEntries(['@capacitor/android', '@capacitor/cli', '@capacitor/core', ...plugins].map(name => [name, VERSION])), sharp: SHARP };
   await writeFile(join(project, 'package.json'), JSON.stringify({ dependencies, name: `rat-${slug}-android`, private: true }, null, 2) + '\n');
 
