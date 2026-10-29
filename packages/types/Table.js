@@ -25,7 +25,7 @@ import { Schema, typed } from './schema.js';
 // ::: the schema
 
 // fields or a Record schema -> the schema of a row
-const rowOf = shape => shape instanceof Schema ? shape : Record(shape);
+const rowOf = (shape) => shape instanceof Schema ? shape : Record(shape);
 
 // an array or a Table, every row checked against the row schema
 function tableOf (shape) {
@@ -41,7 +41,10 @@ function tableOf (shape) {
       if (!table && !Array.isArray(value)) return { issues: [{ message: 'expected a table', path }] };
       const rows   = table ? value.toArray() : value;
       const issues = [];
-      rows.forEach((entry, index) => { const result = row.validate({ ...row.initial, ...entry }, [...path, index]); if (result.issues) issues.push(...result.issues); });
+      rows.forEach((entry, index) => { 
+        const result = row.validate({ ...row.initial, ...entry }, [...path, index]); 
+        if (result.issues) issues.push(...result.issues); 
+      });
       return issues.length ? { issues } : { value };
     },
   });
@@ -70,8 +73,8 @@ class TableType extends List {
 
   column (key) { return this.map(row => row[key]); }
 
-  push    (...rows)        { return super.push(...rows.map(this.parse)); }
-  unshift (...rows)        { return super.unshift(...rows.map(this.parse)); }
+  push    (...rows)        { return super.push    (...rows.map(this.parse)); }
+  unshift (...rows)        { return super.unshift (...rows.map(this.parse)); }
   set     (index, row)     { return super.set(index, this.parse(row)); }
   replace (rows)           { return super.replace([...rows].map(this.parse)); }
   update  (index, patch)   { return super.set(index, this.parse({ ...this.at(index), ...patch })); }
