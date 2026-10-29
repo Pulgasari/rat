@@ -48,12 +48,26 @@ class SegmentsType {
   at    (index)      { return this.segments.at(index); }
   make  (parts)      { return this.constructor.from(parts, this.separator); } // a new one of the same kind: Path.from() for a path, which keeps one instance per path      
   slice (start, end) { return this.make(this.segments.slice(start, end)); }
-  with  (...parts)   { return this.make([...this.segments, ...parts.flatMap(part => partsOf(part, this.separator))]); }
+  with  (...parts)   { return this.make([...this.segments, ...parts.flatMap(part => partsOf(part, partsOf))]); }
 
+  /* --- scratches for ratjs syntax ---
+  static fn from     = (value, separator) => value instanceof this ? value : new this(value, separator);
+  getter fn length   ==> this.segments.length;
+  public fn at       = this.segments.at;
+  public fn make     = (parts) => this.constructor.from(parts, this.separator);
+  public fn slice    = this.make :: this.segments.slice; // not sure if that would make sense ?
+  public fn with     = (...parts) => this.make :: [...this.segments, ...parts.flatMap(partsOf)];
+  public fn toArray  ==> [...this.segments];
+  public fn toJSON   ==> this.toString();
+  public fn toString ==> this.segments.join(this.separator);
+  */
+  
   equals (other) {
     const parts = partsOf(other, this.separator);
     return parts.length === this.length && parts.every((part, index) => part === this.segments[index]);
   }
+
+  partsOf (part) { return partsOf (part, this.seperator); }
 
   // other is the beginning of this one, part by part (equal counts)
   startsWith (other) {
