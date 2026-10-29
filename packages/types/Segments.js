@@ -45,11 +45,8 @@ class SegmentsType {
 
   get length () { return this.segments.length; }
 
-  at (index) { return this.segments.at(index); }
-
-  // a new one of the same kind: Path.from() for a path, which keeps one instance per path
-  make (parts) { return this.constructor.from(parts, this.separator); }
-
+  at    (index)      { return this.segments.at(index); }
+  make  (parts)      { return this.constructor.from(parts, this.separator); } // a new one of the same kind: Path.from() for a path, which keeps one instance per path      
   slice (start, end) { return this.make(this.segments.slice(start, end)); }
   with  (...parts)   { return this.make([...this.segments, ...parts.flatMap(part => partsOf(part, this.separator))]); }
 
