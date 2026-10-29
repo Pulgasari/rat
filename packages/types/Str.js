@@ -14,7 +14,7 @@ an object with value and methods: a write is checked by the schema, reads subscr
 
 import { reactive } from '@rat/signals';
 
-import { GET, SET, Scalar, Schema, isString, scalar } from './schema.js';
+import { GET, SET, Scalar, Schema, issue, isString, scalar } from './schema.js';
 
 // ::: SCHEMA
 
@@ -35,7 +35,7 @@ class StrSchema extends Schema {
         const result = this.run(value, path);
         if (result.issues) return result;
         if (transform(result.value) === result.value) return result;
-        return { issues: [{ message: `expected ${regex ?? 'this case'}`, path }] };
+        return issue(`expected ${regex ?? 'this case'}`, path);
       },
     });
   }

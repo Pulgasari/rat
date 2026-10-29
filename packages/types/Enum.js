@@ -1,4 +1,4 @@
-// @rat/types :: Enum
+// @rat/types :: Enum, $Enum
 
 /*
 Enum is a data type and, called, its schema:
@@ -15,20 +15,19 @@ Enum is a data type and, called, its schema:
 $Enum, its reactive variant, is below.
 */
 
-import { reactive, register } from '@rat/signals';
-import { Schema, typed } from './schema.js';
+import { Schema, issue, typed, variant } from './schema.js';
 
-// ::: the schema
+// ::: SCHEMA
 
 // one value out of a fixed list, the first is the initial one
 const enumOf = (...values) => new Schema({
   describe : { values },
   initial  : values[0],
   kind     : 'enum',
-  run      : (value, path) => values.includes(value) ? { value } : { issues: [{ message: `one of ${values.map(String).join(', ')}`, path }] },
+  run      : (value, path) => values.includes(value) ? { value } : issue(`one of ${values.map(String).join(', ')}`, path),
 });
 
-// ::: the data type
+// ::: DATA TYPE
 
 class EnumType {
   #index;
@@ -61,24 +60,24 @@ class EnumType {
   valueOf  () { return this.value; }
 }
 
-Object.defineProperty(EnumType, 'name', { value: 'Enum' });
-
 // ::: Enum + $Enum
 
 // create(value): at value, else at the initial one
-const atValue = (Type, schema, value) => { const enumeration = new Type (schema); if (value !== undefined) enumeration.value = value; return enumeration; };
+function atValue (Type, schema, value) {
+  const enumeration = new Type(schema);
+  if (value !== undefined) enumeration.value = value;
+  return enumeration;
+}
 
-const Enum = typed(EnumType, enumOf, atValue);
+const Enum = typed(EnumType, enumOf, { kind: 'enum', make: atValue, name: 'Enum' });
 
-const $Enum = typed(reactive(Enum, {
+const $Enum = variant(Enum, {
   reads  : ['value', 'is', 'toJSON', 'toString', 'valueOf'],
   writes : {
     cycle : enumeration => enumeration.values.length > 1,
     value : (enumeration, value) => !enumeration.is(value),
   },
-}), enumOf, atValue);
-
-register(Enum, $Enum);
+});
 
 // :::::: EXPORT
 

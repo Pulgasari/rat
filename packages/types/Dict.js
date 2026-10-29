@@ -1,4 +1,4 @@
-// @rat/types :: Dict
+// @rat/types :: Dict, $Dict
 
 /*
 Dict is a Map whose keys and values follow a schema each. called, it is the
@@ -26,14 +26,12 @@ like $Map. called, it is the schema as well, whose create() makes a $Dict:
   const commands = $Dict(Str.to(KebabCase), { exec: Fn }).create({ save: { exec: save } });
 */
 
-import { reactive, register } from '@rat/signals';
-
 import './Map.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
 
-import { Record }                  from './Record.js';
-import { Schema, isObject, schemaOf, typed } from './schema.js';
+import { Record } from './Record.js';
+import { Schema, isObject, issue, schemaOf, typed, variant } from './schema.js';
 
-// ::: the schema
+// ::: SCHEMA
 
 const valueOf = value => schemaOf(value) instanceof Schema ? schemaOf(value) : Record(value);
 
@@ -47,7 +45,7 @@ function dictOf (keyed, value) {
     kind     : 'dict',
     parts    : { key, value: values },
     run      : (input, path) => {
-      if (!(input instanceof Map) && !isObject(input)) return { issues: [{ message: 'expected a dict', path }] };
+      if (!(input instanceof Map) && !isObject(input)) return issue('expected a dict', path);
       const issues = [];
       const out    = new Map;
       for (const [rawKey, rawValue] of input instanceof Map ? input : Object.entries(input)) {
@@ -62,7 +60,7 @@ function dictOf (keyed, value) {
   });
 }
 
-// ::: entries as properties
+// ::: ENTRIES AS PROPERTIES
 
 // a dict -> its methods, called on it: a Map method needs the Map, not the proxy. what gives the dict back gives the proxy
 const bound = new WeakMap;
@@ -90,7 +88,7 @@ const ENTRIES = {
   },
 };
 
-// ::: the data type
+// ::: DATA TYPE
 
 class DictType extends Map {
   // new Dict(schema, entries?), new Dict(other): a copy
@@ -122,22 +120,18 @@ class DictType extends Map {
   toJSON () { return Object.fromEntries(this); }
 }
 
-Object.defineProperty(DictType, 'name', { value: 'Dict' });
+// ::: Dict + $Dict
 
-const Dict = typed(DictType, dictOf);
+const Dict = typed(DictType, dictOf, { kind: 'dict', name: 'Dict' });
 
-// ::: $Dict
-
-const $Dict = typed(reactive(Dict, {
+const $Dict = variant(Dict, {
   reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', 'toJSON', Symbol.iterator],
   writes : {
     clear  : dict => dict.size > 0,
     delete : (dict, key) => dict.has(key),
     set    : true,
   },
-}), dictOf);
-
-register(Dict, $Dict);
+});
 
 // :::::: EXPORT
 

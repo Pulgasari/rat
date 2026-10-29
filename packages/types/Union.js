@@ -1,6 +1,16 @@
 // @rat/types :: Union
 
-import { Schema, isSchema, schemaOf } from './schema.js';
+/*
+Union is a schema: one of several cases, the first that fits. a case is any schema, named or by position.
+
+  const Exec = Union(Fn, Str);                     // a function, or the name of a command
+  const Shape = Union({ circle: Circle, rect: Rect });
+  Shape.which(value);                              // 'circle', 'rect' or null
+*/
+
+import { Schema, isSchema, issue, schemaOf } from './schema.js';
+
+// ::: SCHEMA
 
 class UnionSchema extends Schema {
   // the name (or index) of the first case the value fits, null for none
@@ -27,11 +37,11 @@ function Union (...given) {
         const result = schema.validate(value, path);
         if (!result.issues) return result;
       }
-      return { issues: [{ message: `none of ${entries.map(([name, schema]) => named ? name : schema.kind).join(', ')}`, path }] };
+      return issue(`none of ${entries.map(([name, schema]) => named ? name : schema.kind).join(', ')}`, path);
     },
   });
 }
 
 // :::::: EXPORT
 
-export { Union, UnionSchema };
+export { Union };

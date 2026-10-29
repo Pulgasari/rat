@@ -14,11 +14,13 @@ both are schemas only, a key is a plain string or number. Id is optional on
 validation, the key is made after.
 */
 
-import { Schema } from './schema.js';
+import { Schema, issue } from './schema.js';
 
 const isKey = value => (typeof value === 'string' && value !== '') || Number.isInteger(value);
 
-const key = (message, path) => value => isKey(value) ? { value } : { issues: [{ message, path }] };
+const key = (message, path) => value => isKey(value) ? { value } : issue(message, path);
+
+// ::: SCHEMA
 
 class IdSchema extends Schema {
   get counter () { return this.derive({ describe: { counter: true } }); }

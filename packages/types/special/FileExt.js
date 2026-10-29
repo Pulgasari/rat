@@ -19,7 +19,7 @@ for its schema without the call:
   const Upload = { name: Str, ext: FileExt };
 */
 
-import { Schema, bare, typed } from '../schema.js';
+import { Schema, bare, byParse, issue, isString, typed } from '../schema.js';
 
 const MIME = {
   '7z'  : 'application/x-7z-compressed',
@@ -87,7 +87,7 @@ function extOf (value) {
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
 }
 
-// ::: the data type
+// ::: DATA TYPE
 
 class FileExtType {
   constructor (value = '') {
@@ -105,22 +105,20 @@ class FileExtType {
   toString () { return this.value; }
 }
 
-Object.defineProperty(FileExtType, 'name', { value: 'FileExt' });
+// ::: SCHEMA
 
-// ::: the schema
-
-const ofValue = (Type, schema, value = schema.initial) => schema.parse(value);
-
-const FileExt = bare(typed(FileExtType, () => new Schema({
+const fileExtOf = () => new Schema({
   initial : '',
   kind    : 'fileext',
   run     : (value, path) => {
     if (value instanceof FileExtType) return { value };
-    return typeof value === 'string' 
-      ? { value: new FileExtType (value) } 
-      : { issues: [{ message: 'expected an extension', path }] };
+    return isString(value) ? { value: new FileExtType(value) } : issue('expected an extension', path);
   },
-}), ofValue));
+});
+
+// ::: FileExt
+
+const FileExt = bare(typed(FileExtType, fileExtOf, { kind: 'fileext', make: byParse, name: 'FileExt' }));
 
 // :::::: EXPORT
 

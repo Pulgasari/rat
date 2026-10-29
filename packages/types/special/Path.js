@@ -26,13 +26,13 @@ schema without the call, so a Record or a Table field holds a Path and stores it
 the rest is Segments (../Segments.js): segments, length, at(), slice(), with(), equals(), toArray().
 */
 
-import { Schema, bare, typed }                 from '../schema.js';
-import { Segments, isInput, ofValue, partsOf } from '../Segments.js';
+import { Schema, bare, byParse, issue, typed } from '../schema.js';
+import { Segments, isInput, partsOf }          from '../Segments.js';
 import { FileExt }                             from './FileExt.js';
 
 const known = new Map;   // 'a/b' -> its Path
 
-// ::: the data type
+// ::: DATA TYPE
 
 class PathType extends Segments {
   constructor (value = []) { super(value, '/'); }
@@ -53,15 +53,17 @@ class PathType extends Segments {
   child (name) { return this.with(name); }
 }
 
-Object.defineProperty(PathType, 'name', { value: 'Path' });
+// ::: SCHEMA
 
-// ::: the schema
-
-const Path = bare(typed(PathType, () => new Schema({
+const pathOf = () => new Schema({
   initial : '',
   kind    : 'path',
-  run     : (value, path) => isInput(value) ? { value: PathType.from(value) } : { issues: [{ message: 'expected a path', path }] },
-}), ofValue));
+  run     : (value, path) => isInput(value) ? { value: PathType.from(value) } : issue('expected a path', path),
+});
+
+// ::: Path
+
+const Path = bare(typed(PathType, pathOf, { kind: 'path', make: byParse, name: 'Path' }));
 
 // :::::: EXPORT
 

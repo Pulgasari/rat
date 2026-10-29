@@ -15,9 +15,9 @@ a tuple is frozen: fixed length, fixed values. a change is a new tuple, so
 there is no reactive variant, a signal holding a tuple is reactive enough.
 */
 
-import { Schema, schemaOf, typed } from './schema.js';
+import { Schema, issue, partsIn, schemaOf, typed } from './schema.js';
 
-// ::: the schema
+// ::: SCHEMA
 
 // an array or a Tuple of exactly these items, each checked and coerced
 function tupleOf (...given) {
@@ -29,22 +29,16 @@ function tupleOf (...given) {
     parts    : items,
     run      : (value, path) => {
       const tuple = value instanceof TupleType;
-      if (!tuple && !Array.isArray(value)) return { issues: [{ message: 'expected a tuple', path }] };
-      if (value.length !== items.length)   return { issues: [{ message: `expected ${items.length} items`, path }] };
-      const issues = [];
-      const out    = items.map((item, index) => {
-        const result = item.validate(value[index], [...path, index]);
-        if (result.issues) issues.push(...result.issues);
-        return result.value;
-      });
-      if (issues.length) return { issues };
-      if (!out.some((entry, index) => entry !== value[index])) return { value };
-      return { value: tuple ? new TupleType(...out) : out };
+      if (!tuple && !Array.isArray(value)) return issue('expected a tuple', path);
+      if (value.length !== items.length)   return issue(`expected ${items.length} items`, path);
+      const result = partsIn(items.map((item, index) => [index, item, value[index]]), path);
+      if (result.issues || !result.changed) return result.issues ? result : { value };
+      return { value: tuple ? new TupleType(...result.values) : result.values };
     },
   });
 }
 
-// ::: the data type
+// ::: DATA TYPE
 
 class TupleType {
   constructor (...items) {
@@ -75,9 +69,12 @@ class TupleType {
   * [Symbol.iterator] () { for (let index = 0; index < this.length; index++) yield this[index]; }
 }
 
-Object.defineProperty(TupleType, 'name', { value: 'Tuple' });
+// ::: Tuple
 
-const Tuple = typed(TupleType, tupleOf, (Type, schema, items = schema.initial) => new Type(...schema.parse(items)));
+// create(items): checked, then spread
+const ofItems = (Type, schema, items = schema.initial) => new Type(...schema.parse(items));
+
+const Tuple = typed(TupleType, tupleOf, { kind: 'tuple', make: ofItems, name: 'Tuple' });
 
 // :::::: EXPORT
 

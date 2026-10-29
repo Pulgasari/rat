@@ -1,4 +1,4 @@
-// @rat/types :: List
+// @rat/types :: List, $List
 
 /*
 List is a data type and, called, its schema, like every type here:
@@ -29,11 +29,10 @@ drop and toggle change the list by a test, like where and without read it:
   bookmarks.toggle(bookmark, { folder, path })  // a test of its own, the value is what is added
 */
 
-import { reactive, register } from '@rat/signals';
 import { by, has, keyBy, one, pluck, where, without } from './query.js';
-import { Schema, schemaOf, typed } from './schema.js';
+import { Schema, issue, partsIn, schemaOf, typed, variant } from './schema.js';
 
-// ::: the data type
+// ::: DATA TYPE
 
 class ListType {
   #items;
@@ -106,9 +105,7 @@ class ListType {
   clear   ()             { this.#items.length = 0; return this; }
 }
 
-Object.defineProperty(ListType, 'name', { value: 'List' });
-
-// ::: the schema
+// ::: SCHEMA
 
 class ListSchema extends Schema {
   min (length) { return this.check(value => value.length >= length, `at least ${length} items`, { min: length }); }
@@ -126,21 +123,13 @@ function listOf (given) {
     parts    : { item },
     run      : (value, path) => {
       const list = value instanceof ListType;
-      if (!list && !Array.isArray(value)) return { issues: [{ message: 'expected a list', path }] };
-      const items  = list ? value.toArray() : value;
-      const issues = [];
-      const out    = items.map((entry, index) => {
-        const result = item.validate(entry, [...path, index]);
-        if (result.issues) issues.push(...result.issues);
-        return result.value;
-      });
-      if (issues.length) return { issues };
-      if (!out.some((entry, index) => entry !== items[index])) return { value };
-      return { value: list ? new value.constructor(out) : out };
+      if (!list && !Array.isArray(value)) return issue('expected a list', path);
+      const result = partsIn((list ? value.toArray() : value).map((entry, index) => [index, item, entry]), path);
+      if (result.issues || !result.changed) return result.issues ? result : { value };
+      return { value: list ? new value.constructor(result.values) : result.values };
     },
   });
 }
-
 
 // ::: List + $List
 
@@ -169,12 +158,9 @@ const LIST_WRITES = {
 // create(items): the items checked, a List holds no schema of its own
 const ofItems = (Type, schema, items = []) => new Type(schema.parse(items));
 
-const List = typed(ListType, listOf, ofItems);
-
-const $List = typed(reactive(List, { reads: LIST_READS, writes: LIST_WRITES }), listOf, ofItems);
-
-register (List, $List);
+const List  = typed(ListType, listOf, { kind: 'list', make: ofItems, name: 'List' });
+const $List = variant(List, { reads: LIST_READS, writes: LIST_WRITES });
 
 // :::::: EXPORT
 
-export { LIST_READS, LIST_WRITES, List, $List, ListSchema };
+export { LIST_READS, LIST_WRITES, List, $List };
