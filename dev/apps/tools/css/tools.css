@@ -166,53 +166,50 @@
 /* ── input ──────────────────────────────────────────────────────────────── */
 
 .input-wrap {
-  flex       : 1;
-  overflow   : auto;
-  min-height : 0;
+  display        : flex;
+  flex           : 1;
+  flex-direction : column;
+  min-height     : 0;
+  overflow       : auto;
+  position       : relative;
 }
 
-.input-pre {
-  margin      : 0;
-  padding     : 0.75rem;
-  font-family : var(--font-code);
-  font-size   : 0.82rem;
-  line-height : 1.6;
-  white-space : pre-wrap;
-  word-break  : break-all;
-  min-height  : 100%;
+/* the code itself is a <write-code>: it fills its pane, the header is the pane's */
+.pane write-code {
+  background     : transparent;
+  border         : 0;
+  display        : flex;
+  flex           : 1;
+  flex-direction : column;
+
+  > figure          { flex: 1; }
+  > figure > header { display: none; }
+  > figure > pre    { display: flex; flex: 1; flex-direction: column; overflow: visible; }
+
+  code {
+    flex        : 1;
+    font-size   : 0.82rem;
+    line-height : 1.6;
+    padding     : 0.75rem;
+    white-space : pre-wrap;
+    word-break  : break-all;
+  }
 }
 
-.code-input {
-  flex       : 1;
-  resize     : none;
-  border     : none;
-  outline    : none;
-  background : transparent;
-  color      : var(--color-fg);
-  font-size  : 0.82rem;
-  line-height: 1.6;
-  padding    : 0.75rem;
-  width      : 100%;
-  min-height : 0;
-}
-.code-input::placeholder { opacity: 0.3; }
-
-/* there is no textarea anymore — the placeholder comes from the attribute */
-code[contenteditable]:empty::before {
-  content        : attr(data-placeholder);
+.input-placeholder {
+  font-family    : var(--font-family-mono, ui-monospace, monospace);
+  font-size      : 0.82rem;
+  inset          : 0.75rem auto auto 0.75rem;
   opacity        : 0.3;
   pointer-events : none;
-}
-
-code[contenteditable] {
-  outline     : none;
-  caret-color : var(--color-ink);
-  display     : block;
+  position       : absolute;
 }
 
 /* ── output ─────────────────────────────────────────────────────────────── */
 
 .output-wrap {
+  display        : flex;
+  flex-direction : column;
   flex       : 1;
   overflow   : auto;
   position   : relative;
