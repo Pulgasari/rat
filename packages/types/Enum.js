@@ -44,7 +44,7 @@ class EnumType {
     this.#index = Math.max(0, this.values.indexOf(copy ? first.value : schema.initial));
   }
 
-  get value () { return this.values[this.#index]; }
+  get value ()      { return this.values[this.#index]; }
   set value (value) { this.#index = this.values.indexOf(this.schema.parse(value)); }
 
   // the next value, or the one step places on (-1: the previous), around the end
@@ -66,7 +66,7 @@ Object.defineProperty(EnumType, 'name', { value: 'Enum' });
 // ::: Enum + $Enum
 
 // create(value): at value, else at the initial one
-const atValue = (Type, schema, value) => { const enumeration = new Type(schema); if (value !== undefined) enumeration.value = value; return enumeration; };
+const atValue = (Type, schema, value) => { const enumeration = new Type (schema); if (value !== undefined) enumeration.value = value; return enumeration; };
 
 const Enum = typed(EnumType, enumOf, atValue);
 
