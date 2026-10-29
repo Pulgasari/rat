@@ -43,6 +43,10 @@ jobs:
           java-version: '21'
 
       - uses: android-actions/setup-android@v3
+        with:
+          # its default packages include 'tools', which google removed from the sdk repository: sdkmanager
+          # fails right at setup. one package that exists, the next step installs the rest
+          packages: platform-tools
 
       - name: android sdk packages
         run: |
