@@ -1,0 +1,3 @@
+var a=Object.defineProperty;var s=(e,r)=>a(e,"name",{value:r,configurable:!0});import{r as i,f as m}from"./app.rat-DYXdaI4o.js";import"./index-Dp03ISzK.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";import"./keys-CWTtq0D5.js";const p="edges",$="Edges",c={strength:{type:"number",default:1,min:.2,max:3,step:.1,bake:!0}};function b(e={}){const r=i(c,e),o=Number(r.strength),t=(-o).toFixed(2),n=(4*o).toFixed(2);return m(p,`
+    <feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 ${t} 0  ${t} ${n} ${t}  0 ${t} 0"/>
+  `,e)}s(b,"edges");export{b as default,p as id,$ as name,c as vars};

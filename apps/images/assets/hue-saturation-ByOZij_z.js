@@ -1,0 +1,4 @@
+var u=Object.defineProperty;var e=(t,a)=>u(t,"name",{value:a,configurable:!0});import{r as o,f as s}from"./app.rat-DYXdaI4o.js";import"./index-Dp03ISzK.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";import"./keys-CWTtq0D5.js";const i="hue-saturation",c="Hue & Saturation",r={hue:{type:"angle",default:0,min:0,max:360,step:1,unit:"deg"},saturation:{type:"number",default:1,min:0,max:3,step:.05}};function v(t={}){const a=o(r,t);return s(i,`
+    <feColorMatrix type="hueRotate" values="${a.hue}"/>
+    <feColorMatrix type="saturate" values="${a.saturation}"/>
+  `,t)}e(v,"hueSaturation");const x=e((t={})=>`hue-rotate(${t.hue??r.hue.default}deg) saturate(${t.saturation??r.saturation.default})`,"css");export{x as css,v as default,i as id,c as name,r as vars};
