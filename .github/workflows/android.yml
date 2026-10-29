@@ -1,15 +1,15 @@
 name: build android apps
 
-# rat build --target android for the apps named (or every app whose config.rat.js has android): the web
-# build, the capacitor project beside the app (packages/cli/android.js), gradle. a debug apk per app, an
-# artifact of the run, installable for testing (signed with the throwaway debug key of the run).
-# manual only: packaging never runs on a commit.
+# by hand only: actions -> build android apps -> run workflow. what it builds and how the apks are named
+# is in .github/config.js (android), the work in .github/scripts/android.mjs. the apks land in a
+# release (apk-<date>) as plain files: download, install. debug builds, signed with the throwaway key
+# of the run. yaml keeps what github only reads here: the trigger and the setup actions.
 
 on:
   workflow_dispatch:
     inputs:
       apps:
-        description: 'the apps, space separated (empty: every app with android in its config.rat.js)'
+        description: 'the apps, space separated (empty: as .github/config.js says)'
         required: false
         default: ''
 
@@ -20,60 +20,30 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # the release
     steps:
       - uses: actions/checkout@v4
-        with:
-          path: rat
+        with: { path: rat }
 
-      - { uses: actions/checkout@v4, with: { path: aufbau,      repository: Pulgasari/aufbau      } }
-      - { uses: actions/checkout@v4, with: { path: bunker,      repository: Pulgasari/bunker      } }
-      - { uses: actions/checkout@v4, with: { path: domina,      repository: Pulgasari/domina      } }
-      - { uses: actions/checkout@v4, with: { path: gestalt,     repository: Pulgasari/gestalt     } }
-      - { uses: actions/checkout@v4, with: { path: htx,         repository: Pulgasari/htx         } }
-      - { uses: actions/checkout@v4, with: { path: js-packages, repository: Pulgasari/js-packages } }
+      - id: config
+        run: node rat/.github/scripts/config.mjs >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@v4
-        with:
-          node-version: 24
+        with: { node-version: '${{ steps.config.outputs.node }}' }
 
-      # capacitor 8's android template compiles against java 21
       - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
+        with: { distribution: temurin, java-version: '${{ steps.config.outputs.java }}' }
 
       - uses: android-actions/setup-android@v3
-        with:
-          # its default packages include 'tools', which google removed from the sdk repository: sdkmanager
-          # fails right at setup. one package that exists, the next step installs the rest
-          packages: platform-tools
+        with: { packages: '${{ steps.config.outputs.sdk }}' }
 
-      - name: android sdk packages
-        run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - run: node rat/.github/scripts/repos.mjs
 
-      - name: build
-        working-directory: rat
+      - working-directory: rat
         env:
-          APPS: ${{ inputs.apps }}
+          APPS     : ${{ inputs.apps }}
+          GH_TOKEN : ${{ github.token }}
         run: |
           npm ci
-          if [ -z "$APPS" ]; then
-            APPS=$(for app in dev/apps/*/; do grep -q '^  android' "$app/config.rat.js" 2>/dev/null && basename "$app"; done)
-          fi
-          failed=''
-          for app in $APPS; do
-            npx rat build "dev/apps/$app" --target android || failed="$failed $app"
-          done
-          echo "failed=$failed" >> "$GITHUB_ENV"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: apks
-          path: rat/dev/apps/*/.capacitor/*.apk
-          if-no-files-found: warn
-          retention-days: 14
-
-      - name: report
-        run: if [ -n "$failed" ]; then echo "::error::did not build:$failed"; exit 1; fi
+          node .github/scripts/android.mjs
