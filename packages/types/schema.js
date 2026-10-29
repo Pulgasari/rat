@@ -89,7 +89,11 @@ class Schema {
     return result.value;
   }
 
-  get '~standard' () { return { validate: value => this.validate(value), vendor: 'rat', version: 1 }; }
+  get '~standard' () { return { 
+    validate : value => this.validate(value), 
+    vendor   : 'rat', 
+    version  : 1 
+  }}
 }
 
 // a scalar: coerce, then a type test (Bool, Num, Str in Str.js)
@@ -109,15 +113,22 @@ class NumSchema extends Schema {
 
 const BOOLEAN_WORDS = { false: false, no: false, off: false, on: true, true: true, yes: true };
 
-const toBool = value => typeof value === 'string' && value.toLowerCase() in BOOLEAN_WORDS ? BOOLEAN_WORDS[value.toLowerCase()] : value;
-const toNum  = value => typeof value === 'string' && value.trim() !== '' && !isNaN(value) ? Number(value) : value;
+const
+toBool = (value) => isBoolWord (value) ? BOOLEAN_WORDS[value.toLowerCase()] : value,
+toNum  = (value) => isNumeric  (value) ? Number(value) : value;
 
-const Bool = new Schema   ({ initial: false, kind: 'bool', run: scalar('a boolean', value => typeof value === 'boolean', toBool) });
-const Num  = new NumSchema({ initial: 0,     kind: 'num',  run: scalar('a number',  value => typeof value === 'number' && Number.isFinite(value), toNum) });
+const 
+Bool = new Schema    ({ initial: false, kind: 'bool', run: scalar('a boolean', isBool, toBool) }),
+Num  = new NumSchema ({ initial: 0,     kind: 'num',  run: scalar('a number',  isNumb, toNum) });
 
-const isSchema = value => value instanceof Schema;
-
-const madeBy = value => MADE.get(value);
+const
+isBool     = (value) => typeof value === 'boolean',
+isBoolWord = (value) => isString(value) && value.toLowerCase() in BOOLEAN_WORDS,
+isNum      = (value) => typeof value === 'number' && Number.isFinite(value),
+isNumeric  = (value) => isString(value) && value.trim() !== '' && !isNaN(value),
+isSchema   = (value) => value instanceof Schema,
+isString   = (value) => typeof value === 'string',
+madeBy     = (value) => MADE.get(value);
 
 // one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
 // of a list of strings. the class stays a class (new, extends, instanceof), only a call differs.
@@ -142,4 +153,12 @@ const isObject = value => value !== null && typeof value === 'object' && !Array.
 
 // :::::: EXPORT
 
-export { Bool, Num, STORED, Schema, bare, isObject, isSchema, madeBy, scalar, schemaOf, typed };
+export {
+  STORED,
+  Bool, Num, Schema, 
+  bare, scalar, typed,
+  isObject, isSchema,
+  madeBy, schemaOf, 
+};
+
+
