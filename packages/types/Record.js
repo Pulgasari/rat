@@ -1,4 +1,4 @@
-// @rat/types :: Record
+// @rat/types :: Record, $Record
 
 /*
 Record is a data type and, called, its schema:
@@ -21,15 +21,11 @@ so a field may be called anything but assign, schema and toJSON.
 $Record, its reactive variant, is below.
 */
 
-import { reactive, register } from '@rat/signals';
-import { Schema, isObject, schemaOf, typed } from './schema.js';
-
-const GET = Symbol('rat.record.get');
-const SET = Symbol('rat.record.set');
+import { GET, SET, Schema, isObject, issue, partsIn, schemaOf, typed, variant } from './schema.js';
 
 const RESERVED = new Set(['assign', 'schema', 'toJSON']);
 
-// ::: the schema
+// ::: SCHEMA
 
 // '?title': Str is title: Str.optional()
 const shapeOf = fields => Object.fromEntries(Object.entries(fields).map(([key, field]) => {
@@ -47,21 +43,15 @@ function recordOf (fields) {
     kind     : 'record',
     parts    : shape,
     run      : (value, path) => {
-      if (!isObject(value)) return { issues: [{ message: 'expected a record', path }] };
-      const issues  = [];
-      const changed = {};
-      for (const key of keys) {
-        const result = shape[key].validate(value[key], [...path, key]);
-        if (result.issues) issues.push(...result.issues);
-        else if (result.value !== value[key]) changed[key] = result.value;
-      }
-      if (issues.length) return { issues };
-      return { value: Object.keys(changed).length ? { ...value, ...changed } : value };
+      if (!isObject(value)) return issue('expected a record', path);
+      const result = partsIn(keys.map(key => [key, shape[key], value[key]]), path);
+      if (result.issues || !result.changed) return result.issues ? result : { value };
+      return { value: { ...value, ...Object.fromEntries(keys.map((key, index) => [key, result.values[index]])) } };
     },
   });
 }
 
-// ::: the data type
+// ::: DATA TYPE
 
 class RecordType {
   #values;
@@ -97,23 +87,18 @@ class RecordType {
   toJSON () { return { ...this.#values }; }
 }
 
-Object.defineProperty(RecordType, 'name', { value: 'Record' });
+// ::: Record + $Record
 
-const Record = typed(RecordType, recordOf);
+const Record = typed(RecordType, recordOf, { kind: 'record', name: 'Record' });
 
-// ::: $Record
-// one version for the whole record:
-// a field write updates whatever read any field
-
-const $Record = typed(reactive(Record, {
+// one version for the whole record: a field write updates whatever read any field
+const $Record = variant(Record, {
   reads  : [GET, 'toJSON'],
   writes : {
     [SET]  : (record, key, value) => !Object.is(record[GET](key), value),
     assign : true,
   },
-}), recordOf);
-
-register(Record, $Record);
+});
 
 // :::::: EXPORT
 

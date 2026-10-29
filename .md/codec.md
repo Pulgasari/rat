@@ -174,6 +174,11 @@ the data types could then be written as codecs themselves, their pair is there a
   `inputSchema`, a form). its own draft, once this one stands.
 - **elsewhere**: zod 4.1 has the same (`z.codec(outside, inside, { decode, encode })`, `.decode()`,
   `.encode()`, `parse` kept), purify-ts has `Codec` with `decode` / `encode` and a json schema per codec.
+- **`as()` on a value**: a value type in another of its forms, `color.as('hsl')`, `path.as('array')`,
+  `tuple.as('object')`. close to `encode` with a choice of outside form: `encode` gives the one the
+  schema stores, `as(form)` any form the type knows. a type would list its forms once (`Color.forms`:
+  `hex`, `rgb`, `hsl`, `array`) and `toJSON` / `encode` pick the default one. today these are getters and
+  methods each (`hex`, `toHsl()`, `toArray()`), `as` would be the one way in.
 
 ---
 

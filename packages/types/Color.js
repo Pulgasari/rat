@@ -1,9 +1,9 @@
-// @rat/types :: Color
+// @rat/types :: Color, $Color
 
 /*
 Color is a data type and, called, its schema:
 
-  const Accent = Color();                 // the schema: anything that reads as a color
+  const Accent = Color();                 // the schema: anything that reads as a color, made a Color
 
   const accent = new Color('#ff8800');    // also 'rgb(255 136 0)', 'hsl(32 100% 50%)', [255, 136, 0],
                                           // { r, g, b }, { h, s, l }, another Color
@@ -20,15 +20,14 @@ $Color, its reactive variant, is below.
 
 // :::::: IMPORT
 
-import { reactive, register } from '@rat/signals';
-import { Schema, bare, isObject, typed } from './schema.js';
+import { Schema, bare, isObject, issue, typed, variant } from './schema.js';
 
 // :::::: HELPERS
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const turn  = hue => (hue % 360 + 360) % 360;
 
-// ::: notations
+// ::: NOTATIONS
 
 function hslToRgb (h, s, l) {
   s /= 100; l /= 100;
@@ -84,18 +83,18 @@ function rgba (input) {
   return out?.every(Number.isFinite) ? out : null;
 }
 
-// ::: the schema
+// ::: SCHEMA
 
 const colorOf = (...args) => {
   if (args.length) throw new TypeError('[rat] Color() is the schema and takes nothing, a color is new Color(…)');
   return new Schema({
     initial : '#000000',
     kind    : 'color',
-    run     : (value, path) => rgba(value) ? { value } : { issues: [{ message: 'expected a color', path }] },
+    run     : (value, path) => value instanceof ColorType ? { value } : rgba(value) ? { value: new ColorType(value) } : issue('expected a color', path),
   });
 };
 
-// ::: the data type
+// ::: DATA TYPE
 
 class ColorType {
   #r; #g; #b; #a;
@@ -151,15 +150,14 @@ class ColorType {
   toString () { return this.hex; }
 }
 
-Object.defineProperty(ColorType, 'name', { value: 'Color' });
-
 // ::: Color + $Color
 
+// create(value): a color of its own, also from a color (parse would hand that one on)
+const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
 const differs = name => (color, value) => !Object.is(color[name], value);
-const ofValue = (Type, schema, value = schema.initial) => new Type (schema.parse(value));
 
-const Color  = bare(typed(ColorType, colorOf, ofValue));
-const $Color = bare(typed(reactive(Color, {
+const Color  = bare(typed(ColorType, colorOf, { kind: 'color', make: ofValue, name: 'Color' }));
+const $Color = bare(variant(Color, {
   reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
   writes : {
     a   : differs('a'),
@@ -172,9 +170,7 @@ const $Color = bare(typed(reactive(Color, {
     s   : differs('s'),
     set : (color, input) => !color.equals(input),
   },
-}), colorOf, ofValue));
-
-register(Color,  $Color);
+}));
 
 // :::::: EXPORT
 

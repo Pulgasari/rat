@@ -80,15 +80,24 @@ viewmode.values;           // ['grid', 'list', 'masonry']
 
 ## List
 
-a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays.
-
-flat array-like sequence of unique values of the same type. optionally auto-sorted.
+a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … give a `List`, `toArray()` an array.
 
 ```js
 const tags = new List(['a', 'b']);
 tags.push('c');
 tags.at(-1);      // 'c'
 tags.length;      // 3
+```
+
+made from a schema, a list keeps checking what comes in (`push`, `unshift`, `set`, `splice`, `replace`, `toggle`). an item that is a data type of its own comes in as one, an instance of it stays the same object:
+
+```js
+const Tab   = $Record({ path: Path, source: Str.optional().default(null) });
+const $tabs = $List(Tab).create([{}]);   // or new $List($List(Tab), [{}])
+
+$tabs.push({ path: 'photos' });   // a $Record, path a Path, source null
+$tabs.push({ path: 42 });         // TypeError: path: expected a path
+$tabs.filter(tab => tab.source);  // a List of the same schema
 ```
 
 ## Point
@@ -294,13 +303,15 @@ Settings.initial;                                        // { tags: [], view: 'g
 | `Num.min(n)`, `.max(n)`, `.range(a, b)`, `.int` | |
 | `Str.min(n)`, `.max(n)`, `.pattern(re)`, `.email`, `.uuid` | |
 | `Enum(...values)` | one of them, the first is the initial value |
-| `List(item)`, `.min(n)`, `.max(n)` | an array or a `List` whose items are checked and coerced |
+| `List(item)`, `.min(n)`, `.max(n)` | an array or a `List` whose items are checked and coerced; `create()` a `List` that keeps checking |
 | `Record(shape)` | known fields checked, unknown ones kept |
-| `Tuple(...items)` | an array or a `Tuple` of exactly these items |
+| `Tuple(...items)` | an array or a `Tuple` of exactly these items, made a `Tuple` |
 | `Union(...cases)`, `Union({ name: case })`, `.which(x)` | the first case that fits; `which` names it |
-| `Color()` | anything that reads as a color, kept as it is |
+| `Color()` | anything that reads as a color, made a `Color` |
 | `.default(x)`, `.optional()`, `.check(fn, message)` | on every schema |
 | `validate(x)`, `is(x)`, `parse(x)`, `describe` | `{ value }` or `{ issues: [{ message, path }] }` |
+
+what a schema gives: a **value type** (`Color`, `Segments`, `Path`, `FileExt`, `Tuple`) is a value, its schema gives the instance (`Record({ accent: Color }).parse({ accent: '#f80' }).accent.l` works). a **container** (`Enum`, `List`, `Record`, `Dict`, `Table`) holds values: its schema checks and coerces what it holds and gives plain data, `create()` makes the container.
 
 a schema as a signal's initial value makes a typed signal (d-14 a): it starts at the schema's initial value and checks every write.
 

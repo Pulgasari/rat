@@ -17,7 +17,7 @@ they give a schema, with new a value. one file each, this one holds what they al
 
 // :::::: IMPORT
 
-import { Signal, SIGNAL } from '@rat/signals';
+import { Signal, SIGNAL, reactive, register } from '@rat/signals';
 import { stored } from './stored.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
@@ -115,6 +115,24 @@ class Schema {
   }}
 }
 
+// one issue as a result: return issue('expected a list', path)
+const issue = (message, path) => ({ issues: [{ message, path }] });
+
+// the parts of a structure, each through its schema: [[key, schema, value], …] -> { issues } or { values, changed }.
+// changed: a part came out other than it went in, so the structure is made anew, else it stays the same object
+function partsIn (entries, path) {
+  const issues = [];
+  const values = [];
+  let changed  = false;
+  for (const [key, schema, value] of entries) {
+    const result = schema.validate(value, [...path, key]);
+    if (result.issues) { issues.push(...result.issues); continue; }
+    if (result.value !== value) changed = true;
+    values.push(result.value);
+  }
+  return issues.length ? { issues } : { changed, values };
+}
+
 const
 isFn      = (value) => typeof value === 'function',
 isObject  = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),   // a structure's input: a class instance counts (a Record does)
@@ -127,7 +145,7 @@ madeBy    = (value) => MADE.get(value);
 // the run of a scalar schema: coerce, then a type test
 const scalar = (kind, test, coerce = value => value) => (input, path) => {
   const value = coerce(input);
-  return test(value) ? { value } : { issues: [{ message: `expected ${kind}`, path }] };
+  return test(value) ? { value } : issue(`expected ${kind}`, path);
 };
 
 // a scalar as an object with value, the base of $Bool, $Num, $Str: a write is checked by the schema.
@@ -164,12 +182,35 @@ class Scalar {
 // one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
 // of a list of strings. the class stays a class (new, extends, instanceof), only a call differs.
 // the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
-// make: (Type, schema, value) -> the value, when the constructor is not (schema, value)
+//
+//   const List  = typed(ListType, listOf, { kind: 'list', make, name: 'List' });
+//   const $List = variant(List, { reads, writes });
+//
+// kind: a schema of this kind handed to the call is taken as it is (List(Tags) is Tags).
+// make: (Type, schema, value) -> the value for create(), when the constructor is not (schema, value).
+// name: the name of the class, the type is called (ListType -> List)
 const byConstructor = (Type, schema, value) => new Type(schema, value);
 
-function typed (Class, toSchema, make = byConstructor) {
-  const Type = new Proxy (Class, { apply: (target, self, args) => toSchema(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
+// create() of a type whose schema gives its values already (Segments, Path …)
+const byParse = (Type, schema, value = schema.initial) => schema.parse(value);
+
+const TYPED = new WeakMap;   // a type -> how typed() made it, for variant()
+
+function typed (Class, toSchema, { kind = null, make = byConstructor, name = null } = {}) {
+  if (name) Object.defineProperty(Class, 'name', { value: name });
+  const schemaFor = (...args) => kind && args.length === 1 && isSchema(args[0]) && args[0].kind === kind ? args[0] : toSchema(...args);
+  const Type      = new Proxy(Class, { apply: (target, self, args) => schemaFor(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
+  TYPED.set(Type, { kind, make, toSchema });
   return Type;
+}
+
+// the reactive variant of a typed type: reads subscribe, writes notify (reactive() of @rat/signals). called it is
+// the schema as well, whose create() makes the variant. registered, so $() gives it for a value of the type
+function variant (Type, spec) {
+  const made = TYPED.get(Type);
+  const $Type = typed(reactive(Type, spec), made.toSchema, made);
+  register(Type, $Type);
+  return $Type;
 }
 
 // a type whose schema takes nothing stands for it where a schema is asked: { path: Path } is { path: Path() }.
@@ -184,7 +225,7 @@ const schemaOf = (value) => isFn(value) && value[BARE] ? value() : value;
 export {
   GET, SET, STORED,
   Scalar, Schema,
-  bare, scalar, typed,
+  bare, byParse, issue, partsIn, scalar, typed, variant,
   isObject, isSchema, isString,
   madeBy, schemaOf,
 };
