@@ -124,8 +124,8 @@ class ColorType {
   get l () { return Math.round(this.toHsl()[2]); }
 
   set h (value) { const [, s, l] = this.toHsl(); this.#hsl(value, s, l); }
-  set s (value) { const [h, , l] = this.toHsl(); this.#hsl(h, clamp(value, 0, 100), l); }
-  set l (value) { const [h, s]   = this.toHsl(); this.#hsl(h, s, clamp(value, 0, 100)); }
+  set s (value) { const [h, , l] = this.toHsl(); this.#hsl(h,    clamp(value, 0, 100), l); }
+  set l (value) { const [h, s]   = this.toHsl(); this.#hsl(h, s, clamp(value, 0, 100)   ); }
 
   #hsl (h, s, l) { [this.#r, this.#g, this.#b] = hslToRgb(h, s, l); }
 
@@ -156,11 +156,9 @@ Object.defineProperty(ColorType, 'name', { value: 'Color' });
 // ::: Color + $Color
 
 const differs = name => (color, value) => !Object.is(color[name], value);
+const ofValue = (Type, schema, value = schema.initial) => new Type (schema.parse(value));
 
-const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
-
-const Color = bare(typed(ColorType, colorOf, ofValue));
-
+const Color  = bare(typed(ColorType, colorOf, ofValue));
 const $Color = bare(typed(reactive(Color, {
   reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
   writes : {
