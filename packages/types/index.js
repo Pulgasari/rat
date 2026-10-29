@@ -1,19 +1,18 @@
 // @rat/types
 
-export {
-  Bool, Num,
-  Schema, bare, isSchema, schemaOf,
-} from './schema.js';
+export { Schema, bare, isSchema, schemaOf } from './schema.js';
 
+// scalars: schemas of plain values, and their reactive variant
+export { Bool, $Bool } from './Bool.js';
+export { Num,  $Num  } from './Num.js';
 export {
-  Str,
+  Str, $Str,
   CamelCase, ConstantCase, KebabCase, LowerCase, MockingCase, PascalCase, SnakeCase, TitleCase, UpperCase,
 } from './Str.js';
 
 export { Fn } from './Fn.js';
 
 // Basic DataTypes + their reactive variant
-export { $Bool, $Num, $Str } from './scalars.js';
 export {         $Array  } from './Array.js';
 export { Dict,   $Dict   } from './Dict.js';
 export { Enum,   $Enum   } from './Enum.js';

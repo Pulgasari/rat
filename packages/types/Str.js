@@ -1,6 +1,20 @@
-// @rat/types :: Str
+// @rat/types :: Str, $Str, the cases of writing
 
-import { Schema, scalar } from './schema.js';
+/*
+Str is a schema: the value is a plain string. the cases (CamelCase, KebabCase …) are schemas of Str that
+only pass a string already written that way; from() writes any string so. $Str is the reactive variant,
+an object with value and methods: a write is checked by the schema, reads subscribe, writes notify.
+
+  const Name = Str.min(1).max(80);
+  KebabCase.from('togglePlay');    // 'toggle-play'
+
+  const $query = new $Str('');
+  $query.clear();
+*/
+
+import { reactive } from '@rat/signals';
+
+import { GET, SET, Scalar, Schema, isString, scalar } from './schema.js';
 
 // ::: SCHEMA
 
@@ -27,7 +41,7 @@ class StrSchema extends Schema {
   }
 }
 
-const Str = new StrSchema({ initial: '', kind: 'str', run: scalar('a string', value => typeof value === 'string') });
+const Str = new StrSchema({ initial: '', kind: 'str', run: scalar('a string', isString) });
 
 // ::: CASES
 
@@ -85,10 +99,21 @@ const UpperCase = Str.case({
   transform : value => String(value ?? '').toUpperCase(),
 });
 
+// ::: REACTIVE VARIANT
+
+class StrType extends Scalar {
+  constructor (value, schema) { super(value, schema, Str); }
+  clear () { return this[SET](''); }
+}
+
+Object.defineProperty(StrType, 'name', { value: 'Str' });
+
+const $Str = reactive(StrType, { reads: Scalar.reads, writes: { clear: str => str[GET]() !== '', value: Scalar.changes } });
+
 // :::::: EXPORT
 
 export {
-  Str, StrSchema, 
+  $Str, Str, StrSchema,
   CamelCase, ConstantCase, KebabCase,
   LowerCase, MockingCase, PascalCase, 
   SnakeCase, TitleCase, UpperCase,

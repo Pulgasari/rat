@@ -9,10 +9,10 @@ and @rat/runtime's signal() takes a schema as its initial value:
   let $view = Enum('grid', 'list');      // 'grid', and only 'grid' or 'list' from then on
   let $zoom = Num.range(50, 200).default(100);
 
-every method returns a new schema, a schema never changes. Bool, Num, Str (Str.js),
-Fn (Fn.js) and Union are schemas only, the values they describe are plain js. Color, Enum,
-List, Record and Tuple are data types as well (one file each): called they
-give a schema, with new a value.
+every method returns a new schema, a schema never changes. Bool, Num, Str, Fn and Union are
+schemas only, the values they describe are plain js (Bool, Num and Str have a reactive variant,
+$Bool …, on Scalar below). Color, Enum, List, Record and Tuple are data types as well: called
+they give a schema, with new a value. one file each, this one holds what they all build on.
 */
 
 // :::::: IMPORT
@@ -20,13 +20,12 @@ give a schema, with new a value.
 import { Signal, SIGNAL } from '@rat/signals';
 import { stored } from './stored.js';
 
-// :::::: CONSTANTS | REFERNCES | SYMBOLS
+// :::::: CONSTANTS | REFERENCES | SYMBOLS
 
-const BOOLEAN_WORDS = { false: false, no: false, off: false, on: true, true: true, yes: true };
 const MADE   = new WeakMap;          // a value create() made -> the schema it was made by
 const STORED = Symbol('rat.stored'); // the options of .stored()
 
-// ::::::
+// :::::: SCHEMA
 
 class Schema {
   // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
@@ -116,39 +115,51 @@ class Schema {
   }}
 }
 
-// a scalar: coerce, then a type test (Bool, Num, Str in Str.js)
+const
+isFn      = (value) => typeof value === 'function',
+isObject  = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),   // a structure's input: a class instance counts (a Record does)
+isSchema  = (value) => value instanceof Schema,
+isString  = (value) => typeof value === 'string',
+madeBy    = (value) => MADE.get(value);
+
+// :::::: SCALARS: Bool, Num, Str
+
+// the run of a scalar schema: coerce, then a type test
 const scalar = (kind, test, coerce = value => value) => (input, path) => {
   const value = coerce(input);
   return test(value) ? { value } : { issues: [{ message: `expected ${kind}`, path }] };
 };
 
-// ::: scalars
+// a scalar as an object with value, the base of $Bool, $Num, $Str: a write is checked by the schema.
+// (value), (value, schema) or (schema): at the schema's initial value
+const GET = Symbol('rat.scalar.get');
+const SET = Symbol('rat.scalar.set');
 
-class NumSchema extends Schema {
-  min   (min)      { return this.check(value => value >= min, `at least ${min}`, { min }); }
-  max   (max)      { return this.check(value => value <= max, `at most ${max}`,  { max }); }
-  range (min, max) { return this.min(min).max(max).derive({ initial: this.initial < min || this.initial > max ? min : this.initial }); }
-  get int ()       { return this.check(Number.isInteger, 'an integer', { int: true }); }
+class Scalar {
+  #value;
+
+  constructor (value, schema, fallback) {
+    if (value instanceof Schema) [value, schema] = [undefined, value];
+    this.schema = schema ?? fallback;
+    this.#value = this.schema.parse(value === undefined ? this.schema.initial : value);
+  }
+
+  [GET] ()      { return this.#value; }
+  [SET] (value) { this.#value = this.schema.parse(value); return this.#value; }
+
+  get value ()      { return this[GET](); }
+  set value (value) { this[SET](value); }
+
+  toJSON   () { return this[GET](); }
+  toString () { return String(this[GET]()); }
+  valueOf  () { return this[GET](); }
+
+  // what reactive() needs of every scalar: its reads, and a write of value that changes something
+  static reads   = ['value', 'toJSON', 'toString', 'valueOf'];
+  static changes = (scalar, value) => !Object.is(scalar[GET](), value);
 }
 
-const
-toBool = (value) => isBoolWord (value) ? BOOLEAN_WORDS[value.toLowerCase()] : value,
-toNum  = (value) => isNumeric  (value) ? Number(value) : value;
-
-const 
-Bool = new Schema    ({ initial: false, kind: 'bool', run: scalar('a boolean', isBool, toBool) }),
-Num  = new NumSchema ({ initial: 0,     kind: 'num',  run: scalar('a number',  isNumb, toNum) });
-
-const
-isBool     = (value) => typeof value === 'boolean',
-isBoolWord = (value) => isString(value) && value.toLowerCase() in BOOLEAN_WORDS,
-isFn       = (value) => typeof value === 'function',
-isNum      = (value) => typeof value === 'number' && Number.isFinite(value),
-isNumeric  = (value) => isString(value) && value.trim() !== '' && !isNaN(value),
-isObject   = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),
-isSchema   = (value) => value instanceof Schema,
-isString   = (value) => typeof value === 'string',
-madeBy     = (value) => MADE.get(value);
+// :::::: DATA TYPES
 
 // one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
 // of a list of strings. the class stays a class (new, extends, instanceof), only a call differs.
@@ -168,15 +179,14 @@ const BARE = Symbol('rat.bare');
 const bare     = (Type)  => Object.defineProperty(Type, BARE, { value: true });
 const schemaOf = (value) => isFn(value) && value[BARE] ? value() : value;
 
-
 // :::::: EXPORT
 
 export {
-  STORED,
-  Bool, Num, Schema, 
+  GET, SET, STORED,
+  Scalar, Schema,
   bare, scalar, typed,
-  isObject, isSchema,
-  madeBy, schemaOf, 
+  isObject, isSchema, isString,
+  madeBy, schemaOf,
 };
 
 
