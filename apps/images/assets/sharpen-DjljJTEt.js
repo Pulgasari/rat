@@ -1,0 +1,3 @@
+var a=Object.defineProperty;var n=(e,t)=>a(e,"name",{value:t,configurable:!0});import{r as i,f as p}from"./app.rat-DakpQRL4.js";import"./index-oKSG3TSX.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";import"./keys-CWTtq0D5.js";const m="sharpen",$="Sharpen",c={strength:{type:"number",default:1,min:0,max:3,step:.1,bake:!0}};function b(e={}){const t=i(c,e),o=Number(t.strength),r=(-o).toFixed(2),s=(1+4*o).toFixed(2);return p(m,`
+    <feConvolveMatrix order="3" preserveAlpha="true" kernelMatrix="0 ${r} 0  ${r} ${s} ${r}  0 ${r} 0"/>
+  `,e)}n(b,"sharpen");export{b as default,m as id,$ as name,c as vars};

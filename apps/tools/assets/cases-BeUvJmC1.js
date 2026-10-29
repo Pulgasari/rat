@@ -1,1 +1,0 @@
-var r=Object.defineProperty;var c=(a,s)=>r(a,"name",{value:s,configurable:!0});import{N as m,T as p,V as i}from"./index-BXtbbs6S.js";function f(a,s,e,n=null){const t=m(()=>p(a(),s));return i(()=>t.value.index,e.map((o,u)=>[u,()=>o(()=>t.value.parts??{})]),n)}c(f,"cases");export{f as c};
