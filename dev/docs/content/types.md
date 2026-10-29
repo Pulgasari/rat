@@ -1,203 +1,197 @@
 # Types
 
-types and schemas sit in the `@rat/types` package.
+The data types of `@rat/types`. Each is a class and, called, its schema:
 
-## overview
+```js
+const tags = new List(['a', 'b']);   // a value
+const Tags = List(Str);              // a schema
+Tags.create(['a']);                  // a value made from the schema
+```
 
-### Data Types
-[Color](#color) ·
-[Dict](#dict) ·
-[Enum](#enum) ·
-[List](#list) ·
-[Point](#point) ·
-[Segments](#segments) ·
-[Str](#str) ·
-[Tree](#tree) ·
-[Union](#union)
+Every type has a reactive variant with `$`: reads subscribe, writes notify. A `$name` in a `.rat` file holding an `Array`, `Map`, `Set` or one of these gets its variant by itself.
 
-### Data Types (reactive)
-[$Array](#) ·
-[$Bool](#) ·
-[$Color](#) ·
-[$Dict](#) ·
-[$Enum](#) ·
-[$Map](#) ·
-[$List](#list) ·
-[$Point](#point) ·
-[$Set](#) ·
-[$Tree](#)
+| | |
+|---|---|
+| values | [Color](#color) · [Segments](#segments) · [Path](#path) · [FileExt](#fileext) · [Tuple](#tuple) |
+| containers | [Enum](#enum) · [List](#list) · [Record](#record) · [Dict](#dict) · [Table](#table) |
+| reactive only | [$Array, $Map, $Set](#array-map-set) · [$Bool, $Num, $Str](#bool-num-str) |
 
-### Special
-[Color](#color) ·
-[FileExt](#fileext) ·
-[Path](#path)
-
-#### Case Types
-[CamelCase](#camelcase) ·
-[ConstantCase](#constantcase) ·
-[KebabCase](#kebabcase) ·
-[MockingCase](#mockingcase) ·
-[PascalCase](#pascalcase) ·
-[SnakeCase](#snakecase) ·
-[TitleCase](#titlecase)
-
----
-
-# Basic DataTypes
-
-## Bool
+A **value** is its schema's result: `Record({ accent: Color }).parse(…).accent` is a `Color`. A **container** holds values: its schema gives plain data, `create()` the container.
 
 ## Enum
 
-holds one value out of a fixed list.
+One value out of a fixed list.
 
 ```js
-const viewmode = new Enum('grid', 'list', 'masonry');
+const view = new Enum('grid', 'list', 'masonry');
 
-viewmode.value;            // 'grid'
-viewmode.cycle();          // 'list'
-viewmode.cycle();          // 'masonry'
-viewmode.cycle();          // 'grid'
-viewmode.cycle(-1);        // 'masonry', backwards
-viewmode.is('masonry');    // true
-viewmode.value = 'list';   // fine
-viewmode.value = 'table';  // TypeError: one of grid, list, masonry
-viewmode.values;           // ['grid', 'list', 'masonry']
+view.value;             // 'grid'
+view.cycle();           // 'list'
+view.cycle(-1);         // 'grid', backwards
+view.is('grid');        // true
+view.value = 'table';   // TypeError: one of grid, list, masonry
 ```
 
-`new Enum(View)` starts from a schema (`View = Enum('grid', 'list').default('list')` starts at `'list'`), `new Enum(other)` copies another one at its value.
+```ratjs
+const $sort = new $Enum('newest', 'oldest', 'alpha');
+```
 
 ## List
 
-a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … return plain arrays.
-
-flat array-like sequence of unique values of the same type. optionally auto-sorted.
+A list of its own (not an Array subclass): `length`, `at(i)`, `set(i, value)`.
 
 ```js
-const tags = new List(['a', 'b']);
+const tags = new List(['b', 'a']);
 tags.push('c');
-tags.at(-1);      // 'c'
-tags.length;      // 3
+tags.sort().at(-1);         // 'c'
+tags.toggle('a');           // false: it was there, now it is gone
+tags.toArray();             // ['b', 'c']
+
+const tracks = new List([{ title: 'x', album: 1, track: 2 }, { title: 'y', album: 1, track: 1 }]);
+tracks.where({ album: 1 }).toSortedBy('track').pluck('title');   // List ['y', 'x']
 ```
 
-## Point
+Made from a schema, a list checks what comes in. An item that is a data type becomes one:
+
+```ratjs
+const Tab   = $Record({ path: Path, source: Str.optional().default(null) });
+const $tabs = $List(Tab).create([{}]);
+
+$tabs.push({ path: 'photos' });   // a $Record, path a Path
+$tabs.push({ path: 42 });         // TypeError: path: expected a path
+```
+
+Query methods: `where`, `without`, `one`, `has`, `pluck`, `keyBy`, `sortBy` / `toSortedBy`, `drop`, `toggle`.
 
 ## Record
 
-a sealed object with fixed fields. with a schema, every field write is checked.
+A sealed object with fixed fields; with a schema every field write is checked.
 
 ```js
 const Settings = Record({ view: Enum('grid', 'list'), zoom: Num.range(50, 200).default(100) });
 
-const settings = new Record(Settings);                  // { view: 'grid', zoom: 100 }
-const custom   = new Record(Settings, { zoom: 120 });   // the rest at its initial value
-const point    = new Record({ x: 0, y: 0 });            // no schema: fixed fields, any value
+const settings = Settings.create({ zoom: 120 });   // or new Record(Settings, { zoom: 120 })
+settings.zoom = 150;
+settings.zoom = 'big';                             // TypeError: expected a number
+settings.size = 3;                                 // TypeError: no such field
+settings.assign({ view: 'list', zoom: 80 });
 
-settings.zoom = 150;                           // fine
-settings.zoom = 'big';                         // TypeError: expected a number
-settings.size = 3;                             // TypeError: sealed, no such field
-settings.assign({ view: 'list', zoom: 80 });   // several at once
-JSON.stringify(settings);                      // '{"view":"list","zoom":80}'
+const point = new Record({ x: 0, y: 0 });          // no schema: fixed fields, any value
 ```
 
-a field may be called anything but `assign`, `schema` and `toJSON`.
+```ratjs
+export const $settings! = $Record(Settings).create();   // reactive and kept
+```
 
-`?` before a field's name makes it optional, short for `.optional()`: `Record({ exec: Fn, '?title': Str })` is `Record({ exec: Fn, title: Str.optional() })`.
+## Dict
 
-# Segments
-
-## Str
-
-Str is the schema of a string, and the cases of writing one:
+A `Map` whose keys and values follow a schema each. Entries read as properties too.
 
 ```js
-Str.min(3).max(40)
-Str.pattern(/^#/, 'a hex color')
-Str.email, Str.uuid
+const Commands = Dict(Str.to(KebabCase), { exec: Fn, '?title': Str });
+const commands = Commands.create();
+
+commands.set('togglePlay', { exec: play });   // key: 'toggle-play'
+commands.get('Toggle Play').exec();           // a key is read through the key schema
+commands.togglePlay;                          // = get('togglePlay')
 ```
-
-a case only lets through a string already written that way. from() makes one of any string, Str.to(Case) is the schema that does that on the way in:
-
-```js
-KebabCase.is('toggle-play');             // true
-KebabCase.is('togglePlay');              // false
-KebabCase.from('togglePlay');            // 'toggle-play'
-Str.to(KebabCase).parse('togglePlay');   // 'toggle-play'
-KebabCase.describe.regex;                // the pattern, at hand
-```
-
-a case of your own: Str.case({ regex, transform }). transform decides: what it leaves as it is is in the case, the regex only describes it.
 
 ## Table
 
-a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object with exactly the columns (a field the schema does not know is dropped), its position is its key.
+A list of rows that all follow one record: frozen objects with exactly these columns.
 
 ```js
-const Todos = Table({ title: Str, done: Bool });       // or Table(Record({ … }))
+const todos = Table({ title: Str, done: Bool }).create([{ title: 'milk' }]);
 
-const todos = new Table(Todos, [{ title: 'milk' }]);   // a missing field gets its initial value
-todos.push({ title: 'eggs', done: 'yes' });            // checked and coerced: done is true
-todos.update(0, { done: true });                       // a row is frozen, a change goes through the table
-todos.column('title');                                 // ['milk', 'eggs']
-todos.where({ done: false });                          // the rows a test of match lets through
-todos.columns;                                         // ['title', 'done']
+todos.push({ title: 'eggs', done: 'yes' });   // done: true
+todos.update(0, { done: true });              // a row changes through the table
+todos.column('title');                        // ['milk', 'eggs']
+todos.where({ done: false });
 ```
 
-every `List` method works, the ones that add or replace rows (`push`, `unshift`, `set`, `splice`, `replace`, `update`) check them. `$Table` has one version for the whole table: any write updates whatever read the table.
-
-## Tree
-
-nested nodes-like structure
+A `$Table` kept with `$name!` goes to the app's database.
 
 ## Tuple
 
-a fixed number of values in a fixed order, frozen.
+A fixed number of values, frozen.
 
 ```js
 const entry = new Tuple('rat', 3);
-entry[0];                            // 'rat'
 const [name, count] = entry;
-entry.with(1, 4);                    // a new tuple ('rat', 4)
-entry.equals(new Tuple('rat', 3));   // true
+entry.with(1, 4);                   // a new tuple
+Tuple(Str, Num).parse(['a', '1']);  // Tuple('a', 1)
 ```
-
-## Union
-
-Union is a schema only: one of several schemas, the first that fits wins.
-
-```js
-const Id    = Union (Num.int, Str.uuid);
-const Shade = Union ({ hex: Str.pattern(/^#[0-9a-f]{6}$/i), named: Enum('red', 'blue')
-
-Id.is(3);              // true
-Shade.which('red');    // 'named', the case that fits (an index for Union(a, b))
-```
-
-a union value is just a value of one of its cases, a string or a number, it has nothing of its own. so there is no data type and no reactive variant: `let $id = Id` is a signal that only takes what fits.
-
----
-
-# Additional Data Types
 
 ## Color
 
-one color, read and written in any notation. it holds rgba, `hex` and `h` `s` `l` are read and
-written through it (codecs, see [codecs](https://github.com/Pulgasari/pulgasari.github.io/blob/main/md/webdev/codecs.md)).
+One color in any notation.
 
 ```js
-const accent = new Color('#ff8800');   // or 'rgb(255 136 0)', 'hsl(32 100% 50%)', [255, 136, 0],
-                                       // { r, g, b }, { h, s, l }, another Color
-accent.r;              // 255
-accent.h;              // 32
-accent.l = 70;         // lighter, r g b follow
+const accent = new Color('#ff8800');   // 'rgb(…)', 'hsl(…)', [r, g, b], { r, g, b }, { h, s, l }
+
+accent.l = 70;            // lighter, r g b follow
 accent.a = 0.5;
-accent.hex;            // '#ffad5c80'
-accent.mix('#000');    // a new color, half way to black
-accent.set('hsl(200 50% 50%)');
+accent.hex;               // '#ffb86680'
+accent.mix('#000');       // a new color, halfway to black
+String(accent);           // the hex, JSON too
+```
+
+## Segments
+
+A value of parts with a separator: a key like `rat:noisy:theme`, a version.
+
+```js
+const key = Segments.from('rat:noisy:theme');
+
+key.at(-1);              // 'theme'
+key.slice(0, 2);         // rat:noisy
+key.with('dark');        // rat:noisy:theme:dark
+key.startsWith('rat');   // true, part by part
+Segments.from('1.4.2', '.').toArray();
+```
+
+## Path
+
+Segments with `/`, one instance per path: `===` compares two.
+
+```js
+import { Path } from '@rat/types/Path';
+
+const path = Path.from('photos/2024/beach.jpg');
+path.name;           // 'beach.jpg'
+path.parent;         // photos/2024
+path.child('raw');
+path.ext;            // FileExt jpg
+path === Path.from(['photos', '2024', 'beach.jpg']);   // true
 ```
 
 ## FileExt
 
-## Path
+```js
+import { FileExt } from '@rat/types/FileExt';
 
-a gray has no hue: after `s = 0`, `h` reads 0. named css colors (`'red'`) are not read yet.
+const ext = FileExt.from('Beach.JPG');
+ext.value;              // 'jpg'
+ext.mimeType;           // 'image/jpeg'
+ext.is('jpg', 'jpeg');  // true
+```
+
+## $Array, $Map, $Set
+
+The js collections, reactive. A `$name` holding one gets it by itself:
+
+```ratjs
+let $todos = [];
+$todos.push({ title: 'milk' });   // whatever read $todos updates
+$todos[0].done = true;            // not seen: the item is plain, replace it or use a $Record
+```
+
+## $Bool, $Num, $Str
+
+A plain value as an object with methods:
+
+```js
+const $open = new $Bool;  $open.toggle();
+const $zoom = new $Num(Num.range(50, 200).default(100));  $zoom.inc(10);   // stops at 200
+const $query = new $Str('');  $query.clear();
+```

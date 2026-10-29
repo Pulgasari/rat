@@ -1,30 +1,49 @@
-# persistence
+# Persistence
 
-one could achieve persistence like in any other JS-project or use the stuff RAT provides.
+A value kept beyond the page: read back when it is made, written on every change.
 
-### via schema
+## `$name!`
 
-```js
-// mature: am Schema
-let   $theme    = Enum.from(gestalt.themes).stored({ key: 'custom-key', in: 'session' });
-const $settings = $Record(Settings).stored('settings').create();
+In `.rat` and `.rat.js`, a `!` after the name in a declaration. The key is the name.
+
+```ratjs
+let $theme! = Enum('zombie', 'oled', 'rainbow');
+let $draft! = '';
+export const $settings! = $Record({ view: Enum('grid', 'list'), zoom: Num.default(100) }).create();
+export const $tabs!     = $List(Tab).create([{}]);
 ```
 
-### via compiler magic
+Inside a named view the key gets its name first: `podcasts:tabs`.
 
-inside `.rat` and `.rat.js` files:
+## On the schema
 
-```js
-// compiler magic
-$theme!    = Enum('zombie', 'oled', 'rainbow');
-$settings! = $Record(Settings).create();
+```ratjs
+let $look = Enum('light', 'dark').stored({ key: 'look', in: 'session' });
 ```
 
-### the core
+## `stored()`
+
+The same without the compiler:
 
 ```js
-import { stored } from '@rat/types';
+import { $Table, Bool, Enum, Str, stored } from '@rat/types';
 
-let   $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));
-const $tabs  = stored('tabs', $List(Tab).create());
+const $theme = stored('theme', Enum('zombie', 'oled'));
+const $todos = stored({ key: 'todos', debounce: 300 }, $Table({ title: Str, done: Bool }).create());
+```
+
+## Options
+
+| | |
+|---|---|
+| `key` | default: the name |
+| `in` | `'store'` (default), `'session'`, `'memory'`, `'database'` (a `Table` goes there) |
+| `debounce` | ms after a change before it is written |
+| `sync` | a change in another tab comes in |
+| `version`, `migrate` | `migrate(old, version)` brings an old shape to today's |
+
+What is read goes through the schema: coerced, a missing field at its initial value, a field that no longer fits as well.
+
+```js
+stored.forget('theme');   // back to the initial value, gone from its place
 ```
