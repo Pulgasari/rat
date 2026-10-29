@@ -250,13 +250,9 @@ function keep (options, init, schema) {
 }
 
 // back to its initial value, and gone from its place. in: the place, else every place it is kept in
-stored.forget = (key, { in: name } = {}) => Promise.all([...kept].filter(([id]) => name ? id === `${name}:${key}` : id.endsWith(`:${key}`)).map(([, entry]) => entry.reset()));
-
-stored.place = (name, place) => { places[name] = place; };
-
-// the names a key gets before it, where it is made: none without @rat/app
-stored.scope = () => [];
-
+stored.forget   = (key, { in: name } = {}) => Promise.all([...kept].filter(([id]) => name ? id === `${name}:${key}` : id.endsWith(`:${key}`)).map(([, entry]) => entry.reset()));    
+stored.place    = (name, place) => { places[name] = place; };
+stored.scope    = () => []; // the names a key gets before it, where it is made: none without @rat/app
 stored.defaults = defaults;
 stored.flush    = flush;
 
