@@ -1,0 +1,144 @@
+// @rat/types :: Dict
+
+/*
+Dict is a Map whose keys and values follow a schema each. called, it is the
+schema:
+
+  const Commands = Dict(Str.to(KebabCase), Record({ exec: Fn, title: Str.optional() }));
+  // or with fields for the value: Dict(Str.to(KebabCase), { exec: Fn, '?title': Str })
+
+  const commands = Commands.create();              // or new Dict(Commands), entries as the argument
+  commands.set('togglePlay', { exec: () => … });   // the key becomes 'toggle-play', the value is checked
+  commands.get('toggle_play').exec();              // a key is read through the key schema too
+  commands.has('Toggle Play');                     // true
+
+a key the key schema refuses is not there (get: undefined, has: false), set
+throws. an entry is a property too, read through read() (a subclass may give
+another view of it). the members of the Dict win: an entry named get, size,
+delete … is reached through get() and set() only.
+
+  commands.togglePlay;                     // commands.get('togglePlay')
+  commands.openSettings = { exec: … };     // commands.set('openSettings', …)
+  delete commands.togglePlay;
+ $Dict, its reactive variant, is below: reads subscribe, writes notify,
+like $Map. called, it is the schema as well, whose create() makes a $Dict:
+
+  const commands = $Dict(Str.to(KebabCase), { exec: Fn }).create({ save: { exec: save } });
+*/
+
+import { reactive, register } from '@rat/signals';
+
+import './Map.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
+
+import { Record }                  from './Record.js';
+import { Schema, isObject, schemaOf, typed } from './schema.js';
+
+// ::: the schema
+
+const valueOf = value => schemaOf(value) instanceof Schema ? schemaOf(value) : Record(value);
+
+// a Map or a plain object, every key and value checked and coerced, a Map out
+function dictOf (keyed, value) {
+  const key    = schemaOf(keyed);
+  const values = valueOf(value);
+  return new Schema({
+    describe : { key: key.describe, value: values.describe },
+    initial  : {},
+    kind     : 'dict',
+    parts    : { key, value: values },
+    run      : (input, path) => {
+      if (!(input instanceof Map) && !isObject(input)) return { issues: [{ message: 'expected a dict', path }] };
+      const issues = [];
+      const out    = new Map;
+      for (const [rawKey, rawValue] of input instanceof Map ? input : Object.entries(input)) {
+        const keyed = key.validate(rawKey, [...path, rawKey]);
+        const value = values.validate(rawValue, [...path, rawKey]);
+        if (keyed.issues) issues.push(...keyed.issues);
+        if (value.issues) issues.push(...value.issues);
+        if (!keyed.issues && !value.issues) out.set(keyed.value, value.value);
+      }
+      return issues.length ? { issues } : { value: out };
+    },
+  });
+}
+
+// ::: entries as properties
+
+// a dict -> its methods, called on it: a Map method needs the Map, not the proxy. what gives the dict back gives the proxy
+const bound = new WeakMap;
+
+function boundOf (target, key, method, proxy) {
+  if (!bound.has(target)) bound.set(target, new Map);
+  const methods = bound.get(target);
+  if (!methods.has(key)) methods.set(key, (...args) => { const result = method.apply(target, args); return result === target ? proxy : result; });
+  return methods.get(key);
+}
+
+const isMember = (target, key) => typeof key === 'symbol' || key in target;
+
+const member = key => new TypeError(`[rat] ${String(key)} is a member of the Dict: an entry of that name goes through set() and delete()`);
+
+const ENTRIES = {
+  deleteProperty (target, key)        { if (isMember(target, key)) throw member(key); return target.delete(key); },
+  has            (target, key)        { return isMember(target, key) || target.has(key); },
+  set            (target, key, value) { if (isMember(target, key)) throw member(key); target.set(key, value); return true; },
+
+  get (target, key, proxy) {
+    if (!isMember(target, key)) return target.read(target.get(key));
+    const value = Reflect.get(target, key, target);
+    return typeof value === 'function' && key !== 'constructor' ? boundOf(target, key, value, proxy) : value;
+  },
+};
+
+// ::: the data type
+
+class DictType extends Map {
+  // new Dict(schema, entries?), new Dict(other): a copy
+  constructor (source, entries = []) {
+    super();
+    const copy   = source instanceof DictType;
+    const schema = copy ? source.schema : source;
+    if (!(schema instanceof Schema) || schema.kind !== 'dict') throw new TypeError('[rat] a Dict needs a Dict schema: new Dict(Dict(Key, Value))');
+    Object.defineProperty(this, 'schema', { value: schema });
+    for (const [key, value] of copy ? source : entries instanceof Map ? entries : Object.entries(entries)) this.set(key, value);
+    return new Proxy(this, ENTRIES);
+  }
+
+  // what an entry read as a property gives: the value, another view of it in a subclass
+  read (value) { return value; }
+
+  // the key as the key schema makes it, or undefined when it refuses it
+  keyOf (key) {
+    const result = this.schema.parts.key.validate(key);
+    return result.issues ? undefined : result.value;
+  }
+
+  set (key, value) { return super.set(this.schema.parts.key.parse(key), this.schema.parts.value.parse(value)); }
+
+  get    (key) { const own = this.keyOf(key); return own === undefined ? undefined : super.get(own); }
+  has    (key) { const own = this.keyOf(key); return own !== undefined && super.has(own); }
+  delete (key) { const own = this.keyOf(key); return own !== undefined && super.delete(own); }
+
+  toJSON () { return Object.fromEntries(this); }
+}
+
+Object.defineProperty(DictType, 'name', { value: 'Dict' });
+
+const Dict = typed(DictType, dictOf);
+
+// ::: $Dict
+
+const $Dict = typed(reactive(Dict, {
+  reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', 'toJSON', Symbol.iterator],
+  writes : {
+    clear  : dict => dict.size > 0,
+    delete : (dict, key) => dict.has(key),
+    set    : true,
+  },
+}), dictOf);
+
+register(Dict, $Dict);
+
+// :::::: EXPORT
+
+export { Dict, $Dict };

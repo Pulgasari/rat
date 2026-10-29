@@ -1,0 +1,12 @@
+{
+  "name"        : "@rat/types",
+  "version"     : "0.0.1",
+  "description" : "data types with their schemas (Color, Enum, List, Record, Tuple), schemas (Str, Num, Union …) and reactive variants, registered for $()",
+  "type"        : "module",
+  "main"        : "./index.js",
+  "types"       : "./index.d.ts",
+  "exports"     : { ".": "./index.js", "./FileExt": "./special/FileExt.js", "./Path": "./special/Path.js" },
+  "dependencies": { "@rat/signals": "0.0.1" },
+  "sideEffects" : ["./index.js", "./reactive.js"],
+  "license"     : "MIT"
+}
