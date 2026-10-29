@@ -1,5 +1,7 @@
 # schema
 
+drafts: [codec.md](codec.md) (decode / encode, the verbs of @rat/types and how they relate)
+
 ## libs
 - https://github.com/pbv-public/js-schema
 - https://github.com/ianstormtaylor/superstruct
