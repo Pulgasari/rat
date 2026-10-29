@@ -1,4 +1,0 @@
-var n=Object.defineProperty;var a=(t,e)=>n(t,"name",{value:e,configurable:!0});import{r,f as s}from"./app.rat-DakpQRL4.js";import"./index-oKSG3TSX.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";import"./keys-CWTtq0D5.js";const c="wave",y="Wave",o={frequency:{type:"number",default:.02,min:0,max:.2,step:.005},octaves:{type:"integer",default:2,min:1,max:5,step:1},scale:{type:"number",default:20,min:0,max:100,step:1}};function d(t={}){const e=r(o,t);return s(c,`
-    <feTurbulence type="fractalNoise" baseFrequency="${e.frequency}" numOctaves="${e.octaves}" result="noise"/>
-    <feDisplacementMap in="SourceGraphic" in2="noise" scale="${e.scale}" xChannelSelector="R" yChannelSelector="G"/>
-  `,t)}a(d,"wave");export{d as default,c as id,y as name,o as vars};
