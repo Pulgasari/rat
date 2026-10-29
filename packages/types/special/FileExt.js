@@ -116,7 +116,9 @@ const FileExt = bare(typed(FileExtType, () => new Schema({
   kind    : 'fileext',
   run     : (value, path) => {
     if (value instanceof FileExtType) return { value };
-    return typeof value === 'string' ? { value: new FileExtType(value) } : { issues: [{ message: 'expected an extension', path }] };
+    return typeof value === 'string' 
+      ? { value: new FileExtType (value) } 
+      : { issues: [{ message: 'expected an extension', path }] };
   },
 }), ofValue));
 
