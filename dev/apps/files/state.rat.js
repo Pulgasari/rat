@@ -90,13 +90,12 @@ $selected = null,    // the entry the context area is about
 $sheet    = null,    // what the context area shows instead: 'tasks', 'remotes'
 $size     = null;    // { width, height } of the image in the preview
 
-// :::::: TABS, each a $Record { path, source }, kept with the index of the one on screen
+// :::::: TABS, each a $Record { path, source }, kept with the index of the one on screen. the list makes
+// a tab of what it gets: { path } is a tab at path, {} one at home
 
-const Tab = $Record({ path: Path, '?source': Str });
+const Tab = $Record({ path: Path, source: Str.optional().default(null) });
 
-const tabOf = (tab = {}) => Tab.create({ path: tab.path ?? Path.root, source: tab.source ?? null });
-
-export const $tabs! = $List(Tab).create([tabOf()]);
+export const $tabs! = $List(Tab).create([{}]);
 
 let $tabIndex! = 0;
 
@@ -119,7 +118,7 @@ export function goTo (path, from) {
 }
 
 export function openTab (path = $path, from = $source) {
-  $tabs.push(tabOf({ path, source: from }));
+  $tabs.push({ path, source: from ?? null });
   $tabIndex = $tabs.length - 1;
   $selected = null;
 }
@@ -147,7 +146,7 @@ export function switchTab (tab) {
 function resetTabs (tabs = []) {
   const tab = $tab;
   batch(() => {
-    $tabs.replace(tabs.length ? tabs : [tabOf()]);
+    $tabs.replace(tabs.length ? tabs : [{}]);
     $tabIndex = Math.max(0, $tabs.indexOf(tab));
   });
 }

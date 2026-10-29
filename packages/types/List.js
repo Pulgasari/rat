@@ -3,8 +3,16 @@
 /*
 List is a data type and, called, its schema, like every type here:
 
-  const tags = new List(['a', 'b']);   // a list
+  const tags = new List(['a', 'b']);   // a list, any items
   const Tags = List(Str);              // the schema of a list of strings
+  const own  = Tags.create(['a']);     // a list that knows its schema: new List(Tags, ['a']) as well
+
+a list made from a schema checks what comes in (push, unshift, set, splice, replace, toggle): an item is
+coerced, a wrong one throws. an item that is a data type of its own (a $Record) comes in as one:
+
+  const $tabs = $List($Record({ path: Path, '?source': Str })).create();
+  $tabs.push({ path: 'photos' });    // a $Record, path a Path, source null
+  $tabs.push(tab);                   // a $Record of that schema already: the same object
 
 List is a plain class, not an Array subclass: an array's length and index
 access are no methods and could only be caught with a proxy. a List has length
@@ -30,17 +38,51 @@ drop and toggle change the list by a test, like where and without read it:
 */
 
 import { by, has, keyBy, one, pluck, where, without } from './query.js';
-import { Schema, issue, partsIn, schemaOf, typed, variant } from './schema.js';
+import { Schema, isSchema, issue, madeBy, partsIn, schemaOf, typed, variant } from './schema.js';
 
 // ::: DATA TYPE
 
+let checked = false;   // the items of a copy came out of a list of the same schema: not checked again
+
 class ListType {
   #items;
+  #schema;   // the List schema, null for a list without one
+  #item;     // the schema of an item
 
-  constructor (items = []) { this.#items = [...items]; }
+  // new List(items), new List(schema, items), new List(other): a copy, with its schema
+  constructor (source = [], items) {
+    const copy   = source instanceof ListType;
+    const schema = copy ? source.schema : isSchema(source) ? source : null;
+    if (schema && schema.kind !== 'list') throw new TypeError('[rat] a List needs items or a List schema');
+
+    this.#schema = schema;
+    this.#item   = schema?.parts.item ?? null;
+    this.#items  = copy || checked || !schema ? [...(copy ? source.toArray() : schema ? items : source)] : this.#all(items ?? schema.initial);
+  }
+
+  // items as they come in: each made a data type (create fills what is missing), else the list checked at once
+  #all (items) { return this.#item.factory ? [...items].map(item => this.#in(item)) : this.#schema.parse([...items]); }
+
+  get schema () { return this.#schema; }
 
   static from    (items) { return new this(items); }
   static of   (...items) { return new this(items); }
+
+  // an item as it comes in: through the item schema, made a data type when the item is one
+  #in (value) {
+    const item = this.#item;
+    if (!item) return value;
+    if (!item.factory) return item.parse(value);
+    return madeBy(value) === item ? value : item.create(value);
+  }
+
+  // a copy with the same items keeps the schema, one whose items may differ (map) does not
+  #same (items) {
+    if (!this.#schema) return new ListType(items);
+    checked = true;
+    try { return new ListType(this.#schema, items); }
+    finally { checked = false; }
+  }
 
   get length () { return this.#items.length; }
 
@@ -49,7 +91,7 @@ class ListType {
   indexOf  (value) { return this.#items.indexOf(value); }
 
   every     (fn)         { return this.#items.every(fn); }
-  filter    (fn)         { return new ListType(this.#items.filter(fn)); }
+  filter    (fn)         { return this.#same(this.#items.filter(fn)); }
   find      (fn)         { return this.#items.find(fn); }
   findIndex (fn)         { return this.#items.findIndex(fn); }
   flatMap   (fn)         { return new ListType(this.#items.flatMap(fn)); }
@@ -57,7 +99,7 @@ class ListType {
   join      (separator)  { return this.#items.join(separator); }
   map       (fn)         { return new ListType(this.#items.map(fn)); }
   reduce    (...args)    { return this.#items.reduce(...args); }
-  slice     (start, end) { return new ListType(this.#items.slice(start, end)); }
+  slice     (start, end) { return this.#same(this.#items.slice(start, end)); }
   some      (fn)         { return this.#items.some(fn); }
   toArray   ()           { return [...this.#items]; }
   toJSON    ()           { return this.toArray(); }
@@ -66,29 +108,34 @@ class ListType {
   keyBy   (key)  { return keyBy(key)(this.#items); }
   one     (test) { return one(test)(this.#items); }
   pluck   (key)  { return new ListType(pluck(key)(this.#items)); }
-  where   (test) { return new ListType(where(test)(this.#items)); }
-  without (test) { return new ListType(without(test)(this.#items)); }
+  where   (test) { return this.#same(where(test)(this.#items)); }
+  without (test) { return this.#same(without(test)(this.#items)); }
 
-  toReversed ()             { return new ListType(this.#items.toReversed()); }
-  toSorted   (fn)           { return new ListType(this.#items.toSorted(fn)); }
-  toSortedBy (...keys)      { return new ListType(this.#items.toSorted(by(...keys))); }
-  toSpliced  (...args)      { return new ListType(this.#items.toSpliced(...args)); }
-  with       (index, value) { return new ListType(this.#items.with(index, value)); }
+  toReversed ()                         { return this.#same(this.#items.toReversed()); }
+  toSorted   (fn)                       { return this.#same(this.#items.toSorted(fn)); }
+  toSortedBy (...keys)                  { return this.#same(this.#items.toSorted(by(...keys))); }
+  toSpliced  (start, count, ...items)   { return this.#same(this.#items.toSpliced(start, count, ...items.map(item => this.#in(item)))); }
+  with       (index, value)             { return this.#same(this.#items.with(index, this.#in(value))); }
 
   [Symbol.iterator] () { return this.#items[Symbol.iterator](); }
 
-  push    (...items) { return this.#items.push(...items); }
+  push    (...items) { return this.#items.push(...items.map(item => this.#in(item))); }
   pop     ()         { return this.#items.pop(); }
   shift   ()         { return this.#items.shift(); }
-  unshift (...items) { return this.#items.unshift(...items); }
-  splice  (...args)  { return this.#items.splice(...args); }
+  unshift (...items) { return this.#items.unshift(...items.map(item => this.#in(item))); }
+
+  splice (start, ...rest) {
+    if (!rest.length) return this.#items.splice(start);
+    const [count, ...items] = rest;
+    return this.#items.splice(start, count, ...items.map(item => this.#in(item)));
+  }
   sort    (fn)       { this.#items.sort(fn); return this; }
   sortBy  (...keys)  { this.#items.sort(by(...keys)); return this; }
   reverse ()         { this.#items.reverse(); return this; }
 
-  set     (index, value) { this.#items[index < 0 ? this.#items.length + index : index] = value; return this; }
+  set     (index, value) { this.#items[index < 0 ? this.#items.length + index : index] = this.#in(value); return this; }
   remove  (value)        { const index = this.#items.indexOf(value); if (index > -1) this.#items.splice(index, 1); return index > -1; }
-  replace (items)        { this.#items = [...items]; return this; }
+  replace (items)        { this.#items = this.#schema ? this.#all(items) : [...items]; return this; }
 
   drop (test) {
     const kept    = without(test)(this.#items);
@@ -155,10 +202,7 @@ const LIST_WRITES = {
   unshift : (list, ...items) => items.length > 0,
 };
 
-// create(items): the items checked, a List holds no schema of its own
-const ofItems = (Type, schema, items = []) => new Type(schema.parse(items));
-
-const List  = typed(ListType, listOf, { kind: 'list', make: ofItems, name: 'List' });
+const List  = typed(ListType, listOf, { kind: 'list', name: 'List' });
 const $List = variant(List, { reads: LIST_READS, writes: LIST_WRITES });
 
 // :::::: EXPORT
