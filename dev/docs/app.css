@@ -30,12 +30,14 @@ output-md article {
 
 .brand { font-size: 1.5rem; font-weight: 800; margin-block-end: 1rem; }
 
-/* the page is at least as high as the screen, main takes what is left: the footer sits at the end
-   even under a short page, and scrolls with a long one (not fixed) */
+/* rat-app is as high as the screen (100dvh), the page scrolls in itself: a long page does not run out
+   of the body. main takes what is left: the footer sits at the end even under a short page, and
+   scrolls with a long one (not fixed) */
 #page {
   display        : flex;
   flex-direction : column;
-  min-block-size : 100dvh;
+  min-block-size : 0;
+  overflow-y     : auto;
 }
 
 #page > footer { box-sizing: border-box; inline-size: 100%; margin-block-start: auto; max-inline-size: 48rem; padding: 1rem 2rem; }
