@@ -113,6 +113,16 @@ narrow: menu, tabs, one panel to swipe, player
 .panels,
 .player {
   --gap: normal;
+}
+
+.noisy,
+.menu, 
+.panel,
+.panel-empty,
+.panel-head,
+.panel-list,
+/*.panels,*/
+.player {
   --pad: normal;
 }
 
