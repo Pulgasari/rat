@@ -67,7 +67,9 @@ inspired by: vue
 
 ---
 
-# `.rat`
+# `.rat.js`
+
+some ideasfor extensions of the JavaScript syntax (would be available in `.rat.js` and `.rat` files).
 
 ## keywords
 
@@ -82,6 +84,52 @@ effect
 # other
 cmd | command
 ```
+
+## interpolation
+
+```js
+$name = 'Manfred';
+
+console.log (`moin $name, wie geht's?`);
+console.log (`moin ${name}, wie geht's?`); // regular JS
+```
+
+## alternative `import` syntax
+
+```js
+  import { $sheet }      from './state.rat.js';
+  import { load }        from './modules/root.rat.js';
+  import { start, stop } from './modules/sync.rat.js';
+  import { hint }        from '../.shared/install.js';
+  import { toast }       from '../.shared/toast.js';
+
+  import from './state.rat.js'        : { $sheet };
+  import from './modules/root.rat.js' : { load };
+  import from './modules/sync.rat.js' : { start, stop };
+  import from '../.shared/install.js' : { hint };
+  import from '../.shared/toast.js'   : { toast };
+
+  import from 
+  './state.rat.js'        : { $sheet },
+  './modules/root.rat.js' : { load },
+  './modules/sync.rat.js' : { start, stop },
+  '../.shared/install.js' : { hint },
+  '../.shared/toast.js'   : { toast };
+
+  imports {
+    './state.rat.js'        : { $sheet },
+    './modules/root.rat.js' : { load },
+    './modules/sync.rat.js' : { start, stop },
+    '../.shared/install.js' : { hint },
+    './.shared/toast.js'    : { toast },
+  }
+```
+
+---
+
+# `.rat`
+
+
 
 ## support for `md` (or even `mdx`?)
 
@@ -162,37 +210,6 @@ note: svelte and solidjs both move towards `await` in the reactive graph instead
 - [ ] b) the value in the head, `@pending` and `@catch` as clauses **(rec)**: the main case comes first, and `user of …` reads like `@for`
 - [ ] c) only the short form
 - [x] d) b, with c as the one-line form · built: `@await` in syntax.md
-
-## alternative `import` syntax
-
-```js
-  import { $sheet }      from './state.rat.js';
-  import { load }        from './modules/root.rat.js';
-  import { start, stop } from './modules/sync.rat.js';
-  import { hint }        from '../.shared/install.js';
-  import { toast }       from '../.shared/toast.js';
-
-  import from './state.rat.js'        : { $sheet };
-  import from './modules/root.rat.js' : { load };
-  import from './modules/sync.rat.js' : { start, stop };
-  import from '../.shared/install.js' : { hint };
-  import from '../.shared/toast.js'   : { toast };
-
-  import from 
-  './state.rat.js'        : { $sheet },
-  './modules/root.rat.js' : { load },
-  './modules/sync.rat.js' : { start, stop },
-  '../.shared/install.js' : { hint },
-  '../.shared/toast.js'   : { toast };
-
-  imports {
-    './state.rat.js'        : { $sheet },
-    './modules/root.rat.js' : { load },
-    './modules/sync.rat.js' : { start, stop },
-    '../.shared/install.js' : { hint },
-    './.shared/toast.js'    : { toast },
-  }
-```
 
 ---
 
