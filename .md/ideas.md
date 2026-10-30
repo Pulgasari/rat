@@ -67,6 +67,22 @@ inspired by: vue
 
 ---
 
+# `.rat.js`
+
+extenaiona of the JavaScript syntax available in `.rat.js` and `.rat` files.
+
+## interpolation
+
+```js
+$name = 'Manfred';
+
+console.log (`moin $name, wie geht's?`);
+console.log (`moin ${name}, wie geht's?`); // regular JS
+
+```
+
+---
+
 # `.rat`
 
 ## keywords
