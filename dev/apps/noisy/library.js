@@ -3,18 +3,19 @@
 // the library: the folders the user grants (RAT.app.folders), the audio files found in
 // them (table tracks) with what their tags say. a scan shows every file at once under
 // its file name, then two queues, a few files at a time:
-//   tags   the head of each file (music-metadata, no covers): the panels fill
-//   covers once the tags are all in, the head again, its picture into the thumbnails
-// a head only, not the file: on android every byte crosses the bridge as base64. a file
-// whose tags do not fit in the head is read whole. a file is read again only when its
-// size or date changed.
+//   tags   the part of each file with the tags (music-metadata, no covers): the panels fill
+//   covers once the tags are all in, that part again, its picture into the thumbnails
+// on android the part with the tags only, not the file: every byte crosses the bridge
+// as base64. a file is read again only when its size or date changed.
 
 import { parseBlob, parseBuffer } from 'https://esm.sh/music-metadata@11.16.1';
 
 import { effect, signal } from '@rat/signals';
 
-const HEAD  = 1 << 20;   // bytes read for the tags (and a cover) of a file
-const QUEUE = 3;         // files read at once
+const FRAMES = 1 << 16;   // bytes after the tags: the first frames, for the duration
+const HEAD   = 1 << 20;   // bytes read for the tags of a file of another kind
+const LIMIT  = 1 << 25;   // tags larger than this (a huge cover) are not read
+const QUEUE  = 3;         // files read at once
 
 const db      = () => RAT.app.database;
 const folders = () => RAT.app.folders;
@@ -131,17 +132,37 @@ const stale = track => {
   return !current || current.sig !== track.sig ? null : current;
 };
 
-// the tags out of the head of the file, the whole file when they do not fit
+const bytesOf = async (entry, start, end) => new Uint8Array(await (await entry.slice(start, end)).arrayBuffer());
+
+// where the tags of a file end, a few frames after them for the duration: flac walks its metadata
+// blocks (a picture may come before the comments), an id3v2 tag says its size. else HEAD
+async function tagsEnd (entry, size) {
+  const head = await bytesOf(entry, 0, Math.min(size, 64 * 1024));
+  const kind = String.fromCharCode(...head.subarray(0, 4));
+
+  if (kind === 'fLaC') {
+    for (let at = 4; at < size;) {
+      const block = at + 4 <= head.length ? head.subarray(at, at + 4) : await bytesOf(entry, at, at + 4);
+      at += 4 + (block[1] << 16 | block[2] << 8 | block[3]);
+      if (block[0] & 0x80) return at + FRAMES;   // the last block
+    }
+  }
+  if (kind.startsWith('ID3')) return 10 + (head[5] & 0x10 ? 10 : 0) + ((head[6] & 0x7f) << 21 | (head[7] & 0x7f) << 14 | (head[8] & 0x7f) << 7 | head[9] & 0x7f) + FRAMES;
+  return HEAD;
+}
+
+// the tags of a file. a handle that reads ranges (android: every byte crosses the bridge) gives the
+// part with the tags only, never the whole file. a File of the browser is read where the parser asks
 async function parse (track, skipCovers) {
   const entry = folders().nodeAt(track.sourceId, track.path)?.entry;
   if (!entry) throw new Error(`${track.name} is no longer in its folder`);
-  const info    = await entry.info();
   const options = { duration: false, skipCovers, skipPostHeaders: true };
-  if (info?.size > HEAD) {
-    try   { return await parseBuffer(new Uint8Array(await (await entry.slice(0, HEAD)).arrayBuffer()), { mimeType: info.type, size: info.size }, options); }
-    catch {}
-  }
-  return parseBlob(await entry.read('blob'), { ...options, skipPostHeaders: false });
+  if (!entry.handle.readSlice) return parseBlob(await entry.read('blob'), options);
+
+  const { size = 0, type } = await entry.info() ?? {};
+  const end = Math.min(size, await tagsEnd(entry, size));
+  if (end > LIMIT) throw new Error(`${track.name}: tags of ${end} bytes`);
+  return parseBuffer(await bytesOf(entry, 0, end), { mimeType: type, size }, options);
 }
 
 async function tag (track) {
