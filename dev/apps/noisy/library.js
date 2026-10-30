@@ -168,15 +168,71 @@ async function wavOf (entry, size) {
   return { bytes, duration: rate ? samples / rate : null, size: total };
 }
 
+// an ogg (vorbis, opus): the pages up to the last header packet (the comments carry the cover), the
+// duration out of the granule of the last page, at the end of the file
+const OGG_HEADERS = { OpusHead: 2, '\u0001vorbis': 3 };
+
+async function oggOf (entry, size, head) {
+  const page  = async at => at + 27 <= head.length ? head.subarray(at) : bytesOf(entry, at, Math.min(size, at + 27 + 255));
+  const first = head.subarray(27 + head[26]);
+  const codec = Object.keys(OGG_HEADERS).find(name => ascii(first.subarray(0, name.length)) === name);
+  if (!codec) return { bytes: head.subarray(0, Math.min(size, HEAD)), duration: undefined, size };
+
+  let end = 0, packets = 0;
+  while (packets < OGG_HEADERS[codec] && end < size) {
+    const bytes    = await page(end);
+    const segments = bytes.subarray(27, 27 + bytes[26]);
+    for (const lacing of segments) if (lacing < 255) packets++;
+    end += 27 + segments.length + segments.reduce((sum, lacing) => sum + lacing, 0);
+  }
+  end = Math.min(size, end + FRAMES);
+  if (end > LIMIT) throw new Error(`tags of ${end} bytes`);
+
+  // the last page: its granule is the position of its last sample, 48 kHz for opus
+  const tail = await bytesOf(entry, Math.max(0, size - 65536), size);
+  const last = ascii(tail).lastIndexOf('OggS');
+  const view = new DataView(tail.buffer, tail.byteOffset);
+  const granule = last < 0 ? 0 : Number(view.getBigUint64(last + 6, true));
+  const rate    = codec === 'OpusHead' ? 48000 : u32le(first, 12);
+  const skip    = codec === 'OpusHead' ? first[10] | first[11] << 8 : 0;
+
+  return { bytes: await bytesOf(entry, 0, end), duration: granule && rate ? (granule - skip) / rate : undefined, size };
+}
+
+// an mp4 (m4a): every atom on top but the samples (mdat), which may come before or after moov
+async function mp4Of (entry, size) {
+  const parts = [];
+  for (let at = 0; at + 8 <= size;) {
+    const head = await bytesOf(entry, at, at + 16);
+    let length = (head[0] << 24 | head[1] << 16 | head[2] << 8 | head[3]) >>> 0;
+    if (length === 1) length = Number(new DataView(head.buffer, head.byteOffset).getBigUint64(8));
+    if (length === 0) length = size - at;
+    if (length < 8) break;
+    const type = ascii(head.subarray(4, 8));
+    if (type === 'mdat') parts.push(Uint8Array.of(0, 0, 0, 8, 109, 100, 97, 116));   // empty: the samples stay on disk
+    else {
+      if (length > LIMIT) throw new Error(`${type} of ${length} bytes`);
+      parts.push(await bytesOf(entry, at, at + length));
+    }
+    at += length;
+  }
+  const bytes = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let at = 0;
+  for (const part of parts) { bytes.set(part, at); at += part.length; }
+  return { bytes, duration: undefined, size: bytes.length };
+}
+
 // the part of a file with its tags, a few frames after them for the duration: flac walks its metadata
-// blocks (a picture may come before the comments), an id3v2 tag says its size, a wav is put together
-// from its chunks. else HEAD
+// blocks (a picture may come before the comments), an id3v2 tag says its size, a wav and an mp4 are put
+// together from their chunks, an ogg is read to its last header page. else HEAD
 async function partOf (entry, size) {
   const head = await bytesOf(entry, 0, Math.min(size, 64 * 1024));
   const kind = ascii(head.subarray(0, 4));
   let end = HEAD;
 
   if (kind === 'RIFF' && ascii(head.subarray(8, 12)) === 'WAVE') return wavOf(entry, size);
+  if (kind === 'OggS')                                            return oggOf(entry, size, head);
+  if (ascii(head.subarray(4, 8)) === 'ftyp')                      return mp4Of(entry, size);
   if (kind === 'fLaC') {
     for (let at = 4; at < size;) {
       const block = at + 4 <= head.length ? head.subarray(at, at + 4) : await bytesOf(entry, at, at + 4);
@@ -215,11 +271,16 @@ async function parse (track, skipCovers) {
     const part = await partOf(entry, size);
     result = await parseBuffer(part.bytes, { mimeType: type, size: part.size }, options);
     if (part.duration !== undefined) result.format.duration = part.duration;
+    // a stream without a length of its own (adts, an mp3 without xing): size by bitrate
+    if (!result.format.duration && result.format.bitrate) result.format.duration = size * 8 / result.format.bitrate;
   }
 
-  const { common } = result;
-  for (const key of TEXTS) common[key] = utf8(common[key]);
-  common.genre = common.genre?.map(utf8);
+  // only a wav: elsewhere text is utf-8 by the book, and 'ß²' would read as utf-8 too
+  const { common, format } = result;
+  if (format.container === 'WAVE') {
+    for (const key of TEXTS) common[key] = utf8(common[key]);
+    common.genre = common.genre?.map(utf8);
+  }
   return result;
 }
 
