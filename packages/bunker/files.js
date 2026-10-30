@@ -19,6 +19,7 @@ to it and carries its permission. the content is read only when asked for.
 
   entry.kind, entry.name, entry.path, entry.handle
   await entry.read('text');  await entry.write(data);  await entry.list();  await entry.remove();
+  await entry.slice(0, 1 << 20)                       // a Blob of the first MiB, the rest stays unread
   await entry.info()                                  // { size, modified, type } of a file
   await entry.permission('read')                      // 'granted' | 'prompt' | 'denied', never asks
   await entry.request('read')                         // asks, inside a click
@@ -51,6 +52,11 @@ class Entry {
     if (as === 'bytes') return new Uint8Array(await file.arrayBuffer());
     if (as === 'json')  return JSON.parse(await file.text());
     return file.text();
+  }
+
+  // a range of the file as a Blob: a handle that reads ranges itself (android's) is asked, a File slices lazily
+  async slice (start, end) {
+    return this.handle.readSlice?.(start, end) ?? (await this.handle.getFile()).slice(start, end);
   }
 
   async write (data) {
