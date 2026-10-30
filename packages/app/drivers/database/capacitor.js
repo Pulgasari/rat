@@ -10,9 +10,12 @@ const opened = new Map;   // name -> promise of the open connection
 function open (name) {
   if (!opened.has(name)) opened.set(name, (async () => {
     const api = await SQLite();
-    const { result } = await api.isConnection({ database: name, readonly: false }).catch(() => ({ result: false }));
-    if (!result) await api.createConnection({ database: name, encrypted: false, mode: 'no-encryption', readonly: false, version: 1 });
-    await api.open({ database: name, readonly: false });
+    // isConnection is js of the plugin's SQLiteConnection, not native: a connection made before a reload of the
+    // webview lives on in the plugin, createConnection then says it exists
+    await api.createConnection({ database: name, encrypted: false, mode: 'no-encryption', readonly: false, version: 1 })
+      .catch(error => { if (!/already exists/.test(error?.message)) throw error; });
+    const { result } = await api.isDBOpen({ database: name, readonly: false });
+    if (!result) await api.open({ database: name, readonly: false });
     return api;
   })());
   return opened.get(name);
