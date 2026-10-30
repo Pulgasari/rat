@@ -24,6 +24,9 @@ const access = async uri => {
 
 const MIME = { gif: 'image/gif', jpeg: 'image/jpeg', jpg: 'image/jpeg', json: 'application/json', md: 'text/markdown', mp3: 'audio/mpeg', mp4: 'video/mp4', pdf: 'application/pdf', png: 'image/png', svg: 'image/svg+xml', txt: 'text/plain', webp: 'image/webp' };
 
+// fnv-1a of a string, as hex: a file name for a uri
+const hash = text => { let value = 0x811c9dc5; for (let i = 0; i < text.length; i++) value = Math.imul(value ^ text.charCodeAt(i), 0x01000193); return (value >>> 0).toString(16); };
+
 const mimeOf = name => MIME[name.slice(name.lastIndexOf('.') + 1).toLowerCase()] ?? '';
 
 class SafHandle {
@@ -49,6 +52,15 @@ class SafFile extends SafHandle {
     const stat  = await api.stat({ uri: this._uri }).catch(() => ({}));
     const { data } = await api.read({ uri: this._uri });
     return new File([fromBase64(data ?? '')], this.name, { lastModified: stat.mtime || Date.now(), type: stat.mime || mimeOf(this.name) });
+  }
+
+  // a url to stream from: a copy in the cache of the app, served by the webview in ranges
+  async url () {
+    const meta     = await this.peekFile();
+    const ext      = this.name.includes('.') ? this.name.slice(this.name.lastIndexOf('.')) : '';
+    const key      = `${hash(this._uri)}-${meta.size}-${meta.lastModified}${ext}`;
+    const { path } = await (await Saf()).cache({ key, uri: this._uri });
+    return globalThis.Capacitor.convertFileSrc(path);
   }
 
   // a range without the rest of the file over the bridge: Entry.slice of @rat/bunker asks

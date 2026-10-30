@@ -5,12 +5,12 @@
 
 import { signal } from '@rat/signals';
 
-import { openFile } from './library.js';
+import { urlOf } from './library.js';
 
 const audio = new Audio;
 audio.preload = 'metadata';
 
-let fileUrl = null;   // the object url of the file playing, revoked with the next
+let fileUrl = null;   // the url of the file playing, revoked with the next (an object url in the browser)
 
 const player = {
   duration : signal(0),
@@ -34,10 +34,10 @@ const player = {
     player.index.value = index;
     player.error.value = null;
     try {
-      const file = await openFile(track);
-      if (player.index.value !== index) return;   // another one came meanwhile
+      const url = await urlOf(track);
+      if (player.index.value !== index) return URL.revokeObjectURL(url);   // another one came meanwhile
       if (fileUrl) URL.revokeObjectURL(fileUrl);
-      audio.src = fileUrl = URL.createObjectURL(file);
+      audio.src = fileUrl = url;
       await audio.play();
       session(track);
     }
