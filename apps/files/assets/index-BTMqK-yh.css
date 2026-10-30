@@ -214,37 +214,15 @@ body {
 
   *:disabled { --bg: color-mix(in oklch, var(--color-bg), var(--color-fg) 10%); cursor: default; }
 
-
-/*
-:::::::::::: SPACING ::::::::::::::::::::::::::::::::::::::::::::::::::
-- ich benutze ausser in sehr seltenen fällen gar kein 'margin` mehr
-  sondern mache ansonsten alles über 'gap' und 'padding'
-- aber auch hier denk ich da eher in 'layout/flow only' (ohne abstände) 
-  während das spacing sich dann automatisch aus hierarchie und kontext ergibt
-- und das setz ich dann tendenziell eher gesammelt
-- und mit dem neuen approach will ich ja sowieso nich mehr als 5 sizes verwenden
-  und sogar explizit als: tiny, small, normal, large, huge
-
---- bei aufbau/css
-div { gap: --space(small); padding: --space(huge); } // robust
-div { --gap: small; --pad: huge;  } // hübscher, aber bissl magisch, robust machbar?    
-
---- bei aufbau/ass
-div ( gap: small; padding: small; } // perfekte form, aber braucht js oder build-step     
-*/
-
 rat-view         { flex-direction: column; overflow: hidden; }
 rat-view[active] { display: flex; }
 
-/* the head first, then what the settings put on top: the tabs, the search bar (state.rat.js sets
-   data-tabbar and data-searchbar on the root). at the bottom they keep their place in the markup */
 rat-view > .bar                                   { order: -3; }
 :root[data-tabbar="top"]    rat-view > .tabs      { order: -2; }
 :root[data-searchbar="top"] rat-view > .searchbar { order: -1; }
 .context h3      { font-size: 1rem; font-weight: 500; }
 
-
-nav-crumbs       { flex: none; padding: 0 1rem 0.5rem; }
+nav-crumbs { flex: none; }
 
 .rows { display: flex; flex-direction: column; }
 
@@ -469,7 +447,6 @@ rat-view[name="sync"] :is(input-text, input-password) {
 .remote-form {
   display        : flex;
   flex-direction : column;
-  gap            : 0.5rem;
 
   > .action { align-self: flex-start; }
 }
@@ -507,7 +484,6 @@ rat-view[name="sync"] :is(input-text, input-password) {
     font-size     : 0.65rem;
     inset         : 0.15rem 0.15rem auto auto;
     line-height   : 1;
-    padding       : 0.15rem 0.3rem;
     position      : absolute;
   }
 }
@@ -521,14 +497,12 @@ rat-view[name="sync"] :is(input-text, input-password) {
 .tasks {
   display        : flex;
   flex-direction : column;
-  gap            : 0.5rem;
   margin-block   : 0.5rem 1rem;
 }
 
 .task {
   align-items : center;
   display     : flex;
-  gap         : 0.75rem;
 
   > svg-icon         { flex: none; font-size: 1.25rem; opacity: 0.7; }
   > .text            { flex: 1 1 auto; }
@@ -550,7 +524,6 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
   flex            : 1 1 auto;
   justify-content : center;
   min-block-size  : 0;
-  padding         : 1rem;
 
   > img      { max-block-size: 100%; max-inline-size: 100%; object-fit: contain; }
   > svg-icon { font-size: 6rem; opacity: 0.6; }
@@ -584,8 +557,7 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
 .menu {
   display        : flex;
   flex-direction : column;
-  gap            : 0.125rem;
-
+  
   > button {
     align-items   : center;
     background    : none;
@@ -594,9 +566,7 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
     color         : inherit;
     display       : flex;
     font          : inherit;
-    gap             : 1rem;
     justify-content : flex-start;
-    padding         : 0.75rem 1rem;
     text-align      : start;
 
     > small { margin-inline-start: auto; opacity: 0.6; }
@@ -611,7 +581,6 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
 
 .facts {
   display               : grid;
-  gap                   : 0.25rem 1rem;
   grid-template-columns : auto 1fr;
   margin-block-end      : 1rem;
 
@@ -619,7 +588,7 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
   > dd { overflow-wrap: anywhere; }
 }
 
-.actions { flex-wrap: wrap; gap: 0.5rem; }
+.actions { flex-wrap: wrap; }
 
 .action {
   align-items   : center;
@@ -630,8 +599,6 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
   cursor        : pointer;
   display       : inline-flex;
   font          : inherit;
-  gap           : 0.5rem;
-  padding       : 0.5rem 1rem;
 
   &:hover:not(:disabled) { background: var(--hover); }
 }
@@ -639,31 +606,19 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
 
 .folder { align-items: center; display: flex; gap: 0.5rem; }
 
-.hero {
-  align-items : center;
-  gap         : 1rem;
-  padding     : 2rem 0;
-  text-align  : center;
+.hero            { align-items: center;.text-align: center; }
+.hero > svg-icon { font-size: 4rem; }
+.hero > p        { text-align: center; }
 
-  > svg-icon { font-size: 4rem; }
-  > p        { text-align: center; }
-}
-
-.empty { opacity: 0.6; padding: 2rem 0; text-align: center; }
+.empty { opacity: 0.6; text-align: center; }
 
 /*//////////// RAT ////////////*/
 
 /* the floating button over the listing, where app-float put it */
 .pane > .fab { inset: auto 1rem 1rem auto; position: absolute; }
 
-.context {
-  display        : flex;
-  flex-direction : column;
-  gap            : 0.75rem;
-  padding        : 0.5rem 1rem 1rem;
-
-  > h2 { margin: 0; }
-}
+.context    { display: flex; flex-flow: column; }
+.context h2 { margin: 0; }
 
 /*//////////// PATTERNS ////////////*/
 
@@ -673,9 +628,10 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
 
 :root[data-pattern-bg] body::before {
   background-image : var(--pattern-bg-image);
+  opacity          : var(--pattern-bg-opacity, 1);
+  
   content          : '';
   inset            : 0;
-  opacity          : var(--pattern-bg-opacity, 1);
   pointer-events   : none;
   position         : fixed;
   z-index          : -1;
@@ -686,11 +642,59 @@ rat-area[name="context"]::part(sheet) { margin-inline: calc(var(--unit, 0.25rem)
 
   &::before {
     background-image : var(--pattern-tile-image);
+    opacity          : var(--pattern-tile-opacity, 1);
+    
     border-radius    : inherit;
     content          : '';
     inset            : 0;
-    opacity          : var(--pattern-tile-opacity, 1);
+    
     pointer-events   : none;
     position         : absolute;
   }
 }
+
+/*//////////// SPACINGS ////////////*/
+
+.hero  { padding: 2rem 0; }
+.empty { padding: 2rem 0; }
+
+.menu > button,
+.context,
+.hero { --gap: normal; }
+
+.action,
+.actions,
+.remote-form,
+.tasks { --gap: small; }
+
+.menu { --gap: tiny; }
+
+.context,
+.facts,
+.menu > button,
+nav-crumbs,
+.stage,
+.task { --pad: normal; }
+
+.action,
+.tasks-button >.bade { --pad: small; }
+
+
+
+.menu {
+  --gap: tiny;
+}
+.action, .actions, .remote-form, .tasks {
+  --gap: small;
+}
+.context, .hero {
+  --gap: normal;
+}
+
+.action, .tasks-button > .bade {
+  --pad: small;
+}
+.context, .facts, .menu > button, nav-crumbs, .stage, .task {
+  --pad: normal;
+}
+
