@@ -69,7 +69,7 @@ inspired by: vue
 
 # `.rat.js`
 
-extenaiona of the JavaScript syntax available in `.rat.js` and `.rat` files.
+extensions of the JavaScript syntax available in `.rat.js` and `.rat` files.
 
 ## interpolation
 
