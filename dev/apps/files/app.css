@@ -476,21 +476,12 @@ rat-area[name="context"]::part(sheet) { margin-inline: --space(small); }
 
 /*//////////// SPACINGS ////////////*/
 
-.hero  { gap: 1rem; }
 .hero  { padding: 2rem 0; }
 .empty { padding: 2rem 0; }
 
-.tasks-button >.bade { --pad: small; }
-
+.menu > button,
 .context,
-.facts,
-.menu > button,
-nav-crumbs,
-.stage,
-.task { --pad: normal; }
-
-.menu > button,
-.context { --gap: normal; }
+.hero { --gap: normal; }
 
 .action,
 .actions,
@@ -499,18 +490,26 @@ nav-crumbs,
 
 .menu { --gap: tiny; }
 
-.action { --pad: small; }
+.context,
+.facts,
+.menu > button,
+nav-crumbs,
+.stage,
+.task { --pad: normal; }
+
+.action,
+.tasks-button >.bade { --pad: small; }
+
+
 
 @spread --gap {
   tiny   : .menu;
   small  : .action, .actions, .remote-form, .tasks;
-  normal : .context;
-  
+  normal : .context, .hero;
 }
 
 @spread --pad {
-  small  :  .small;
-  normal : .context, .facts;
-  
+  small  : .action, .tasks-button > .bade;
+  normal : .context, .facts, .menu > button, nav-crumbs, .stage, .task;
 }
 
