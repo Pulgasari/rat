@@ -33,8 +33,11 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 @CapacitorPlugin(name = "Saf")
 public class SafPlugin extends Plugin {
@@ -202,6 +205,47 @@ public class SafPlugin extends Plugin {
 
             JSObject out = new JSObject();
             out.put("data", Base64.encodeToString(buf.toByteArray(), Base64.NO_WRAP));
+            call.resolve(out);
+        } catch (Exception e) {
+            call.reject(e.getMessage(), e);
+        }
+    }
+
+    // :::::: STREAM
+
+    private static final int STREAMED = 3;   // copies kept in the cache, the newest
+
+    /**
+     * a copy of the file in the cache, for the webview to stream (Capacitor.convertFileSrc of `path`):
+     * an <audio> reads it in ranges, nothing crosses the bridge. `key` names the copy (the js side
+     * gives uri, size and date): one with the same key is used again
+     */
+    @PluginMethod
+    public void cache (PluginCall call) {
+        File dir  = new File(getContext().getCacheDir(), "rat-stream");
+        File file = new File(dir, call.getString("key", "file"));
+        try {
+            if (!dir.isDirectory() && !dir.mkdirs()) { call.reject("could not make the cache folder"); return; }
+            if (!file.isFile()) {
+                File part = new File(dir, file.getName() + ".part");
+                try (InputStream in = resolver().openInputStream(docUri(parse(call, "uri"))); OutputStream out = new FileOutputStream(part)) {
+                    if (in == null) { call.reject("could not open the file"); return; }
+                    byte[] chunk = new byte[256 * 1024];
+                    for (int n; (n = in.read(chunk)) != -1; ) out.write(chunk, 0, n);
+                }
+                if (!part.renameTo(file)) { call.reject("could not keep the copy"); return; }
+            }
+            file.setLastModified(System.currentTimeMillis());
+
+            // the older copies go
+            File[] copies = dir.listFiles();
+            if (copies != null && copies.length > STREAMED) {
+                Arrays.sort(copies, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+                for (int i = STREAMED; i < copies.length; i++) copies[i].delete();
+            }
+
+            JSObject out = new JSObject();
+            out.put("path", file.getAbsolutePath());
             call.resolve(out);
         } catch (Exception e) {
             call.reject(e.getMessage(), e);

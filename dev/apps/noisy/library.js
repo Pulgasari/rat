@@ -213,12 +213,13 @@ async function cover (track) {
 
 // :::::: FILES
 
-const fileOf = track => folders().nodeAt(track.sourceId, track.path)?.entry.read('blob') ?? Promise.reject(new Error(`${track.name} is no longer in its folder`));
-
-// the file of a track, fresh off disk: the player asks
-export function openFile (track) {
-  if (folders().perms.value[track.sourceId] !== 'granted') return Promise.reject(new Error('Reconnect the folder of this track in the settings first.'));
-  return fileOf(track);
+// a url to stream a track from, the player asks: an object url of the File in the browser, on android
+// a copy in the cache the webview reads in ranges (not the whole file over the bridge)
+export async function urlOf (track) {
+  if (folders().perms.value[track.sourceId] !== 'granted') throw new Error('Reconnect the folder of this track in the settings first.');
+  const entry = folders().nodeAt(track.sourceId, track.path)?.entry;
+  if (!entry) throw new Error(`${track.name} is no longer in its folder`);
+  return entry.url();
 }
 
 // :::::: FOLDERS
