@@ -134,22 +134,72 @@ const stale = track => {
 
 const bytesOf = async (entry, start, end) => new Uint8Array(await (await entry.slice(start, end)).arrayBuffer());
 
-// where the tags of a file end, a few frames after them for the duration: flac walks its metadata
-// blocks (a picture may come before the comments), an id3v2 tag says its size. else HEAD
-async function tagsEnd (entry, size) {
-  const head = await bytesOf(entry, 0, Math.min(size, 64 * 1024));
-  const kind = String.fromCharCode(...head.subarray(0, 4));
+const ascii = bytes => String.fromCharCode(...bytes);
+const u32le = (bytes, at) => (bytes[at] | bytes[at + 1] << 8 | bytes[at + 2] << 16 | bytes[at + 3] << 24) >>> 0;
 
+// the chunks of a wav that are not its samples, as a wav of their own: tags may come after the samples
+// (LIST INFO, id3), so they are fetched where they are. the duration out of fmt and the size of data
+const WAV_KEEP = new Set(['fmt ', 'LIST', 'id3 ', 'ID3 ']);
+
+async function wavOf (entry, size) {
+  const parts = [];
+  let samples = 0, rate = 0;
+  for (let at = 12; at + 8 <= size;) {
+    const head = await bytesOf(entry, at, at + 8);
+    const id   = ascii(head.subarray(0, 4));
+    const length = u32le(head, 4);
+    if (id === 'data') samples = length;
+    else if (WAV_KEEP.has(id) && length <= LIMIT) {
+      const body = await bytesOf(entry, at + 8, at + 8 + length + (length & 1));
+      if (id === 'fmt ') rate = u32le(body, 8);   // bytes per second
+      parts.push(head, body);
+    }
+    at += 8 + length + (length & 1);
+  }
+  const total = parts.reduce((sum, part) => sum + part.length, 0) + 12 + 8;
+  const bytes = new Uint8Array(total);
+  const view  = new DataView(bytes.buffer);
+  bytes.set([...'RIFF'].map(char => char.charCodeAt(0)), 0);
+  view.setUint32(4, total - 8, true);
+  bytes.set([...'WAVE'].map(char => char.charCodeAt(0)), 8);
+  let at = 12;
+  for (const part of parts) { bytes.set(part, at); at += part.length; }
+  bytes.set([...'data'].map(char => char.charCodeAt(0)), at);   // empty: the samples stay on disk
+  return { bytes, duration: rate ? samples / rate : null, size: total };
+}
+
+// the part of a file with its tags, a few frames after them for the duration: flac walks its metadata
+// blocks (a picture may come before the comments), an id3v2 tag says its size, a wav is put together
+// from its chunks. else HEAD
+async function partOf (entry, size) {
+  const head = await bytesOf(entry, 0, Math.min(size, 64 * 1024));
+  const kind = ascii(head.subarray(0, 4));
+  let end = HEAD;
+
+  if (kind === 'RIFF' && ascii(head.subarray(8, 12)) === 'WAVE') return wavOf(entry, size);
   if (kind === 'fLaC') {
     for (let at = 4; at < size;) {
       const block = at + 4 <= head.length ? head.subarray(at, at + 4) : await bytesOf(entry, at, at + 4);
       at += 4 + (block[1] << 16 | block[2] << 8 | block[3]);
-      if (block[0] & 0x80) return at + FRAMES;   // the last block
+      if (block[0] & 0x80) { end = at + FRAMES; break; }   // the last block
     }
   }
-  if (kind.startsWith('ID3')) return 10 + (head[5] & 0x10 ? 10 : 0) + ((head[6] & 0x7f) << 21 | (head[7] & 0x7f) << 14 | (head[8] & 0x7f) << 7 | head[9] & 0x7f) + FRAMES;
-  return HEAD;
+  if (kind.startsWith('ID3')) end = 10 + (head[5] & 0x10 ? 10 : 0) + ((head[6] & 0x7f) << 21 | (head[7] & 0x7f) << 14 | (head[8] & 0x7f) << 7 | head[9] & 0x7f) + FRAMES;
+
+  end = Math.min(size, end);
+  if (end > LIMIT) throw new Error(`tags of ${end} bytes`);
+  return { bytes: end <= head.length ? head.subarray(0, end) : await bytesOf(entry, 0, end), duration: undefined, size };
 }
+
+// utf-8 read as latin1 (a wav's LIST INFO is latin1 by the book, taggers write utf-8): 'Ã¤' back to 'ä'
+const LATIN = /[\u00c2-\u00f4][\u0080-\u00bf]/;
+const utf8  = text => {
+  if (typeof text !== 'string' || !LATIN.test(text) || /[^\u0000-\u00ff]/.test(text)) return text;
+  try   { return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(text, char => char.charCodeAt(0))); }
+  catch { return text; }
+};
+
+const TEXTS = ['album', 'albumartist', 'artist', 'title'];
 
 // the tags of a file. a handle that reads ranges (android: every byte crosses the bridge) gives the
 // part with the tags only, never the whole file. a File of the browser is read where the parser asks
@@ -157,12 +207,20 @@ async function parse (track, skipCovers) {
   const entry = folders().nodeAt(track.sourceId, track.path)?.entry;
   if (!entry) throw new Error(`${track.name} is no longer in its folder`);
   const options = { duration: false, skipCovers, skipPostHeaders: true };
-  if (!entry.handle.readSlice) return parseBlob(await entry.read('blob'), options);
 
-  const { size = 0, type } = await entry.info() ?? {};
-  const end = Math.min(size, await tagsEnd(entry, size));
-  if (end > LIMIT) throw new Error(`${track.name}: tags of ${end} bytes`);
-  return parseBuffer(await bytesOf(entry, 0, end), { mimeType: type, size }, options);
+  let result;
+  if (!entry.handle.readSlice) result = await parseBlob(await entry.read('blob'), options);
+  else {
+    const { size = 0, type } = await entry.info() ?? {};
+    const part = await partOf(entry, size);
+    result = await parseBuffer(part.bytes, { mimeType: type, size: part.size }, options);
+    if (part.duration !== undefined) result.format.duration = part.duration;
+  }
+
+  const { common } = result;
+  for (const key of TEXTS) common[key] = utf8(common[key]);
+  common.genre = common.genre?.map(utf8);
+  return result;
 }
 
 async function tag (track) {
