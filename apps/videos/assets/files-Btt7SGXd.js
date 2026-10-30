@@ -1,0 +1,1 @@
+var i=Object.defineProperty;var a=(e,r)=>i(e,"name",{value:r,configurable:!0});import{p as t,q as s}from"./index-ai-duwoE.js";import"https://esm.sh/jsr/@pulgasari/str";import"https://esm.sh/jsr/@pulgasari/is";import"https://esm.sh/jsr/@pulgasari/logger";const c=a(async({driver:e,...r})=>t(r.root?r:{...r,driver:await s("files",e)}),"files");export{c as default};
