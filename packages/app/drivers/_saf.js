@@ -6,9 +6,9 @@ SafPlugin.java): the storage access framework. the picker persists the grant, so
 across restarts. a handle is its content:// uri, every uri the plugin gives is a document inside the
 picked tree: children are listed, never built from strings.
 
-no streaming over the bridge: a file is read whole and written on close, as base64. so peekFile() gives
-size, type and date without reading (what the listing brought along, else one stat): a listing, an index
-or a scan asks for that first.
+no streaming over the bridge: a file is read whole (or a range of it, readSlice) and written on close, as
+base64. so peekFile() gives size, type and date without reading (what the listing brought along, else one
+stat): a listing, an index or a scan asks for that first.
 */
 
 import { plugin } from './_capacitor.js';
@@ -49,6 +49,13 @@ class SafFile extends SafHandle {
     const stat  = await api.stat({ uri: this._uri }).catch(() => ({}));
     const { data } = await api.read({ uri: this._uri });
     return new File([fromBase64(data ?? '')], this.name, { lastModified: stat.mtime || Date.now(), type: stat.mime || mimeOf(this.name) });
+  }
+
+  // a range without the rest of the file over the bridge: Entry.slice of @rat/bunker asks
+  async readSlice (start = 0, end) {
+    const length   = end == null ? -1 : Math.max(0, end - start);
+    const { data } = await (await Saf()).read({ length, offset: start, uri: this._uri });
+    return new Blob([fromBase64(data ?? '')], { type: (await this.peekFile()).type });
   }
 
   // the parts are kept until close, then the whole content is replaced

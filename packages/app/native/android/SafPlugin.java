@@ -185,15 +185,20 @@ public class SafPlugin extends Plugin {
         }
     }
 
-    /** the whole file as base64. the bridge only carries strings */
+    /** the file as base64, whole or `length` bytes from `offset` (a head for tags: not the whole file over the bridge) */
     @PluginMethod
     public void read (PluginCall call) {
+        long offset = call.getData().optLong("offset", 0L);
+        long length = call.getData().optLong("length", -1L);
         try (InputStream in = resolver().openInputStream(docUri(parse(call, "uri")))) {
             if (in == null) { call.reject("could not open the file"); return; }
 
+            for (long skipped; offset > 0 && (skipped = in.skip(offset)) > 0; ) offset -= skipped;
+
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             byte[] chunk = new byte[64 * 1024];
-            for (int n; (n = in.read(chunk)) != -1; ) buf.write(chunk, 0, n);
+            long left = length < 0 ? Long.MAX_VALUE : length;
+            for (int n; left > 0 && (n = in.read(chunk, 0, (int) Math.min(chunk.length, left))) != -1; left -= n) buf.write(chunk, 0, n);
 
             JSObject out = new JSObject();
             out.put("data", Base64.encodeToString(buf.toByteArray(), Base64.NO_WRAP));
