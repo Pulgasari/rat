@@ -17,6 +17,7 @@ reads the signals.
   await folders.remove(id);          // forgets it, the files stay
   await folders.scan(id);
   folders.nodeAt(id, path);          // a file node of a tree, or null
+  await folders.entryAt(id, path);   // its entry, off disk while the tree is not there yet
   await folders.read(node);          // its text, fresh off disk
   folders.handleOf(id);              // the folder's directory handle, for an app that reads it itself
 
@@ -150,6 +151,11 @@ function createFolders ({ accept, driver = web, id = 'folders', scan = true, tab
         : node.kind === 'file' ? (node.path === path ? node : null)
         : (node.children ?? []).reduce((found, child) => found ?? find(child), null);
       return find(folders.trees.value[sourceId]);
+    },
+
+    // a file by its path: the node of the tree, else off disk (the tree is not there yet while a scan runs)
+    async entryAt (sourceId, path) {
+      return folders.nodeAt(sourceId, path)?.entry ?? await files.get(sourceId)?.entry(path) ?? null;
     },
 
     handleOf : sourceId => handles.get(sourceId) ?? null,
