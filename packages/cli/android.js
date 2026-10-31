@@ -5,7 +5,7 @@ rat build --target android: the app as an android app, through capacitor. the ca
 here, beside the app (.capacitor/, not in git), from what config.rat.js says:
 
   android : { id: 'dev.pulgasari.files', name: 'Files', plugins: ['filesync'] }   // all optional
-  android : { npm: ['@jofr/capacitor-media-session'] }                          // npm plugins of the app's own
+  android : { npm: ['@jofr/capacitor-media-session@4'] }                        // npm plugins of the app's own, name@version
 
   1. the web build of the app (target android: capacitor's drivers only) into .capacitor/www (build.js)
   2. the project: capacitor.config.json, a package.json with the plugins the app's mods need (files ->
@@ -48,6 +48,9 @@ const PLUGINS = {
 
 // every app loads its store at the start (rat-app, useStored), named in config.rat.js or not
 const ALWAYS = PLUGINS.store;
+
+// an npm plugin of android.npm has a version of its own: 'name@version' ('@scope/name@4'), else the newest
+const packageOf = spec => { const at = spec.lastIndexOf('@'); return at > 0 ? [spec.slice(0, at), spec.slice(at + 1)] : [spec, 'latest']; };
 
 // what an npm plugin of android.npm misses in its own manifest
 const NEEDS = {
@@ -110,8 +113,9 @@ async function scaffold (project, { id, mods, name, npm, slug }) {
 
   await writeFile(join(project, 'capacitor.config.json'), JSON.stringify({ appId: id, appName: name, webDir: 'www' }, null, 2) + '\n');
 
-  const plugins      = [...new Set([...ALWAYS, ...mods.flatMap(mod => PLUGINS[mod]), ...npm])].sort();
-  const dependencies = { ...Object.fromEntries(['@capacitor/android', '@capacitor/cli', '@capacitor/core', ...plugins].map(name => [name, VERSION])), sharp: SHARP };
+  const own          = Object.fromEntries(npm.map(packageOf));
+  const plugins      = [...new Set([...ALWAYS, ...mods.flatMap(mod => PLUGINS[mod]), ...Object.keys(own)])].sort();
+  const dependencies = { ...Object.fromEntries(['@capacitor/android', '@capacitor/cli', '@capacitor/core', ...plugins].map(name => [name, own[name] ?? VERSION])), sharp: SHARP };
   await writeFile(join(project, 'package.json'), JSON.stringify({ dependencies, name: `rat-${slug}-android`, private: true }, null, 2) + '\n');
 
   print(`${name}: ${plugins.length ? plugins.join(', ') : 'no npm plugins'}`);
@@ -180,7 +184,7 @@ async function addNative (project, native, npm) {
     await copyJava(dir, javaDir, registered);
     if (existsSync(join(dir, 'manifest.json'))) manifest = addToManifest(manifest, JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8')));
   }
-  for (const name of npm) if (NEEDS[name]) manifest = addToManifest(manifest, NEEDS[name]);
+  for (const [name] of npm.map(packageOf)) if (NEEDS[name]) manifest = addToManifest(manifest, NEEDS[name]);
   await writeFile(join(main, 'AndroidManifest.xml'), manifest);
 
   // the template's MainActivity, or one written here before: local plugins register before super.onCreate()
