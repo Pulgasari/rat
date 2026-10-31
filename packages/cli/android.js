@@ -5,10 +5,12 @@ rat build --target android: the app as an android app, through capacitor. the ca
 here, beside the app (.capacitor/, not in git), from what config.rat.js says:
 
   android : { id: 'dev.pulgasari.files', name: 'Files', plugins: ['filesync'] }   // all optional
+  android : { npm: ['@jofr/capacitor-media-session'] }                          // npm plugins of the app's own
 
   1. the web build of the app (target android: capacitor's drivers only) into .capacitor/www (build.js)
   2. the project: capacitor.config.json, a package.json with the plugins the app's mods need (files ->
-     @capacitor/filesystem, dialogs -> @capacitor/dialog …), npm install, cap add android once
+     @capacitor/filesystem, dialogs -> @capacitor/dialog …) and those of android.npm, npm install, cap
+     add android once
   3. rat's own plugins (@rat/app/native/android: Saf and NativeHttp always, the folders named in plugins)
      copied into the android project, registered in MainActivity, their manifest entries added. the app's
      icon, its color on the bars and the launch screen (android-res.js: android.icon, android.color)
@@ -46,6 +48,11 @@ const PLUGINS = {
 
 // every app loads its store at the start (rat-app, useStored), named in config.rat.js or not
 const ALWAYS = PLUGINS.store;
+
+// what an npm plugin of android.npm misses in its own manifest
+const NEEDS = {
+  '@jofr/capacitor-media-session' : { permissions: ['android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK'] },   // android 14 asks for it
+};
 
 const execute = (command, args, cwd) => new Promise((done, fail) => {
   print(color.gray(`${relative('.', cwd) || '.'} $ ${[command, ...args].join(' ')}`));
@@ -95,20 +102,21 @@ async function settingsOf (root) {
   const mods = [];
   for (const mod of Object.keys(PLUGINS)) if (used.has(mod) || await named(mod)) mods.push(mod);
 
-  return { android, config: file, id: android.id ?? `dev.rat.${slug}`, mods, name, native: android.plugins ?? [], slug };
+  return { android, config: file, id: android.id ?? `dev.rat.${slug}`, mods, name, native: android.plugins ?? [], npm: android.npm ?? [], slug };
 }
 
-async function scaffold (project, { id, mods, name, slug }) {
+async function scaffold (project, { id, mods, name, npm, slug }) {
   await mkdir(join(project, 'www'), { recursive: true });
 
   await writeFile(join(project, 'capacitor.config.json'), JSON.stringify({ appId: id, appName: name, webDir: 'www' }, null, 2) + '\n');
 
-  const plugins      = [...new Set([...ALWAYS, ...mods.flatMap(mod => PLUGINS[mod])])].sort();
+  const plugins      = [...new Set([...ALWAYS, ...mods.flatMap(mod => PLUGINS[mod]), ...npm])].sort();
   const dependencies = { ...Object.fromEntries(['@capacitor/android', '@capacitor/cli', '@capacitor/core', ...plugins].map(name => [name, VERSION])), sharp: SHARP };
   await writeFile(join(project, 'package.json'), JSON.stringify({ dependencies, name: `rat-${slug}-android`, private: true }, null, 2) + '\n');
 
   print(`${name}: ${plugins.length ? plugins.join(', ') : 'no npm plugins'}`);
-  await execute('npm', ['install', '--no-audit', '--no-fund'], project);
+  // a plugin of the app's own may name an older capacitor as its peer
+  await execute('npm', ['install', '--legacy-peer-deps', '--no-audit', '--no-fund'], project);
 
   // the id is the java package of the project: another one makes it anew
   const gradle = join(project, 'android', 'app', 'build.gradle');
@@ -158,7 +166,7 @@ async function findFile (dir, name) {
   return null;
 }
 
-async function addNative (project, native) {
+async function addNative (project, native, npm) {
   const main       = join(project, 'android', 'app', 'src', 'main');
   const javaDir    = join(main, 'java');
   const registered = [];
@@ -172,6 +180,7 @@ async function addNative (project, native) {
     await copyJava(dir, javaDir, registered);
     if (existsSync(join(dir, 'manifest.json'))) manifest = addToManifest(manifest, JSON.parse(await readFile(join(dir, 'manifest.json'), 'utf8')));
   }
+  for (const name of npm) if (NEEDS[name]) manifest = addToManifest(manifest, NEEDS[name]);
   await writeFile(join(main, 'AndroidManifest.xml'), manifest);
 
   // the template's MainActivity, or one written here before: local plugins register before super.onCreate()
@@ -222,7 +231,7 @@ export async function android (root) {
   const settings    = await settingsOf(root);
 
   await scaffold(project, settings);
-  await addNative(project, settings.native);
+  await addNative(project, settings.native, settings.npm);
   const { color: tint, icon } = await resources(project, settings.config, settings.android);
   print(`${settings.name}: ${icon ? `the icon of ${relative('.', icon)}, ` : ''}${tint} on the bars and the launch screen`);
   await execute('npx', ['cap', 'sync', 'android'], project);

@@ -57,18 +57,55 @@ audio.addEventListener('play',           () => { player.playing.value = true; })
 audio.addEventListener('timeupdate',     () => { player.time.value = audio.currentTime || 0; });
 
 // :::::: MEDIA SESSION
+// the controls in the system: the notification, the lock screen, headphone buttons. on android the
+// webview hands none of navigator.mediaSession to the system: the MediaSession plugin (config.rat.js,
+// android.npm) does, with a foreground service that keeps the app playing in the background
 
-const media = navigator.mediaSession;
+const native = globalThis.Capacitor?.isPluginAvailable?.('MediaSession') ? globalThis.Capacitor.Plugins.MediaSession : null;
+const web    = native ? null : navigator.mediaSession ?? null;
 
-function session (track) {
-  if (!media) return;
-  media.metadata = new MediaMetadata({ album: track.release, artist: track.artist, title: track.title });
+const system = {
+  action   : (action, handler) => { try { native ? native.setActionHandler({ action }, handler) : web?.setActionHandler(action, handler); } catch {} },   // a browser without the action throws
+  metadata : metadata          => native ? native.setMetadata(metadata) : web && (web.metadata = new MediaMetadata(metadata)),
+  position : ()                => {
+    if (!audio.duration || !Number.isFinite(audio.duration)) return;
+    const state = { duration: audio.duration, playbackRate: audio.playbackRate, position: Math.min(audio.currentTime, audio.duration) };
+    native ? native.setPositionState(state) : web?.setPositionState?.(state);
+  },
+  state    : playbackState     => native ? native.setPlaybackState({ playbackState }) : web && (web.playbackState = playbackState),
+};
+
+// the plugin turns no blob: url into a picture, a data: url it does
+const dataUrl = blob => new Promise((done, fail) => { const reader = new FileReader; reader.onload = () => done(reader.result); reader.onerror = fail; reader.readAsDataURL(blob); });
+
+async function artworkOf (track) {
+  if (!track.cover) return [];
+  try {
+    const url = await RAT.app.thumbnails.requestFile(track.cover, () => null);
+    if (!url) return [];
+    if (!native) return [{ src: url }];
+    const blob = await (await fetch(url)).blob();
+    return [{ src: await dataUrl(blob), type: blob.type }];
+  }
+  catch { return []; }
 }
 
-media?.setActionHandler('nexttrack',     () => player.next());
-media?.setActionHandler('pause',         () => audio.pause());
-media?.setActionHandler('play',          () => audio.play());
-media?.setActionHandler('previoustrack', () => player.previous());
+async function session (track) {
+  const metadata = { album: track.release, artist: track.artist, title: track.title };
+  system.metadata(metadata);
+  const artwork = await artworkOf(track);
+  if (artwork.length && player.track === track) system.metadata({ ...metadata, artwork });
+}
+
+audio.addEventListener('play',           () => system.state('playing'));
+audio.addEventListener('pause',          () => system.state(audio.ended && player.index.value >= player.queue.value.length - 1 ? 'none' : 'paused'));
+for (const type of ['durationchange', 'play', 'pause', 'ratechange', 'seeked']) audio.addEventListener(type, system.position);
+
+system.action('nexttrack',     () => player.next());
+system.action('pause',         () => audio.pause());
+system.action('play',          () => audio.play());
+system.action('previoustrack', () => player.previous());
+system.action('seekto',        details => details?.seekTime != null && player.seek(details.seekTime));
 
 // :::::: EXPORT
 
