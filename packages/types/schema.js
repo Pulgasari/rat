@@ -8,8 +8,8 @@ import { isFn, isObject, isSchema, isString } from './_shared.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
 
-const MADE  = new WeakMap;          // a value create() made -> the schema it was made by
-const TYPED = new WeakMap;   // a type -> how typed() made it, for variant()
+const MADE  = new WeakMap; // a value create() made -> the schema it was made by
+const TYPED = new WeakMap; // a type -> how typed() made it, for variant()
 
 const // symbols
 BARE   = Symbol('rat.bare'),
