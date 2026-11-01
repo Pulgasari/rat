@@ -36,13 +36,11 @@ export function isSignal    (value: unknown): value is ReadSignal<unknown>;
 export function isSchema    (value: unknown): value is StandardSchema;
 
 /** Methods and getters that read subscribe, methods and setters that write notify. A write check returns false when nothing changes. */
-export interface Variant {
-  reads?  : (string | symbol)[];
-  writes? : (string | symbol)[] | Record<string | symbol, true | ((target: any, ...args: any[]) => boolean)>;
-}
 
-/** A subclass of Base whose instances report reads and writes. */
-export function reactive<C extends new (...args: any[]) => any> (Base: C, variant: Variant): C;
+/** A subclass of Base whose instances report reads and writes: a getter reads, a setter writes, a method writes when its name is a write (set, push, toggle …, SET), else reads. */
+export function reactive<C extends new (...args: any[]) => any> (Base: C): C;
+/** The name of a write that sets one field (a Record's, a scalar's value). */
+export const SET: unique symbol;
 export function isReactive (value: unknown): boolean;
 /** The registered variant for a value, or the value itself. */
 export function wrap<T> (value: T): T;

@@ -75,13 +75,7 @@ class RecordType {
 const Record = typed(RecordType, recordOf, { kind: 'record', name: 'Record' });
 
 // one version for the whole record: a field write updates whatever read any field
-const $Record = variant(Record, {
-  reads  : [GET, 'toJSON'],
-  writes : {
-    [SET]  : (record, key, value) => !Object.is(record[GET](key), value),
-    assign : true,
-  },
-});
+const $Record = variant(Record);
 
 // :::::: EXPORT
 

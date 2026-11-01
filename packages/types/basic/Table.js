@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { LIST_READS, LIST_WRITES, List } from './List.js';
+import { List } from './List.js';
 import { Record } from './Record.js';
 import { STORED, Schema, issue, partsIn, typed, variant } from './../schema.js';
 import { isArray } from './../_shared.js';
@@ -69,10 +69,7 @@ class TableType extends List {
 const Table = typed(TableType, tableOf, { kind: 'table', name: 'Table' });
 
 // one version for the whole table
-const $Table = variant(Table, {
-  reads  : [...LIST_READS, 'column', 'columns'],
-  writes : [...LIST_WRITES, 'update'],
-});
+const $Table = variant(Table);
 
 // :::::: EXPORT
 

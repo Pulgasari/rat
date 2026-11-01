@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { SCHEMA, SIGNAL, STORED, Signal, reactive, register, stored } from '@rat/signals';
+import { SCHEMA, SET, SIGNAL, STORED, Signal, reactive, register, stored } from '@rat/signals';
 import { isFn, isObject, isSchema, isString } from './_shared.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
@@ -12,8 +12,7 @@ const TYPED = new WeakMap; // a type -> how typed() made it, for variant()
 
 const // symbols
 BARE   = Symbol('rat.bare'),
-GET    = Symbol('rat.scalar.get'),
-SET    = Symbol('rat.scalar.set'); // STORED and SCHEMA come from @rat/signals (stored())
+GET    = Symbol('rat.scalar.get'); // SET (a write by name), STORED and SCHEMA come from @rat/signals
 
 const bare          = (Type)  => Object.defineProperty(Type, BARE, { value: true });
 const byConstructor = (Type, schema, value) => new Type (schema, value);
@@ -163,10 +162,6 @@ class Scalar {
   toJSON   () { return this[GET](); }
   toString () { return String(this[GET]()); }
   valueOf  () { return this[GET](); }
-
-  // what reactive() needs of every scalar: its reads, and a write of value that changes something
-  static reads   = ['value', 'toJSON', 'toString', 'valueOf'];
-  static changes = (scalar, value) => !Object.is(scalar[GET](), value);
 }
 
 // :::::: DATA TYPES
@@ -180,7 +175,7 @@ the class stays a class (new, extends, instanceof), only a call differs.
 the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
 
 const List  = typed(ListType, listOf, { kind: 'list', make, name: 'List' });
-const $List = variant(List, { reads, writes });
+const $List = variant(List);
 
 kind: a schema of this kind handed to the call is taken as it is (List(Tags) is Tags).
 make: (Type, schema, value) -> the value for create(), when the constructor is not (schema, value).
@@ -198,9 +193,9 @@ function typed (Class, toSchema, { kind = null, make = byConstructor, name = nul
 
 // the reactive variant of a typed type: reads subscribe, writes notify (reactive() of @rat/signals). called it is
 // the schema as well, whose create() makes the variant. registered, so $() gives it for a value of the type
-function variant (Type, spec) {
+function variant (Type) {
   const made = TYPED.get(Type);
-  const $Type = typed(reactive(Type, spec), made.toSchema, made);
+  const $Type = typed(reactive(Type), made.toSchema, made);
   register(Type, $Type);
   return $Type;
 }
