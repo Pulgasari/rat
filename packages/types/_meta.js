@@ -9,7 +9,7 @@ const READS = [
 ];
 
 const WRITES = [
-  'clear',
+  'clear', 'cycle',
   'delete', 'drop',
   'fill',
   'pop', 'push',
