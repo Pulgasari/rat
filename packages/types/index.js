@@ -2,28 +2,22 @@
 
 export { Schema, bare, isSchema, schemaOf } from './schema.js';
 
-// scalars: schemas of plain values, and their reactive variant
-export { Bool, $Bool } from './Bool.js';
-export { Num,  $Num  } from './Num.js';
-export {
-  Str, $Str,
-  CamelCase, ConstantCase, KebabCase, LowerCase, MockingCase, PascalCase, SnakeCase, TitleCase, UpperCase,
-} from './Str.js';
-
-export { Fn } from './Fn.js';
-
 // Basic DataTypes + their reactive variant
 export {         $Array  } from './basic/Array.js';
-export { Dict,   $Dict   } from './Dict.js';
-export { Enum,   $Enum   } from './Enum.js';
-export { List,   $List   } from './List.js';
-export {         $Map    } from './Map.js';
-export { Record, $Record } from './Record.js';
-export { Segments        } from './Segments.js';
-export { Table,  $Table  } from './Table.js';
-export {         $Set    } from './Set.js';
-export { Tuple           } from './Tuple.js';
-export { Union           } from './Union.js';
+export { Bool,   $Bool   } from './basic/Bool.js';
+export { Dict,   $Dict   } from './basic/Dict.js';
+export { Enum,   $Enum   } from './basic/Enum.js';
+export { Fn              } from './basic/Fn.js';
+export { List,   $List   } from './basic/List.js';
+export {         $Map    } from './basic/Map.js';
+export { Num,    $Num    } from './basic/Num.js';
+export { Record, $Record } from './basic/Record.js';
+export { Segments        } from './basic/Segments.js';
+export { Str,    $Str    } from './basic/Str.js';
+export { Table,  $Table  } from './basic/Table.js';
+export {         $Set    } from './basic/Set.js';
+export { Tuple           } from './basic/Tuple.js';
+export { Union           } from './basic/Union.js';
 
 // Additional DataTypes + their reactive variant
 export { Color, $Color }   from './special/Color.js';
@@ -39,3 +33,16 @@ export { by, has, keyBy, one, pluck, sortBy, toSortedBy, where, without } from '
 
 // Quatsch
 export { Id, Ref } from './id.js';
+
+// String Cases
+export {
+  CamelCase,
+  ConstantCase, 
+  KebabCase, 
+  LowerCase, 
+  MockingCase, 
+  PascalCase, 
+  SnakeCase, 
+  TitleCase, 
+  UpperCase,
+} from './Str.js';
