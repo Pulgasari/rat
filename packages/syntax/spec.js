@@ -58,8 +58,8 @@ const apply = ['<|', '::'];   // two spellings of the same, to try out
 const templateTags = ['html', 'htx', 'rat'];
 
 const files = {
-  rat   : { extensions: ['rat'],    name: 'RAT',    root: 'markup', scopeName: 'source.rat'    },
-  ratjs : { extensions: ['rat.js'], name: 'RAT JS', root: 'script', scopeName: 'source.rat.js' },
+  rat   : { extensions: ['rat', 'rat.html'], name: 'RAT',    root: 'markup', scopeName: 'source.rat'    },
+  ratjs : { extensions: ['rat.js'],          name: 'RAT JS', root: 'script', scopeName: 'source.rat.js' },
 };
 
 // :::::: PATTERNS

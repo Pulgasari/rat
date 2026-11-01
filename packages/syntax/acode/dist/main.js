@@ -58,7 +58,7 @@
   var apply = ["<|", "::"];
   var templateTags = ["html", "htx", "rat"];
   var files = {
-    rat: { extensions: ["rat"], name: "RAT", root: "markup", scopeName: "source.rat" },
+    rat: { extensions: ["rat", "rat.html"], name: "RAT", root: "markup", scopeName: "source.rat" },
     ratjs: { extensions: ["rat.js"], name: "RAT JS", root: "script", scopeName: "source.rat.js" }
   };
   var escape = (string) => string.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&");
