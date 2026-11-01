@@ -3,7 +3,8 @@
 // :::::: IMPORT
 
 import { by, has, keyBy, one, pluck, where, without } from './../query.js';
-import { Schema, isSchema, issue, madeBy, partsIn, schemaOf, typed, variant } from './../schema.js';
+import { Schema, issue, madeBy, partsIn, schemaOf, typed, variant } from './../schema.js';
+import { isArray, isSchema } from './../_shared.js';
 
 // ::: DATA TYPE
 
@@ -135,7 +136,7 @@ function listOf (given) {
     parts    : { item },
     run      : (value, path) => {
       const list = value instanceof ListType;
-      if (!list && !Array.isArray(value)) return issue('expected a list', path);
+      if (!list && !isArray(value)) return issue('expected a list', path);
       const result = partsIn((list ? value.toArray() : value).map((entry, index) => [index, item, entry]), path);
       if (result.issues || !result.changed) return result.issues ? result : { value };
       return { value: list ? new value.constructor(result.values) : result.values };
