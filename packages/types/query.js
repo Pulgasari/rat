@@ -24,27 +24,33 @@ order, 'desc' after a key flips it ('asc' is the default). strings compare natur
 */
 
 import { is } from './match.js';
+import { isArray, isFn, isString } from './_shared.js';
 
-const arrayOf  = list => Array.isArray(list) ? list : [...list];
-const getterOf = key  => typeof key === 'function' ? key : item => item?.[key];
+const arrayOf  = (list) => isArray(list) ? list : [...list];
+const getterOf = (key)  => isFn(key) ? key : item => item?.[key];
 
 // :::::: ORDER
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-
-const compare = (a, b) => typeof a === 'string' && typeof b === 'string' ? collator.compare(a, b) : a < b ? -1 : a > b ? 1 : 0;
+const compare  = (a,b) => isString(a) && isString(b) ? collator.compare(a,b) : a < b ? -1 : a > b ? 1 : 0;
 
 function by (...keys) {
   const rules = [];
   for (const key of keys) {
-    if (key === 'asc' || key === 'desc') { if (rules.length) rules.at(-1).sign = key === 'desc' ? -1 : 1; continue; }
+    if (key === 'asc' || key === 'desc') { 
+      if (rules.length) rules.at(-1).sign = key === 'desc' ? -1 : 1;
+      continue; 
+    }
     rules.push({ get: getterOf(key), sign: 1 });
   }
 
   return (a, b) => {
     for (const { get, sign } of rules) {
       const left = get(a), right = get(b);
-      if (left == null || right == null) { if (left == null && right == null) continue; return left == null ? 1 : -1; }
+      if (left == null || right == null) {
+        if (left == null && right == null) continue;
+        return left == null ? 1 : -1; 
+      }
       const result = compare(left, right);
       if (result) return sign * result;
     }

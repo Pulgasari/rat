@@ -1,27 +1,26 @@
 // @rat/types :: schema
 
-/*
-schemas are values (concept 5, d-14 a). a schema checks and coerces a value,
-knows its initial value and describes itself, and speaks the standard schema
-interface ('~standard'), so anything that takes zod or valibot takes these,
-and @rat/runtime's signal() takes a schema as its initial value:
-
-  let $view = Enum('grid', 'list');      // 'grid', and only 'grid' or 'list' from then on
-  let $zoom = Num.range(50, 200).default(100);
-
-every method returns a new schema, a schema never changes. Bool, Num, Str, Fn and Union are
-schemas only, the values they describe are plain js (Bool, Num and Str have a reactive variant,
-$Bool …, on Scalar below). Color, Enum, List, Record and Tuple are data types as well: called
-they give a schema, with new a value. one file each, this one holds what they all build on.
-*/
-
 // :::::: IMPORT
 
 import { SCHEMA, SIGNAL, STORED, Signal, reactive, register, stored } from '@rat/signals';
+import { isFn, isObject, isSchema, isString } from './_shared.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
 
-const MADE = new WeakMap;   // a value create() made -> the schema it was made by (value[SCHEMA], madeBy)
+const MADE  = new WeakMap; // a value create() made -> the schema it was made by (value[SCHEMA], madeBy)
+const TYPED = new WeakMap; // a type -> how typed() made it, for variant()
+
+const // symbols
+BARE   = Symbol('rat.bare'),
+GET    = Symbol('rat.scalar.get'),
+SET    = Symbol('rat.scalar.set'); // STORED and SCHEMA come from @rat/signals (stored())
+
+const bare          = (Type)  => Object.defineProperty(Type, BARE, { value: true });
+const byConstructor = (Type, schema, value) => new Type (schema, value);
+const byParse       = (Type, schema, value = schema.initial) => schema.parse(value); // create() of a type whose schema gives its values already (Segments, Path …)
+const issue         = (message, path) => ({ issues: [{ message, path }] }); // one issue as a result: return issue('expected a list', path)
+const madeBy        = (value)         => MADE.get(value);
+const schemaOf      = (value)         => isFn(value) && value[BARE] ? value() : value;
 
 // :::::: SCHEMA
 
@@ -49,16 +48,14 @@ class Schema {
     Object.freeze(this);
   }
 
-  derive (patch) { return new this.constructor({ ...this, ...patch, describe: { ...this.describe, ...patch.describe } }); }
-
   // a further condition: check(value => value % 2 === 0, 'even')
   check (fn, message = 'check failed', describe = {}) { return this.derive({ checks: [...this.checks, [fn, message]], describe }); }
 
-  default  (value) { return this.derive({ describe: { initial: value }, initial: value }); }
-  optional ()      { return this.derive({ describe: { optional: true }, nullable: true }); }
-
-  // kept beyond the page (stored() of @rat/signals): a key or { key, in, debounce, sync, version, migrate }
-  stored (options = {}) { return this.derive({ [STORED]: { ...this[STORED], ...(typeof options === 'string' ? { key: options } : options) } }); }
+  is       (value)        { return !this.validate(value).issues; }
+  derive   (patch)        { return new this.constructor({ ...this, ...patch, describe: { ...this.describe, ...patch.describe } }); }
+  default  (value)        { return this.derive({ describe: { initial: value }, initial: value }); }
+  optional ()             { return this.derive({ describe: { optional: true }, nullable: true }); }
+  stored   (options = {}) { return this.derive({ [STORED]: { ...this[STORED], ...(isString(options) ? { key: options } : options) } }); }
 
   // $(schema): its signal, a kept one after stored() with a key
   [SIGNAL] () { return this[STORED]?.key ? stored({}, this) : new Signal(this); }
@@ -85,8 +82,6 @@ class Schema {
     const issues = this.checks.filter(([fn]) => !fn(result.value)).map(([, message]) => ({ message, path }));
     return issues.length ? { issues } : result;
   }
-
-  is (value) { return !this.validate(value).issues; }
 
   // a value of the data type this schema was made by: $Dict(Key, Value).create({ … }) is a $Dict with it
   create (value) {
@@ -127,9 +122,6 @@ class Schema {
   }}
 }
 
-// one issue as a result: return issue('expected a list', path)
-const issue = (message, path) => ({ issues: [{ message, path }] });
-
 // the parts of a structure, each through its schema: [[key, schema, value], …] -> { issues } or { values, changed }.
 // changed: a part came out other than it went in, so the structure is made anew, else it stays the same object
 function partsIn (entries, path) {
@@ -145,13 +137,6 @@ function partsIn (entries, path) {
   return issues.length ? { issues } : { changed, values };
 }
 
-const
-isFn      = (value) => typeof value === 'function',
-isObject  = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),   // a structure's input: a class instance counts (a Record does)
-isSchema  = (value) => value instanceof Schema,
-isString  = (value) => typeof value === 'string',
-madeBy    = (value) => MADE.get(value);
-
 // :::::: SCALARS: Bool, Num, Str
 
 // the run of a scalar schema: coerce, then a type test
@@ -159,11 +144,6 @@ const scalar = (kind, test, coerce = value => value) => (input, path) => {
   const value = coerce(input);
   return test(value) ? { value } : issue(`expected ${kind}`, path);
 };
-
-// a scalar as an object with value, the base of $Bool, $Num, $Str: a write is checked by the schema.
-// (value), (value, schema) or (schema): at the schema's initial value
-const GET = Symbol('rat.scalar.get');
-const SET = Symbol('rat.scalar.set');
 
 class Scalar {
   #value;
@@ -191,22 +171,21 @@ class Scalar {
 
 // :::::: DATA TYPES
 
-// one name for a data type and its schema: `new List(items)` is a list, `List(Str)` the schema
-// of a list of strings. the class stays a class (new, extends, instanceof), only a call differs.
-// the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
-//
-//   const List  = typed(ListType, listOf, { kind: 'list', make, name: 'List' });
-//   const $List = variant(List, { reads, writes });
-//
-// kind: a schema of this kind handed to the call is taken as it is (List(Tags) is Tags).
-// make: (Type, schema, value) -> the value for create(), when the constructor is not (schema, value).
-// name: the name of the class, the type is called (ListType -> List)
-const byConstructor = (Type, schema, value) => new Type(schema, value);
+/*
+one name for a data type and its schema: 
+`new List(items)` is a list, 
+`List(Str)` the schema of a list of strings. 
 
-// create() of a type whose schema gives its values already (Segments, Path …)
-const byParse = (Type, schema, value = schema.initial) => schema.parse(value);
+the class stays a class (new, extends, instanceof), only a call differs.
+the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
 
-const TYPED = new WeakMap;   // a type -> how typed() made it, for variant()
+const List  = typed(ListType, listOf, { kind: 'list', make, name: 'List' });
+const $List = variant(List, { reads, writes });
+
+kind: a schema of this kind handed to the call is taken as it is (List(Tags) is Tags).
+make: (Type, schema, value) -> the value for create(), when the constructor is not (schema, value).
+name: the name of the class, the type is called (ListType -> List)
+*/
 
 function typed (Class, toSchema, { kind = null, make = byConstructor, name = null } = {}) {
   if (name) Object.defineProperty(Class, 'name', { value: name });
@@ -225,13 +204,6 @@ function variant (Type, spec) {
   register(Type, $Type);
   return $Type;
 }
-
-// a type whose schema takes nothing stands for it where a schema is asked: { path: Path } is { path: Path() }.
-// bare() marks such a type (Color, Path …), schemaOf() calls it, a structure asks it for each of its parts
-const BARE = Symbol('rat.bare');
-
-const bare     = (Type)  => Object.defineProperty(Type, BARE, { value: true });
-const schemaOf = (value) => isFn(value) && value[BARE] ? value() : value;
 
 // :::::: EXPORT
 

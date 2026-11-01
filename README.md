@@ -4,13 +4,6 @@
 
 experimental JS-framework.
 
-works great with:
-[@aufbau](https://github.com/pulgasari/aufbau/) ·
-[@bunker](https://github.com/pulgasari/bunker/) ·
-[@domina](https://github.com/pulgasari/domina/) ·
-[@gestalt](https://github.com/pulgasari/gestalt/) ·
-[@htx](https://github.com/pulgasari/htx/)
-
 ---
 
 official: 
