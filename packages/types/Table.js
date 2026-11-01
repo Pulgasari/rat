@@ -1,25 +1,11 @@
 // @rat/types :: Table, $Table
 
-/*
-Table is a List whose rows all follow one record schema: the same keys, other
-values. called, it is the schema:
-
-  const Todos = Table({ title: Str, done: Bool });      // or Table(Record({ … }))
-
-  const todos = new Table(Todos, [{ title: 'milk' }]);  // a row gets the initial value of a missing field
-  todos.push({ title: 'eggs', done: true });            // checked and coerced like a Record
-  todos.update(0, { done: true });                      // a row is frozen: a change goes through the table
-  todos.column('title');                                // a List: milk, eggs
-  todos.where({ done: false });                         // the rows a test of match.js lets through, a List
-
-a row is a plain frozen object with exactly the columns, its position is its key. every List method
-works, the ones that add or replace rows check them. $Table has one version
-for the whole table: any write updates whatever read the table.
-*/
+// :::::: IMPORT
 
 import { LIST_READS, LIST_WRITES, List } from './List.js';
 import { Record } from './Record.js';
-import { Schema, issue, partsIn, typed, variant } from './schema.js';
+import { Schema, issue, partsIn, typed, variant } from './../schema.js';
+import { isArray } from './../_shared.js';
 
 // ::: SCHEMA
 
@@ -37,7 +23,7 @@ function tableOf (shape) {
     parts    : { row },
     run      : (value, path) => {
       if (value instanceof TableType) return { value };
-      if (!Array.isArray(value)) return issue('expected a table', path);
+      if (!isArray(value)) return issue('expected a table', path);
       const result = partsIn(value.map((entry, index) => [index, row, { ...row.initial, ...entry }]), path);
       return result.issues ? result : { value: result.values };
     },
@@ -67,11 +53,11 @@ class TableType extends List {
 
   column (key) { return this.map(row => row[key]); }
 
-  push    (...rows)        { return super.push    (...rows.map(this.parse)); }
-  unshift (...rows)        { return super.unshift (...rows.map(this.parse)); }
-  set     (index, row)     { return super.set(index, this.parse(row)); }
-  replace (rows)           { return super.replace([...rows].map(this.parse)); }
-  update  (index, patch)   { return super.set(index, this.parse({ ...this.at(index), ...patch })); }
+  push    (...rows)               { return super.push    (...rows.map(this.parse)); }
+  unshift (...rows)               { return super.unshift (...rows.map(this.parse)); }
+  set     (index, row)            { return super.set(index, this.parse(row)); }
+  replace (rows)                  { return super.replace([...rows].map(this.parse)); }
+  update  (index, patch)          { return super.set(index, this.parse({ ...this.at(index), ...patch })); }
   splice  (start, count, ...rows) { return arguments.length < 2 ? super.splice(start) : super.splice(start, count, ...rows.map(this.parse)); }
 
   toJSON () { return this.toArray(); }
