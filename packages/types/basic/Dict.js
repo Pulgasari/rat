@@ -1,34 +1,11 @@
 // @rat/types :: Dict, $Dict
 
-/*
-Dict is a Map whose keys and values follow a schema each. called, it is the
-schema:
-
-  const Commands = Dict(Str.to(KebabCase), Record({ exec: Fn, title: Str.optional() }));
-  // or with fields for the value: Dict(Str.to(KebabCase), { exec: Fn, '?title': Str })
-
-  const commands = Commands.create();              // or new Dict(Commands), entries as the argument
-  commands.set('togglePlay', { exec: () => … });   // the key becomes 'toggle-play', the value is checked
-  commands.get('toggle_play').exec();              // a key is read through the key schema too
-  commands.has('Toggle Play');                     // true
-
-a key the key schema refuses is not there (get: undefined, has: false), set
-throws. an entry is a property too, read through read() (a subclass may give
-another view of it). the members of the Dict win: an entry named get, size,
-delete … is reached through get() and set() only.
-
-  commands.togglePlay;                     // commands.get('togglePlay')
-  commands.openSettings = { exec: … };     // commands.set('openSettings', …)
-  delete commands.togglePlay;
- $Dict, its reactive variant, is below: reads subscribe, writes notify,
-like $Map. called, it is the schema as well, whose create() makes a $Dict:
-
-  const commands = $Dict(Str.to(KebabCase), { exec: Fn }).create({ save: { exec: save } });
-*/
+// :::::: IMPORT
 
 import './Map.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
 import { Record } from './Record.js';
-import { Schema, isObject, issue, schemaOf, typed, variant } from './../schema.js';
+import { Schema, issue, schemaOf, typed, variant } from './../schema.js';
+import { isObject, isSymbol } from './../_shared.js';
 
 // ::: SCHEMA
 
@@ -71,7 +48,7 @@ function boundOf (target, key, method, proxy) {
   return methods.get(key);
 }
 
-const isMember = (target, key) => typeof key === 'symbol' || key in target;
+const isMember = (target, key) => isSymbol(key) || key in target;
 const member   = key => new TypeError(`[rat] ${String(key)} is a member of the Dict: an entry of that name goes through set() and delete()`);
 
 const ENTRIES = {

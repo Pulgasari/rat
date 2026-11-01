@@ -1,23 +1,5 @@
 // @rat/types :: $Array
 
-/*
-$Array: a plain js array whose reads subscribe and whose writes notify.
-a proxy, not a subclass: index access and length are no methods, only a proxy sees them. 
-Array.isArray is true, every array method works.
-
-  const $todos = new $Array([]);   // or $Array([])
-  $todos.push(todo);               // whatever read $todos updates
-  $todos[0] = other;               // the same
-  $todos.length;                   // reading subscribes
-
-registered for Array, so `let $todos = []` in a .rat script is a signal
-holding a $Array. the items are copied, the array handed in stays as it is.
-
-a mutating method runs on the array itself and notifies once. every other
-read (index, length, a method, iteration) subscribes to one version for the
-whole array, like $Map and $Set.
-*/
-
 import { REACTIVE, Signal, register, untrack } from '@rat/signals';
 
 // mutating methods: whether a call changed the array (length before, result, args)

@@ -1,37 +1,5 @@
 // @rat/signals :: reactive variants and $()
 
-/*
-a signal only notices reassignment. a container that is changed in place (a
-map that gets set(), a list that gets push()) needs a variant whose methods
-report what they do: reading methods subscribe to a version signal, writing
-methods bump it.
-
-  const $Map = reactive(Map);
-
-what is which comes from the names, the same for every class:
-
-  a getter         a read (size, length, value, hex)
-  a setter         a write (value = …, r = …)
-  a method         a write when its name is one of WRITES (set, push, toggle …), else a read
-
-a write runs untracked: what it reads of its target (Table's update reads at())
-does not subscribe the effect that writes.
-
-the version signal is created on first use, not in a field: a built-in like
-Map calls the overridden set() from its own constructor, before any field of
-a subclass exists.
-
-$() is the explicit form of what the compiler does with `let $x = …`: it
-always returns a signal (the compiler adds .value to every $name), and the
-registry decides which variant its value gets, now and on every write:
-
-  $(0)                  a signal of 0
-  $(Enum('a', 'b'))     a signal checked by the schema
-  $(new Map)            a signal holding a $Map, once a variant for Map is registered
-  $(signal)             the signal itself
-  $(value with [SIGNAL]) the signal it makes: a schema with .stored() gives one that is kept
-*/
-
 import { Signal, batch, isSchema, isSignal, untrack } from './core.js';
 
 const REACTIVE = Symbol.for('rat.reactive');
@@ -47,11 +15,21 @@ const isReactive = value => isSignal(value) || value?.[REACTIVE] === true;
 
 // ::: reactive(Class)
 
-// the names that change their target, in every class. SET writes one field (a Record's, a scalar's value)
+// the names that change their target, in every class: a getter reads, a setter writes, a method writes
+// when its name is here, else reads. SET writes one field (a Record's, a scalar's value)
 const SET    = Symbol.for('rat.set');
 const WRITES = new Set([
-  'add', 'assign', 'clear', 'cycle', 'dec', 'delete', 'drop', 'inc', 'off', 'on', 'pop', 'push',
-  'remove', 'replace', 'reverse', 'set', 'shift', 'sort', 'sortBy', 'splice', 'toggle', 'unshift', 'update',
+  'add', 'assign',
+  'clear', 'cycle',
+  'dec', 'delete', 'drop',
+  'fill',
+  'inc',
+  'off', 'on',
+  'pop', 'push',
+  'remove', 'replace', 'reverse',
+  'set', 'shift', 'sort', 'sortBy', 'splice',
+  'toggle',
+  'unshift', 'update',
   SET,
 ]);
 

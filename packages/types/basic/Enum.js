@@ -1,19 +1,6 @@
 // @rat/types :: Enum, $Enum
 
-/*
-Enum is a data type and, called, its schema:
-
-  const View     = Enum('grid', 'list', 'masonry');      // the schema: one of them, 'grid' first
-  const viewmode = new Enum('grid', 'list', 'masonry');  // a value: holds one of them
-  const other    = new Enum(View);                       // the same, from the schema
-  const copy     = new Enum(viewmode);                   // a copy, at viewmode's value
-
-  viewmode.value;     // 'grid'
-  viewmode.cycle();   // 'list', then 'masonry', then 'grid' again
-  viewmode.value = 'table';   // TypeError: one of grid, list, masonry
-
-$Enum, its reactive variant, is below.
-*/
+// :::::: IMPORT
 
 import { Schema, issue, typed, variant } from './../schema.js';
 
@@ -64,7 +51,7 @@ class EnumType {
 
 // create(value): at value, else at the initial one
 function atValue (Type, schema, value) {
-  const enumeration = new Type(schema);
+  const enumeration = new Type (schema);
   if (value !== undefined) enumeration.value = value;
   return enumeration;
 }

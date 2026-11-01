@@ -1,52 +1,5 @@
 // @rat/signals :: stored
 
-/*
-a value kept beyond the page: read back when it is made, written on every change. one word, three
-ways to say it:
-
-  // the primitive: a key and a value
-  let   $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));    // a signal
-  const $tabs  = stored('tabs', $List(Tab).create());                  // the variant itself, kept
-
-  // on the schema: the options travel with the type
-  let   $theme    = Enum.from(gestalt.themes).stored({ key: 'look', in: 'session' });   // $() makes the signal
-  const $settings = $Record(Settings).stored('settings').create();                     // create() the variant
-
-  // in a declaration, the compiler: the key is the name
-  let   $theme!    = Enum('zombie', 'oled', 'rainbow');   // stored('theme', Enum(…))
-  const $settings! = $Record(Settings).create();           // stored('settings', $Record(Settings).create())
-
-options, a key or
-  key        what it is kept under. a key written on the schema wins over the one of the call
-  scope      false: the key as it is. else made inside a named view, part or area, their names go
-             before it (stored.scope(), set by @rat/app): podcasts:tabs, search:tabs
-  in         the place, see below
-  debounce   ms after a change before it is written, default: once per microtask
-  sync       true: a change from elsewhere (another tab) comes in
-  version    the version of the shape. what was kept under another goes through migrate
-  migrate    (old, version) -> the value in today's shape, undefined drops it
-
-the place: the call, else the schema (a Table is many rows: { in: 'database' } on its schema), else
-stored.defaults.in (config.rat.js: stored: { in }), else 'store'. a place is { peek (key) | get (key), set (key, value),
-delete (key), on? ('change', fn), load? (), loaded?, sync? }, a @rat/bunker store is one.
-without @rat/app 'store' is localStorage, 'session' sessionStorage, 'memory' a Map; @rat/app puts
-RAT.app.store there, read ahead, and a store in the app's database as 'database'.
-
-a place that answers at once (peek) gives the value before anything reads it. any other answers once it
-can; a change made before that wins. what is read goes through the schema: its fit() where it has one
-(@rat/types: a record field by field, what no longer fits at its initial value), else the standard
-schema check. what is written is what toJSON gives.
-
-signals knows no types and no storage, only three things a value or a schema can say:
-
-  schema['~standard']   a standard schema, the check of what is read
-  schema[STORED]        the options of .stored() on a schema (@rat/types)
-  value[SCHEMA]         the schema a data type was made by ($List(Tab).create())
-
-the same key in the same place twice is the same signal. a variant can not be shared that way: the second
-one is kept as well, and warned about.
-*/
-
 import { Signal, batch, effect, isSchema, isSignal, untrack } from './core.js';
 import { REACTIVE, $ }                                         from './reactive.js';
 
