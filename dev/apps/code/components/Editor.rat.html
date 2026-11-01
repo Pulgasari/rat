@@ -4,11 +4,13 @@
 
   import { effect, untrack } from '@rat/runtime';
 
-  import { $current } from '../modules/documents.rat.js';
+  import { $current, $documents } from '../modules/documents.rat.js';
   import { $options, applyTheme, loadMonaco, optionsOf, setInstance } from '../modules/editor.rat.js';
+  import * as lsp from '../modules/lsp.js';
 
   let $box    = null;
   let $editor = null;
+  let $served = false;   // rat's language server is there
   let writing = false;
 
   effect(() => {
@@ -25,7 +27,10 @@
         if (writing || !document) return;
         document.content = made.getValue();
         document.dirty   = true;
+        lsp.change(made.getModel());
       });
+      // rat's language server for .rat.html and .rat.js: the document on screen is opened once it is there
+      lsp.attach(monaco).then(ok => { if (alive) $served = ok; });
       $editor = made;
       setInstance(made);
     });
@@ -51,6 +56,20 @@
       globalThis.monaco.editor.setModelLanguage(editor.getModel(), document.language);
       editor.updateOptions({ readOnly: document.readOnly || $options.readOnly });
     });
+  });
+
+  // the language server gets the document on screen (rat, ratjs) and keeps every open one, until it closes
+  effect(() => {
+    const editor = $editor, document = $current;
+    if (!$served || !editor || !document) return;
+    untrack(() => lsp.open(editor.getModel(), document.id, document.name, editor.getValue()));
+  });
+
+  let served = new Set;
+  effect(() => {
+    const ids = new Set($documents.map(document => document.id));
+    for (const id of served) if (!ids.has(id)) lsp.forget(id);
+    served = ids;
   });
 
   effect(() => {

@@ -44,6 +44,17 @@ it is in rat source (`$todos.filter` offers the array methods).
 Not known yet: the types of props and the index of an `@for`. That needs the
 compiler output with a source map.
 
+## in the browser
+
+The worker has no typescript (`js.js` needs a file system). An editor that has one
+asks `rat/javascript` (`{ textDocument, position }` → `{ region, text }`): the region
+at the position and the js text, with every offset of the source, which it hands to
+its own typescript. The code app does that with monaco's.
+
+Component tags complete from what the open documents know: their file names
+(`Card.rat.html`), the imports of their scripts, the tags in use. Components of an
+app's `autoImport` show up once a file uses them or is open.
+
 ## run
 
 ```sh
@@ -55,7 +66,7 @@ rat-language-server --stdio
 | file | starts the server |
 |---|---|
 | `node.js` | in node, over stdio (`--stdio`) or node ipc; the `bin` |
-| `worker.js` | in a web worker, over `postMessage`, for monaco or codemirror in the browser |
+| `worker.js` | in a web worker, over `postMessage`, for monaco or codemirror in the browser. `node build.js` bundles it into `dist/worker.js` (a worker has no import map), which the code app (`dev/apps/code/modules/lsp.js`) starts |
 | `index.js` | `start(connection)`, the server itself, independent of the transport |
 
 ## editors
