@@ -336,7 +336,7 @@ async function cover (track) {
 // a copy in the cache the webview reads in ranges (not the whole file over the bridge)
 export async function urlOf (track) {
   if (folders().perms.value[track.sourceId] !== 'granted') throw new Error('Reconnect the folder of this track in the settings first.');
-  const entry = folders().nodeAt(track.sourceId, track.path)?.entry;
+  const entry = await folders().entryAt(track.sourceId, track.path);
   if (!entry) throw new Error(`${track.name} is no longer in its folder`);
   return entry.url();
 }

@@ -1,9 +1,19 @@
 <script>
-  // <Cover id={track.cover} />: the cover of a track from the thumbnails (library.js put it there), else a note
+  // <Cover id={track.cover} />: the cover of a track from the thumbnails (library.js put it there), else a note.
+  // it follows id: the player keeps one Cover while its track changes
 
+  import { effect } from '@rat/signals';
+
+  let { $id } = this.props;
   let $url = null;
 
-  if (props.id) RAT.app.thumbnails.requestFile(props.id, () => null).then(url => { $url = url; }).catch(() => {});
+  effect(() => {
+    const id = $id;
+    let live = true;
+    $url = null;
+    if (id) RAT.app.thumbnails.requestFile(id, () => null).then(url => { if (live) $url = url; }).catch(() => {});
+    return () => { live = false; };
+  });
 </script>
 
 <span.cover style:background-image={$url ? `url("${$url}")` : null}>
