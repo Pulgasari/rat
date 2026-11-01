@@ -1,20 +1,10 @@
 // @rat/types :: Str, $Str, the cases of writing
 
-/*
-Str is a schema: the value is a plain string. the cases (CamelCase, KebabCase …) are schemas of Str that
-only pass a string already written that way; from() writes any string so. $Str is the reactive variant,
-an object with value and methods: a write is checked by the schema, reads subscribe, writes notify.
-
-  const Name = Str.min(1).max(80);
-  KebabCase.from('togglePlay');    // 'toggle-play'
-
-  const $query = new $Str('');
-  $query.clear();
-*/
+// :::::: IMPORT
 
 import { reactive } from '@rat/signals';
-
-import { GET, SET, Scalar, Schema, issue, isString, scalar } from './schema.js';
+import { GET, SET, Scalar, Schema, issue, scalar } from './../schema.js';
+import { isString } from './../_shared.js';
 
 // ::: SCHEMA
 
