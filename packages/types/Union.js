@@ -1,14 +1,8 @@
 // @rat/types :: Union
 
-/*
-Union is a schema: one of several cases, the first that fits. a case is any schema, named or by position.
+// :::::: IMPORT
 
-  const Exec = Union(Fn, Str);                     // a function, or the name of a command
-  const Shape = Union({ circle: Circle, rect: Rect });
-  Shape.which(value);                              // 'circle', 'rect' or null
-*/
-
-import { Schema, isSchema, issue, schemaOf } from './schema.js';
+import { Schema, isSchema, issue, schemaOf } from './../schema.js';
 
 // ::: SCHEMA
 
