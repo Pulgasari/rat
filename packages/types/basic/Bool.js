@@ -12,9 +12,10 @@ schema, reads subscribe, writes notify.
   $open.toggle();  $open.on();  $open.off();
 */
 
-import { reactive } from '@rat/signals';
+// :::::: IMPORT
 
-import { GET, SET, Scalar, Schema, isString, scalar } from './schema.js';
+import { reactive } from '@rat/signals';
+import { GET, SET, Scalar, Schema, isString, scalar } from './../schema.js';
 
 // ::: SCHEMA
 
@@ -40,7 +41,12 @@ Object.defineProperty(BoolType, 'name', { value: 'Bool' });
 
 const $Bool = reactive(BoolType, {
   reads  : Scalar.reads,
-  writes : { off: bool => bool[GET]() !== false, on: bool => bool[GET]() !== true, toggle: true, value: Scalar.changes },
+  writes : {
+    off    : bool => bool[GET]() !== false, 
+    on     : bool => bool[GET]() !== true, 
+    toggle : true, 
+    value  : Scalar.changes
+  },
 });
 
 // :::::: EXPORT
