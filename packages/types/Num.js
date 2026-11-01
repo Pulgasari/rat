@@ -1,20 +1,10 @@
 // @rat/types :: Num, $Num
 
-/*
-Num is a schema: the value is a plain, finite number. it reads numeric strings ('120' -> 120). $Num is
-the reactive variant, an object with value and methods: a write is checked by the schema, a step stops
-at its bounds, reads subscribe, writes notify.
-
-  const Zoom = Num.range(50, 200).default(100);
-  Num.int.parse('3');                               // 3
-
-  const $zoom = new $Num(100, Num.range(50, 200));  // or new $Num(Num.range(50, 200)): at its initial value
-  $zoom.inc(10);  $zoom.dec(10);
-*/
+// :::::: IMPORT
 
 import { reactive } from '@rat/signals';
-
-import { GET, SET, Scalar, Schema, isString, scalar } from './schema.js';
+import { GET, SET, Scalar, Schema, scalar } from './../schema.js';
+import { isString } from './../_shared.js';
 
 // ::: SCHEMA
 
