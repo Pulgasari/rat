@@ -9,6 +9,12 @@ const READS = [
 ];
 
 const WRITES = [
-  'clear', 'drop', 'pop', 'push', 'remove', 'replace', 'reverse',
-  'set', 'shift', 'sort', 'sortBy', 'splice', 'toggle', 'unshift',
+  'clear',
+  'drop',
+  'fill',
+  'pop', 'push',
+  'remove', 'replace', 'reverse',
+  'set', 'shift', 'sort', 'sortBy', 'splice', 
+  'toggle', 
+  'unshift',
 ];
