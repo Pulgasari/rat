@@ -1,9 +1,9 @@
 // @rat/types :: $Array
 
 /*
-$Array: a plain js array whose reads subscribe and whose writes notify. a
-proxy, not a subclass: index access and length are no methods, only a proxy
-sees them. Array.isArray is true, every array method works.
+$Array: a plain js array whose reads subscribe and whose writes notify.
+a proxy, not a subclass: index access and length are no methods, only a proxy sees them. 
+Array.isArray is true, every array method works.
 
   const $todos = new $Array([]);   // or $Array([])
   $todos.push(todo);               // whatever read $todos updates
