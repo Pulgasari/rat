@@ -13,7 +13,7 @@ export {
 export { Fn } from './Fn.js';
 
 // Basic DataTypes + their reactive variant
-export {         $Array  } from './Array.js';
+export {         $Array  } from './basic/Array.js';
 export { Dict,   $Dict   } from './Dict.js';
 export { Enum,   $Enum   } from './Enum.js';
 export { List,   $List   } from './List.js';
