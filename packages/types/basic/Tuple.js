@@ -1,21 +1,9 @@
 // @rat/types :: Tuple
 
-/*
-Tuple is a data type and, called, its schema:
+// :::::: IMPORT
 
-  const Entry = Tuple(Str, Num);          // the schema: a string, then a number, made a Tuple
-
-  const entry = new Tuple('rat', 3);      // a tuple
-  entry[0];                               // 'rat'
-  const [name, count] = entry;            // destructures like an array
-  entry.with(1, 4);                       // a new tuple: ('rat', 4)
-  entry.equals(new Tuple('rat', 3));      // true
-
-a tuple is frozen: fixed length, fixed values. a change is a new tuple, so
-there is no reactive variant, a signal holding a tuple is reactive enough.
-*/
-
-import { Schema, byParse, issue, partsIn, schemaOf, typed } from './schema.js';
+import { Schema, byParse, issue, partsIn, schemaOf, typed } from './../schema.js';
+import { isArray } from './../_shared.js';
 
 // ::: SCHEMA
 
@@ -29,8 +17,10 @@ function tupleOf (...given) {
     parts    : items,
     run      : (value, path) => {
       const tuple = value instanceof TupleType;
-      if (!tuple && !Array.isArray(value)) return issue('expected a tuple', path);
-      if (value.length !== items.length)   return issue(`expected ${items.length} items`, path);
+      
+      if (!tuple && !isArray(value))     return issue('expected a tuple', path);
+      if (value.length !== items.length) return issue(`expected ${items.length} items`, path);
+      
       const result = partsIn(items.map((item, index) => [index, item, value[index]]), path);
       if (result.issues) return result;
       return { value: tuple && !result.changed ? value : new TupleType(...result.values) };
