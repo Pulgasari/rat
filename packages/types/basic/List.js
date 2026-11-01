@@ -155,23 +155,10 @@ const LIST_READS = [
   'with', 'without',
   Symbol.iterator,
 ];
-
-const LIST_WRITES = {
-  clear   : list => list.length > 0,
-  drop    : (list, test) => list.has(test),
-  pop     : list => list.length > 0,
-  push    : (list, ...items) => items.length > 0,
-  remove  : (list, value) => list.includes(value),
-  replace : true,
-  reverse : (list) => list.length > 1,
-  set     : (list, index, value) => !Object.is(list.at(index), value),
-  shift   : (list) => list.length > 0,
-  sort    : (list) => list.length > 1,
-  sortBy  : (list) => list.length > 1,
-  splice  : true,
-  toggle  : true,
-  unshift : (list, ...items) => items.length > 0,
-};
+const LIST_WRITES = [
+  'clear', 'drop', 'pop', 'push', 'remove', 'replace', 'reverse',
+  'set', 'shift', 'sort', 'sortBy', 'splice', 'toggle', 'unshift',
+];
 
 const List  = typed(ListType, listOf, { kind: 'list', name: 'List' });
 const $List = variant(List, { reads: LIST_READS, writes: LIST_WRITES });
