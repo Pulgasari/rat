@@ -27,9 +27,8 @@ like $Map. called, it is the schema as well, whose create() makes a $Dict:
 */
 
 import './Map.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
-
 import { Record } from './Record.js';
-import { Schema, isObject, issue, schemaOf, typed, variant } from './schema.js';
+import { Schema, isObject, issue, schemaOf, typed, variant } from './../schema.js';
 
 // ::: SCHEMA
 
@@ -73,8 +72,7 @@ function boundOf (target, key, method, proxy) {
 }
 
 const isMember = (target, key) => typeof key === 'symbol' || key in target;
-
-const member = key => new TypeError(`[rat] ${String(key)} is a member of the Dict: an entry of that name goes through set() and delete()`);
+const member   = key => new TypeError(`[rat] ${String(key)} is a member of the Dict: an entry of that name goes through set() and delete()`);
 
 const ENTRIES = {
   deleteProperty (target, key)        { if (isMember(target, key)) throw member(key); return target.delete(key); },
