@@ -15,7 +15,7 @@ Enum is a data type and, called, its schema:
 $Enum, its reactive variant, is below.
 */
 
-import { Schema, issue, typed, variant } from './schema.js';
+import { Schema, issue, typed, variant } from './../schema.js';
 
 // ::: SCHEMA
 
