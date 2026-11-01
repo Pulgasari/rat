@@ -206,7 +206,6 @@ export {
   GET, SET, STORED,
   Scalar, Schema,
   bare, byParse, issue, partsIn, scalar, typed, variant,
-  isObject, isSchema, isString,
   madeBy, schemaOf,
 };
 

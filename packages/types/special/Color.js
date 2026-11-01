@@ -20,7 +20,8 @@ $Color, its reactive variant, is below.
 
 // :::::: IMPORT
 
-import { Schema, bare, isObject, issue, typed, variant } from './../schema.js';
+import { Schema, bare, issue, typed, variant } from './../schema.js';
+import { isObject } from './../_shared.js';
 
 // :::::: HELPERS
 

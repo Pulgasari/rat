@@ -2,7 +2,8 @@
 
 // :::::: IMPORT
 
-import { GET, SET, Schema, isObject, issue, partsIn, schemaOf, typed, variant } from './../schema.js';
+import { GET, SET, Schema, issue, partsIn, schemaOf, typed, variant } from './../schema.js';
+import { isObject } from './../_shared.js';
 
 // :::::: CONSTANTS
 

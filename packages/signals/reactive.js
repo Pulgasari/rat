@@ -20,7 +20,7 @@ const isReactive = value => isSignal(value) || value?.[REACTIVE] === true;
 const SET    = Symbol.for('rat.set');
 const WRITES = new Set([
   'add', 'assign',
-  'clear', 'cycle',
+  'clear', 'copyWithin', 'cycle',
   'dec', 'delete', 'drop',
   'fill',
   'inc',
@@ -99,4 +99,4 @@ $.register = register;
 
 // :::::: EXPORT
 
-export { $, REACTIVE, SET, SIGNAL, isReactive, reactive, register, wrap };
+export { $, REACTIVE, SET, SIGNAL, WRITES, isReactive, reactive, register, wrap };

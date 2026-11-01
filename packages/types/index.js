@@ -1,21 +1,20 @@
 // @rat/types
 
-export { Schema, bare, isSchema, schemaOf } from './schema.js';
+export { Schema, bare, schemaOf } from './schema.js';
+export { isSchema }               from './_shared.js';
 
 // Basic DataTypes + their reactive variant
-export {         $Array  } from './basic/Array.js';
+export { $Array, $Map, $Set } from './basic/builtins.js';
 export { Bool,   $Bool   } from './basic/Bool.js';
 export { Dict,   $Dict   } from './basic/Dict.js';
 export { Enum,   $Enum   } from './basic/Enum.js';
 export { Fn              } from './basic/Fn.js';
 export { List,   $List   } from './basic/List.js';
-export {         $Map    } from './basic/Map.js';
 export { Num,    $Num    } from './basic/Num.js';
 export { Record, $Record } from './basic/Record.js';
 export { Segments        } from './basic/Segments.js';
 export { Str,    $Str    } from './basic/Str.js';
 export { Table,  $Table  } from './basic/Table.js';
-export {         $Set    } from './basic/Set.js';
 export { Tuple           } from './basic/Tuple.js';
 export { Union           } from './basic/Union.js';
 

@@ -3,8 +3,8 @@
 // :::::: IMPORT
 
 import { reactive } from '@rat/signals';
-import { GET, SET, Scalar, Schema, isString, scalar } from './../schema.js';
-import { isBool } from './../_shared.js';
+import { GET, SET, Scalar, Schema, scalar } from './../schema.js';
+import { isBool, isString } from './../_shared.js';
 
 // ::: SCHEMA
 
