@@ -1,5 +1,6 @@
 const READS = [
   'at',
+  'column', 'columns',
   'entries', 'every',
   'filter', 'find', 'findIndex', 'flatMap', 'forEach',
   'get',
@@ -29,5 +30,5 @@ const WRITES = [
   'remove', 'replace', 'reverse',
   'set', 'shift', 'sort', 'sortBy', 'splice', 
   'toggle', 
-  'unshift',
+  'unshift', 'update',
 ];
