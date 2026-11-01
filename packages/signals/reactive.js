@@ -1,33 +1,5 @@
 // @rat/signals :: reactive variants and $()
 
-/*
-a signal only notices reassignment. a container that is changed in place (a
-map that gets set(), a list that gets push()) needs a variant whose methods
-report what they do: reading methods subscribe to a version signal, writing
-methods bump it.
-
-  const $Map = reactive(Map, {
-    reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', Symbol.iterator],
-    writes : { set: (map, key, value) => !map.has(key) || !Object.is(map.get(key), value), delete: true, clear: true },
-  });
-
-a getter is a read, a setter is a write (value on $Enum).
-
-the version signal is created on first use, not in a field: a built-in like
-Map calls the overridden set() from its own constructor, before any field of
-a subclass exists.
-
-$() is the explicit form of what the compiler does with `let $x = …`: it
-always returns a signal (the compiler adds .value to every $name), and the
-registry decides which variant its value gets, now and on every write:
-
-  $(0)                  a signal of 0
-  $(Enum('a', 'b'))     a signal checked by the schema
-  $(new Map)            a signal holding a $Map, once a variant for Map is registered
-  $(signal)             the signal itself
-  $(value with [SIGNAL]) the signal it makes: a schema with .stored() gives one that is kept
-*/
-
 import { Signal, batch, isSchema, isSignal, untrack } from './core.js';
 
 const REACTIVE = Symbol.for('rat.reactive');
