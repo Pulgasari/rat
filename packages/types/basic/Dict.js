@@ -97,8 +97,7 @@ class DictType extends Map {
 
 // ::: Dict + $Dict
 
-const Dict = typed(DictType, dictOf, { kind: 'dict', name: 'Dict' });
-
+const  Dict = typed(DictType, dictOf, { kind: 'dict', name: 'Dict' });
 const $Dict = variant(Dict);
 
 // :::::: EXPORT
