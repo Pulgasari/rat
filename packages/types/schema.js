@@ -50,16 +50,14 @@ class Schema {
     Object.freeze(this);
   }
 
-  derive (patch) { return new this.constructor({ ...this, ...patch, describe: { ...this.describe, ...patch.describe } }); }
-
   // a further condition: check(value => value % 2 === 0, 'even')
   check (fn, message = 'check failed', describe = {}) { return this.derive({ checks: [...this.checks, [fn, message]], describe }); }
 
-  default  (value) { return this.derive({ describe: { initial: value }, initial: value }); }
-  optional ()      { return this.derive({ describe: { optional: true }, nullable: true }); }
-
-  // kept beyond the page (stored.js): a key or { key, in, debounce, sync, version, migrate }
-  stored (options = {}) { return this.derive({ [STORED]: { ...this[STORED], ...(typeof options === 'string' ? { key: options } : options) } }); }
+  is       (value)        { return !this.validate(value).issues; }
+  derive   (patch)        { return new this.constructor({ ...this, ...patch, describe: { ...this.describe, ...patch.describe } }); }
+  default  (value)        { return this.derive({ describe: { initial: value }, initial: value }); }
+  optional ()             { return this.derive({ describe: { optional: true }, nullable: true }); }
+  stored   (options = {}) { return this.derive({ [STORED]: { ...this[STORED], ...(isString(options) ? { key: options } : options) } }); }
 
   // $(schema): its signal, a kept one after stored()
   [SIGNAL] () { return this[STORED] ? stored({}, this) : new Signal(this); }
@@ -72,8 +70,6 @@ class Schema {
     const issues = this.checks.filter(([fn]) => !fn(result.value)).map(([, message]) => ({ message, path }));
     return issues.length ? { issues } : result;
   }
-
-  is (value) { return !this.validate(value).issues; }
 
   // a value of the data type this schema was made by: $Dict(Key, Value).create({ … }) is a $Dict with it
   create (value) {
@@ -195,7 +191,6 @@ function variant (Type, spec) {
   register(Type, $Type);
   return $Type;
 }
-
 
 // :::::: EXPORT
 
