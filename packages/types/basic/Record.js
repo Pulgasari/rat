@@ -1,27 +1,10 @@
 // @rat/types :: Record, $Record
 
-/*
-Record is a data type and, called, its schema:
+// :::::: IMPORT
 
-  const Settings = Record({ view: Enum('grid', 'list'), zoom: Num.range(50, 200).default(100) });
-  const Command  = Record({ exec: Fn, '?title': Str });   // ? before a name: optional, Str.optional()
+import { GET, SET, Schema, isObject, issue, partsIn, schemaOf, typed, variant } from './../schema.js';
 
-  const settings = new Record(Settings);                  // { view: 'grid', zoom: 100 }
-  const custom   = new Record(Settings, { zoom: 120 });   // the rest at its initial value
-  const point    = new Record({ x: 0, y: 0 });            // no schema: fixed fields, any value
-
-  settings.zoom = 150;       // checked by the field's schema
-  settings.zoom = 'big';     // TypeError: expected a number
-  settings.size = 3;         // TypeError: no such field, a record is sealed
-  settings.assign({ view: 'list', zoom: 80 });
-
-fields are accessors on the instance, the values sit behind GET / SET, 
-so a field may be called anything but assign, schema and toJSON. 
-
-$Record, its reactive variant, is below.
-*/
-
-import { GET, SET, Schema, isObject, issue, partsIn, schemaOf, typed, variant } from './schema.js';
+// :::::: CONSTANTS
 
 const RESERVED = new Set(['assign', 'schema', 'toJSON']);
 
