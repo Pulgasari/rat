@@ -324,7 +324,7 @@ so a zod or valibot schema works as well (its initial value is `undefined`).
 ### kept values: `$name!`
 
 a `!` right after the name in a declaration keeps the value beyond the page ([persistence.md](../persistence.md),
-`stored` of `@rat/types`): read back when it is made, written on every change, the key is the name.
+`stored` of `@rat/signals`): read back when it is made, written on every change, the key is the name.
 
 ```js
 let $theme! = Enum('zombie', 'oled', 'rainbow');       // let $theme = $$.stored('theme', Enum(…))

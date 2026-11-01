@@ -11,3 +11,5 @@ export {
   $, REACTIVE, SIGNAL, reactive,
   isReactive, register, wrap 
 } from './reactive.js';
+
+export { SCHEMA, STORED, stored } from './stored.js';

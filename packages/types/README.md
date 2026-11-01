@@ -386,7 +386,7 @@ $query.clear();
 
 ### stored
 
-a value kept beyond the page (`stored.js`, [persistence.md](../../.md/persistence.md)): read back when it
+a value kept beyond the page (`stored()` of `@rat/signals`, re-exported here, [persistence.md](../../.md/persistence.md)): read back when it
 is made, written on every change. one word, three ways to say it:
 
 ```js
@@ -406,7 +406,7 @@ const $settings! = $Record(Settings).create();
 | option | |
 |---|---|
 | `key` | what it is kept under. one written on the schema wins over the name |
-| `in` | the place: the call, else the type (a `Table` goes to `'database'`), else `stored.defaults.in` (config: `stored: { in }`), else `'store'`. without `@rat/app`: `'store'` localStorage, `'session'` sessionStorage, `'memory'`; `stored.place(name, place)` adds one, a `@rat/bunker` store is one |
+| `in` | the place: the call, else the schema's (a `Table` schema says `'database'`), else `stored.defaults.in` (config: `stored: { in }`), else `'store'`. without `@rat/app`: `'store'` localStorage, `'session'` sessionStorage, `'memory'`; `stored.place(name, place)` adds one, a `@rat/bunker` store is one |
 | `debounce` | ms after a change before it is written, default once per microtask. pending writes run on `pagehide` and when the page is hidden |
 | `sync` | a change from elsewhere (another tab) comes in |
 | `version`, `migrate` | what was kept under another version goes through `migrate(old, version)` |

@@ -60,3 +60,59 @@ export const REACTIVE: unique symbol;
 
 /** A value with a method under this symbol makes its own signal in $(): a schema with .stored() one that is kept. */
 export const SIGNAL: unique symbol;
+
+/** value[SCHEMA]: the schema a data type was made by ($List(Tab).create()), for stored(). */
+export const SCHEMA: unique symbol;
+/** schema[STORED]: the options of .stored() on a schema (@rat/types), for stored(). */
+export const STORED: unique symbol;
+
+export interface StoredOptions {
+  /** What it is kept under. A key written on the schema wins over the one of the call (the name of $x!). */
+  key?      : string;
+  /** The place: 'store', 'session', 'database', 'memory' or one of stored.place(). Default: the schema's (a Table: 'database'), else stored.defaults.in, else 'store'. */
+  in?       : string;
+  /** false: the key as it is. Else, made inside a named view, part or area, their names go before it: podcasts:tabs. */
+  scope?    : boolean;
+  /** Ms after a change before it is written. Default: once per microtask. */
+  debounce? : number;
+  /** A change from elsewhere (another tab) comes in. */
+  sync?     : boolean;
+  /** The version of the shape: what was kept under another goes through migrate. */
+  version?  : number;
+  /** The value in today's shape, undefined drops it. */
+  migrate?  : (old: unknown, version: number) => unknown;
+}
+
+/** Where kept values live: a @rat/bunker store is one. Answers at once through peek, else through get. */
+export interface Place {
+  peek?   (key: string): unknown;
+  get?    (key: string): Promise<unknown>;
+  set     (key: string, value: unknown): unknown;
+  delete  (key: string): unknown;
+  on?     (type: 'change', fn: (change: { keys: string[], type: string }) => void): () => void;
+  load?   (): Promise<void>;
+  loaded? : boolean;
+  sync?   : boolean;
+}
+
+/**
+ * A value kept beyond the page: read back now, written on every change. A schema or a plain value gives a
+ * signal (the same key twice: the same signal), a reactive variant is kept in place and returned.
+ * The compiler's let $name! = … is stored('name', …).
+ */
+export declare const stored: {
+  <T>(options: string | StoredOptions, init: StandardSchema<T>): Signal<T>;
+  <V extends object>(options: string | StoredOptions, init: V): V;
+  <T>(options: string | StoredOptions, init?: T): Signal<T>;
+  /** Back to its initial value and gone from its place: in names one place, else every place. */
+  forget (key: string, options?: { in?: string }): Promise<unknown[]>;
+  /** A place under its name: @rat/app sets 'store' (RAT.app.store, read ahead) and 'database'. */
+  place (name: string, place: Place): void;
+  /** The names a key gets before it, where it is made. @rat/app: the named views, parts and areas around the component. */
+  scope (): string[];
+  /** The place of everything that names none (config.rat.js: stored: { in }). */
+  defaults : { in: string | null };
+  /** Every pending write, now (pagehide and a hidden page do it). */
+  flush (): void;
+};
+

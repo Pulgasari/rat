@@ -1,4 +1,4 @@
-// @rat/types :: stored
+// @rat/signals :: stored
 
 /*
 a value kept beyond the page: read back when it is made, written on every change. one word, three
@@ -26,23 +26,32 @@ options, a key or
   version    the version of the shape. what was kept under another goes through migrate
   migrate    (old, version) -> the value in today's shape, undefined drops it
 
-the place: the call, else the type (a Table is many rows: 'database'), else stored.defaults.in
-(config.rat.js: stored: { in }), else 'store'. a place is { peek (key) | get (key), set (key, value),
+the place: the call, else the schema (a Table is many rows: { in: 'database' } on its schema), else
+stored.defaults.in (config.rat.js: stored: { in }), else 'store'. a place is { peek (key) | get (key), set (key, value),
 delete (key), on? ('change', fn), load? (), loaded?, sync? }, a @rat/bunker store is one.
 without @rat/app 'store' is localStorage, 'session' sessionStorage, 'memory' a Map; @rat/app puts
 RAT.app.store there, read ahead, and a store in the app's database as 'database'.
 
 a place that answers at once (peek) gives the value before anything reads it. any other answers once it
-can; a change made before that wins. what is read goes through the schema: coerced, what is missing at
-its initial value, a field that no longer fits as well. what is written is what toJSON gives.
+can; a change made before that wins. what is read goes through the schema: its fit() where it has one
+(@rat/types: a record field by field, what no longer fits at its initial value), else the standard
+schema check. what is written is what toJSON gives.
+
+signals knows no types and no storage, only three things a value or a schema can say:
+
+  schema['~standard']   a standard schema, the check of what is read
+  schema[STORED]        the options of .stored() on a schema (@rat/types)
+  value[SCHEMA]         the schema a data type was made by ($List(Tab).create())
 
 the same key in the same place twice is the same signal. a variant can not be shared that way: the second
 one is kept as well, and warned about.
 */
 
-import { REACTIVE, Signal, batch, effect, isSignal, untrack, $ } from '@rat/signals';
-import { STORED, isObject, isSchema, madeBy } from './schema.js';
+import { Signal, batch, effect, isSchema, isSignal, untrack } from './core.js';
+import { REACTIVE, $ }                                         from './reactive.js';
 
+const SCHEMA  = Symbol.for('rat.schema');   // value[SCHEMA]: the schema it was made by
+const STORED  = Symbol.for('rat.stored');   // schema[STORED]: the options of .stored()
 const VERSION = '~version';
 
 // :::::: PLACES
@@ -82,27 +91,20 @@ function placeOf (name) {
   return placeOf(instead[name]);
 }
 
-const placeFor = (options, schema) => options.in ?? (schema?.kind === 'table' ? 'database' : null) ?? defaults.in ?? 'store';
+const placeFor = options => options.in ?? defaults.in ?? 'store';
 
 // answers at once: from memory after load(), or a sync driver
 const answers = place => typeof place.peek === 'function' && (place.loaded !== false || place.sync === true);
 
 // :::::: READ
 
-// the value in the schema's form. a record takes field by field, what does not fit stays initial
+// the value in the schema's form: its fit() (lenient, @rat/types), else the standard check. undefined drops it
 function fit (schema, value) {
   if (!schema) return value;
-  if (schema.kind === 'record' && isObject(value)) {
-    return Object.fromEntries(Object.entries(schema.parts).map(([key, part]) => {
-      const result = key in value ? part.validate(value[key]) : null;
-      return [key, result && !result.issues ? result.value : part.initial];
-    }));
-  }
-  const result = schema.validate(value);
+  const result = typeof schema.fit === 'function' ? schema.fit(value) : schema['~standard'].validate(value);
+  if (typeof result?.then === 'function') { console.warn('[rat] stored: an async schema can not check what is read, dropped'); return undefined; }
   if (result.issues) { console.warn(`[rat] stored: dropped, ${result.issues.map(issue => issue.message).join(', ')}`); return undefined; }
-  // items that are a data type of their own (a $Record) come back as one
-  const item = schema.kind === 'list' ? schema.parts?.item : null;
-  return item?.factory ? result.value.map(entry => item.create(entry)) : result.value;
+  return result.value;
 }
 
 // a variant takes the value in place
@@ -133,7 +135,7 @@ const optionsOf = options => typeof options === 'string' ? { key: options } : { 
 
 function stored (options, init) {
   const given  = optionsOf(options);
-  const schema = isSchema(init) ? init : init !== null && typeof init === 'object' ? madeBy(init) ?? init.schema : undefined;
+  const schema = isSchema(init) ? init : init !== null && typeof init === 'object' ? init[SCHEMA] : undefined;
   const own    = schema?.[STORED] ?? null;
   const key    = own?.key ?? given.key;
   const scope  = (own?.scope ?? given.scope) === false || !key ? [] : stored.scope();
@@ -144,7 +146,7 @@ function keep (options, init, schema) {
   const { debounce = 0, key, migrate, sync = false, version } = options;
   if (!key) throw new TypeError('[rat] stored: a key, written or from the name');
 
-  const name   = placeFor(options, schema);
+  const name   = placeFor(options);
   const place  = placeOf(name);
   const id     = `${name}:${key}`;
   const known  = kept.get(id);
@@ -219,6 +221,7 @@ function keep (options, init, schema) {
   else {
     take(raw);
     ready = true;
+    if (touched) schedule();   // a migration while reading: written back in today's shape
   }
 
   // no owner: it lives as long as the key, a component that made it may be gone
@@ -258,4 +261,4 @@ stored.flush    = flush;
 
 // :::::: EXPORT
 
-export { stored };
+export { SCHEMA, STORED, stored };

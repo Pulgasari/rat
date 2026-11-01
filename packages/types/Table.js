@@ -19,7 +19,7 @@ for the whole table: any write updates whatever read the table.
 
 import { LIST_READS, LIST_WRITES, List } from './List.js';
 import { Record } from './Record.js';
-import { Schema, issue, partsIn, typed, variant } from './schema.js';
+import { STORED, Schema, issue, partsIn, typed, variant } from './schema.js';
 
 // ::: SCHEMA
 
@@ -35,6 +35,7 @@ function tableOf (shape) {
     initial  : [],
     kind     : 'table',
     parts    : { row },
+    [STORED] : { in: 'database' },   // many rows: kept in the app's database, unless said otherwise
     run      : (value, path) => {
       if (value instanceof TableType) return { value };
       if (!Array.isArray(value)) return issue('expected a table', path);
