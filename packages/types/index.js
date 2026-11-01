@@ -26,7 +26,7 @@ export { Tuple           } from './Tuple.js';
 export { Union           } from './Union.js';
 
 // Additional DataTypes + their reactive variant
-export { Color, $Color }   from './Color.js';
+export { Color, $Color }   from './special/Color.js';
 
 // kept beyond the page
 export { stored } from './stored.js';
