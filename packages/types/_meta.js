@@ -21,6 +21,7 @@ const READS = [
 ];
 
 const WRITES = [
+  'assign',
   'clear', 'cycle',
   'delete', 'drop',
   'fill',
