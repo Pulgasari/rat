@@ -5,7 +5,7 @@ import { isFn } from './../_shared.js';
 
 // ::: SCHEMA
 
-const Fn = new Schema({ 
+const Fn = new Schema ({ 
   initial : undefined, 
   kind    : 'fn',
   run     : scalar('a function', value => isFn(value))
