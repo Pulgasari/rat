@@ -58,13 +58,7 @@ function atValue (Type, schema, value) {
 
 const Enum = typed(EnumType, enumOf, { kind: 'enum', make: atValue, name: 'Enum' });
 
-const $Enum = variant(Enum, {
-  reads  : ['value', 'is', 'toJSON', 'toString', 'valueOf'],
-  writes : {
-    cycle : enumeration => enumeration.values.length > 1,
-    value : (enumeration, value) => !enumeration.is(value),
-  },
-});
+const $Enum = variant(Enum);
 
 // :::::: EXPORT
 

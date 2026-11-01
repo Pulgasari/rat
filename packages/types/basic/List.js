@@ -146,23 +146,9 @@ function listOf (given) {
 
 // ::: List + $List
 
-const LIST_READS = [
-  'at',
-  'length', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 
-  'has', 'keyBy', 'one', 'pluck', 'where',
-  'toArray', 'toJSON',
-  'toReversed', 'toSorted', 'toSortedBy', 'toSpliced', 
-  'with', 'without',
-  Symbol.iterator,
-];
-const LIST_WRITES = [
-  'clear', 'drop', 'pop', 'push', 'remove', 'replace', 'reverse',
-  'set', 'shift', 'sort', 'sortBy', 'splice', 'toggle', 'unshift',
-];
-
 const List  = typed(ListType, listOf, { kind: 'list', name: 'List' });
-const $List = variant(List, { reads: LIST_READS, writes: LIST_WRITES });
+const $List = variant(List);
 
 // :::::: EXPORT
 
-export { LIST_READS, LIST_WRITES, List, $List };
+export { List, $List };

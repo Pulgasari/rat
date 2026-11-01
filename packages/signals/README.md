@@ -28,7 +28,7 @@ in a `.rat` file none of this is written by hand: `let $count = 0` compiles to
 | `onCleanup(fn)` | runs when the current owner runs again or is disposed |
 | `peek()` | the value without subscribing |
 | `$(value)` | the explicit form of `let $x = …`: always a signal, its value through the registry |
-| `reactive(Class, { reads, writes })` | a subclass whose reading methods subscribe and whose writing methods notify |
+| `reactive(Class)` | a subclass whose reading methods subscribe and whose writing methods notify, told apart by name |
 | `register(kind, variant)`, `$.register` | which variant `$()` gives a kind of value |
 
 `parent` is the owner that disposes the node: the current owner unless given, `null` for no
@@ -60,14 +60,24 @@ effect(() => console.log($bla.get('a')));   // logs undefined
 $bla.set('a', 1);                           // logs 1
 ```
 
-`reactive()` is how such a variant is made, `@rat/types` does it for `List`, `Map` and `Set`:
+`reactive()` is how such a variant is made, `@rat/types` does it for every data type:
 
 ```js
-const $Map = reactive(Map, {
-  reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', Symbol.iterator],
-  writes : { set: (map, key, value) => !map.has(key) || !Object.is(map.get(key), value), delete: (map, key) => map.has(key), clear: map => map.size > 0 },
-});
+const $Map = reactive(Map);
 ```
+
+what reads and what writes comes from the names, the same for every class (`WRITES` in
+`reactive.js`):
+
+| | |
+|---|---|
+| a getter | a read: `size`, `length`, `value`, `hex` |
+| a setter | a write: `value = …`, `r = …` |
+| a method named in `WRITES` | a write: `add`, `assign`, `clear`, `cycle`, `dec`, `delete`, `drop`, `inc`, `off`, `on`, `pop`, `push`, `remove`, `replace`, `reverse`, `set`, `shift`, `sort`, `sortBy`, `splice`, `toggle`, `unshift`, `update`, `[SET]` |
+| any other method | a read |
+
+a new method that changes its target needs its name in `WRITES`, else it reads. a write
+notifies every time, also when nothing changed (`set(key, sameValue)`).
 
 the same code works unchanged in `.js`, `.rat.js` and `.rat`: the compiler leaves a `$name`
 made with `new $Variant(…)` as written, no signal, no `.value`.
@@ -76,11 +86,11 @@ made with `new $Variant(…)` as written, no signal, no `.value`.
 signal whose value becomes a `$Map`. in a `.rat` script `let $bla = new Map` compiles to that,
 and lets `$bla` be reassigned (`$bla = new Map(entries)` gives a new `$Map`).
 
-- a `writes` entry is `true` or a check `(target, ...args) => changes?`, run untracked before
-  the write; when it says no, nothing is notified.
+- a write runs untracked: what it reads of its target (`update` reads `at()`) does not subscribe
+  the effect that writes.
 - the version signal is created on first use, so built-ins whose constructor calls the
   overridden method (`new Map(entries)` calls `set`) work.
-- `@rat/types` brings `$List`, `$Map` and `$Set` and registers them for `Array`, `Map` and `Set`.
+- `@rat/types` brings the variants (`$List`, `$Map`, `$Set`, `$Record` …) and registers them for `Array`, `Map` and `Set`.
 
 ## stored
 

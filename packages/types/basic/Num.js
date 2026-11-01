@@ -36,7 +36,7 @@ class NumType extends Scalar {
 
 Object.defineProperty(NumType, 'name', { value: 'Num' });
 
-const $Num = reactive(NumType, { reads: Scalar.reads, writes: { dec: true, inc: true, value: Scalar.changes } });
+const $Num = reactive(NumType);
 
 // :::::: EXPORT
 

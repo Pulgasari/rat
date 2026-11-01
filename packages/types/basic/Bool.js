@@ -27,15 +27,7 @@ class BoolType extends Scalar {
 
 Object.defineProperty(BoolType, 'name', { value: 'Bool' });
 
-const $Bool = reactive(BoolType, {
-  reads  : Scalar.reads,
-  writes : {
-    off    : bool => bool[GET]() !== false, 
-    on     : bool => bool[GET]() !== true, 
-    toggle : true, 
-    value  : Scalar.changes
-  },
-});
+const $Bool = reactive(BoolType);
 
 // :::::: EXPORT
 

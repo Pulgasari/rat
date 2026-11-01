@@ -98,7 +98,7 @@ class StrType extends Scalar {
 
 Object.defineProperty(StrType, 'name', { value: 'Str' });
 
-const $Str = reactive(StrType, { reads: Scalar.reads, writes: { clear: str => str[GET]() !== '', value: Scalar.changes } });
+const $Str = reactive(StrType);
 
 // :::::: EXPORT
 

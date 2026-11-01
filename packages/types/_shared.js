@@ -9,4 +9,5 @@ isBool   = (value) => typeof value === 'boolean',
 isFn     = (value) => typeof value === 'function',
 isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),      
 isSchema = (value) => value instanceof Schema,
-isString = (value) => typeof value === 'string';
+isString = (value) => typeof value === 'string',
+isSymbol = (value) => typeof value === 'symbol';

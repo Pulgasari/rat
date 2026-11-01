@@ -246,7 +246,7 @@ export const Record: RecordConstructor;
 /** A Record whose field reads subscribe and whose field writes notify, one version for all fields. Called, the schema whose create() makes one. */
 export const $Record: RecordConstructor;
 
-/** A value with a schema, like $Enum: reads subscribe, writes are checked and notify. */
+/** A value with a schema, like $Enum: reads subscribe, writes are checked by the schema and notify. */
 export interface Scalar<T> {
   readonly schema : Schema<T>;
   value : T;

@@ -154,23 +154,9 @@ class ColorType {
 
 // create(value): a color of its own, also from a color (parse would hand that one on)
 const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
-const differs = name => (color, value) => !Object.is(color[name], value);
 
 const Color  = bare(typed(ColorType, colorOf, { kind: 'color', make: ofValue, name: 'Color' }));
-const $Color = bare(variant(Color, {
-  reads  : ['r', 'g', 'b', 'a', 'h', 's', 'l', 'hex', 'equals', 'mix', 'toArray', 'toHsl', 'toJSON', 'toString'],
-  writes : {
-    a   : differs('a'),
-    b   : differs('b'),
-    g   : differs('g'),
-    h   : differs('h'),
-    hex : differs('hex'),
-    l   : differs('l'),
-    r   : differs('r'),
-    s   : differs('s'),
-    set : (color, input) => !color.equals(input),
-  },
-}));
+const $Color = bare(variant(Color));
 
 // :::::: EXPORT
 

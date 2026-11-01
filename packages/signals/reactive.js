@@ -13,64 +13,50 @@ const bump      = target => { versionOf(target).value++; };
 
 const isReactive = value => isSignal(value) || value?.[REACTIVE] === true;
 
-// ::: reactive(Class, { reads, writes })
+// ::: reactive(Class)
 
-// a descriptor up the prototype chain, for getters like size
-function descriptorOf (prototype, name) {
-  for (let current = prototype; current; current = Object.getPrototypeOf(current)) {
-    const descriptor = Object.getOwnPropertyDescriptor(current, name);
-    if (descriptor) return descriptor;
+// the names that change their target, in every class: a getter reads, a setter writes, a method writes
+// when its name is here, else reads. SET writes one field (a Record's, a scalar's value)
+const SET    = Symbol.for('rat.set');
+const WRITES = new Set([
+  'add', 'assign',
+  'clear', 'cycle',
+  'dec', 'delete', 'drop',
+  'fill',
+  'inc',
+  'off', 'on',
+  'pop', 'push',
+  'remove', 'replace', 'reverse',
+  'set', 'shift', 'sort', 'sortBy', 'splice',
+  'toggle',
+  'unshift', 'update',
+  SET,
+]);
+
+// the own names of a class and its parents, the nearest first, Object's own left out
+function namesOf (prototype) {
+  const found = new Map;
+  for (let current = prototype; current && current !== Object.prototype; current = Object.getPrototypeOf(current)) {
+    for (const name of Reflect.ownKeys(current)) if (name !== 'constructor' && !found.has(name)) found.set(name, Object.getOwnPropertyDescriptor(current, name));
   }
-  return null;
+  return found;
 }
 
-// writes: a list of names, or { name: true | (target, ...args) => changes? }
-const entriesOf = writes => Array.isArray(writes) ? writes.map(name => [name, true]) : Reflect.ownKeys(writes).map(name => [name, writes[name]]);
-
-function reactive (Base, { reads = [], writes = [] } = {}) {
+function reactive (Base) {
   const Reactive = class extends Base {};
   Object.defineProperty(Reactive, 'name', { value: `$${Base.name}` });
   Object.defineProperty(Reactive.prototype, REACTIVE, { value: true });
 
-  for (const name of reads) {
-    const descriptor = descriptorOf(Base.prototype, name);
-    if (!descriptor) throw new TypeError(`[rat] ${Base.name} has no ${String(name)} to read`);
-    if (descriptor.get) {
-      const get = descriptor.get;
-      Object.defineProperty(Reactive.prototype, name, { configurable: true, get () { track(this); return get.call(this); }, set: descriptor.set });
+  const read  = fn => function (...args) { track(this); return fn.apply(this, args); };
+  const write = fn => function (...args) { return batch(() => { const result = untrack(() => fn.apply(this, args)); bump(this); return result; }); };
+
+  for (const [name, descriptor] of namesOf(Base.prototype)) {
+    if (descriptor.get || descriptor.set) {
+      Object.defineProperty(Reactive.prototype, name, { configurable: true, get: descriptor.get && read(descriptor.get), set: descriptor.set && write(descriptor.set) });
     }
-    else {
-      const method = descriptor.value;
-      Object.defineProperty(
-        Reactive.prototype, 
-        name,
-        { 
-          configurable: true, 
-          writable: true, 
-          value: function (...args) { 
-            track(this); 
-            return method.apply(this, args); 
-          }
-        }
-      );
+    else if (typeof descriptor.value === 'function') {
+      Object.defineProperty(Reactive.prototype, name, { configurable: true, value: (WRITES.has(name) ? write : read)(descriptor.value), writable: true });
     }
-    
-  }
-
-  for (const [name, changes] of entriesOf(writes)) {
-    const descriptor = descriptorOf(Base.prototype, name);
-    const method     = descriptor?.value ?? descriptor?.set;
-    if (typeof method !== 'function') throw new TypeError(`[rat] ${Base.name} has no method or setter ${String(name)} to write with`);
-
-    const write = function (...args) {
-      // the check reads the target: untracked, or an effect that writes would subscribe to its own write
-      if (changes !== true && !untrack(() => changes(this, ...args))) return method.apply(this, args);
-      return batch(() => { const result = method.apply(this, args); bump(this); return result; });
-    };
-
-    // a setter keeps its getter, the tracking one when the name is a read as well
-    if (descriptor.set) Object.defineProperty(Reactive.prototype, name, { configurable: true, get: descriptorOf(Reactive.prototype, name).get, set: write });
-    else Object.defineProperty(Reactive.prototype, name, { configurable: true, writable: true, value: write });
   }
 
   return Reactive;
@@ -113,4 +99,4 @@ $.register = register;
 
 // :::::: EXPORT
 
-export { $, REACTIVE, SIGNAL, isReactive, reactive, register, wrap };
+export { $, REACTIVE, SET, SIGNAL, isReactive, reactive, register, wrap };

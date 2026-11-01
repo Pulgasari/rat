@@ -99,14 +99,7 @@ class DictType extends Map {
 
 const Dict = typed(DictType, dictOf, { kind: 'dict', name: 'Dict' });
 
-const $Dict = variant(Dict, {
-  reads  : ['get', 'has', 'size', 'keys', 'values', 'entries', 'forEach', 'toJSON', Symbol.iterator],
-  writes : {
-    clear  : dict => dict.size > 0,
-    delete : (dict, key) => dict.has(key),
-    set    : true,
-  },
-});
+const $Dict = variant(Dict);
 
 // :::::: EXPORT
 
