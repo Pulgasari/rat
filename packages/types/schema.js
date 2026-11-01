@@ -19,6 +19,7 @@ they give a schema, with new a value. one file each, this one holds what they al
 
 import { Signal, SIGNAL, reactive, register } from '@rat/signals';
 import { stored } from './stored.js';
+import { isFn, isObject, isSchema, isString } from './_shared.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
 
@@ -133,12 +134,7 @@ function partsIn (entries, path) {
   return issues.length ? { issues } : { changed, values };
 }
 
-const
-isFn      = (value) => typeof value === 'function',
-isObject  = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),   // a structure's input: a class instance counts (a Record does)
-isSchema  = (value) => value instanceof Schema,
-isString  = (value) => typeof value === 'string',
-madeBy    = (value) => MADE.get(value);
+const madeBy = (value) => MADE.get(value);
 
 // :::::: SCALARS: Bool, Num, Str
 
