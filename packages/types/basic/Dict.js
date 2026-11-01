@@ -22,9 +22,12 @@ function dictOf (keyed, value) {
     parts    : { key, value: values },
     run      : (input, path) => {
       if (!(input instanceof Map) && !isObject(input)) return issue('expected a dict', path);
-      const issues = [];
-      const out    = new Map;
-      for (const [rawKey, rawValue] of input instanceof Map ? input : Object.entries(input)) {
+      
+      const issues  = [];
+      const out     = new Map;
+      const entries = input instanceof Map ? input : Object.entries(input);
+      
+      for (const [rawKey, rawValue] of entries) {
         const keyed = key.validate(rawKey, [...path, rawKey]);
         const value = values.validate(rawValue, [...path, rawKey]);
         if (keyed.issues) issues.push(...keyed.issues);
