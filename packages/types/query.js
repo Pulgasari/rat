@@ -24,10 +24,10 @@ order, 'desc' after a key flips it ('asc' is the default). strings compare natur
 */
 
 import { is } from './match.js';
-import { isString } from './_shared.js';
+import { isArray, isFn, isString } from './_shared.js';
 
-const arrayOf  = list => Array.isArray(list) ? list : [...list];
-const getterOf = key  => typeof key === 'function' ? key : item => item?.[key];
+const arrayOf  = (list) => isArray(list) ? list : [...list];
+const getterOf = (key)  => isFn(key) ? key : item => item?.[key];
 
 // :::::: ORDER
 
