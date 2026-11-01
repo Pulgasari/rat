@@ -1,5 +1,7 @@
 // @rat/types :: Fn
 
+// :::::: IMPORT
+
 import { Schema, scalar } from './../schema.js';
 import { isFn } from './../_shared.js';
 
@@ -8,7 +10,7 @@ import { isFn } from './../_shared.js';
 const Fn = new Schema ({ 
   initial : undefined, 
   kind    : 'fn',
-  run     : scalar('a function', value => isFn(value))
+  run     : scalar('a function', isFn)
 });
 
 // :::::: EXPORT
