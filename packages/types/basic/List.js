@@ -1,44 +1,9 @@
 // @rat/types :: List, $List
 
-/*
-List is a data type and, called, its schema, like every type here:
+// :::::: IMPORT
 
-  const tags = new List(['a', 'b']);   // a list, any items
-  const Tags = List(Str);              // the schema of a list of strings
-  const own  = Tags.create(['a']);     // a list that knows its schema: new List(Tags, ['a']) as well
-
-a list made from a schema checks what comes in (push, unshift, set, splice, replace, toggle): an item is
-coerced, a wrong one throws. an item that is a data type of its own (a $Record) comes in as one:
-
-  const $tabs = $List($Record({ path: Path, '?source': Str })).create();
-  $tabs.push({ path: 'photos' });    // a $Record, path a Path, source null
-  $tabs.push(tab);                   // a $Record of that schema already: the same object
-
-List is a plain class, not an Array subclass: an array's length and index
-access are no methods and could only be caught with a proxy. a List has length
-as a getter and at(index) / set(index, value) instead of [index]. $List, its
-reactive variant, is below.
-
-what gives a list gives a List (filter, map, flatMap, slice, where …), toArray()
-an array. the query vocabulary of query.js as methods:
-
-  tracks.where({ album }).toSortedBy('track').pluck('title')
-  tracks.without({ id })
-  tracks.one({ id })   tracks.has({ status: 'reading' })   tracks.keyBy('id')
-
-as with the array methods, the short name changes the list, to… gives a copy:
-sort / toSorted, sortBy / toSortedBy, reverse / toReversed, splice / toSpliced,
-set / with. on a $List the first ones are writes.
-
-drop and toggle change the list by a test, like where and without read it:
-
-  tags.drop('old')                              // every item the test lets through, gone: how many
-  bookmarks.toggle({ folder, name, path })      // gone where there was one, else added: there now?
-  bookmarks.toggle(bookmark, { folder, path })  // a test of its own, the value is what is added
-*/
-
-import { by, has, keyBy, one, pluck, where, without } from './query.js';
-import { Schema, isSchema, issue, madeBy, partsIn, schemaOf, typed, variant } from './schema.js';
+import { by, has, keyBy, one, pluck, where, without } from './../query.js';
+import { Schema, isSchema, issue, madeBy, partsIn, schemaOf, typed, variant } from './../schema.js';
 
 // ::: DATA TYPE
 
@@ -181,8 +146,13 @@ function listOf (given) {
 // ::: List + $List
 
 const LIST_READS = [
-  'length', 'at', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 'toArray', 'toJSON', Symbol.iterator,
-  'has', 'keyBy', 'one', 'pluck', 'where', 'without', 'toReversed', 'toSorted', 'toSortedBy', 'toSpliced', 'with',
+  'at',
+  'length', 'includes', 'indexOf', 'every', 'filter', 'find', 'findIndex', 'flatMap', 'forEach', 'join', 'map', 'reduce', 'slice', 'some', 
+  'has', 'keyBy', 'one', 'pluck', 'where',
+  'toArray', 'toJSON',
+  'toReversed', 'toSorted', 'toSortedBy', 'toSpliced', 
+  'with', 'without',
+  Symbol.iterator,
 ];
 
 const LIST_WRITES = {
@@ -192,11 +162,11 @@ const LIST_WRITES = {
   push    : (list, ...items) => items.length > 0,
   remove  : (list, value) => list.includes(value),
   replace : true,
-  reverse : list => list.length > 1,
+  reverse : (list) => list.length > 1,
   set     : (list, index, value) => !Object.is(list.at(index), value),
-  shift   : list => list.length > 0,
-  sort    : list => list.length > 1,
-  sortBy  : list => list.length > 1,
+  shift   : (list) => list.length > 0,
+  sort    : (list) => list.length > 1,
+  sortBy  : (list) => list.length > 1,
   splice  : true,
   toggle  : true,
   unshift : (list, ...items) => items.length > 0,
