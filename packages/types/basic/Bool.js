@@ -12,7 +12,7 @@ const BOOL_WORDS = { false: false, no: false, off: false, on: true, true: true, 
 
 const
 isWord = (value) => isString(value) && value.toLowerCase() in BOOL_WORDS,
-toBool = (value) => isWord(value) ? WORDS[value.toLowerCase()] : value;
+toBool = (value) => isWord(value) ? BOOL_WORDS[value.toLowerCase()] : value;
 
 const Bool = new Schema ({ initial: false, kind: 'bool', run: scalar('a boolean', isBool, toBool) });
 

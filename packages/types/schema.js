@@ -2,20 +2,18 @@
 
 // :::::: IMPORT
 
-import { Signal, SIGNAL, reactive, register } from '@rat/signals';
-import { stored } from './stored.js';
+import { SCHEMA, SIGNAL, STORED, Signal, reactive, register, stored } from '@rat/signals';
 import { isFn, isObject, isSchema, isString } from './_shared.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
 
-const MADE  = new WeakMap; // a value create() made -> the schema it was made by
+const MADE  = new WeakMap; // a value create() made -> the schema it was made by (value[SCHEMA], madeBy)
 const TYPED = new WeakMap; // a type -> how typed() made it, for variant()
 
 const // symbols
 BARE   = Symbol('rat.bare'),
 GET    = Symbol('rat.scalar.get'),
-SET    = Symbol('rat.scalar.set'),
-STORED = Symbol('rat.stored'); // the options of .stored()
+SET    = Symbol('rat.scalar.set'); // STORED and SCHEMA come from @rat/signals (stored())
 
 const bare          = (Type)  => Object.defineProperty(Type, BARE, { value: true });
 const byConstructor = (Type, schema, value) => new Type (schema, value);
@@ -59,8 +57,22 @@ class Schema {
   optional ()             { return this.derive({ describe: { optional: true }, nullable: true }); }
   stored   (options = {}) { return this.derive({ [STORED]: { ...this[STORED], ...(isString(options) ? { key: options } : options) } }); }
 
-  // $(schema): its signal, a kept one after stored()
-  [SIGNAL] () { return this[STORED] ? stored({}, this) : new Signal(this); }
+  // $(schema): its signal, a kept one after stored() with a key
+  [SIGNAL] () { return this[STORED]?.key ? stored({}, this) : new Signal(this); }
+
+  // what was kept, read back as far as it fits (stored()): a record field by field, what no longer fits
+  // at its initial value; items that are a data type of their own (a $Record) come back as one
+  fit (value) {
+    if (this.kind === 'record' && isObject(value)) {
+      return { value: Object.fromEntries(Object.entries(this.parts).map(([key, part]) => {
+        const result = key in value ? part.validate(value[key]) : null;
+        return [key, result && !result.issues ? result.value : part.initial];
+      })) };
+    }
+    const result = this.validate(value);
+    const item   = this.kind === 'list' ? this.parts?.item : null;
+    return result.issues || !item?.factory ? result : { value: result.value.map(entry => item.create(entry)) };
+  }
 
   // { value } or { issues: [{ message, path }] }
   validate (input, path = []) {
@@ -177,6 +189,7 @@ name: the name of the class, the type is called (ListType -> List)
 
 function typed (Class, toSchema, { kind = null, make = byConstructor, name = null } = {}) {
   if (name) Object.defineProperty(Class, 'name', { value: name });
+  Object.defineProperty(Class.prototype, SCHEMA, { configurable: true, get () { return MADE.get(this); } });   // for stored()
   const schemaFor = (...args) => kind && args.length === 1 && isSchema(args[0]) && args[0].kind === kind ? args[0] : toSchema(...args);
   const Type      = new Proxy(Class, { apply: (target, self, args) => schemaFor(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
   TYPED.set(Type, { kind, make, toSchema });

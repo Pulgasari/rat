@@ -11,7 +11,7 @@
     "./worker" : "./worker.js"
   },
   "dependencies": {
-    "@htx/analyzer"                     : "npm:@jsr/htx__analyzer@^0.1.0",
+    "@htx/analyzer"                     : "file:../../../htx/packages/analyzer",
     "@rat/compiler"                     : "file:../compiler",
     "acorn"                             : "^8.14.0",
     "typescript"                        : "^5.9.0 || ^6.0.0",

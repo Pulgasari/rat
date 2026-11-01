@@ -23,7 +23,7 @@ export { Union           } from './basic/Union.js';
 export { Color, $Color }   from './special/Color.js';
 
 // kept beyond the page
-export { stored } from './stored.js';
+export { stored } from '@rat/signals';
 
 // match
 export { NONE, any, either, is, match, part, pass, pattern, rest, which } from './match.js';
@@ -45,4 +45,4 @@ export {
   SnakeCase, 
   TitleCase, 
   UpperCase,
-} from './Str.js';
+} from './basic/Str.js';

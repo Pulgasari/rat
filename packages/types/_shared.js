@@ -1,4 +1,4 @@
-
+import { Schema } from './schema.js';   // circular, read only when isSchema() runs
 
 export const
 

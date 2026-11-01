@@ -1,7 +1,7 @@
 // @rat/app :: stored
 
 /*
-the places of kept values (stored, @rat/types) in an app, set up in configure(): after the mods, before
+the places of kept values (stored, @rat/signals) in an app, set up in configure(): after the mods, before
 the app's modules run.
 
   store      RAT.app.store, read ahead: every key in memory, so a kept value is there before the first
@@ -19,7 +19,7 @@ one made in a module (state.rat.js) or the app's own component keeps its name as
 
 import { createStore } from '@rat/bunker';
 import { building }    from '@rat/runtime';
-import { stored }      from '@rat/types';
+import { stored }      from '@rat/signals';
 
 import { nameOf }         from './_shared.js';
 import { bunkerDriverOf } from './drivers.js';

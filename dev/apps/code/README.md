@@ -36,6 +36,7 @@ the servers in `remotes.json` (`RAT.app.files`).
 | `modules/documents.rat.js` | the open files, opened from a handle, saved through its writable |
 | `modules/editor.rat.js` | monaco's options as a `$Record` of a schema (the settings render from it), the themes, the live editor |
 | `modules/github.rat.js`, `modules/github/` | the token, the repos, the branch; the api client and the handles |
+| `modules/lsp.js` | rat's language server (`@rat/language-server`, `dist/worker.js`) in a worker, its answers as monaco's providers for `.rat.html` and `.rat.js`: diagnostics, completion (blocks, `bind:`, behaviors, components), hover, definition, references, rename, symbols, folding, quick fixes, colors. javascript in scripts and holes goes to monaco's typescript, on the server's js text |
 | `modules/monaco.js` | monaco through its amd loader from a cdn, rat's highlighting from `@rat/syntax` |
 | `modules/sources.rat.js` | the roots: folders, servers, which one the files area shows |
 | `modules/tree.rat.js` | what a tree changes, the clipboard, `$version` that lists every open folder again |

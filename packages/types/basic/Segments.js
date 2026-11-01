@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { Schema, bare, byParse, issue, typed } from './schema.js';
+import { Schema, bare, byParse, issue, typed } from './../schema.js';
 import { isArray, isString } from './../_shared.js';
 
 // :::::: HELPERS

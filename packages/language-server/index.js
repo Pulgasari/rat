@@ -162,7 +162,34 @@ function start (connection, platform = {}) {
 
   // :::::: FEATURES
 
+  // the components known here: open component files (Card.rat.html), imports of the scripts, tags in
+  // use. an app's autoImport (config.rat.js) imports nothing a file shows, its tags come from use
+  const COMPONENT_FILE = /\/([A-Z][\w-]*)\.rat(?:\.html)?$/;
+  const IMPORTED       = /import\s+([A-Z]\w*)|import\s*\{([^}]*)\}/g;
+
+  // here: the uri and offset of the tag being typed, which is no name yet
+  function components (here, at) {
+    const names = new Set;
+    for (const uri of documents.keys()) {
+      const model = modelOf(uri);
+      const file  = decodeURIComponent(uri).match(COMPONENT_FILE)?.[1];
+      if (file) names.add(file);
+      for (const item of model?.components ?? []) if (uri !== here || at < item.start || at > item.end) names.add(item.name);
+      for (const segment of model?.segments ?? []) {
+        if (!['module', 'script'].includes(segment.kind)) continue;
+        for (const [, single, list] of segment.code.matchAll(IMPORTED)) {
+          for (const name of [single, ...(list ?? '').split(',').map(part => part.trim().split(/\s+as\s+/).pop())]) if (/^[A-Z]\w*$/.test(name ?? '')) names.add(name);
+        }
+      }
+    }
+    return [...names].sort();
+  }
+
   connection.onCompletion(handle(({ document, model, offset, params, uri }) => {
+    // a component tag being typed: <Ca
+    const typed = model.kind === 'rat' && document.getText().slice(Math.max(0, offset - 64), offset).match(/<([A-Z][\w-]*)?$/);
+    if (typed) return components(uri, offset).map(name => ({ detail: 'component', kind: 7, label: name }));
+
     const region = regionAt(model, offset);
     if (region === 'css') return css.complete(model, uri, params.position);
     if (region === 'js')  return javascript?.complete(uri, document, offset);
@@ -206,6 +233,10 @@ function start (connection, platform = {}) {
   connection.languages.semanticTokens.on(handle(({ document, model }) => rat.semanticTokens(model, document)));
 
   connection.onCodeAction(handle(({ document, model, params }) => codeActions(model, document, params.range, params.context?.diagnostics ?? [])));
+
+  // an editor with a typescript of its own (monaco in the browser, where js.js does not run): the region at
+  // a position and the js text, with every offset of the source
+  connection.onRequest('rat/javascript', handle(({ model, offset }) => ({ region: regionAt(model, offset), text: model.js })));
 
   connection.onDocumentColor(handle(({ model, uri }) => css.colors(model, uri)));
   connection.onColorPresentation(handle(({ model, params, uri }) => css.presentations(model, uri, params.color, params.range)));

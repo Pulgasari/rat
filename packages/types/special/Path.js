@@ -27,7 +27,7 @@ the rest is Segments (../Segments.js): segments, length, at(), slice(), with(), 
 */
 
 import { Schema, bare, byParse, issue, typed } from '../schema.js';
-import { Segments, isInput, partsOf }          from '../Segments.js';
+import { Segments, isInput, partsOf }          from './../basic/Segments.js';
 import { FileExt }                             from './FileExt.js';
 
 const known = new Map;   // 'a/b' -> its Path

@@ -237,6 +237,12 @@ function analyze (text, uri) {
 
   const names     = new Set(model.signals.map(signal => signal.name));
   const declaring = new Set(model.signals.map(signal => signal.start));
+
+  // every $name a script names is known to the markup: an import ({ $current }), a destructuring
+  // (let { $time } = player), a parameter. one no script has is what the compiler reports there
+  const scripted = new Set(model.segments
+    .filter(segment => ['file', 'module', 'script'].includes(segment.kind))
+    .flatMap(segment => tokensOf(segment.code).filter(token => token.type.label === 'name' && token.value[0] === '$').map(token => token.value)));
   model.occurrences = [];
   model.functions   = new Set;
   model.unknown     = [];   // $names read in the markup that no script declares
@@ -247,7 +253,7 @@ function analyze (text, uri) {
       if (token.type.label !== 'name') return;
       const start = token.start + segment.start;
       if (names.has(token.value) && list[index - 1]?.type.label !== '.') model.occurrences.push({ declaration: declaring.has(start), end: token.end + segment.start, name: token.value, start });
-      else if (token.value[0] === '$' && token.value.length > 1 && token.value !== '$$' && !['script', 'module', 'file'].includes(segment.kind) && list[index - 1]?.type.label !== '.' && list[index + 1]?.type.label !== '=>') {
+      else if (token.value[0] === '$' && token.value.length > 1 && token.value !== '$$' && !scripted.has(token.value) && !['script', 'module', 'file'].includes(segment.kind) && list[index - 1]?.type.label !== '.' && list[index + 1]?.type.label !== '=>') {
         model.unknown.push({ end: token.end + segment.start, name: token.value, start });
       }
       // function name, const name = (…) => / x => / function

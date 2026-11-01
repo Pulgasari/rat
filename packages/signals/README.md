@@ -82,6 +82,29 @@ and lets `$bla` be reassigned (`$bla = new Map(entries)` gives a new `$Map`).
   overridden method (`new Map(entries)` calls `set`) work.
 - `@rat/types` brings `$List`, `$Map` and `$Set` and registers them for `Array`, `Map` and `Set`.
 
+## stored
+
+a signal kept beyond the page (`stored.js`): read back when it is made, written on every change.
+`let $x! = …` compiles to it, the key is the name.
+
+```js
+let   $theme = stored('theme', Enum('zombie', 'oled'));     // a signal, checked by its schema
+const $tabs  = stored('tabs', $List(Tab).create());          // a reactive variant, kept in place
+```
+
+options: `key`, `in` (the place), `scope`, `debounce`, `sync`, `version`, `migrate`. the full list and
+how they behave: [persistence.md](../../.md/persistence.md), `@rat/types`' readme.
+
+it knows neither types nor storage, only what a place, a schema or a value can say:
+
+| | |
+|---|---|
+| a place | `{ peek? (key), get? (key), set (key, value), delete (key), on? ('change', fn), load? () }`: a `@rat/bunker` store is one. `stored.place(name, place)` adds one, `@rat/app` sets `store` (`RAT.app.store`) and `database`. without it: `store` localStorage, `session` sessionStorage, `memory` |
+| `schema['~standard']` | a standard schema checks what is read |
+| `schema.fit (value)` | where a schema has it, it reads leniently (`@rat/types`: a record field by field) |
+| `schema[STORED]` | the options of `.stored()` on a schema (`@rat/types`), a `Table` says `in: 'database'` |
+| `value[SCHEMA]` | the schema a data type was made by (`$List(Tab).create()`) |
+
 ## system.js
 
 alien-signals' `system.mjs` (3.2.1), vendored: a single file without imports, so the package

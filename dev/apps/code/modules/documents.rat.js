@@ -25,7 +25,7 @@ const LANGUAGES = {
   yaml: 'yaml', yml: 'yaml',
 };
 
-export const languageOf = name => /\.rat\.js$/i.test(name) ? 'ratjs' : LANGUAGES[name.split('.').pop().toLowerCase()] ?? 'plaintext';
+export const languageOf = name => /\.rat\.js$/i.test(name) ? 'ratjs' : /\.rat\.html$/i.test(name) ? 'rat' : LANGUAGES[name.split('.').pop().toLowerCase()] ?? 'plaintext';
 
 // a NUL in the first 8000 bytes: binary, good enough
 const isBinary = bytes => bytes.subarray(0, 8000).includes(0);

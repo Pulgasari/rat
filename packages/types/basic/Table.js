@@ -4,7 +4,7 @@
 
 import { LIST_READS, LIST_WRITES, List } from './List.js';
 import { Record } from './Record.js';
-import { Schema, issue, partsIn, typed, variant } from './../schema.js';
+import { STORED, Schema, issue, partsIn, typed, variant } from './../schema.js';
 import { isArray } from './../_shared.js';
 
 // ::: SCHEMA
@@ -21,6 +21,7 @@ function tableOf (shape) {
     initial  : [],
     kind     : 'table',
     parts    : { row },
+    [STORED] : { in: 'database' },   // many rows: kept in the app's database, unless said otherwise
     run      : (value, path) => {
       if (value instanceof TableType) return { value };
       if (!isArray(value)) return issue('expected a table', path);
@@ -70,7 +71,7 @@ const Table = typed(TableType, tableOf, { kind: 'table', name: 'Table' });
 // one version for the whole table
 const $Table = variant(Table, {
   reads  : [...LIST_READS, 'column', 'columns'],
-  writes : { ...LIST_WRITES, update: true },
+  writes : [...LIST_WRITES, 'update'],
 });
 
 // :::::: EXPORT

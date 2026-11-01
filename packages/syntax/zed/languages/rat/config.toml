@@ -1,6 +1,6 @@
 name             = "RAT"
 grammar          = "rat"
-path_suffixes    = ["rat"]
+path_suffixes    = ["rat", "rat.html"]
 block_comment    = ["<!-- ", " -->"]
 tab_size         = 2
 brackets         = [
