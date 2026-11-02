@@ -15,42 +15,25 @@ class UnionSchema extends Schema {
   }
 }
 
-// ::: CASES
-
-// Union({ text: Str, count: Num }): the cases have names
-const isNamed = (given) => given.length === 1 && !isSchema(schemaOf(given[0]));
-
-// the cases as [name, schema]: Union(Str, Num) -> [[0, Str], [1, Num]], Union({ text: Str }) -> [['text', Str]]
-function casesOf (given) {
-  const pairs = isNamed(given) ? Object.entries(given[0]) : given.map((schema, index) => [index, schema]);
-  return pairs.map(([name, schema]) => [name, schemaOf(schema)]);
-}
-
-// the first case the value fits, its result. null for none
-function firstFit (cases, value, path) {
-  for (const [, schema] of cases) {
-    const result = schema.validate(value, path);
-    if (!result.issues) return result;
-  }
-  return null;
-}
-
-// ::: Union
-
 // Union(a, b, …) or Union({ name: a, … }), the first case's initial value is the initial one
 function Union (...given) {
-  const cases = casesOf(given);
-  if (!cases.length) throw new TypeError('[rat] a Union needs at least one case');
-
-  const named    = isNamed(given);
-  const expected = cases.map(([name, schema]) => named ? name : schema.kind).join(', ');
+  const cases   = given.map(schemaOf);
+  const named   = cases.length === 1 && !isSchema(cases[0]);
+  const entries = named ? Object.entries(cases[0]).map(([name, schema]) => [name, schemaOf(schema)]) : cases.map((schema, index) => [index, schema]);
+  if (!entries.length) throw new TypeError('[rat] a Union needs at least one case');
 
   return new UnionSchema({
-    describe : { cases: cases.map(([name, schema]) => ({ name, ...schema.describe })) },
-    initial  : cases[0][1].initial,
+    describe : { cases: entries.map(([name, schema]) => ({ name, ...schema.describe })) },
+    initial  : entries[0][1].initial,
     kind     : 'union',
-    parts    : cases,
-    run      : (value, path) => firstFit(cases, value, path) ?? issue(`none of ${expected}`, path),
+    parts    : entries,
+    run      : (value, path) => {
+      for (const [, schema] of entries) {
+        const result = schema.validate(value, path);
+        if (!result.issues) return result;
+      }
+      return issue(`none of ${entries.map(([name, schema]) => named ? name : schema.kind).join(', ')}`, path);
+    },
   });
 }
 

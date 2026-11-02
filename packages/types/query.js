@@ -32,14 +32,7 @@ const getterOf = (key)  => isFn(key) ? key : item => item?.[key];
 // :::::: ORDER
 
 const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-
-// two strings by the collator ('file2' before 'file10', case aside), anything else by < and >
-function compare (a, b) {
-  if (isString(a) && isString(b)) return collator.compare(a, b);
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
-}
+const compare  = (a,b) => isString(a) && isString(b) ? collator.compare(a,b) : a < b ? -1 : a > b ? 1 : 0;
 
 function by (...keys) {
   const rules = [];

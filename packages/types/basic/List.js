@@ -23,10 +23,7 @@ class ListType {
 
     this.#schema = schema;
     this.#item   = schema?.parts.item ?? null;
-    if (copy)         this.#items = source.toArray();
-    else if (!schema) this.#items = [...source];
-    else if (checked) this.#items = [...items];
-    else              this.#items = this.#all(items ?? schema.initial);
+    this.#items  = copy || checked || !schema ? [...(copy ? source.toArray() : schema ? items : source)] : this.#all(items ?? schema.initial);
   }
 
   // items as they come in: each made a data type (create fills what is missing), else the list checked at once

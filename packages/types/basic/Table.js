@@ -33,27 +33,18 @@ function tableOf (shape) {
 
 // ::: DATA TYPE
 
-// the table schema of what new Table() got: another table's, a table schema, or one made of a record schema
-function tableSchemaOf (source) {
-  if (source instanceof TableType)  return source.schema;
-  if (!(source instanceof Schema))  return null;
-  return source.kind === 'table' ? source : tableOf(source);
-}
-
-// a row as the schema makes it, frozen, only its columns: a field the schema does not know is dropped
-const rowParser = (row) => (entry) => {
-  const parsed = row.parse({ ...row.initial, ...entry });
-  return Object.freeze(Object.fromEntries(Object.keys(row.parts).map(key => [key, parsed[key]])));
-};
-
 class TableType extends List {
   // new Table(schema, rows?), new Table(other): a copy
   constructor (source, rows = []) {
-    const schema = tableSchemaOf(source);
+    const copy   = source instanceof TableType;
+    const schema = copy ? source.schema : source instanceof Schema && source.kind === 'table' ? source : source instanceof Schema ? tableOf(source) : null;
     if (!schema) throw new TypeError('[rat] a Table needs a Table schema or a Record schema');
 
-    const parse = rowParser(schema.parts.row);
-    super((source instanceof TableType ? source.toArray() : rows).map(parse));
+    const row   = schema.parts.row;
+    const keys  = Object.keys(row.parts);
+    // only the columns: a field the schema does not know is dropped
+    const parse = entry => { const parsed = row.parse({ ...row.initial, ...entry }); return Object.freeze(Object.fromEntries(keys.map(key => [key, parsed[key]]))); };
+    super((copy ? source.toArray() : rows).map(parse));
 
     Object.defineProperty(this, 'schema', { value: schema });
     Object.defineProperty(this, 'parse',  { value: parse });
