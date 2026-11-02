@@ -29,11 +29,23 @@ P.mapByKey  = function (key) { return this.map(item => item?.[key]) };
 P.mapValues = function (fn)  { return this.map(fn) };
 
 /*
+books.where({ sourceId: folder })        // all that match
+books.without({ id })                    // all that do not
+books.one({ id })                        // the first that matches
+books.has({ status: 'reading' })         // is there one
+books.all({ year: year => year > 1900 }) // do all
+books.pluck('title')                     // the value of a key of every item
+books.keyBy('id')                        // { [id]: book }
+books.search(query, ['title', 'author']) // case insensitive, an empty query finds all
+books.sortBy('title')                    //
+
 books.sortBy('title')              // ascending by default
 books.sortBy('title', 'desc')
 books.sortBy(['author', 'title'])  // ascending by each, in order
 books.sortBy({ year: 'desc', title: 'asc' })
 books.sortBy(book => book.title.length)
+
+books.where({ sourceId: folder }).search(query, ['title', 'author']).pluck('id');
 */
 
 // approach 3 :: creating List from extending Array
