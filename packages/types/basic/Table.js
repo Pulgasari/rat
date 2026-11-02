@@ -5,7 +5,7 @@
 import { List } from './List.js';
 import { Record } from './Record.js';
 import { STORED, Schema, issue, partsIn, typed, variant } from './../schema.js';
-import { isArray } from './../_shared.js';
+import { isArray, isSchema } from './../_shared.js';
 
 // ::::::
 
@@ -21,7 +21,7 @@ const pick = (obj, keys) => {
 // ::: SCHEMA
 
 // fields or a Record schema -> the schema of a row
-const rowOf = (shape) => shape instanceof Schema ? shape : Record(shape);
+const rowOf = (shape) => isSchema(shape) ? shape : Record(shape);
 
 // an array or a Table, every row checked against the row schema: the rows out, a missing field at its initial value
 function tableOf (shape) {
@@ -48,7 +48,7 @@ class TableType extends List {
   // new Table(schema, rows?), new Table(other): a copy
   constructor (source, rows = []) {
     const copy   = source instanceof TableType;
-    const schema = copy ? source.schema : source instanceof Schema && source.kind === 'table' ? source : source instanceof Schema ? tableOf(source) : null;
+    const schema = copy ? source.schema : isSchema(source) && source.kind === 'table' ? source : isSchema(source) ? tableOf(source) : null;
     if (!schema) throw new TypeError('[rat] a Table needs a Table schema or a Record schema');
 
     const row   = schema.parts.row;
