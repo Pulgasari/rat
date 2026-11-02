@@ -1,13 +1,9 @@
 <script>
-  // <ReaderView />: the book of state.bookKey. the reader is in the dom while it is on screen
-  // only, leaving it closes the book
-
   import { effect, untrack } from '@rat/runtime';
-
-  import { closeReader }                                  from './../actions.js';
+  import { closeReader }                                   from './../actions.js';
   import { bookByKey, openFile, progressOf, saveProgress } from './../lib.js';
-  import { createEpubReader, createPdfReader }            from './../reader.js';
-  import { state }                                        from './../state.js';
+  import { createEpubReader, createPdfReader }             from './../reader.js';
+  import { state }                                         from './../state.js';
 
   let { $bookKey, $readerFlow, $readerFont, $readerUi: $ui } = state;
 
