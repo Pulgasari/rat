@@ -7,6 +7,9 @@ import { Record } from './Record.js';
 import { STORED, Schema, dataTypes, issue, partsIn } from './../schema.js';
 import { isArray, isSchema } from './../_shared.js';
 
+const isInstanceOf = (sth) => (Type) => sth instanceof Type;
+const isSchemaOf   = (sth) => (kind) => isSchema(sth) && sth.kind === kind;
+
 // ::::::
 
 const freeze = Object.freeze;
@@ -17,6 +20,10 @@ const pick = (obj, keys) => {
   for (const key of keys) if (key in obj) result[key] = obj[key];
   return result;
 };
+
+const 
+isTable       = isInstanceOf(TableType),
+isTableSchema = isSchemaOf('table');
 
 // ::: SCHEMA
 
@@ -34,7 +41,7 @@ function tableOf (shape) {
     parts    : { row },
     [STORED] : { in: 'database' },   // many rows: kept in the app's database, unless said otherwise
     run      : (value, path) => {
-      if (value instanceof TableType) return { value };
+      if  (isTable(value)) return { value };
       if (!isArray(value)) return issue('expected a table', path);
       const result = partsIn(value.map((entry, index) => [index, row, { ...row.initial, ...entry }]), path);
       return result.issues ? result : { value: result.values };
@@ -47,8 +54,8 @@ function tableOf (shape) {
 class TableType extends List {
   // new Table(schema, rows?), new Table(other): a copy
   constructor (source, rows = []) {
-    const copy   = source instanceof TableType;
-    const schema = copy ? source.schema : isSchema(source) && source.kind === 'table' ? source : isSchema(source) ? tableOf(source) : null;
+    const copy   = isTable(source);
+    const schema = copy ? source.schema : isTableSchema(source) ? source : isSchema(source) ? tableOf(source) : null;
     if (!schema) throw new TypeError('[rat] a Table needs a Table schema or a Record schema');
 
     const row   = schema.parts.row;
