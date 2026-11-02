@@ -1,11 +1,6 @@
 <script>
-  // ebooks: a library of the epub and pdf files in folders the user grants, and a reader.
-  // the library is lib.js, what the views share is state.js, what they do actions.js
-
-  import toast from './../.shared/toast.js';
-
-  import { load } from './lib.js';
-
+  import toast       from './../.shared/toast.js';
+  import { load }    from './lib.js';
   import LibraryView from './views/LibraryView.rat.html';
   import ReaderView  from './views/ReaderView.rat.html';
 
@@ -13,8 +8,10 @@
 </script>
 
 <rat-area name='main'>
-  <rat-view route='/' name='library' component={LibraryView} />
-  <rat-view route='/reader' name='reader' component={ReaderView} transition='slide' />
+  <rat-view route='/'       name='library' component={LibraryView} />
+  <rat-view route='/reader' name='reader'  component={ReaderView} transition='slide' />
 </rat-area>
 
-<rat-area name='config' dock='end'><Settings name='eBooks' /></rat-area>
+<rat-area name='config' dock='end'>
+  <Settings name='eBooks' />
+</rat-area>
