@@ -28,6 +28,7 @@ function ask ({ cancel = null, input = false, message = '', ok = 'OK', title = '
   });
 }
 
-export const alert   = async options => { await ask(options); };
-export const confirm = options => ask({ cancel: 'Cancel', ...options });
-export const prompt  = options => ask({ cancel: 'Cancel', ...options, input: true });
+export const
+alert   = async options => { await ask(options); },
+confirm = options => ask({ cancel: 'Cancel', ...options }),
+prompt  = options => ask({ cancel: 'Cancel', ...options, input: true });
