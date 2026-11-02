@@ -39,7 +39,8 @@ const MODS = {
   thumbnails    : () => import('./modules/thumbnails.js'),
 };
 
-// every key of the config that names a mod onto the app, in order. one the app has already is left out
+// every key of the config that names a mod onto the app, in order.
+// one the app has already is left out <<< was soll das überhaupt bedeuten?? 
 async function useMods (app, config) {
   for (const [name, value] of Object.entries(config)) {
     if (!Object.hasOwn(MODS, name) || value === false || value == null) continue;
