@@ -1,5 +1,7 @@
 # RAT :: todo
 
+- [ ] das zeug in `packages/app/host/deno.js` gehört doch trotzdem zu jeweils `deno.js` in drivers ?? kp was das wieder für ein schwachsinn is lol
+
 ## `@rat/app`
 - [ ] move `/store.js` to `/modules/store.js`
 - [ ] create module drivers:
