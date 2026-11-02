@@ -3,7 +3,6 @@
 import { Signal, batch, effect, isSchema, isSignal, untrack } from './core.js';
 import { REACTIVE, $ }                                         from './reactive.js';
 
-const SCHEMA  = Symbol.for('rat.schema');   // value[SCHEMA]: the schema it was made by
 const STORED  = Symbol.for('rat.stored');   // schema[STORED]: the options of .stored()
 const VERSION = '~version';
 
@@ -88,7 +87,7 @@ const optionsOf = options => typeof options === 'string' ? { key: options } : { 
 
 function stored (options, init) {
   const given  = optionsOf(options);
-  const schema = isSchema(init) ? init : init !== null && typeof init === 'object' ? init[SCHEMA] : undefined;
+  const schema = isSchema(init) ? init : isSchema(init?.schema) ? init.schema : undefined;   // a data type knows the schema it was made by
   const own    = schema?.[STORED] ?? null;
   const key    = own?.key ?? given.key;
   const scope  = (own?.scope ?? given.scope) === false || !key ? [] : stored.scope();
@@ -214,4 +213,4 @@ stored.flush    = flush;
 
 // :::::: EXPORT
 
-export { SCHEMA, STORED, stored };
+export { STORED, stored };

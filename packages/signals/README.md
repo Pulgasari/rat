@@ -113,7 +113,7 @@ it knows neither types nor storage, only what a place, a schema or a value can s
 | `schema['~standard']` | a standard schema checks what is read |
 | `schema.fit (value)` | where a schema has it, it reads leniently (`@rat/types`: a record field by field) |
 | `schema[STORED]` | the options of `.stored()` on a schema (`@rat/types`), a `Table` says `in: 'database'` |
-| `value[SCHEMA]` | the schema a data type was made by (`$List(Tab).create()`) |
+| `value.schema` | the schema a data type was made by (`$List(Tab).create()`) |
 
 ## system.js
 

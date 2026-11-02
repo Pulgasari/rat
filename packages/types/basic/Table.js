@@ -4,7 +4,7 @@
 
 import { List } from './List.js';
 import { Record } from './Record.js';
-import { STORED, Schema, issue, partsIn, typed, variant } from './../schema.js';
+import { STORED, Schema, dataTypes, issue, partsIn } from './../schema.js';
 import { isArray, isSchema } from './../_shared.js';
 
 // ::::::
@@ -83,8 +83,8 @@ class TableType extends List {
 
 // ::: Table + $Table
 
-const  Table = typed(TableType, tableOf, { kind: 'table', name: 'Table' });
-const $Table = variant(Table); // one version for the whole table
+// one version for the whole table
+const [Table, $Table] = dataTypes(TableType, tableOf, { kind: 'table', name: 'Table' });
 
 // :::::: EXPORT
 

@@ -4,7 +4,7 @@
 
 import './builtins.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
 import { Record } from './Record.js';
-import { Schema, issue, schemaOf, typed, variant } from './../schema.js';
+import { Schema, dataTypes, issue, schemaOf } from './../schema.js';
 import { isFn, isMap, isObject, isSchema, isSymbol } from './../_shared.js';
 
 // ::: SCHEMA
@@ -103,8 +103,7 @@ class DictType extends Map {
 
 // ::: Dict + $Dict
 
-const  Dict = typed(DictType, dictOf, { kind: 'dict', name: 'Dict' });
-const $Dict = variant(Dict);
+const [Dict, $Dict] = dataTypes(DictType, dictOf, { kind: 'dict', name: 'Dict' });
 
 // :::::: EXPORT
 
