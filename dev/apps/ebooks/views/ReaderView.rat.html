@@ -142,3 +142,18 @@
     <span.foot-label>{$ui.percent != null ? Math.round(($ui.percent || 0) * 100) + '%' : ''}</span>
   <aufbau-progress class='foot-bar' value={Math.round(($ui.percent || 0) * 100)} />
 </footer>
+
+<style>
+  .reader-foot {
+    flex: none; display: flex; align-items: center; gap: 0.6rem; height: 2.6rem; padding: 0 1rem;
+    border-top: 1px solid var(--line); background: var(--panel);
+  }
+  .foot-label { font-size: 0.75rem; color: var(--fg-50, var(--color-fg)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .foot-bar { --progress-size: 4px; flex: 1 1 auto; border-radius: 2px; background: var(--panel-2); overflow: hidden; }
+  .foot-bar .progress-bar { background: var(--color-ink); }
+  
+  @media (max-width: 560px) {
+    .reader-author { display: none; }
+  }
+
+</style>
