@@ -13,6 +13,6 @@ isSchema = (value) => value instanceof Schema,
 isString = (value) => typeof value === 'string',
 isSymbol = (value) => typeof value === 'symbol',
 
-isInstanceOf = (sth) => (Type) => sth instanceof Type,
-isSchemaOf   = (sth) => (kind) => isSchema(sth) && sth.kind === kind;
+isInstanceOf = (Type) => (value) => value instanceof Type,
+isSchemaOf   = (kind) => (value) => isSchema(value) && value.kind === kind;
 
