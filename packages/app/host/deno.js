@@ -1,8 +1,9 @@
 // @rat/app :: host :: deno
 
 /*
-the deno side of rat's drivers in a Deno Desktop app: a binding per call, under rat: so they do not mix
-with the app's own. the app's deno entrypoint hands its window over:
+the deno side of rat's drivers in a Deno Desktop app:
+a binding per call, under rat: so they do not mix with the app's own. 
+the app's deno entrypoint hands its window over:
 
   import { host } from '@rat/app/host/deno.js';
   host(win, { name: 'notes' });                // the window deno desktop gives it, the app's name
@@ -11,12 +12,11 @@ with the app's own. the app's deno entrypoint hands its window over:
 name picks the data folder (database, store, files): ~/.local/share/<name> on linux ($XDG_DATA_HOME),
 ~/Library/Application Support/<name> on macos, %APPDATA%\<name> on windows. data sets it directly.
 
-runs in deno, not in the page. deno has no clipboard, dialogs or notifications of its own: the system's
-tools do it (pbcopy, osascript, wl-clipboard or xclip, zenity, notify-send, xdg-open, powershell).
+runs in deno, not in the page. deno has no clipboard, dialogs or notifications of its own:
+the system's tools do it (pbcopy, osascript, wl-clipboard or xclip, zenity, notify-send, xdg-open, powershell).
 */
 
 import { DatabaseSync } from 'node:sqlite';
-
 import { fromBase64, toBase64 } from '../drivers/_fs.js';
 
 const OS = Deno.build.os;
