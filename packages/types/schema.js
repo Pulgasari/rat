@@ -20,11 +20,6 @@ const schemaOf      = (value)         => isFn(value) && value[BARE] ? value() : 
 // :::::: SCHEMA
 
 class Schema {
-  // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
-  // parts: the schemas a structure is made of (record fields, tuple items, union cases).
-  // transform: how a value is made into this schema's form, for from() (a case of Str).
-  // factory: (schema, value) -> a value of the data type, for create() (dataType sets it). not make: Id.make() makes a key
-  // [STORED]: the options of stored(), the schema makes kept values then
   constructor ({
     checks    = [],
     describe  = {}, 
@@ -161,24 +156,6 @@ class Scalar {
 
 // :::::: DATA TYPES
 
-/*
-one name for a data type and its schema:
-`new List(items)` is a list,
-`List(Str)` the schema of a list of strings, whose create() makes a List.
-
-a class can not be called without new, so the name is a function that is both: with new it constructs
-the class (new.target passed on, so `class Table extends List` works), without it gives the schema.
-its prototype is the class's (instanceof), its statics come from the class (List.from, Path.root).
-
-const [List, $List] = dataTypes(ListType, listOf, { kind: 'list', name: 'List' });   // and $List, registered for $()
-const Path          = dataType(PathType, pathOf, { create: byParse, kind: 'path', name: 'Path' });
-
-kind:   a schema of this kind handed to the call is taken as it is: $Record(Settings) takes Settings
-create: (Type, schema, value) -> the value of create(). default: new Type(schema, value); byParse for a
-        type whose schema gives its values already (a Path is one instance per path)
-name:   the name of the type, of the class too
-*/
-
 function dataType (Class, toSchema, { create = byConstructor, kind, name }) {
   function Type (...args) {
     if (new.target) return Reflect.construct(Class, args, new.target);
@@ -192,8 +169,6 @@ function dataType (Class, toSchema, { create = byConstructor, kind, name }) {
   return Type;
 }
 
-// the type and its reactive variant (reactive() of @rat/signals: reads subscribe, writes notify), the
-// variant registered: $() gives it for a value of the type
 function dataTypes (Class, toSchema, options) {
   const Type  = dataType(Class, toSchema, options);
   const $Type = dataType(reactive(Class), toSchema, { ...options, name: `$${options.name}` });
