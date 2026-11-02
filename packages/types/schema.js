@@ -186,7 +186,8 @@ function typed (Class, toSchema, { kind = null, make = byConstructor, name = nul
   if (name) Object.defineProperty(Class, 'name', { value: name });
   Object.defineProperty(Class.prototype, SCHEMA, { configurable: true, get () { return MADE.get(this); } });   // for stored()
   const schemaFor = (...args) => kind && args.length === 1 && isSchema(args[0]) && args[0].kind === kind ? args[0] : toSchema(...args);
-  const Type      = new Proxy(Class, { apply: (target, self, args) => schemaFor(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
+  const factory   = (schema, value) => make(Type, schema, value);
+  const Type      = new Proxy(Class, { apply: (target, self, args) => schemaFor(...args).derive({ factory }) });
   TYPED.set(Type, { kind, make, toSchema });
   return Type;
 }

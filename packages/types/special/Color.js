@@ -91,7 +91,11 @@ const colorOf = (...args) => {
   return new Schema({
     initial : '#000000',
     kind    : 'color',
-    run     : (value, path) => value instanceof ColorType ? { value } : rgba(value) ? { value: new ColorType(value) } : issue('expected a color', path),
+    run     : (value, path) => {
+      if (value instanceof ColorType) return { value };
+      if (rgba(value))                return { value: new ColorType(value) };
+      return issue('expected a color', path);
+    },
   });
 };
 

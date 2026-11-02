@@ -38,7 +38,15 @@ const isFn     = (sth) => typeof sth === 'function';
 const isSchema = (sth) => isFn(sth?.['~standard']?.validate);
 
 const NONE   = Symbol('rat.none');
-const TYPEOF = new Map([[BigInt, 'bigint'], [Boolean, 'boolean'], [Function, 'function'], [Number, 'number'], [Object, 'object'], [String, 'string'], [Symbol, 'symbol']]);
+const TYPEOF = new Map([
+  [BigInt,   'bigint'],
+  [Boolean,  'boolean'],
+  [Function, 'function'],
+  [Number,   'number'],
+  [Object,   'object'],
+  [String,   'string'],
+  [Symbol,   'symbol'],
+]);
 
 class Either  { constructor (tests)       { this.tests = tests; } }
 class Part    { constructor (name, test)  { this.name = name; this.test = test; } }
