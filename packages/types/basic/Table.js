@@ -5,10 +5,7 @@
 import { List } from './List.js';
 import { Record } from './Record.js';
 import { STORED, Schema, dataTypes, issue, partsIn } from './../schema.js';
-import { isArray, isSchema } from './../_shared.js';
-
-const isInstanceOf = (sth) => (Type) => sth instanceof Type;
-const isSchemaOf   = (sth) => (kind) => isSchema(sth) && sth.kind === kind;
+import { isArray, isInstanceOf, isSchema, isSchemaOf } from './../_shared.js';
 
 // ::::::
 
