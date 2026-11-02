@@ -9,9 +9,7 @@
 // only when its size or date changed.
 
 import { effect, signal } from '@rat/signals';
-
 import { createFolders } from '@rat/app/modules/folders.js';
-
 import { extractMeta, kindOf, prettyName } from './library.js';
 
 const QUEUE = 3;   // books opened at once for their metadata
