@@ -1,4 +1,4 @@
-// @rat/app :: drivers :: files, capacitor (android, ios): @capacitor/filesystem, the app's data folder
+// @rat/app :: drivers :: files
 
 import { plugin } from '../_capacitor.js';
 import { Handle, fromBase64, toBase64 } from '../_fs.js';
