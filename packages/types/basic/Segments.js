@@ -22,7 +22,6 @@ class SegmentsType {
     Object.freeze(this);
   }
 
-  // another separator, or a subclass, keeps its own: from() of the class that is asked
   static from (value, separator) { return value instanceof this ? value : new this(value, separator); }
 
   get length () { return this.segments.length; }
@@ -66,7 +65,11 @@ const segmentsOf = (separator = ':') => new Schema({
 // ::: Segments
 
 // a value of the schema is Segments already: create() hands it on
-const Segments = bare(typed(SegmentsType, segmentsOf, { kind: 'segments', make: byParse, name: 'Segments' }));
+const Segments = bare(typed(SegmentsType, segmentsOf, { 
+  kind: 'segments', 
+  make: byParse, 
+  name: 'Segments' 
+}));
 
 // :::::: EXPORT
 
