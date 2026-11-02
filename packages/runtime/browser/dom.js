@@ -18,7 +18,7 @@ calls with the element once its children are in place.
 
 import { each, html, raw, render as renderInto, unrender, when } from '@htx/js/render';
 import { effect, isFn, isSignal, isString, onCleanup, scope, signal, untrack } from '../common/shared.js';
-import { guard }                                                               from './errors.js';
+import { guard } from './errors.js';
 
 // effects belong to no owner, the renderer disposes them. scopes neither: the
 // renderer disposes them with their part
@@ -124,11 +124,9 @@ first: an adopted sheet resolves them against the page (chromium ignores the
 baseURL option). @import does not work in an adopted sheet (a constructable
 stylesheet ignores it); link does that.
 */
-const files = new Map;
-
+const files        = new Map;
 const RELATIVE_URL = /url\(\s*(['"]?)(?![a-z][\w+.-]*:|\/|#)([^'")]+)\1\s*\)/gi;
-
-const rebase = (css, base) => css.replace(RELATIVE_URL, (_, quote, path) => `url("${new URL(path, base).href}")`);
+const rebase       = (css, base) => css.replace(RELATIVE_URL, (_, quote, path) => `url("${new URL(path, base).href}")`);
 
 function sheet (mode, url) {
   if (files.has(url)) return files.get(url);
