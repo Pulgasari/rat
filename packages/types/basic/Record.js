@@ -3,7 +3,7 @@
 // :::::: IMPORT
 
 import { GET, SET, Schema, issue, partsIn, schemaOf, typed, variant } from './../schema.js';
-import { isObject } from './../_shared.js';
+import { isObject, isSchema } from './../_shared.js';
 
 // :::::: CONSTANTS
 
@@ -49,7 +49,7 @@ class RecordType {
   // new Record(schema, values?), new Record(values) without a schema, new Record(other): a copy
   constructor (source, values = {}) {
     const copy   = source instanceof RecordType;
-    const schema = copy ? source.schema : source instanceof Schema ? source : null;
+    const schema = copy ? source.schema : isSchema(source) ? source : null;
     if (schema && schema.kind !== 'record') throw new TypeError('[rat] a Record needs fields or a Record schema');
 
     const data = copy ? source.toJSON() : schema ? schema.parse({ ...schema.initial, ...values }) : source;
@@ -63,7 +63,7 @@ class RecordType {
       defineProp(this, key, {
         enumerable: true, 
         get: ()    => this[GET](key), 
-        set: value => this[SET](key, value)
+        set: value => this[SET](key, value)j
       });
     }
 
