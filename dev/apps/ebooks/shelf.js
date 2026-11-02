@@ -2,7 +2,6 @@
 // the books the library shows: filtered by folder and search, sorted
 
 import { computed } from '@rat/signals';
-
 import { books, progressOf } from './lib.js';
 import { state }             from './state.js';
 
