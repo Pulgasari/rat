@@ -97,9 +97,9 @@
   });
 </script>
 
-<header.reader-bar>
+<header class='reader-bar'>
   <btn-icon icon='arrow-left' label='Back' title='Back to library' onclick={closeReader} />
-  <div.reader-id>
+  <div class='reader-id'>
     <span.reader-title>{$book?.title ?? 'Book'}</span>
     @if ($book?.author): <span.reader-author>{$book.author}</span>
   </div.reader-id>
@@ -107,10 +107,10 @@
   <div.reader-controls>
     @if ($ui.kind === 'pdf')
       <btn-icon icon='remove' label='Zoom out' onclick={() => $engine?.zoomOut()} />
-      <btn-icon icon='add'  label='Zoom in'  onclick={() => $engine?.zoomIn()} />
+      <btn-icon icon='add'    label='Zoom in'  onclick={() => $engine?.zoomIn()} />
     @if ($ui.kind === 'epub')
       <btn-icon icon='text-smaller' label='Smaller text' disabled={!$engine} onclick={() => font(-1)} />
-      <btn-icon icon='text-larger' label='Larger text'  disabled={!$engine} onclick={() => font(1)} />
+      <btn-icon icon='text-larger'  label='Larger text'  disabled={!$engine} onclick={() => font(1)} />
       <btn-icon
         icon={$ui.flow === 'scrolled' ? 'book-open' : 'scroll'}
         label={$ui.flow === 'scrolled' ? 'Paginated' : 'Scrolled'}
@@ -118,11 +118,11 @@
         onclick={toggleFlow}
       />
     <btn-icon icon='contents' label='Contents' aria-pressed={$ui.tocOpen} onclick={toggleToc} />
-  </div.reader-controls>
-</header.reader-bar>
+  </div>
+</header>
 
-<div.reader-main>
-  <div.reader-stage ref={$stage}></div>
+<div class='reader-main'>
+  <div class='reader-stage' ref={$stage}></div>
 
   @if ($ui.tocOpen): <TocPanel items={$ui.toc} kind={$ui.kind} onpick={pick} />
   @if (!$ui.ready && !$ui.error): <div.reader-loading><svg-icon icon='loading' /></div>
@@ -131,14 +131,14 @@
   @if ($ui.kind === 'epub' && $ui.ready && !$ui.error)
     <button.page-edge.left  aria-label='Previous' onclick={() => $engine?.prev()}><svg-icon icon='chevron-left' /></button>
     <button.page-edge.right aria-label='Next'     onclick={() => $engine?.next()}><svg-icon icon='chevron-right' /></button>
-</div.reader-main>
+</div>
 
-<footer.reader-foot>
+<footer class='reader-foot'>
   @if ($ui.kind === 'pdf' && $ui.pages)
     <button.ibtn aria-label='Previous page' onclick={() => $engine?.prev()}><svg-icon icon='chevron-up' /></button>
     <span.foot-label>Page {$ui.page ?? 1} / {$ui.pages}</span>
     <button.ibtn aria-label='Next page' onclick={() => $engine?.next()}><svg-icon icon='chevron-down' /></button>
   @else
     <span.foot-label>{$ui.percent != null ? Math.round(($ui.percent || 0) * 100) + '%' : ''}</span>
-  <aufbau-progress.foot-bar value={Math.round(($ui.percent || 0) * 100)} />
-</footer.reader-foot>
+  <aufbau-progress class='foot-bar' value={Math.round(($ui.percent || 0) * 100)} />
+</footer>
