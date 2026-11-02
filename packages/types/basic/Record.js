@@ -63,7 +63,7 @@ class RecordType {
       defineProp(this, key, {
         enumerable: true, 
         get: ()    => this[GET](key), 
-        set: value => this[SET](key, value)j
+        set: value => this[SET](key, value)
       });
     }
 
