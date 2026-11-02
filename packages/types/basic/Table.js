@@ -7,6 +7,17 @@ import { Record } from './Record.js';
 import { STORED, Schema, issue, partsIn, typed, variant } from './../schema.js';
 import { isArray } from './../_shared.js';
 
+// ::::::
+
+const freeze = Object.freeze;
+
+// Pick specific keys from an object
+const pick = (obj, keys) => {
+  const result = {};
+  for (const key of keys) if (key in obj) result[key] = obj[key];
+  return result;
+};
+
 // ::: SCHEMA
 
 // fields or a Record schema -> the schema of a row
@@ -43,7 +54,13 @@ class TableType extends List {
     const row   = schema.parts.row;
     const keys  = Object.keys(row.parts);
     // only the columns: a field the schema does not know is dropped
-    const parse = entry => { const parsed = row.parse({ ...row.initial, ...entry }); return Object.freeze(Object.fromEntries(keys.map(key => [key, parsed[key]]))); };
+    //const parse = entry => { const parsed = row.parse({ ...row.initial, ...entry }); return Object.freeze(Object.fromEntries(keys.map(key => [key, parsed[key]]))); };
+    const parse = entry => {
+      const parsed = row.parse({ ...row.initial, ...entry }); 
+      const picked = pick(parsed, keys);
+      const frozen = freeze(picked);
+      return frozen; 
+    };
     super((copy ? source.toArray() : rows).map(parse));
 
     Object.defineProperty(this, 'schema', { value: schema });
@@ -66,10 +83,8 @@ class TableType extends List {
 
 // ::: Table + $Table
 
-const Table = typed(TableType, tableOf, { kind: 'table', name: 'Table' });
-
-// one version for the whole table
-const $Table = variant(Table);
+const  Table = typed(TableType, tableOf, { kind: 'table', name: 'Table' });
+const $Table = variant(Table); // one version for the whole table
 
 // :::::: EXPORT
 
