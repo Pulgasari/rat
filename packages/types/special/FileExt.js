@@ -19,7 +19,8 @@ for its schema without the call:
   const Upload = { name: Str, ext: FileExt };
 */
 
-import { Schema, bare, byParse, issue, isString, typed } from '../schema.js';
+import { Schema, bare, byParse, issue, typed } from './../schema.js';
+import { isString } from './../_shared.js';
 
 const MIME = {
   '7z'  : 'application/x-7z-compressed',

@@ -8,7 +8,7 @@ export {
 } from './core.js';
 
 export { 
-  $, REACTIVE, SET, SIGNAL, reactive,
+  $, REACTIVE, SET, SIGNAL, WRITES, reactive,
   isReactive, register, wrap 
 } from './reactive.js';
 

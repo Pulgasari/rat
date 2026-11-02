@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import './Map.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
+import './builtins.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
 import { Record } from './Record.js';
 import { Schema, issue, schemaOf, typed, variant } from './../schema.js';
 import { isObject, isSymbol } from './../_shared.js';

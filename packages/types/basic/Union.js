@@ -2,7 +2,8 @@
 
 // :::::: IMPORT
 
-import { Schema, isSchema, issue, schemaOf } from './../schema.js';
+import { Schema, issue, schemaOf } from './../schema.js';
+import { isSchema } from './../_shared.js';
 
 // ::: SCHEMA
 

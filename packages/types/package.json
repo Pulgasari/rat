@@ -7,6 +7,6 @@
   "types"       : "./index.d.ts",
   "exports"     : { ".": "./index.js", "./FileExt": "./special/FileExt.js", "./Path": "./special/Path.js" },
   "dependencies": { "@rat/signals": "0.0.1" },
-  "sideEffects" : ["./index.js", "./reactive.js"],
+  "sideEffects" : ["./index.js", "./basic/*.js", "./special/*.js"],
   "license"     : "MIT"
 }

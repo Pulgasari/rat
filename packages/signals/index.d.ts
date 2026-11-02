@@ -39,6 +39,8 @@ export function isSchema    (value: unknown): value is StandardSchema;
 
 /** A subclass of Base whose instances report reads and writes: a getter reads, a setter writes, a method writes when its name is a write (set, push, toggle …, SET), else reads. */
 export function reactive<C extends new (...args: any[]) => any> (Base: C): C;
+/** The names of the methods that write, in every class: reactive() and $Array tell reads from writes by them. */
+export const WRITES: ReadonlySet<string | symbol>;
 /** The name of a write that sets one field (a Record's, a scalar's value). */
 export const SET: unique symbol;
 export function isReactive (value: unknown): boolean;
