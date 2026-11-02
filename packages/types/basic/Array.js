@@ -25,6 +25,16 @@ P.filterByCriteria    = function (criteria = {}) { return this.filter  (matchesA
 P.findByAnyCriteria   = function (criteria = {}) { return this.find    (matchesAny(criteria) };
 P.findByCriteria      = function (criteria = {}) { return this.find    (matchesAll(criteria) };
 
+P.mapByKey  = function (key) { return this.map(item => item?.[key]) };
+P.mapValues = function (fn)  { return this.map(fn) };
+
+/*
+books.sortBy('title')              // ascending by default
+books.sortBy('title', 'desc')
+books.sortBy(['author', 'title'])  // ascending by each, in order
+books.sortBy({ year: 'desc', title: 'asc' })
+books.sortBy(book => book.title.length)
+*/
 
 // approach 3 :: creating List from extending Array
 
