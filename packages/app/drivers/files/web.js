@@ -1,3 +1,3 @@
-// @rat/app :: drivers :: files, web: the origin private file system (@rat/bunker 'opfs')
+// @rat/app :: drivers :: files
 
-export default 'opfs';
+export default 'opfs'; // @bunker
