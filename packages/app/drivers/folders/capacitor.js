@@ -3,6 +3,7 @@
 
 import { pickTree, revive as folderOf } from '../_saf.js';
 
-export const pick   = () => pickTree();
-export const keep   = handle => handle.toJSON();
-export const revive = stored => folderOf(stored);
+export const 
+pick   = ()       => pickTree(),
+keep   = (handle) => handle.toJSON(),
+revive = (stored) => folderOf(stored);
