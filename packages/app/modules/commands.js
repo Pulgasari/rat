@@ -1,15 +1,16 @@
+// @rat/app/modules :: commands
+
 import { COMMAND, parseCommand, raise }  from '@rat/runtime';
 import { $Dict, Dict, Fn, KebabCase, Str } from '@rat/types';
+import { isFn } from './../_shared.js';
 
 const Command = { '?description': Str, exec: Fn, '?title': Str };
 const Schema  = Dict(Str.to(KebabCase), Command);
 
 class Commands extends $Dict {
-  constructor (entries = {}) { super(Schema, entries); }
-
-  read (entry) { return entry?.exec; }
-
-  set (name, command) { return super.set(name, typeof command === 'function' ? { exec: command } : command); }
+  constructor (entries = {})  { super(Schema, entries); }
+  read        (entry)         { return entry?.exec; }
+  set         (name, command) { return super.set(name, isFn(command) ? { exec: command } : command); }
 
   assign (entries) {
     for (const [name, command] of Object.entries(entries)) this.set(name, command);
