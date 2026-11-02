@@ -1,5 +1,4 @@
-// @rat/app :: drivers :: folders, deno desktop: the system's folder dialog, any folder by its path.
-// the deno side is host/deno.js
+// @rat/app :: drivers :: folders
 
 import { Handle, revive as handleOf } from '../_fs.js';
 import { fs } from '../files/deno.js';
@@ -9,5 +8,6 @@ export async function pick () {
   return path ? new Handle(fs, path) : null;
 }
 
-export const keep   = handle => handle.toJSON();
-export const revive = stored => handleOf(fs, stored);
+export const
+keep   = (handle) => handle.toJSON(),
+revive = (stored) => handleOf(fs, stored);
