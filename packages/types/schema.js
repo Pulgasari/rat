@@ -2,23 +2,19 @@
 
 // :::::: IMPORT
 
-import { SCHEMA, SET, SIGNAL, STORED, Signal, reactive, register, stored } from '@rat/signals';
+import { SET, SIGNAL, STORED, Signal, reactive, register, stored } from '@rat/signals';
 import { isFn, isObject, isSchema, isString } from './_shared.js';
 
 // :::::: CONSTANTS | REFERENCES | SYMBOLS
 
-const MADE  = new WeakMap; // a value create() made -> the schema it was made by (value[SCHEMA], madeBy)
-const TYPED = new WeakMap; // a type -> how typed() made it, for variant()
-
 const // symbols
 BARE   = Symbol('rat.bare'),
-GET    = Symbol('rat.scalar.get'); // SET (a write by name), STORED and SCHEMA come from @rat/signals
+GET    = Symbol('rat.scalar.get'); // SET (a write by name) and STORED come from @rat/signals
 
 const bare          = (Type)  => Object.defineProperty(Type, BARE, { value: true });
 const byConstructor = (Type, schema, value) => new Type (schema, value);
 const byParse       = (Type, schema, value = schema.initial) => schema.parse(value); // create() of a type whose schema gives its values already (Segments, Path …)
 const issue         = (message, path) => ({ issues: [{ message, path }] }); // one issue as a result: return issue('expected a list', path)
-const madeBy        = (value)         => MADE.get(value);
 const schemaOf      = (value)         => isFn(value) && value[BARE] ? value() : value;
 
 // :::::: SCHEMA
@@ -27,7 +23,7 @@ class Schema {
   // run (value, path) -> { value } or { issues }: the kind check plus coercion, before the checks.
   // parts: the schemas a structure is made of (record fields, tuple items, union cases).
   // transform: how a value is made into this schema's form, for from() (a case of Str).
-  // factory: (schema, value) -> a value of the data type, for create() (typed sets it). not make: Id.make() makes a key
+  // factory: (schema, value) -> a value of the data type, for create() (dataType sets it). not make: Id.make() makes a key
   // [STORED]: the options of stored(), the schema makes kept values then
   constructor ({
     checks    = [],
@@ -86,7 +82,6 @@ class Schema {
   create (value) {
     if (!this.factory) throw new TypeError(`[rat] ${this.kind} is no data type, there is nothing to create: its values are plain js`);
     const made = this.factory(this, value);
-    if (made !== null && typeof made === 'object') MADE.set(made, this);
     // without a key yet it waits for one: $x! = …create() hands over the name
     return this[STORED]?.key ? stored({}, made) : made;
   }
@@ -167,37 +162,43 @@ class Scalar {
 // :::::: DATA TYPES
 
 /*
-one name for a data type and its schema: 
-`new List(items)` is a list, 
-`List(Str)` the schema of a list of strings. 
+one name for a data type and its schema:
+`new List(items)` is a list,
+`List(Str)` the schema of a list of strings, whose create() makes a List.
 
-the class stays a class (new, extends, instanceof), only a call differs.
-the schema of a call knows the type it was made by: create() makes one, $List(Str) a $List.
+a class can not be called without new, so the name is a function that is both: with new it constructs
+the class (new.target passed on, so `class Table extends List` works), without it gives the schema.
+its prototype is the class's (instanceof), its statics come from the class (List.from, Path.root).
 
-const List  = typed(ListType, listOf, { kind: 'list', make, name: 'List' });
-const $List = variant(List);
+const [List, $List] = dataTypes(ListType, listOf, { kind: 'list', name: 'List' });   // and $List, registered for $()
+const Path          = dataType(PathType, pathOf, { create: byParse, kind: 'path', name: 'Path' });
 
-kind: a schema of this kind handed to the call is taken as it is (List(Tags) is Tags).
-make: (Type, schema, value) -> the value for create(), when the constructor is not (schema, value).
-name: the name of the class, the type is called (ListType -> List)
+kind:   a schema of this kind handed to the call is taken as it is: $Record(Settings) takes Settings
+create: (Type, schema, value) -> the value of create(). default: new Type(schema, value); byParse for a
+        type whose schema gives its values already (a Path is one instance per path)
+name:   the name of the type, of the class too
 */
 
-function typed (Class, toSchema, { kind = null, make = byConstructor, name = null } = {}) {
-  if (name) Object.defineProperty(Class, 'name', { value: name });
-  Object.defineProperty(Class.prototype, SCHEMA, { configurable: true, get () { return MADE.get(this); } });   // for stored()
-  const schemaFor = (...args) => kind && args.length === 1 && isSchema(args[0]) && args[0].kind === kind ? args[0] : toSchema(...args);
-  const Type      = new Proxy(Class, { apply: (target, self, args) => schemaFor(...args).derive({ factory: (schema, value) => make(Type, schema, value) }) });
-  TYPED.set(Type, { kind, make, toSchema });
+function dataType (Class, toSchema, { create = byConstructor, kind, name }) {
+  function Type (...args) {
+    if (new.target) return Reflect.construct(Class, args, new.target);
+    const schema = isSchema(args[0]) && args[0].kind === kind ? args[0] : toSchema(...args);
+    return schema.derive({ factory: (schema, value) => create(Type, schema, value) });
+  }
+  Object.defineProperty(Class, 'name', { value: name });
+  Object.defineProperty(Type,  'name', { value: name });
+  Object.setPrototypeOf(Type, Class);
+  Type.prototype = Class.prototype;
   return Type;
 }
 
-// the reactive variant of a typed type: reads subscribe, writes notify (reactive() of @rat/signals). called it is
-// the schema as well, whose create() makes the variant. registered, so $() gives it for a value of the type
-function variant (Type) {
-  const made = TYPED.get(Type);
-  const $Type = typed(reactive(Type), made.toSchema, made);
+// the type and its reactive variant (reactive() of @rat/signals: reads subscribe, writes notify), the
+// variant registered: $() gives it for a value of the type
+function dataTypes (Class, toSchema, options) {
+  const Type  = dataType(Class, toSchema, options);
+  const $Type = dataType(reactive(Class), toSchema, { ...options, name: `$${options.name}` });
   register(Type, $Type);
-  return $Type;
+  return [Type, $Type];
 }
 
 // :::::: EXPORT
@@ -205,8 +206,8 @@ function variant (Type) {
 export {
   GET, SET, STORED,
   Scalar, Schema,
-  bare, byParse, issue, partsIn, scalar, typed, variant,
-  madeBy, schemaOf,
+  bare, byParse, dataType, dataTypes, issue, partsIn, scalar,
+  schemaOf,
 };
 
 

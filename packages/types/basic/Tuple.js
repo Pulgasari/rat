@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { Schema, byParse, issue, partsIn, schemaOf, typed } from './../schema.js';
+import { Schema, byParse, dataType, issue, partsIn, schemaOf } from './../schema.js';
 import { isArray } from './../_shared.js';
 
 // ::: SCHEMA
@@ -62,7 +62,7 @@ class TupleType {
 // ::: Tuple
 
 // a value of the schema is a Tuple already: create() hands it on (a tuple never changes, sharing it is safe)
-const Tuple = typed(TupleType, tupleOf, { kind: 'tuple', make: byParse, name: 'Tuple' });
+const Tuple = dataType(TupleType, tupleOf, { create: byParse, kind: 'tuple', name: 'Tuple' });
 
 // :::::: EXPORT
 

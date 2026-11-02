@@ -19,7 +19,7 @@ for its schema without the call:
   const Upload = { name: Str, ext: FileExt };
 */
 
-import { Schema, bare, byParse, issue, typed } from './../schema.js';
+import { Schema, bare, byParse, dataType, issue } from './../schema.js';
 import { isString } from './../_shared.js';
 
 const MIME = {
@@ -119,7 +119,7 @@ const fileExtOf = () => new Schema({
 
 // ::: FileExt
 
-const FileExt = bare(typed(FileExtType, fileExtOf, { kind: 'fileext', make: byParse, name: 'FileExt' }));
+const FileExt = bare(dataType(FileExtType, fileExtOf, { create: byParse, kind: 'fileext', name: 'FileExt' }));
 
 // :::::: EXPORT
 

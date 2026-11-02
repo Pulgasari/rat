@@ -3,7 +3,7 @@
 // :::::: IMPORT
 
 import { by, has, keyBy, one, pluck, where, without } from './../query.js';
-import { Schema, issue, madeBy, partsIn, schemaOf, typed, variant } from './../schema.js';
+import { Schema, dataTypes, issue, partsIn, schemaOf } from './../schema.js';
 import { isArray, isSchema } from './../_shared.js';
 
 // ::: DATA TYPE
@@ -39,7 +39,7 @@ class ListType {
     const item = this.#item;
     if (!item) return value;
     if (!item.factory) return item.parse(value);
-    return madeBy(value) === item ? value : item.create(value);
+    return value?.schema === item ? value : item.create(value);
   }
 
   // a copy with the same items keeps the schema, one whose items may differ (map) does not
@@ -146,8 +146,7 @@ function listOf (given) {
 
 // ::: List + $List
 
-const List  = typed(ListType, listOf, { kind: 'list', name: 'List' });
-const $List = variant(List);
+const [List, $List] = dataTypes(ListType, listOf, { kind: 'list', name: 'List' });
 
 // :::::: EXPORT
 

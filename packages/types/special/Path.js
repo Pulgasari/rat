@@ -26,7 +26,7 @@ schema without the call, so a Record or a Table field holds a Path and stores it
 the rest is Segments (../Segments.js): segments, length, at(), slice(), with(), equals(), toArray().
 */
 
-import { Schema, bare, byParse, issue, typed } from '../schema.js';
+import { Schema, bare, byParse, dataType, issue } from './../schema.js';
 import { Segments, isInput, partsOf }          from './../basic/Segments.js';
 import { FileExt }                             from './FileExt.js';
 
@@ -63,7 +63,7 @@ const pathOf = () => new Schema({
 
 // ::: Path
 
-const Path = bare(typed(PathType, pathOf, { kind: 'path', make: byParse, name: 'Path' }));
+const Path = bare(dataType(PathType, pathOf, { create: byParse, kind: 'path', name: 'Path' }));
 
 // :::::: EXPORT
 

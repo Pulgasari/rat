@@ -1,6 +1,6 @@
 # rat :: persistence
 
-status: **built**: the store reads ahead, `stored` in `@rat/signals` (it knows neither types nor storage: a place, a standard schema, `schema[STORED]`, `value[SCHEMA]`, `schema.fit()`), `$name!` in the compiler, keys per view.
+status: **built**: the store reads ahead, `stored` in `@rat/signals` (it knows neither types nor storage: a place, a standard schema, `schema[STORED]`, `value.schema`, `schema.fit()`), `$name!` in the compiler, keys per view.
 later: `in: 'url'`, a table by rows, keys as functions, `in: 'secure'`.
 
 a value that outlives the page: a setting, the open tabs, bookmarks, a draft. before, every app did it by

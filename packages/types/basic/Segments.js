@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { Schema, bare, byParse, issue, typed } from './../schema.js';
+import { Schema, bare, byParse, dataType, issue } from './../schema.js';
 import { isArray, isString } from './../_shared.js';
 
 // :::::: HELPERS
@@ -66,7 +66,7 @@ const segmentsOf = (separator = ':') => new Schema({
 // ::: Segments
 
 // a value of the schema is Segments already: create() hands it on
-const Segments = bare(typed(SegmentsType, segmentsOf, { kind: 'segments', make: byParse, name: 'Segments' }));
+const Segments = bare(dataType(SegmentsType, segmentsOf, { create: byParse, kind: 'segments', name: 'Segments' }));
 
 // :::::: EXPORT
 

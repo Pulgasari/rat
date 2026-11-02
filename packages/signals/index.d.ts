@@ -61,8 +61,6 @@ export const REACTIVE: unique symbol;
 /** A value with a method under this symbol makes its own signal in $(): a schema with .stored() one that is kept. */
 export const SIGNAL: unique symbol;
 
-/** value[SCHEMA]: the schema a data type was made by ($List(Tab).create()), for stored(). */
-export const SCHEMA: unique symbol;
 /** schema[STORED]: the options of .stored() on a schema (@rat/types), for stored(). */
 export const STORED: unique symbol;
 

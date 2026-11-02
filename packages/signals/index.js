@@ -12,4 +12,4 @@ export {
   isReactive, register, wrap 
 } from './reactive.js';
 
-export { SCHEMA, STORED, stored } from './stored.js';
+export { STORED, stored } from './stored.js';

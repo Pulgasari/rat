@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { GET, SET, Schema, issue, partsIn, schemaOf, typed, variant } from './../schema.js';
+import { GET, SET, Schema, dataTypes, issue, partsIn, schemaOf } from './../schema.js';
 import { isObject } from './../_shared.js';
 
 // :::::: CONSTANTS
@@ -73,10 +73,8 @@ class RecordType {
 
 // ::: Record + $Record
 
-const Record = typed(RecordType, recordOf, { kind: 'record', name: 'Record' });
-
 // one version for the whole record: a field write updates whatever read any field
-const $Record = variant(Record);
+const [Record, $Record] = dataTypes(RecordType, recordOf, { kind: 'record', name: 'Record' });
 
 // :::::: EXPORT
 

@@ -2,7 +2,7 @@
 
 // :::::: IMPORT
 
-import { Schema, issue, typed, variant } from './../schema.js';
+import { Schema, dataTypes, issue } from './../schema.js';
 
 // ::: SCHEMA
 
@@ -19,15 +19,16 @@ const enumOf = (...values) => new Schema({
 class EnumType {
   #index;
 
-  // new Enum('a', 'b') or new Enum(schema), at the schema's initial value. new Enum(other): a copy, at its value
+  // new Enum('a', 'b'), new Enum(schema, value?) at value or the schema's initial one, new Enum(other): a copy, at its value
   constructor (...values) {
-    const [first] = values;
+    const [first, value] = values;
     const copy    = values.length === 1 && first instanceof EnumType;
-    const schema  = copy ? first.schema : values.length === 1 && first instanceof Schema ? first : enumOf(...values);
+    const schema  = copy ? first.schema : first instanceof Schema ? first : enumOf(...values);
     if (schema.kind !== 'enum' || !schema.describe.values.length) throw new TypeError('[rat] an Enum needs values or an Enum schema');
     this.schema = schema;
     this.values = Object.freeze([...schema.describe.values]);
     this.#index = Math.max(0, this.values.indexOf(copy ? first.value : schema.initial));
+    if (!copy && first instanceof Schema && value !== undefined) this.value = value;
   }
 
   get value ()      { return this.values[this.#index]; }
@@ -49,16 +50,7 @@ class EnumType {
 
 // ::: Enum + $Enum
 
-// create(value): at value, else at the initial one
-function atValue (Type, schema, value) {
-  const enumeration = new Type (schema);
-  if (value !== undefined) enumeration.value = value;
-  return enumeration;
-}
-
-const Enum = typed(EnumType, enumOf, { kind: 'enum', make: atValue, name: 'Enum' });
-
-const $Enum = variant(Enum);
+const [Enum, $Enum] = dataTypes(EnumType, enumOf, { kind: 'enum', name: 'Enum' });
 
 // :::::: EXPORT
 

@@ -20,7 +20,7 @@ $Color, its reactive variant, is below.
 
 // :::::: IMPORT
 
-import { Schema, bare, issue, typed, variant } from './../schema.js';
+import { Schema, bare, dataTypes, issue } from './../schema.js';
 import { isObject } from './../_shared.js';
 
 // :::::: HELPERS
@@ -100,7 +100,12 @@ const colorOf = (...args) => {
 class ColorType {
   #r; #g; #b; #a;
 
-  constructor (input = '#000000') { this.set(input); }
+  // new Color('#ff8800'), new Color(schema, value?): a color of its own, also from a color
+  constructor (source = '#000000', value) {
+    const schema = source instanceof Schema ? source : null;
+    Object.defineProperty(this, 'schema', { value: schema });
+    this.set(schema ? schema.parse(value ?? schema.initial) : source);
+  }
 
   set (input) {
     const values = rgba(input);
@@ -153,11 +158,10 @@ class ColorType {
 
 // ::: Color + $Color
 
-// create(value): a color of its own, also from a color (parse would hand that one on)
-const ofValue = (Type, schema, value = schema.initial) => new Type(schema.parse(value));
+const [Color, $Color] = dataTypes(ColorType, colorOf, { kind: 'color', name: 'Color' });
 
-const Color  = bare(typed(ColorType, colorOf, { kind: 'color', make: ofValue, name: 'Color' }));
-const $Color = bare(variant(Color));
+bare(Color);
+bare($Color);
 
 // :::::: EXPORT
 
