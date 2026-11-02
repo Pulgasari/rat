@@ -22,7 +22,6 @@ class SegmentsType {
     Object.freeze(this);
   }
 
-  // another separator, or a subclass, keeps its own: from() of the class that is asked
   static from (value, separator) { return value instanceof this ? value : new this(value, separator); }
 
   get length () { return this.segments.length; }

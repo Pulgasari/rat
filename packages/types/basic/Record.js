@@ -3,16 +3,22 @@
 // :::::: IMPORT
 
 import { GET, SET, Schema, dataTypes, issue, partsIn, schemaOf } from './../schema.js';
-import { isObject } from './../_shared.js';
+import { isObject, isSchema } from './../_shared.js';
 
 // :::::: CONSTANTS
 
-const RESERVED = new Set(['assign', 'schema', 'toJSON']);
+const RESERVED = new Set (['assign', 'schema', 'toJSON']);
+
+// ::::::
+
+const defineProp = Object.defineProperty;
+const toEntries  = Object.entries;
+const toObject   = Object.fromEntries;
 
 // ::: SCHEMA
 
 // '?title': Str is title: Str.optional()
-const shapeOf = fields => Object.fromEntries(Object.entries(fields).map(([key, field]) => {
+const shapeOf = fields => toObject(toEntries(fields).map(([key, field]) => {
   const schema = schemaOf(field);
   return key.startsWith('?') ? [key.slice(1), schema.optional()] : [key, schema];
 }));
@@ -22,15 +28,15 @@ function recordOf (fields) {
   const shape = shapeOf(fields);
   const keys  = Object.keys(shape);
   return new Schema({
-    describe : { fields: Object.fromEntries(keys.map(key => [key, shape[key].describe])) },
-    initial  : Object.fromEntries(keys.map(key => [key, shape[key].initial])),
+    describe : { fields: toObject(keys.map(key => [key, shape[key].describe])) },
+    initial  :           toObject(keys.map(key => [key, shape[key].initial])),
     kind     : 'record',
     parts    : shape,
     run      : (value, path) => {
       if (!isObject(value)) return issue('expected a record', path);
       const result = partsIn(keys.map(key => [key, shape[key], value[key]]), path);
       if (result.issues || !result.changed) return result.issues ? result : { value };
-      return { value: { ...value, ...Object.fromEntries(keys.map((key, index) => [key, result.values[index]])) } };
+      return { value: { ...value, ...toObject(keys.map((key, index) => [key, result.values[index]])) } };
     },
   });
 }
@@ -43,24 +49,28 @@ class RecordType {
   // new Record(schema, values?), new Record(values) without a schema, new Record(other): a copy
   constructor (source, values = {}) {
     const copy   = source instanceof RecordType;
-    const schema = copy ? source.schema : source instanceof Schema ? source : null;
+    const schema = copy ? source.schema : isSchema(source) ? source : null;
     if (schema && schema.kind !== 'record') throw new TypeError('[rat] a Record needs fields or a Record schema');
 
     const data = copy ? source.toJSON() : schema ? schema.parse({ ...schema.initial, ...values }) : source;
     const keys = schema ? Object.keys(schema.parts) : Object.keys(data);
 
-    Object.defineProperty(this, 'schema', { value: schema });
-    this.#values = Object.fromEntries(keys.map(key => [key, data[key]]));
+    defineProp(this, 'schema', { value: schema });
+    this.#values = toObject(keys.map(key => [key, data[key]]));
 
     for (const key of keys) {
       if (RESERVED.has(key)) throw new TypeError(`[rat] ${key} can not be a Record field`);
-      Object.defineProperty(this, key, { enumerable: true, get: () => this[GET](key), set: value => this[SET](key, value) });
+      defineProp(this, key, {
+        enumerable: true, 
+        get: ()    => this[GET](key), 
+        set: value => this[SET](key, value)j
+      });
     }
 
     Object.seal(this);
   }
 
-  [GET] (key) { return this.#values[key]; }
+  [GET] (key)        { return this.#values[key]; }
   [SET] (key, value) { this.#values[key] = this.schema ? this.schema.parts[key].parse(value) : value; }
 
   assign (values) {

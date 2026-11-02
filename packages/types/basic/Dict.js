@@ -5,7 +5,7 @@
 import './builtins.js';   // $Map registered first: a Dict is a Map too, the later registration is asked first
 import { Record } from './Record.js';
 import { Schema, dataTypes, issue, schemaOf } from './../schema.js';
-import { isObject, isSymbol } from './../_shared.js';
+import { isFn, isMap, isObject, isSchema, isSymbol } from './../_shared.js';
 
 // ::: SCHEMA
 
@@ -21,10 +21,13 @@ function dictOf (keyed, value) {
     kind     : 'dict',
     parts    : { key, value: values },
     run      : (input, path) => {
-      if (!(input instanceof Map) && !isObject(input)) return issue('expected a dict', path);
-      const issues = [];
-      const out    = new Map;
-      for (const [rawKey, rawValue] of input instanceof Map ? input : Object.entries(input)) {
+      if (!(isMap(input)) && !isObject(input)) return issue('expected a dict', path);
+      
+      const issues  = [];
+      const out     = new Map;
+      const entries = isMap(input) ? input : Object.entries(input);
+      
+      for (const [rawKey, rawValue] of entries) {
         const keyed = key.validate(rawKey, [...path, rawKey]);
         const value = values.validate(rawValue, [...path, rawKey]);
         if (keyed.issues) issues.push(...keyed.issues);
@@ -44,7 +47,10 @@ const bound = new WeakMap;
 function boundOf (target, key, method, proxy) {
   if (!bound.has(target)) bound.set(target, new Map);
   const methods = bound.get(target);
-  if (!methods.has(key)) methods.set(key, (...args) => { const result = method.apply(target, args); return result === target ? proxy : result; });
+  if (!methods.has(key)) methods.set(key, (...args) => {
+    const result = method.apply(target, args);
+    return result === target ? proxy : result;
+  });
   return methods.get(key);
 }
 
@@ -59,7 +65,7 @@ const ENTRIES = {
   get (target, key, proxy) {
     if (!isMember(target, key)) return target.read(target.get(key));
     const value = Reflect.get(target, key, target);
-    return typeof value === 'function' && key !== 'constructor' ? boundOf(target, key, value, proxy) : value;
+    return isFn(value) && key !== 'constructor' ? boundOf(target, key, value, proxy) : value;
   },
 };
 
@@ -71,9 +77,9 @@ class DictType extends Map {
     super();
     const copy   = source instanceof DictType;
     const schema = copy ? source.schema : source;
-    if (!(schema instanceof Schema) || schema.kind !== 'dict') throw new TypeError('[rat] a Dict needs a Dict schema: new Dict(Dict(Key, Value))');
+    if (!isSchema(schema) || schema.kind !== 'dict') throw new TypeError('[rat] a Dict needs a Dict schema: new Dict(Dict(Key, Value))');
     Object.defineProperty(this, 'schema', { value: schema });
-    for (const [key, value] of copy ? source : entries instanceof Map ? entries : Object.entries(entries)) this.set(key, value);
+    for (const [key, value] of copy ? source : isMap(entries) ? entries : Object.entries(entries)) this.set(key, value);
     return new Proxy(this, ENTRIES);
   }
 
