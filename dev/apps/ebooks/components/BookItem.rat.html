@@ -8,11 +8,13 @@
   const $percent = progressOf(book.key)?.percent ?? 0;
 </script>
 
-<button.book title={book.name} onclick={() => openReader(book.key)}>
-  <Cover book={book} class='book-cover' />
-  <div.book-meta>
-    <div.book-title>{book.title}</div>
-    @if (book.author): <div.book-author>{book.author}</div>
-  </div.book-meta>
-  @if ($percent > 0): <aufbau-progress.book-progress value={Math.round($percent * 100)} />
-</button.book>
+<data-item>
+  <button class='book' title={book.name} onclick={() => openReader(book.key)}>
+    <Cover book={book} class='book-cover' />
+    <div.book-meta>
+      <div.book-title>{book.title}</div>
+      @if (book.author): <div.book-author>{book.author}</div>
+    </div.book-meta>
+    @if ($percent > 0): <aufbau-progress.book-progress value={Math.round($percent * 100)} />
+  </button>
+</data-item>
