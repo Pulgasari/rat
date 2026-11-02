@@ -13,12 +13,12 @@
 <aside.player class:idle={!$track}>
   @if ($track)
     <Cover id={$track.cover} />
-    <div.player-now>
-      <span.player-title>{$track.title}</span>
-      <span.player-artist>{$track.artist}</span>
-    </div.player-now>
+    <div.now>
+      <span.title>{$track.title}</span>
+      <span.artist>{$track.artist}</span>
+    </div>
   @else
-    <span.player-title>Player</span>
+    <span.title>Player</span>
 
   <div.player-controls>
     <btn-icon icon='skip-previous' label='Previous' onclick='previous' />
