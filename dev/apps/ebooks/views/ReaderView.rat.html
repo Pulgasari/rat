@@ -133,24 +133,24 @@
     <button.page-edge.right aria-label='Next'     onclick={() => $engine?.next()}><svg-icon icon='chevron-right' /></button>
 </div>
 
-<footer class='reader-foot'>
+<footer>
   @if ($ui.kind === 'pdf' && $ui.pages)
     <button.ibtn aria-label='Previous page' onclick={() => $engine?.prev()}><svg-icon icon='chevron-up' /></button>
-    <span.foot-label>Page {$ui.page ?? 1} / {$ui.pages}</span>
+    <span.label>Page {$ui.page ?? 1} / {$ui.pages}</span>
     <button.ibtn aria-label='Next page' onclick={() => $engine?.next()}><svg-icon icon='chevron-down' /></button>
   @else
-    <span.foot-label>{$ui.percent != null ? Math.round(($ui.percent || 0) * 100) + '%' : ''}</span>
-  <aufbau-progress class='foot-bar' value={Math.round(($ui.percent || 0) * 100)} />
+    <span.label>{$ui.percent != null ? Math.round(($ui.percent || 0) * 100) + '%' : ''}</span>
+  <aufbau-progress value={Math.round(($ui.percent || 0) * 100)} />
 </footer>
 
 <style>
-  .reader-foot {
+  footer {
     flex: none; display: flex; align-items: center; gap: 0.6rem; height: 2.6rem; padding: 0 1rem;
     border-top: 1px solid var(--line); background: var(--panel);
   }
-  .foot-label { font-size: 0.75rem; color: var(--fg-50, var(--color-fg)); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .foot-bar { --progress-size: 4px; flex: 1 1 auto; border-radius: 2px; background: var(--panel-2); overflow: hidden; }
-  .foot-bar .progress-bar { background: var(--color-ink); }
+  footer label { font-size: 0.75rem; color: var(--fg-50, var(--color-fg)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  aufbau-progress               { --progress-size: 4px; flex: 1 1 auto; border-radius: 2px; background: var(--panel-2); overflow: hidden; }
+  aufbau-progress .progress-bar { background: var(--color-ink); }
   
   @media (max-width: 560px) {
     .reader-author { display: none; }
