@@ -14,7 +14,7 @@
 </script>
 
 <ViewHeader title='Library'>
-  @if ($pending > 0): <span.scan-note><svg-icon icon='loading' /> {$pending} left</span>
+  @if ($pending > 0): <span class='scan-note'><svg-icon icon='loading' /> {$pending} left</span>
   <btn-icon icon='refresh'    label='Rescan folders' onclick={rescanAll} />
   <btn-icon icon='folder-add' label='Add folder'     onclick={addFolder} />
   <btn-icon icon='settings'   label='Settings'       onclick={toggleConfig} />
@@ -29,10 +29,10 @@
       <btn-push icon='folder-add' label='Add a folder' onclick={addFolder} />
     </Empty>
   @else
-    <div.lib-controls>
+    <div class='lib-controls'>
       <SearchPanel placeholder='Search title or author…' bind:value={$search} />
       <Picker signal={state.sort} />
-    </div.lib-controls>
+    </div>
 
     @if ($sources.length > 1)
       <div.folder-bar>
@@ -44,7 +44,7 @@
       <h2>All books <span>{$visible.length}</span></h2>
       @if ($visible.length)
         <data-index viewmode='grid' item-size='150px' gap='1rem'>
-          @for (book of $visible): <data-item><BookItem book={book} /></data-item>
+          @for (book of $visible): <BookItem book={book} />
         </data-index>
       @else if ($search)
         <Empty icon='no-results' title='Nothing matches your search' />
