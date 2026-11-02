@@ -4,7 +4,11 @@
 
 import { by, has, keyBy, one, pluck, where, without } from './../query.js';
 import { Schema, dataTypes, issue, partsIn, schemaOf } from './../schema.js';
-import { isArray, isSchema } from './../_shared.js';
+import { isArray, isInstanceOf, isSchema } from './../_shared.js';
+
+// HELPERS
+
+const isList = isInstanceOf(ListType);
 
 // ::: DATA TYPE
 
@@ -17,7 +21,7 @@ class ListType {
 
   // new List(items), new List(schema, items), new List(other): a copy, with its schema
   constructor (source = [], items) {
-    const copy   = source instanceof ListType;
+    const copy   = isList(source);
     const schema = copy ? source.schema : isSchema(source) ? source : null;
     if (schema && schema.kind !== 'list') throw new TypeError('[rat] a List needs items or a List schema');
 
@@ -135,7 +139,7 @@ function listOf (given) {
     kind     : 'list',
     parts    : { item },
     run      : (value, path) => {
-      const list = value instanceof ListType;
+      const list = isList(value);
       if (!list && !isArray(value)) return issue('expected a list', path);
       const result = partsIn((list ? value.toArray() : value).map((entry, index) => [index, item, entry]), path);
       if (result.issues || !result.changed) return result.issues ? result : { value };
