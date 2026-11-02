@@ -433,3 +433,43 @@ export interface SegmentsConstructor {
 }
 
 export const Segments: SegmentsConstructor;
+
+/** What where, exclude, first, has, all and purge take: a value, an object of tests per key, a function, a RegExp, a schema, a class (match.js). */
+export type ArrayTest<T> = unknown | ((item: T) => boolean);
+
+/** A key of an item, or a function of it. */
+export type ArrayKey<T> = keyof T | string | ((item: T) => unknown);
+
+/** The order sortBy takes: 'title' · 'title', 'desc' · ['author', 'title'] · { year: 'desc', title: 'asc' } · item => … */
+export type ArrayOrder<T> = ArrayKey<T>[] | [ArrayKey<T>, 'asc' | 'desc'] | [ArrayKey<T>[]] | [{ [key: string]: 'asc' | 'desc' }];
+
+declare global {
+  interface Array<T> {
+    /** The items that match. */
+    where (test: ArrayTest<T>): T[];
+    /** The items where at least one key of criteria matches. */
+    whereSome (criteria: Record<string, unknown>): T[];
+    /** The items that do not match. */
+    exclude (test: ArrayTest<T>): T[];
+    /** The first that matches, without a test the first item. */
+    first (test?: ArrayTest<T>): T | undefined;
+    /** Is there one that matches. */
+    has (test: ArrayTest<T>): boolean;
+    /** Do all match. */
+    all (test: ArrayTest<T>): boolean;
+    /** { [value of key]: [items] }. */
+    groupBy (key: ArrayKey<T>): Record<string, T[]>;
+    /** The first of each value of key, without a key the first of each item. */
+    uniqueBy (key?: ArrayKey<T>): T[];
+    /** Case aside, in the given keys, else in the item or all its values. An empty query finds all. */
+    search (query: string, keys?: ArrayKey<T>[]): T[];
+    /** Sorts in place, as sort(). */
+    sortBy (...order: ArrayOrder<T>): this;
+    /** A sorted copy, as toSorted(). */
+    toSortedBy (...order: ArrayOrder<T>): T[];
+    /** Swaps two items in place, a negative index counts from the end. */
+    swap (a: number, b: number): this;
+    /** The items that match go, in place. */
+    purge (test: ArrayTest<T>): this;
+  }
+}
