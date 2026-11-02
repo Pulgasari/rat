@@ -15,3 +15,122 @@
 <rat-area name='config' dock='end'>
   <Settings name='eBooks' />
 </rat-area>
+
+<style>
+/* ── library ─────────────────────────────────────────────────────────────── */
+
+app-view[name="library"] > main { max-width: 1200px; margin: 0 auto; padding: 1.25rem clamp(1rem, 3vw, 2.25rem) 3rem; }
+
+.lib-head       { display: flex; align-items: center; flex-wrap: wrap; }
+.brand          { display: flex; align-items: center; flex: 1 1 auto; }
+.brand svg-icon { color: var(--color-ink); }
+.lib-tools      { display: flex; align-items: center; }
+.scan-note      { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.78rem; color: var(--fg-50, var(--color-fg)); }
+
+.reconnect-bar {
+  display: flex; align-items: center; flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: color-mix(in oklch, var(--color-ink) 8%, var(--panel));
+}
+.reconnect-bar > svg-icon { color: var(--color-ink); }
+.reconnect-item { display: flex; align-items: center; flex-wrap: wrap; }
+
+
+.lib-controls { display: flex; align-items: center; margin-bottom: 0.9rem; flex-wrap: wrap; }
+.lib-search {
+  display: flex; align-items: center; flex: 1 1 16rem;
+  background: var(--color-bg); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.lib-search:focus-within { border-color: var(--color-ink); }
+.lib-search svg-icon { color: var(--fg-50, var(--color-fg)); flex: none; }
+.lib-search input { flex: 1 1 auto; min-width: 0; border: none; background: none; color: var(--color-fg); font: inherit; outline: none; }
+
+.folder-bar { display: flex; flex-wrap: wrap; }
+.chip {
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--fg-75, var(--color-fg));
+  font: inherit; white-space: nowrap;
+}
+.chip:hover { background: var(--hover); }
+.chip.active { background: var(--accent-25); color: var(--color-fg); border-color: transparent; }
+
+/* ── shelves + book grid ─────────────────────────────────────────────────── */
+
+  .shelf-title { display: flex; align-items: baseline; gap: 0.5rem; }
+
+/* the "continue reading" row scrolls horizontally */
+.shelf-row {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 130px;
+  overflow-x: auto; scroll-snap-type: x proximity;
+}
+.shelf-row .book { scroll-snap-align: start; }
+
+.book-grid data-item { overflow: visible; }
+
+.book {
+  border: none; background: none; color: inherit; padding: 0; text-align: left;
+  width: 100%; display: flex; flex-direction: column;
+}
+
+.cover {
+  position: relative; 
+  width: 100%; 
+  aspect-ratio: 2 / 3; 
+  overflow: hidden;
+  background-size: cover; background-position: center;
+  box-shadow: var(--shadow);
+  display: flex;
+}
+.book:hover .cover { transform: translateY(-3px); }
+.cover.has-img .cover-fallback { display: none; }
+.cover-fallback {
+  margin: auto; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center;
+  text-align: center; color: #fff;
+}
+.cover-fallback svg-icon { opacity: 0.85; }
+.cover-title {
+  display: -webkit-box; 
+  -webkit-line-clamp: 4; 
+  -webkit-box-orient: vertical; 
+  overflow: hidden; 
+}
+.kind-badge {
+  position: absolute; 
+  top: 0.4rem; 
+  right: 0.4rem;
+  color: #fff;
+}
+.kind-badge.pdf  { background: color-mix(in oklch, #e06c75 75%, black); }
+.kind-badge.epub { background: color-mix(in oklch, #8be9fd 70%, black); }
+
+.book-meta { min-width: 0; }
+.book-title {
+  display: -webkit-box; 
+  -webkit-line-clamp: 2; 
+  -webkit-box-orient: vertical; 
+  overflow: hidden; 
+}
+.book-author { color: var(--fg-50, var(--color-fg)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.book-progress { --progress-size: 3px; display: block; border-radius: 2px; background: var(--panel-2); overflow: hidden; }
+.book-progress .progress-bar { background: var(--color-ink); }
+
+@spread --gap {
+  small  : .book, .brand, .cover-fallback, .folder-bar, .lib-search, .lib-tools, .reconnect-bar, .reconnect-item;
+  normal : .lib-controls, .lib-head, .shelf-row;
+}
+
+@spread --pad {
+  tiny   : .kind-badge;
+  small  : .chip, .lib-search, .reconnect-bar;
+  normal : .cover-fallback;
+}
+
+@spread --rad {
+  0.25rem : .kind-badge;
+  0.50rem : .cover;
+  1.00rem : .chip;
+}
+
+</style>
