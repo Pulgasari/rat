@@ -14,6 +14,18 @@ P.swap    = function (a,b)  { let temp = this[a]; this[a] = this[b]; this[b] = t
 // sortBy
 // toSortedBy
 
+// every key of criteria has to match, or at least one
+const matchesAll = (item) => (criteria) => Object.keys(criteria).every(key => item?.[key] === criteria[key]);
+const matchesAny = (item) => (criteria) => Object.keys(criteria).some (key => item?.[key] === criteria[key]);
+
+P.dropByAnyCriteria   = function (criteria = {}) { return this.filter (!matchesAny(criteria) };
+P.dropByCriteria      = function (criteria = {}) { return this.filter (!matchesAll(criteria) };
+P.filterByAnyCriteria = function (criteria = {}) { return this.filter  (matchesAny(criteria) };
+P.filterByCriteria    = function (criteria = {}) { return this.filter  (matchesAll(criteria) };
+P.findByAnyCriteria   = function (criteria = {}) { return this.find    (matchesAny(criteria) };
+P.findByCriteria      = function (criteria = {}) { return this.find    (matchesAll(criteria) };
+
+
 // approach 3 :: creating List from extending Array
 
 class List extends Array {
@@ -24,3 +36,9 @@ class List extends Array {
     input[index_B] = temp;
   }
 }
+
+
+
+
+
+
