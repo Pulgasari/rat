@@ -11,4 +11,8 @@ isMap    = (value) => value instanceof Map,
 isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value),      
 isSchema = (value) => value instanceof Schema,
 isString = (value) => typeof value === 'string',
-isSymbol = (value) => typeof value === 'symbol';
+isSymbol = (value) => typeof value === 'symbol',
+
+isInstanceOf = (sth) => (Type) => sth instanceof Type,
+isSchemaOf   = (sth) => (kind) => isSchema(sth) && sth.kind === kind;
+
