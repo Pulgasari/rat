@@ -59,7 +59,21 @@ function comparatorOf (spec) {
 const indexOf = (array, index) => index < 0 ? array.length + index : index;
 
 // :::::: METHODS
+/*
+const define = (name, fn) => Object.defineProperty(Array.prototype, name, { configurable: true, value: fn, writable: true });
 
+define ('first', function (test) { return test === undefined ? this[0] : this.find(item => is(item, test)); }); // pick1, findBy
+
+define ('where',   function (test) { return this.filter (item =>  is(item, test)); });
+define ('exclude', function (test) { return this.filter (item => !is(item, test)); });
+define ('has',     function (test) { return this.some   (item =>  is(item, test)); });                                     // contains
+define ('all',     function (test) { return this.every  (item =>  is(item, test)); });
+
+define ('sortBy',    function (...spec) { return this.sort     (comparatorOf(spec)); }); // in place, as sort()
+define ('toSortedBy' function (...spec) { return this.toSorted (comparatorOf(spec)); }); // a sorted copy, as toSorted()
+
+define ('whereSome', function (criteria) { return this.filter(item => Object.keys(criteria).some(key => is(item?.[key], criteria[key]))); }); // whereAny
+*/
 const METHODS = {
 
   // ::: TESTS
