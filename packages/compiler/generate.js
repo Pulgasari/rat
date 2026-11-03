@@ -253,7 +253,8 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     if (isEvent(name))    return event(name, value);
     if (isBehavior(name)) return behavior(name, value);
     if (name === 'ref')   return `ref=${hole(`${$('ref')}(${reference(value)})`)}`;
-    return bind(name, value);
+    if (name.startsWith('bind:')) return bind(name, value);
+    return plainProp(name, value);   // a plain name in a group with an event: label|onclick='next'
   }
 
   // a bare signal name is the signal itself, anything else an expression
