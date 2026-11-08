@@ -11,7 +11,7 @@ import { REACTIVE, Signal, WRITES, reactive, register, untrack } from '@rat/sign
 // ::: $Array
 
 // these return the array itself: the proxy, not the raw one
-const SELF = new Set(['copyWithin', 'fill', 'reverse', 'sort']);
+const SELF = new Set(['copyWithin', 'fill', 'purge', 'reverse', 'sort', 'sortBy', 'swap']);
 
 function $Array (items = []) {
   const target  = [...items];

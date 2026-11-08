@@ -6,10 +6,6 @@ import { by, has, keyBy, one, pluck, where, without } from './../query.js';
 import { Schema, dataTypes, issue, partsIn, schemaOf } from './../schema.js';
 import { isArray, isInstanceOf, isSchema } from './../_shared.js';
 
-// HELPERS
-
-const isList = isInstanceOf(ListType);
-
 // ::: DATA TYPE
 
 let checked = false;   // the items of a copy came out of a list of the same schema: not checked again
@@ -121,6 +117,8 @@ class ListType {
   }
   clear   ()             { this.#items.length = 0; return this; }
 }
+
+const isList = isInstanceOf(ListType);
 
 // ::: SCHEMA
 

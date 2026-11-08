@@ -18,10 +18,6 @@ const pick = (obj, keys) => {
   return result;
 };
 
-const 
-isTable       = isInstanceOf(TableType),
-isTableSchema = isSchemaOf('table');
-
 // ::: SCHEMA
 
 // fields or a Record schema -> the schema of a row
@@ -84,6 +80,10 @@ class TableType extends List {
 
   toJSON () { return this.toArray(); }
 }
+
+const 
+isTable       = isInstanceOf(TableType),
+isTableSchema = isSchemaOf('table');
 
 // ::: Table + $Table
 

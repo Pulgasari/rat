@@ -3,6 +3,9 @@
 export { Schema, bare, schemaOf } from './schema.js';
 export { isSchema }               from './_shared.js';
 
+// every array: where, exclude, first, has, all, groupBy, uniqueBy, search, sortBy, toSortedBy, swap, purge
+import './basic/Array.js';
+
 // Basic DataTypes + their reactive variant
 export { $Array, $Map, $Set } from './basic/builtins.js';
 export { Bool,   $Bool   } from './basic/Bool.js';
