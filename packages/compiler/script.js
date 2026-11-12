@@ -1000,9 +1000,13 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
     }
   }
 
-  if (extraEdits) edits.push(...extraEdits(program, sugared, names, cases));
+  if (!extraEdits) return { code: applyEdits(sugared, edits), imports, program };
 
-  return { code: applyEdits(sugared, edits), imports, program };
+  // what a template compiles to replaces it whole: the edits of the script inside it are the template's own
+  const extra  = extraEdits(program, sugared, names, cases);
+  const inside = edit => extra.some(range => edit.pos >= range.pos && (edit.end ?? edit.pos) <= range.end);
+
+  return { code: applyEdits(sugared, [...edits.filter(edit => !inside(edit)), ...extra]), imports, program };
 }
 
 // an import with $names: its text with each one renamed ($x -> $x$import), and the declarations that

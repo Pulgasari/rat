@@ -65,7 +65,7 @@ source ──► parse ──► ast ──► generate ──► es module
 - scope analysis: detect shadowing of `$` names (parameters, inner declarations).
 - source maps (the edit list already holds the information).
 - several `<script>` blocks: names from block 2 do not apply in block 1 in v0.
-- `.rat.js`: templates with `${…}` stay untouched (runtime htx). mixed forms?
+- `.rat.js`: a template inside a hole (`${list.map(x => html`…`)}`) is not compiled, it stays a runtime template.
 - imports between `.rat` files in the playground (virtual file system, a blob url per file).
 
 ## output

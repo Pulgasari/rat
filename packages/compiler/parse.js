@@ -5,7 +5,7 @@ markup -> ast. the markup itself (elements, selectors, attributes, prop groups,
 closing tags) is htx and read by its one parser, scanner() of @htx/htx. this
 file is what rat adds to it:
 
-  holes      {…}, delimited with acorn's tokenizer (the script pass parses the code later)
+  holes      {…} and ${…}, the same thing, delimited with acorn's tokenizer (the script pass parses the code later)
   blocks     @if @for @match @await @fragment @var, in child position, with their three body forms
   raw tags   <script>, <script module>, <script comptime>, <style>, top level only
   components a capital means an identifier: <Card />
@@ -50,6 +50,9 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
   // offset: where source starts inside the file (a template in a .rat.js), errors count from the file
   const fullSource = offset ? ' '.repeat(offset) + source : source;
 
+  // a hole opens with { or ${, the dollar changes nothing
+  const holeStart = (source, index) => source[index] === '{' || (source[index] === '$' && source[index + 1] === '{');
+
   const p = scanner(source, {
     child      : (p, end, context) => p.peek('@') && atBlockStart() ? block(context) : undefined,
     component  : name => /^[A-Z]/.test(name),
@@ -57,9 +60,9 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     ends,
     error      : (message, index) => new CompileError(message, { filename, index: index + offset, source: fullSource }),
     hole       : holeAt,
+    holeStart,
     open       : (p, name, start, context) => name === 'script' || name === 'style' ? { node: raw(name, start, context) } : undefined,
     position   : { end: index => index + offset, start: index => index + offset },
-    stops      : '{',
     tagStart   : TAG_START,
     text       : (p, end, context) => text(end, context),
     tolerant,
@@ -97,8 +100,8 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
 
   // {expr}, and {...props} where an attribute stands. a tag or a closing name is never a hole
   function holeAt (p, where) {
-    if (where === 'tag' || where === 'closing' || source[p.i] !== '{') return undefined;
-    p.i++;
+    if (where === 'tag' || where === 'closing' || !holeStart(source, p.i)) return undefined;
+    p.i += source[p.i] === '$' ? 2 : 1;
     if (where === 'attribute' && peek('...')) { p.i += 3; return { spread: true, value: hole() }; }
     return { value: hole() };
   }
@@ -246,7 +249,7 @@ function parse (source, { blocks = true, filename = 'component.rat', offset = 0,
     p.i++;
     while (p.i < source.length) {
       const char = source[p.i];
-      if (char === '<' || char === '{') break;
+      if (char === '<' || holeStart(source, p.i)) break;
       if (char === '}' && (end === 'brace' || (loose && context.braces))) break;
       if (char === '\n' && loose) break;
       if (char === '@' && (atBlockStart() || (end === 'line' && atContinuation()))) break;

@@ -39,7 +39,7 @@ one core, three notations. all end up in the same ast and the same codegen.
 | entrance | file | build needed | what it does |
 |---|---|---|---|
 | vanilla | `.js` | no | ``html`…` `` through htx at runtime. the gateway drug, nothing is transformed |
-| sugar | `.rat.js` | yes (or compile in the browser) | plain js plus sugar: `\|>`, `..`, implicit `const` in `for…of`, `$` signals. ``html`…` `` with `{…}` holes is compiled **(v0)** |
+| sugar | `.rat.js` | yes (or compile in the browser) | plain js plus sugar: `\|>`, `..`, implicit `const` in `for…of`, `$` signals. ``html`…` `` is compiled, its holes `{…}` or `${…}` **(v0)** |
 | component | `.rat` | yes (or compile in the browser) | markup first: `<script>`, `<script module>`, `<style>`, control flow in the markup **(v0)** |
 
 the difference to "a framework with a compiler": `.js` stays a full way in. whoever does

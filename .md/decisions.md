@@ -83,3 +83,6 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 - testen gibt es genau einmal: `match.js` in `@rat/types` (`match`, `is`, `pass`, `pattern`, `which`). der compiler übersetzt muster nur in daten (`part('name')`, `either`, `rest`, `any`), `match`, `is`, `@match` und benannte cases laufen alle darüber, die runtime importiert es. `choice` entfällt, `match()` ist die form für plain js
 - `@switch` heißt `@match`, die zweige bleiben `@case`/`@default`
 
+## holes
+- `${…}` und `{…}` sind in `.rat` und `.rat.js` dasselbe hole: der dollar ist optional, beide sind live (der compiler schreibt die closure, `{$count}` → `${() => $count.value}`). in `.rat.js` gilt das für `` html`…` `` (`htx`, `rat`), ein gewöhnlicher template-string bleibt js. nur in plain `.js` (ohne compiler) ist `${x}` ein wert: wer es dort live will, schreibt `${() => …}`
+- ein `` html`…` `` innerhalb eines holes (`${items.map(item => html`<li>${item}</li>`)}`) wird nicht mitkompiliert, es bleibt ein template zur laufzeit. in markup ist `@for` der weg
