@@ -6,9 +6,7 @@ import config from '../config.js';
 
 const outputs = {
   debounce : config.debounce,
-  java     : config.android.java,
   node     : config.node,
-  sdk      : config.android.sdk.join(' '),
 };
 
 for (const [key, value] of Object.entries(outputs)) console.log(`${key}=${value}`);

@@ -19,8 +19,7 @@ playground:
 [syntax](https://code.pulgasari.dev/rat/demos/playground/#syntax.rat) ·
 [todos](https://code.pulgasari.dev/rat/demos/playground/#todos.rat)
 
-apps (demos): 
-[noisy](https://code.pulgasari.dev/rat/apps/noisy/)
+apps written in rat: [zugriff](https://github.com/pulgasari/zugriff)
 
 ## packages
 

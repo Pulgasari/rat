@@ -1,1 +1,0 @@
-var c=Object.defineProperty;var t=(n,e)=>c(n,"name",{value:e,configurable:!0});const r=t(async n=>{const e=Object.freeze({...n});return customElements.whenDefined("svg-icon").then(s=>s.register?.(e)),e},"icons");export{r as default};

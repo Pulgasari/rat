@@ -1,7 +1,7 @@
 // @rat/language-server :: build
 //
 // the worker as one file for the browser: a worker has no import map, so what it imports is bundled.
-// the code app (dev/apps/code) starts it beside monaco. typescript is not in it: js.js needs a file
+// the code app (zugriff/apps/code) starts it beside monaco. typescript is not in it: js.js needs a file
 // system, monaco brings a typescript of its own (rat/javascript hands it the js text).
 //
 //   npm install && node build.js    -> dist/worker.js

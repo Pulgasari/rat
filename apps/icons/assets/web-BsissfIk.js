@@ -1,1 +1,0 @@
-var i=Object.defineProperty;var t=(r,a)=>i(r,"name",{value:a,configurable:!0});const e=globalThis.navigator?.clipboard,d={read:!!e?.readText,write:!!e?.writeText},c=t(()=>e.readText(),"read"),x=t(r=>e.writeText(r),"write");export{d as can,c as read,x as write};
