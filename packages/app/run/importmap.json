@@ -24,6 +24,7 @@
     "@gestalt/syntax"         : "../../../../gestalt/packages/syntax/index.js",
     "@gestalt/webfonts"       : "../../../../gestalt/packages/webfonts/index.js",
     "@htx/htx"                : "../../../../htx/packages/htx/index.js",
+    "@htx/htx/scan"           : "../../../../htx/packages/htx/scan.js",
     "@htx/js/render"          : "../../../../htx/packages/js/render.js",
     "@pulgasari/canonicalmap" : "../../../../js-packages/obj/CanonicalMap.js",
     "@pulgasari/coerce"       : "../../../../js-packages/coerce/index.js",

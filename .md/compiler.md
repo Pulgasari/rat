@@ -11,7 +11,7 @@ source ──► parse ──► ast ──► generate ──► es module
 
 | file | job |
 |---|---|
-| `parse.js` | markup → ast. hand-written recursive descent. js in holes is only delimited (acorn's tokenizer finds the closing `}` / `)`), not parsed. knows the three body forms (braces, indentation, one line). every node has `start` / `end`; `tolerant: true` (the language server) collects errors in `ast.errors` and recovers, closing tags that name another element land in `ast.warnings` |
+| `parse.js` | markup → ast. the markup itself is htx and read by its one parser (`scanner()` of `@htx/htx`), `parse.js` plugs in what rat adds: `{…}` holes (acorn's tokenizer finds the closing `}` / `)`, the js is only delimited), the blocks with their three body forms (braces, indentation, one line), `<script>` / `<style>`, components. every node has `start` / `end`; `tolerant: true` (the language server) collects errors in `ast.errors` and recovers, closing tags that name another element land in `ast.warnings` |
 | `script.js` | `sugar` (token based: `#`, `..`, `\|>`, `for…of`), then the acorn parse, then the reactive rewrite (`$x` → `$x.value`, declarations → `signal` / `computed`). `declared(code)` lists the `$` declarations token based, for tooling |
 | `generate.js` | ast → an htx template for `@domina/render`. holes become closures, blocks the helpers `when` / `match` / `each`, component props a spread of getters |
 | `style.js` | `<style>` → `@scope (:has(> [data-rat="hash"])) to (:scope > :not([data-rat="hash"])) { … }`: rooted at the parent, so the component's own top level elements match too |
@@ -32,7 +32,7 @@ source ──► parse ──► ast ──► generate ──► es module
 
 ## decisions
 
-- **acorn is the only dependency.** js is never read with a regex. the tokenizer also
+- **acorn and the htx scanner are the only dependencies.** js is never read with a regex. the tokenizer also
   delimits holes, because it knows strings, templates and regexes and tolerates `|>`
   (two tokens, no grammar check). a `#` is masked to a same-length name while scanning.
 - **sugar before the parse.** acorn knows neither `|>` nor `#` nor `..`, so they are
