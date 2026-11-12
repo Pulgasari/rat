@@ -5,7 +5,7 @@ one entry, two inputs:
 
   .rat      markup first. <script comptime>, <script module>, <script>, <style>, the rest is markup
   .rat.html the same as .rat, for highlighting where .rat is unknown (github)
-  .rat.js   plain js plus sugar, html`…` without ${…} is compiled as markup
+  .rat.js   plain js plus sugar, html`…` is compiled as markup, ${…} and {…} are the same hole
 
 both run through the same passes (parse -> script -> generate) and emit an es
 module that imports nothing but @rat/runtime and what the file imports itself.
@@ -166,13 +166,12 @@ function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/ru
   const names     = new Set;
   const templates = [];
 
-  // html`…` (htx`…`, rat`…`) without holes of its own is rat markup
+  // html`…` (htx`…`, rat`…`) is rat markup, its ${…} holes the same as {…}: read from the source as written
   const markup = (program, code, known, cases) => {
     const edits = [];
     walk(program, node => {
       if (node.type !== 'TaggedTemplateExpression' || node.tag.type !== 'Identifier' || !tags.includes(node.tag.name)) return;
-      if (node.quasi.expressions.length) return;
-      const raw = node.quasi.quasis[0].value.raw;
+      const raw = code.slice(node.quasi.start + 1, node.quasi.end - 1);
       const ast = parse(raw, { blocks: false, filename, offset: node.quasi.start + 1 });
       templates.push(ast);
       edits.push({ end: node.end, pos: node.start, text: generate(ast, { cases, filename, names: known, runtime: RUNTIME, source: code }) });

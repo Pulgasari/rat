@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@htx/analyzer"                     : "file:../../../htx/packages/analyzer",
+    "@htx/htx"                          : "file:../../../htx/packages/htx",
     "@rat/compiler"                     : "file:../compiler",
     "acorn"                             : "^8.14.0",
     "typescript"                        : "^5.9.0 || ^6.0.0",

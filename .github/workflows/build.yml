@@ -1,12 +1,11 @@
-name: build docs and apps
+name: build docs
 
-# builds dev/docs into docs/ and every app of dev/apps with a build in its config.rat.js into apps/
-# (rat build, @rat/dev), as code.pulgasari.dev serves them. one that fails does not stop the others,
-# the run fails at the end and names it.
+# builds dev/docs into docs/, as code.pulgasari.dev serves it. the apps live in pulgasari/zugriff
+# and are built there.
 #
 # the import map (packages/app/run/importmap.json) points into the repos next to this one, so
 # they are checked out side by side (.github/config.js: repos). a change there builds nothing by
-# itself: run this by hand (actions -> build docs and apps).
+# itself: run this by hand (actions -> build docs).
 #
 # debounced as the css of gestalt: a push waits (.github/config.js: debounce), a newer one cancels
 # it. the commit made here uses GITHUB_TOKEN, which starts no new run.
@@ -55,23 +54,16 @@ jobs:
         working-directory: rat
         run: |
           npm ci
-          failed=''
-          npm run build:docs || failed="$failed docs"
-          for app in dev/apps/*/; do
-            grep -q '^  build' "$app/config.rat.js" 2>/dev/null || continue
-            npx rat build "$app" || failed="$failed $(basename "$app")"
-          done
-          echo "failed=$failed" >> "$GITHUB_ENV"
+          npm run build:docs
 
       - name: commit
         working-directory: rat
         run: |
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A docs apps
+          git add -A docs
           git diff --cached --quiet || {
-            git commit -m 'docs, apps: rebuild'
+            git commit -m 'docs: rebuild'
             git pull --rebase origin "${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           }
-          if [ -n "$failed" ]; then echo "::error::did not build:$failed"; exit 1; fi

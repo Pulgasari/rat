@@ -6,6 +6,7 @@
     ".": "./index.js"
   },
   "imports": {
+    "@htx/htx": "jsr:@htx/htx@^0.4.0",
     "acorn": "npm:acorn@^8.14.0"
   },
   "publish": {

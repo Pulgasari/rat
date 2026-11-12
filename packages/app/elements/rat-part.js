@@ -3,7 +3,7 @@
 /*
   <rat-part src="./chart.rat" load="visible">chart …</rat-part>
 
-loads a .rat (.rat.js, .rat.html), an .htx or a plain .html file through the
+loads a .rat (.rat.js, .rat.html) or a plain .html file through the
 loader and mounts its component into itself. plain html is shown as it is:
 no holes, scripts in it do not run. what it holds until then stays: a loading screen for free. src
 resolves against the page, a new src mounts the new component.

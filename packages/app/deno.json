@@ -16,7 +16,6 @@
     "@domina/proxy": "jsr:@domina/proxy@^0.1.0",
     "@domina/verbs": "jsr:@domina/verbs@^0.1.0",
     "@gestalt/core": "jsr:@gestalt/core@^0.1.0",
-    "@htx/compiler": "jsr:@htx/compiler@^0.1.0",
     "acorn": "npm:acorn@^8.14.0"
   },
   "publish": {

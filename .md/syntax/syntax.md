@@ -500,8 +500,8 @@ careful: in plain js this would assign to an outer `item`. in rat never.
 ## `.rat.js`
 
 plain js with everything from [script sugar](#script-sugar). additionally every
-``html`…` ``, ``htx`…` `` and ``rat`…` `` without a `${…}` of its own is compiled as
-rat markup, holes as `{…}` (all three for now, d-11):
+``html`…` ``, ``htx`…` `` and ``rat`…` `` is compiled as rat markup (all three for now, d-11).
+a hole is `{…}` or `${…}`, the dollar is optional and both are live:
 
 ```js
 let $count = 0;
@@ -511,7 +511,10 @@ export const Counter = () => html`
 `;
 ```
 
-a template with `${…}` stays a runtime htx template.
+a template inside a hole (``${list.map(x => html`…`)}``) is not compiled, it stays a runtime htx
+template: in markup the loop is `@for`. a template string without one of the tags is plain js.
+
+the same holds in a `.rat` file: `<p>${$count}</p>` is `<p>{$count}</p>`.
 
 ## behaviors
 

@@ -44,7 +44,7 @@ Runs once per file, not per instance: state all instances of a component share.
 
 ## Markup in a `.rat.js`
 
-An `html` template without `${…}` is compiled as rat markup:
+An `html` template is compiled as rat markup. A hole is `{…}` or `${…}`, the dollar is optional and both are live:
 
 ```ratjs
 let $count = 0;
