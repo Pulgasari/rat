@@ -12,7 +12,7 @@ the app's on('error'), the toast. a component that goes drops every answer still
 */
 
 import { effect, onCleanup, signal } from '../common/shared.js';
-import { when }                      from '@htx/js/render';
+import { when }                      from '@domina/render';
 
 const PENDING = { status: 'pending' };
 

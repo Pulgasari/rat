@@ -106,6 +106,7 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | target | output | when |
 |---|---|---|
 | `dom` | an htx template (``$$.html`…` ``) with live holes, rendered by `@domina/render`: static markup is parsed once per template and cloned, only the holes bind | **(v0)**, default |
+| `dom`, as programs | `templates: 'program'`: the program of every template written into the module (`$$.view($$t0, [values])`), made by the same function the runtime would call, so nothing is parsed at runtime. off by default: measured on the apps it saves about a millisecond of parsing per app, costs 1 to 2 kb gzip and the readable output, and the htx parser stays in a bundle as long as an aufbau element writes its template with it | built, opt in |
 | `ssr` | string output, hydration markers | later |
 | `htx` | ``html`…` `` output for existing htx/preact projects (migration, zugriff): the `dom` target is htx already | covered |
 

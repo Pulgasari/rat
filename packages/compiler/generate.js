@@ -17,6 +17,9 @@ component body (hoisted, so the script can call it too), collected in
 options.fragments. without that array (.rat.js) a @fragment is an error.
 */
 
+import { parseExpressionAt }    from 'acorn';
+import { programOf }            from '@htx/htx';
+
 import { transformExpression }  from './script.js';
 import { CompileError, key }    from './util.js';
 
@@ -55,8 +58,33 @@ const isBehavior = name => name[0] === '@' || name.startsWith('use:');
 
 // ::: generator
 
-function generate (ast, { cases = new Map, filename, fragments = null, names, runtime = '$$', scope = null, source }) {
+function generate (ast, { cases = new Map, filename, fragments = null, names, programs = null, runtime = '$$', scope = null, source }) {
   const $ = name => `${runtime}.${name}`;
+
+  /*
+  a template as code, from what stands between its backticks. without programs
+  the htx template itself, parsed by the runtime: the readable output. with
+  programs (a list the caller declares at the top of the module) its program,
+  made here by the same function the runtime would call, and the holes as values:
+
+    $$.html`<p>${() => $count.value}</p>`
+    $$.view($$t0, [() => $count.value])      const $$t0 = {"nodes":[{"tag":"p","props":[],"children":[{"hole":0}]}]};
+
+  a program is one object per template, the renderer keeps an instance while its
+  program stays: so it is declared once, never written inline
+  */
+  function template (body) {
+    if (!programs) return `${$('html')}\`${body}\``;
+
+    const code    = `\`${body}\``;
+    const literal = parseExpressionAt(code, 0, { ecmaVersion: 'latest' });
+    const statics = literal.quasis.map(quasi => quasi.value.cooked);
+    const values  = literal.expressions.map(node => code.slice(node.start, node.end));
+    const json    = JSON.stringify(programOf(statics));
+    // one constant per template, also for two that read the same: the renderer tells places apart by their program
+    const index = programs.push(json) - 1;
+    return `${$('view')}(${runtime}t${index}, [${values.join(', ')}])`;
+  }
 
   // the reactive names in reach; a @case branch adds the parts of its case
   let reactive = names;
@@ -96,7 +124,7 @@ function generate (ast, { cases = new Map, filename, fragments = null, names, ru
     if (vars.length) return declared(vars, children.filter(child => child.type !== 'Var'), depth, root);
     if (!children.length) return 'null';
     const body = content(children, depth, root);
-    return `${$('html')}\`${body.block ? `\n${body.items.map(item => pad(depth + 1) + item).join('\n')}\n${pad(depth)}` : body.items.join('')}\``;
+    return template(body.block ? `\n${body.items.map(item => pad(depth + 1) + item).join('\n')}\n${pad(depth)}` : body.items.join(''));
   }
 
   // @var name = value: a constant, @var $name = value a computed, read as $name.value from then on

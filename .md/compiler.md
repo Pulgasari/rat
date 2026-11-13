@@ -13,7 +13,7 @@ source ──► parse ──► ast ──► generate ──► es module
 |---|---|
 | `parse.js` | markup → ast. the markup itself is htx and read by its one parser (`scanner()` of `@htx/htx`), `parse.js` plugs in what rat adds: `{…}` holes (acorn's tokenizer finds the closing `}` / `)`, the js is only delimited), the blocks with their three body forms (braces, indentation, one line), `<script>` / `<style>`, components. every node has `start` / `end`; `tolerant: true` (the language server) collects errors in `ast.errors` and recovers, closing tags that name another element land in `ast.warnings` |
 | `script.js` | `sugar` (token based: `#`, `..`, `\|>`, `for…of`), then the acorn parse, then the reactive rewrite (`$x` → `$x.value`, declarations → `signal` / `computed`). `declared(code)` lists the `$` declarations token based, for tooling |
-| `generate.js` | ast → an htx template for `@domina/render`. holes become closures, blocks the helpers `when` / `match` / `each`, component props a spread of getters |
+| `generate.js` | ast → an htx template for `@domina/render`. holes become closures, blocks the helpers `when` / `match` / `each`, component props a spread of getters. with `templates: 'program'` every template becomes its program instead (`programOf()` of `@htx/htx`), declared once at the top of the module and called as `$$.view(program, values)` |
 | `style.js` | `<style>` → `@scope (:has(> [data-rat="hash"])) to (:scope > :not([data-rat="hash"])) { … }`: rooted at the parent, so the component's own top level elements match too |
 | `util.js` | errors with line/column, token scanners, applying edits, names |
 | `index.js` | `compile()`, tells `.rat` from `.rat.js`, runs `<style lang>` preprocessors |

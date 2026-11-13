@@ -117,7 +117,14 @@ const urlOf = (src, base) => /^[a-z][\w+.-]*:/i.test(src) ? JSON.stringify(src)
   : base ? JSON.stringify(new URL(src, base).href)
   : `new URL(${JSON.stringify(src)}, import.meta.url).href`;
 
-function compileComponent (source, { baked, base, filename = 'component.rat', inlined, processedCss, runtime = '@rat/runtime', styles } = {}) {
+// the programs generate() collected, as constants: at the top of the module, a template at the top
+// level of a script may run while the module is evaluated
+const constantsOf = programs => programs?.length ? programs.map((json, index) => `const ${RUNTIME}t${index} = ${json};`).join('\n') : null;
+
+// templates: 'htx' writes htx templates the runtime parses (readable), 'program' their programs
+const programsOf = templates => templates === 'program' ? [] : null;
+
+function compileComponent (source, { baked, base, filename = 'component.rat', inlined, processedCss, runtime = '@rat/runtime', styles, templates } = {}) {
   const ast        = parse(source, { filename });
   if (ast.scripts.comptime.length && baked == null) throw new CompileError('<script comptime> runs in compileAsync(source, { comptime }), not in compile()', { filename, index: ast.scripts.comptime[0].start, source });
   const names      = new Set;
@@ -132,13 +139,15 @@ function compileComponent (source, { baked, base, filename = 'component.rat', in
   const css       = processedCss ?? stylesOf(ast, sheets, { base, filename, inlined, source, styles });
   const scope     = css ? hash(`${filename}\n${css}`) : null;
   const fragments = [];
-  const view      = generate(ast, { cases, filename, fragments, names, runtime: RUNTIME, scope, source });
+  const programs  = programsOf(templates);
+  const view      = generate(ast, { cases, filename, fragments, names, programs, runtime: RUNTIME, scope, source });
 
   // the body runs with this: this.props (the arguments stay as well)
   const name  = nameOf(filename);
   const lines = [
     `import * as ${RUNTIME} from ${JSON.stringify(runtime)};`,
     ...instance.flatMap(script => script.imports),
+    constantsOf(programs) && `\n${constantsOf(programs)}`,
     baked && `\n${baked}`,
     ...modules.map(trimBlock),
     linked.length && `\n${linked.join('\n')}`,
@@ -162,8 +171,9 @@ function compileComponent (source, { baked, base, filename = 'component.rat', in
 // the template tags compiled as markup in .rat.js, all three for now (d-11)
 const TAGS = ['html', 'htx', 'rat'];
 
-function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/runtime', tags = TAGS } = {}) {
+function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/runtime', tags = TAGS, templates: mode } = {}) {
   const names     = new Set;
+  const programs  = programsOf(mode);
   const templates = [];
 
   // html`…` (htx`…`, rat`…`) is rat markup, its ${…} holes the same as {…}: read from the source as written
@@ -174,7 +184,7 @@ function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/ru
       const raw = code.slice(node.quasi.start + 1, node.quasi.end - 1);
       const ast = parse(raw, { blocks: false, filename, offset: node.quasi.start + 1 });
       templates.push(ast);
-      edits.push({ end: node.end, pos: node.start, text: generate(ast, { cases, filename, names: known, runtime: RUNTIME, source: code }) });
+      edits.push({ end: node.end, pos: node.start, text: generate(ast, { cases, filename, names: known, programs, runtime: RUNTIME, source: code }) });
       return false;
     });
     return edits;
@@ -182,7 +192,8 @@ function compileModule (source, { filename = 'module.rat.js', runtime = '@rat/ru
 
   const { code } = transformScript(source, { extraEdits: markup, filename, names, runtime: RUNTIME, source });
   const used     = code.includes(`${RUNTIME}.`);
-  const out      = (used ? `import * as ${RUNTIME} from ${JSON.stringify(runtime)};\n\n` : '') + code.trim() + '\n';
+  const consts   = constantsOf(programs);
+  const out      = (used ? `import * as ${RUNTIME} from ${JSON.stringify(runtime)};\n\n` : '') + (consts ? `${consts}\n\n` : '') + code.trim() + '\n';
 
   return {
     ast        : { templates, type: 'Module' },
