@@ -69,9 +69,9 @@ export declare class Store<V = any> {
   on (type: 'change', fn: (change: Change) => void): () => void;
   emit (change: Change): void;
 
-  /** The content in a form: Array, Object, Map, 'keys', 'values', 'entries', List (a promise), $List (live). */
+  /** The content in a form: Array, Object, Map, 'keys', 'values', 'entries', $Array (live, from @rat/app). */
   as (Type: unknown): any;
-  /** A $List of the values that follows the store, one per store. */
+  /** A $Array of the values that follows the store, one per store. */
   readonly $items: any;
 }
 

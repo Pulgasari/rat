@@ -6,6 +6,7 @@
     ".": "./index.js"
   },
   "imports": {
+    "@domina/render": "jsr:@domina/render@^0.3.0",
     "@htx/js": "jsr:@htx/js@^0.3.0"
   }
 }

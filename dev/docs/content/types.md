@@ -3,8 +3,8 @@
 The data types of `@rat/types`. Each is a class and, called, its schema:
 
 ```js
-const tags = new List(['a', 'b']);   // a value
-const Tags = List(Str);              // a schema
+const tags = new $Array(['a', 'b']);   // a value
+const Tags = $Array(Str);              // a schema
 Tags.create(['a']);                  // a value made from the schema
 ```
 
@@ -13,7 +13,7 @@ Every type has a reactive variant with `$`: reads subscribe, writes notify. A `$
 | | |
 |---|---|
 | values | [Color](#color) · [Segments](#segments) · [Path](#path) · [FileExt](#fileext) · [Tuple](#tuple) |
-| containers | [Enum](#enum) · [List](#list) · [Record](#record) · [Dict](#dict) · [Table](#table) |
+| containers | [Enum](#enum) · [Array](#array) · [Record](#record) · [Dict](#dict) · [Table](#table) |
 | reactive only | [$Array, $Map, $Set](#array-map-set) · [$Bool, $Num, $Str](#bool-num-str) |
 
 A **value** is its schema's result: `Record({ accent: Color }).parse(…).accent` is a `Color`. A **container** holds values: its schema gives plain data, `create()` the container.
@@ -36,32 +36,28 @@ view.value = 'table';   // TypeError: one of grid, list, masonry
 const $sort = new $Enum('newest', 'oldest', 'alpha');
 ```
 
-## List
+## Array
 
-A list of its own (not an Array subclass): `length`, `at(i)`, `set(i, value)`.
+A list is an array. Every array has the vocabulary of rat, the reactive one is `$Array`:
 
 ```js
-const tags = new List(['b', 'a']);
-tags.push('c');
-tags.sort().at(-1);         // 'c'
+const tags = ['b', 'a'];
 tags.toggle('a');           // false: it was there, now it is gone
-tags.toArray();             // ['b', 'c']
+tags.first();               // 'b'
 
-const tracks = new List([{ title: 'x', album: 1, track: 2 }, { title: 'y', album: 1, track: 1 }]);
-tracks.where({ album: 1 }).toSortedBy('track').pluck('title');   // List ['y', 'x']
+const tracks = [{ title: 'x', album: 1, track: 2 }, { title: 'y', album: 1, track: 1 }];
+tracks.where({ album: 1 }).toSortedBy('track').pluck('title');   // ['y', 'x']
 ```
 
-Made from a schema, a list checks what comes in. An item that is a data type becomes one:
+Made from a schema, a `$Array` checks what comes in. An item that is a data type becomes one:
 
 ```ratjs
 const Tab   = $Record({ path: Path, source: Str.optional().default(null) });
-const $tabs = $List(Tab).create([{}]);
+const $tabs = $Array(Tab).create([{}]);
 
 $tabs.push({ path: 'photos' });   // a $Record, path a Path
 $tabs.push({ path: 42 });         // TypeError: path: expected a path
 ```
-
-Query methods: `where`, `without`, `one`, `has`, `pluck`, `keyBy`, `sortBy` / `toSortedBy`, `drop`, `toggle`.
 
 ## Record
 

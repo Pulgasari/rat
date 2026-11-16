@@ -1,7 +1,9 @@
 // @rat/runtime :: dom
 
 /*
-compiled markup is an htx template, rendered by @domina/render. the runtime
+compiled markup is rendered by @domina/render, as a program the compiler wrote
+(view(program, values)) or as an htx template parsed here (html`…`, the readable
+output and what a script writes by hand). the runtime
 hands every render its effect and scope, which makes it fine-grained: a
 function in a hole is a live binding, a helper with a function as source
 builds its rows and branches once and keeps them, and what a component or row
@@ -16,7 +18,8 @@ calls with the element once its children are in place.
 
 // :::::: IMPORT
 
-import { each, html, raw, render as renderInto, unrender, when } from '@htx/js/render';
+import { each, raw, render as renderInto, result as view, unrender, when } from '@domina/render';
+import { html }                                                          from '@htx/js/render';
 import { effect, isFn, isSignal, isString, onCleanup, scope, signal, untrack } from '../common/shared.js';
 import { guard } from './errors.js';
 
@@ -180,4 +183,4 @@ function indexed (items, row, otherwise = null) {
   return each(source, item => item, item => row(item, indexes.get(item)), otherwise);
 }
 
-export { aria, bind, building, each, html, indexed, mount, raw, ref, render, sheet, style, unrender, use, when };
+export { aria, bind, building, each, html, indexed, mount, raw, ref, render, sheet, style, unrender, use, view, when };

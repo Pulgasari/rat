@@ -86,3 +86,12 @@ getroffene entscheidungen, ohne bestimmte ordnung. offenes steht in [todo.md](to
 ## holes
 - `${…}` und `{…}` sind in `.rat` und `.rat.js` dasselbe hole: der dollar ist optional, beide sind live (der compiler schreibt die closure, `{$count}` → `${() => $count.value}`). in `.rat.js` gilt das für `` html`…` `` (`htx`, `rat`), ein gewöhnlicher template-string bleibt js. nur in plain `.js` (ohne compiler) ist `${x}` ein wert: wer es dort live will, schreibt `${() => …}`
 - ein `` html`…` `` innerhalb eines holes (`${items.map(item => html`<li>${item}</li>`)}`) wird nicht mitkompiliert, es bleibt ein template zur laufzeit. in markup ist `@for` der weg
+
+## arrays, `List` ist weg
+- das vokabular für listen steht auf `Array.prototype` (`@rat/types/basic/Array.js`): `where`, `whereSome`, `exclude`, `first`, `has`, `all`, `pluck`, `keyBy`, `groupBy`, `uniqueBy`, `search`, `sortBy`, `toSortedBy`, `swap`, `purge`, `remove`, `replace`, `clear`, `toggle`. in rat immer da, `@rat/types` lädt es
+- zwei namen, bis die praxis entscheidet: `exclude` / `without`, `purge` / `drop`. `first` statt `one`
+- `query.js` (data-last für `|>`) ist weg: `rows.where({ album }).toSortedBy('track')` liest sich gleich, `|>` bleibt für freie funktionen. `by()` (der comparator von `sortBy`) bleibt als export
+- die klasse `List` ist weg, eine liste ist ein array. reaktiv: `$Array`, ein name in zwei formen: `new $Array(items)` der wert, `$Array(Str)` das schema (`.min()`, `.max()`, `.create()`). `[Str]` bzw. `Array(Str)` ist die kurzform ohne mehr, überall wo ein schema erwartet wird
+- `$Array(Tab).create()` hält sich an sein schema: was hereinkommt (`push`, `splice`, `array[i] = …`) geht durch das schema eines items. eine typisierte liste, die nicht reaktiv ist, gibt es nicht mehr
+- `Table(fields)` ist nur noch das schema, `$Table` ein `$Array` aus eingefrorenen zeilen mit `columns`, `column()`, `update()`
+- `@pulgasari/it` (dasselbe vokabular, auch als prototype) ist gelöscht

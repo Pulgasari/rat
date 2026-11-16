@@ -81,8 +81,8 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
                  └───────────────────────────────────────┘
                                    ▲
                  ┌──────────── @rat/types ───────────────┐
-                 │ schemas    Bool Enum Num Str List …   │
-                 │ reactive   $Bool $List $Dict $Tree …  │
+                 │ schemas    Bool Enum Num Str [Str] …   │
+                 │ reactive   $Bool $Array $Dict $Tree …  │
                  └───────────────────────────────────────┘
 ```
 
@@ -96,7 +96,7 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | `@rat/syntax` | highlighting from one spec: hljs, monaco, codemirror/acode, zed, textmate | v0 |
 | `@rat/app` | no build: `run.js`, `<rat-app>`, `<rat-part>` | v0 |
 | `@rat/import` | files of any format as values | v0 |
-| `@rat/types` | data types with their schemas (`Color`, `Enum`, `List`, `Record`, `Tuple`), schemas (`Str`, `Num`, `Union` …), reactive variants (`$Color`, `$Enum`, `$List`, `$Map`, `$Record`, `$Set`) | v0 |
+| `@rat/types` | data types with their schemas (`Color`, `Enum`, `Record`, `Tuple`), schemas (`Str`, `Num`, `Union` …), reactive variants (`$Color`, `$Enum`, `$Array`, `$Map`, `$Record`, `$Set`) | v0 |
 | `@rat/cli` | `rat create`, `dev`, `build`, `compile`, `check` (node) | v0 |
 | `@rat/dev` | one build plugin (unplugin: vite, rollup, rolldown, esbuild, webpack): compiles .rat files, resolves through `importmap.json` of `@rat/app` | built |
 | `@rat/elements` | bridge to `@aufbau/elements`, components as custom elements | planned |
@@ -106,6 +106,7 @@ decided: [d-11](ideas/templates-in-js.md#d-11) template tag name, [d-12](ideas/t
 | target | output | when |
 |---|---|---|
 | `dom` | an htx template (``$$.html`…` ``) with live holes, rendered by `@domina/render`: static markup is parsed once per template and cloned, only the holes bind | **(v0)**, default |
+| `dom`, as programs | `templates: 'program'`: the program of every template written into the module (`$$.view($$t0, [values])`), made by the same function the runtime would call, so nothing is parsed at runtime. off by default: measured on the apps it saves about a millisecond of parsing per app, costs 1 to 2 kb gzip and the readable output, and the htx parser stays in a bundle as long as an aufbau element writes its template with it | built, opt in |
 | `ssr` | string output, hydration markers | later |
 | `htx` | ``html`…` `` output for existing htx/preact projects (migration, zugriff): the `dom` target is htx already | covered |
 
@@ -148,7 +149,7 @@ same convention as in `@aufbau/signals`.
 - `$` signals in `<script module>` are shared module wide: a store for every instance,
   without a store api.
 - mutation in place (`$todos.push(x)`) does not notify. v0: reassign
-  (`$todos = [...$todos, x]`). later: reactive types from `@rat/types` (`$List`).
+  (`$todos = [...$todos, x]`). later: reactive types from `@rat/types` (`$Array`).
 
 open: [d-13](ideas/props.md#d-13) props, [d-15](ideas/loop-metadata.md#d-15) `@for` index,
 [d-23](ideas/reactivity.md#d-23) mutation. shadowing (a parameter `$x` in an inner function is
@@ -162,7 +163,7 @@ no typescript. schemas instead, which exist at runtime and which the compiler ca
 when they are static.
 
 ```js
-import { Bool, Enum, List, Num, Record, Str } from '@rat/types';
+import { Bool, Enum, Num, Record, Str } from '@rat/types';
 
 export const Todo = Record({
   id    : Str.uuid,
@@ -173,7 +174,7 @@ export const Todo = Record({
 export const Settings = Record({
   view : Enum('grid', 'list'),
   zoom : Num.range(50, 200).default(100),
-  tags : List(Str),
+  tags : [Str],
 });
 ```
 
@@ -183,7 +184,7 @@ what a schema should do:
 |---|---|
 | `validate` / `coerce` | input, storage, network |
 | `default` | initial values, reset |
-| `reactive()` | turns the schema into a reactive type (`$Record`, `$List` …) with fitting verbs (`toggle`, `cycle`, `push`) |
+| `reactive()` | turns the schema into a reactive type (`$Record`, `$Array` …) with fitting verbs (`toggle`, `cycle`, `push`) |
 | `stored` | kept beyond the page: `schema.stored()`, `let $x! = …` ([persistence.md](persistence.md)) |
 | `describe` | introspection: generate forms, devtools, `@aufbau/gui` controls |
 | statically readable | the compiler knows the shape: completion, warnings, targeted updates |

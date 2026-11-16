@@ -6,7 +6,7 @@ matching; it gets the parts as a getter, so the compiler can make every part a
 computed and the branch follows a new value of the same case.
 */
 
-import { match }    from '@htx/js/render';
+import { match }    from '@domina/render';
 import { which }    from '@rat/types';
 import { computed } from '../common/shared.js';
 

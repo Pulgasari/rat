@@ -6,7 +6,7 @@
 [Color](#color) ·
 [Dict](#dict) ·
 [Enum](#enum) ·
-[List](#list) ·
+[Array](#array) ·
 [Point](#point) ·
 [Segments](#segments) ·
 [Str](#str) ·
@@ -24,7 +24,7 @@
 [$Dict](#) ·
 [$Enum](#) ·
 [$Map](#) ·
-[$List](#list) ·
+
 [$Point](#point) ·
 [$Set](#) ·
 [$Tree](#)
@@ -49,7 +49,7 @@ three things, kept apart:
 const Commands = $Dict(Str.to(KebabCase), { exec: Fn, '?title': Str });
 const commands = Commands.create({ save: { exec: save } });   // a $Dict with the schema Commands
 
-List(Num).create(['1', 2]);   // a List [1, 2]
+$Array(Num).create(['1', 2]);   // a $Array [1, 2]
 Enum('grid', 'list').create('list');
 Str.create();                 // TypeError: a string is plain js, there is nothing to create
 ```
@@ -78,26 +78,34 @@ viewmode.values;           // ['grid', 'list', 'masonry']
 
 `new Enum(View)` starts from a schema (`View = Enum('grid', 'list').default('list')` starts at `'list'`), `new Enum(other)` copies another one at its value.
 
-## List
+## Array
 
-a list that is a class of its own, not an Array subclass: `length` is a getter, `at(i)` and `set(i, value)` replace `[i]` (index access would need a proxy). `map`, `filter`, `slice` … give a `List`, `toArray()` an array.
+there is no list type of its own: a list is an array, and every array has the vocabulary of
+`basic/Array.js` (`where`, `first`, `sortBy`, `toggle` … see [arrays](#arrays)). the reactive one is `$Array`,
+one name in two forms:
 
 ```js
-const tags = new List(['a', 'b']);
+const tags = new $Array(['a', 'b']);   // a reactive array
 tags.push('c');
-tags.at(-1);      // 'c'
-tags.length;      // 3
+tags[0] = 'x';                         // index and length are tracked, Array.isArray(tags) is true
+
+const Tags = $Array(Str).min(1);       // the schema of an array of strings
+[Str];                                 // the same without more, where a schema is asked: Record({ tags: [Str] })
+Array(Str);                            // which is what js makes of this
 ```
 
-made from a schema, a list keeps checking what comes in (`push`, `unshift`, `set`, `splice`, `replace`, `toggle`). an item that is a data type of its own comes in as one, an instance of it stays the same object:
+made from a schema, an array keeps to it: what comes in (`push`, `unshift`, `splice`, `fill`, `replace`,
+`toggle`, `array[i] = …`) goes through the schema of an item. an item that is a data type of its own comes in
+as one, an instance of it stays the same object:
 
 ```js
 const Tab   = $Record({ path: Path, source: Str.optional().default(null) });
-const $tabs = $List(Tab).create([{}]);   // or new $List($List(Tab), [{}])
+const $tabs = $Array(Tab).create([{}]);   // or new $Array($Array(Tab), [{}])
 
 $tabs.push({ path: 'photos' });   // a $Record, path a Path, source null
 $tabs.push({ path: 42 });         // TypeError: path: expected a path
-$tabs.filter(tab => tab.source);  // a List of the same schema
+$tabs.filter(tab => tab.source);  // a plain array, as every method that gives a new one
+$tabs.schema;                     // the schema
 ```
 
 ## Point
@@ -148,20 +156,20 @@ a case of your own: Str.case({ regex, transform }). transform decides: what it l
 
 ## Table
 
-a `List` whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object with exactly the columns (a field the schema does not know is dropped), its position is its key.
+an array whose rows all follow one record schema: the same keys, other values. a row is a plain frozen object with exactly the columns (a field the schema does not know is dropped), its position is its key.
 
 ```js
-const Todos = Table({ title: Str, done: Bool });       // or Table(Record({ … }))
+const Todos = Table({ title: Str, done: Bool });         // the schema, or Table(Record({ … }))
 
-const todos = new Table(Todos, [{ title: 'milk' }]);   // a missing field gets its initial value
-todos.push({ title: 'eggs', done: 'yes' });            // checked and coerced: done is true
-todos.update(0, { done: true });                       // a row is frozen, a change goes through the table
-todos.column('title');                                 // ['milk', 'eggs']
-todos.where({ done: false });                          // the rows a test of match lets through
-todos.columns;                                         // ['title', 'done']
+const todos = new $Table(Todos, [{ title: 'milk' }]);    // or $Table({ … }).create(rows). a missing field gets its initial value
+todos.push({ title: 'eggs', done: 'yes' });              // checked and coerced: done is true
+todos.update(0, { done: true });                         // a row is frozen, a change goes through the table
+todos.column('title');                                   // ['milk', 'eggs']
+todos.where({ done: false });                            // the rows a test of match lets through
+todos.columns;                                           // ['title', 'done']
 ```
 
-every `List` method works, the ones that add or replace rows (`push`, `unshift`, `set`, `splice`, `replace`, `update`) check them. `$Table` has one version for the whole table: any write updates whatever read the table.
+a `$Table` is a `$Array` of rows: every array method works, the ones that add or replace rows check them, and any write updates whatever read the table. a table that is no `$Table` is a plain array of rows, `Table(…)` only the schema.
 
 ## Segments
 
@@ -279,7 +287,7 @@ schemas are values:
 <../../.md/ideas/types.md#d-14>
 
 ```js
-import { Bool, Enum, List, Num, Record, Str } from '@rat/types';
+import { Bool, Enum, Num, Record, Str } from '@rat/types';
 
 export const Todo = Record({
   done  : Bool,
@@ -288,7 +296,7 @@ export const Todo = Record({
 });
 
 export const Settings = Record({
-  tags : List(Str),
+  tags : [Str],
   view : Enum('grid', 'list'),
   zoom : Num.range(50, 200).default(100),
 });
@@ -303,7 +311,7 @@ Settings.initial;                                        // { tags: [], view: 'g
 | `Num.min(n)`, `.max(n)`, `.range(a, b)`, `.int` | |
 | `Str.min(n)`, `.max(n)`, `.pattern(re)`, `.email`, `.uuid` | |
 | `Enum(...values)` | one of them, the first is the initial value |
-| `List(item)`, `.min(n)`, `.max(n)` | an array or a `List` whose items are checked and coerced; `create()` a `List` that keeps checking |
+| `[item]`, `Array(item)`, `$Array(item)`, `.min(n)`, `.max(n)` | an array whose items are checked and coerced. `min`, `max` and `create()` (a `$Array` that keeps checking) on `$Array(item)` |
 | `Record(shape)` | known fields checked, unknown ones kept |
 | `Tuple(...items)` | an array or a `Tuple` of exactly these items, made a `Tuple` |
 | `Union(...cases)`, `Union({ name: case })`, `.which(x)` | the first case that fits; `which` names it |
@@ -347,11 +355,11 @@ $todos.push(todo);   // whatever read $todos, an index or its length updates
 $todos[0] = other;
 ```
 
-- `$Array` is a proxy around a plain array, not a subclass: index access and `length` are no methods. `Array.isArray` is true, every array method works. `$List` stays its own type (a class with `at()`/`set()`, no proxy).
+- `$Array` is a proxy around a plain array, not a subclass: index access and `length` are no methods. `Array.isArray` is true, every array method works.
 
 - reading methods and getters subscribe, writing methods and setters notify, a write that changes nothing notifies nobody (`set` with the same value, `pop` on an empty list).
 - `$Record` has one version for all fields: a write to one field updates whatever read any field (d-23 b). a signal per field would be finer, and pays off only for large records.
-- the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$Array` (d-23 c), and can be reassigned:
+- the variants are also registered for `Array`, `Color`, `Enum`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$Array` (d-23 c), and can be reassigned:
 
 ```html
 <script>
@@ -392,7 +400,7 @@ is made, written on every change. one word, three ways to say it:
 ```js
 // the primitive: a key and a value
 let   $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));   // a signal
-const $tabs  = stored('tabs', $List(Tab).create());                 // the variant, kept in place
+const $tabs  = stored('tabs', $Array(Tab).create());                 // the variant, kept in place
 
 // on the schema: the options travel with the type
 let   $theme    = Enum.from(gestalt.themes).stored({ key: 'look', in: 'session' });
@@ -412,7 +420,7 @@ const $settings! = $Record(Settings).create();
 | `version`, `migrate` | what was kept under another version goes through `migrate(old, version)` |
 
 what is read goes through the schema: coerced (a `Path` from `'a/b'`), missing fields at their initial
-value, a field that no longer fits as well; items of a list that are a data type (`$List(Tab)`) come back as
+value, a field that no longer fits as well; items of a list that are a data type (`$Array(Tab)`) come back as
 one. what is written is what `toJSON` gives. the same key in the same place twice is the same signal.
 `stored.forget(key)` sets it back and removes it.
 
@@ -525,6 +533,6 @@ Vec3 Vector3
 
 Hier steht:
 
-> the variants are also registered for `Array`, `Color`, `Enum`, `List`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c), and can be reassigned:
+> the variants are also registered for `Array`, `Color`, `Enum`, `Map`, `Record` and `Set` when this package is imported. from then on `let $todos = []` in a `.rat` script is a signal holding a `$List` (d-23 c), and can be reassigned:
 
 aber das is doch Quatsch. Ich hab nie gesagt, da solle dann magisch und unlogisch plötzlich `$List` statt `$Array' draus werden.

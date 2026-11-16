@@ -231,5 +231,5 @@ const Card   = componentOf(module);        // its component
 - compiling in the page costs time on every load: fine for development and small sites. for
   production a build compiles the same files ahead.
 - the import map needs `acorn` from a cdn; offline it has to be mapped to a local copy.
-- `@domina/render` renders iterables (a `$List`) as lists only from the commit on domina's
+- `@domina/render` renders iterables (a `$Array`) as lists only from the commit on domina's
   `ccr-6dcb933c-w3kck9` branch on.

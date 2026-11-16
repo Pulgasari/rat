@@ -1,10 +1,11 @@
 // @rat/types
 
-export { Schema, bare, schemaOf } from './schema.js';
+export { ArraySchema, Schema, bare, schemaOf } from './schema.js';
 export { isSchema }               from './_shared.js';
 
-// every array: where, exclude, first, has, all, groupBy, uniqueBy, search, sortBy, toSortedBy, swap, purge
-import './basic/Array.js';
+// every array: where, exclude, first, has, all, pluck, keyBy, groupBy, uniqueBy, search, sortBy, toSortedBy,
+// swap, purge, remove, replace, clear, toggle. by() is the comparator of sortBy
+export { by } from './basic/Array.js';
 
 // Basic DataTypes + their reactive variant
 export { $Array, $Map, $Set } from './basic/builtins.js';
@@ -12,7 +13,6 @@ export { Bool,   $Bool   } from './basic/Bool.js';
 export { Dict,   $Dict   } from './basic/Dict.js';
 export { Enum,   $Enum   } from './basic/Enum.js';
 export { Fn              } from './basic/Fn.js';
-export { List,   $List   } from './basic/List.js';
 export { Num,    $Num    } from './basic/Num.js';
 export { Record, $Record } from './basic/Record.js';
 export { Segments        } from './basic/Segments.js';
@@ -29,9 +29,6 @@ export { stored } from '@rat/signals';
 
 // match
 export { NONE, any, either, is, match, part, pass, pattern, rest, which } from './match.js';
-
-// the query vocabulary of a list, data last: rows |> where({ album }) |> toSortedBy('track')
-export { by, has, keyBy, one, pluck, sortBy, toSortedBy, where, without } from './query.js';
 
 // Quatsch
 export { Id, Ref } from './id.js';

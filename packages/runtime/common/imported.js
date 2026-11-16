@@ -6,7 +6,7 @@ an imported $name, as the compiler hands it over: `import { $x } from './a.rat.j
 $x.value as for its own signals, imported() decides what that means:
 
   a signal              its value, written as usual
-  a reactive variant    the variant itself ($Record, $List …): read, changed through its methods,
+  a reactive variant    the variant itself ($Record, $Array …): read, changed through its methods,
                         never reassigned
 
 the module is asked on the first read, not before: a cycle of imports finds it initialized by then.

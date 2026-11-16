@@ -90,7 +90,7 @@ and lets `$bla` be reassigned (`$bla = new Map(entries)` gives a new `$Map`).
   the effect that writes.
 - the version signal is created on first use, so built-ins whose constructor calls the
   overridden method (`new Map(entries)` calls `set`) work.
-- `@rat/types` brings the variants (`$List`, `$Map`, `$Set`, `$Record` …) and registers them for `Array`, `Map` and `Set`.
+- `@rat/types` brings the variants (`$Array`, `$Map`, `$Set`, `$Record` …) and registers them for `Array`, `Map` and `Set`.
 
 ## stored
 
@@ -99,7 +99,7 @@ a signal kept beyond the page (`stored.js`): read back when it is made, written 
 
 ```js
 let   $theme = stored('theme', Enum('zombie', 'oled'));     // a signal, checked by its schema
-const $tabs  = stored('tabs', $List(Tab).create());          // a reactive variant, kept in place
+const $tabs  = stored('tabs', $Array(Tab).create());          // a reactive variant, kept in place
 ```
 
 options: `key`, `in` (the place), `scope`, `debounce`, `sync`, `version`, `migrate`. the full list and
@@ -113,7 +113,7 @@ it knows neither types nor storage, only what a place, a schema or a value can s
 | `schema['~standard']` | a standard schema checks what is read |
 | `schema.fit (value)` | where a schema has it, it reads leniently (`@rat/types`: a record field by field) |
 | `schema[STORED]` | the options of `.stored()` on a schema (`@rat/types`), a `Table` says `in: 'database'` |
-| `value.schema` | the schema a data type was made by (`$List(Tab).create()`) |
+| `value.schema` | the schema a data type was made by (`$Array(Tab).create()`) |
 
 ## system.js
 
