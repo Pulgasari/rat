@@ -15,7 +15,10 @@ const bare          = (Type)  => Object.defineProperty(Type, BARE, { value: true
 const byConstructor = (Type, schema, value) => new Type (schema, value);
 const byParse       = (Type, schema, value = schema.initial) => schema.parse(value); // create() of a type whose schema gives its values already (Segments, Path …)
 const issue         = (message, path) => ({ issues: [{ message, path }] }); // one issue as a result: return issue('expected a list', path)
-const schemaOf      = (value)         => isFn(value) && value[BARE] ? value() : value;
+
+// what stands for a schema, as one: a bare type (Str for Str()), and [Str] (which is what Array(Str) gives)
+// for an array of it
+const schemaOf = (value) => isFn(value) && value[BARE] ? value() : Array.isArray(value) && value.length === 1 ? arrayOf(value[0]) : value;
 
 // :::::: SCHEMA
 
@@ -60,7 +63,7 @@ class Schema {
       })) };
     }
     const result = this.validate(value);
-    const item   = this.kind === 'list' ? this.parts?.item : null;
+    const item   = this.kind === 'array' ? this.parts?.item : null;
     return result.issues || !item?.factory ? result : { value: result.value.map(entry => item.create(entry)) };
   }
 
@@ -126,6 +129,31 @@ function partsIn (entries, path) {
   return issues.length ? { issues } : { changed, values };
 }
 
+// :::::: ARRAYS
+
+class ArraySchema extends Schema {
+  min (length) { return this.check(value => value.length >= length, `at least ${length} items`, { min: length }); }
+  max (length) { return this.check(value => value.length <= length, `at most ${length} items`,  { max: length }); }
+}
+
+// an array, every item checked and coerced. a new one only when an item changed, so an unchanged array
+// stays the same object. written [Str], Array(Str) or $Array(Str), the last one for more: .min(1), .create()
+function arrayOf (given) {
+  const item = schemaOf(given);
+  return new ArraySchema({
+    describe : { item: item.describe },
+    initial  : [],
+    kind     : 'array',
+    parts    : { item },
+    run      : (value, path) => {
+      if (!Array.isArray(value)) return issue('expected an array', path);
+      const result = partsIn(value.map((entry, index) => [index, item, entry]), path);
+      if (result.issues || !result.changed) return result.issues ? result : { value };
+      return { value: result.values };
+    },
+  });
+}
+
 // :::::: SCALARS: Bool, Num, Str
 
 // the run of a scalar schema: coerce, then a type test
@@ -180,8 +208,8 @@ function dataTypes (Class, toSchema, options) {
 
 export {
   GET, SET, STORED,
-  Scalar, Schema,
-  bare, byParse, dataType, dataTypes, issue, partsIn, scalar,
+  ArraySchema, Scalar, Schema,
+  arrayOf, bare, byParse, dataType, dataTypes, issue, partsIn, scalar,
   schemaOf,
 };
 

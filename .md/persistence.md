@@ -45,7 +45,7 @@ top, where it is really good (`$theme!`).
 | `RAT.app.database` | tables with schemas, indexeddb / sqlite |
 | schemas of `@rat/types` | `validate` (coerce, check, fill defaults) and `toJSON` on the types: the codec in both directions |
 | typed signals | `let $view = Enum('grid', 'list')`: the signal knows its schema |
-| reactive variants | `$Record`, `$List`, `$Table`, `$Dict`: change in place, report every change |
+| reactive variants | `$Record`, `$Array`, `$Table`, `$Dict`: change in place, report every change |
 
 a place (store), a codec (schema), a change signal (signals, variants). `stored` is the glue.
 
@@ -85,7 +85,7 @@ one vocabulary: **`stored`**, from the primitive to the sugar.
 ```js
 // the primitive (the core): a key and a value, plain js
 let   $theme = stored('theme', Enum('zombie', 'oled', 'rainbow'));    // a signal
-const $tabs  = stored('tabs', $List(Tab).create());                  // the variant, kept in place
+const $tabs  = stored('tabs', $Array(Tab).create());                  // the variant, kept in place
 
 // the mature way: on the schema, the options travel with the type
 let   $theme    = Enum.from(gestalt.themes).stored({ key: 'custom-key', in: 'session' });   // $() makes the signal
@@ -112,9 +112,9 @@ what `stored` takes and gives:
 
 | init | gives |
 |---|---|
-| a value | a signal (`$()` of it: an array becomes a `$List` as always) |
+| a value | a signal (`$()` of it: an array becomes a `$Array` as always) |
 | a schema | a typed signal |
-| a variant (`$Record`, `$List`, `$Table`, `$Dict` …) | the variant itself, restored in place and written on change |
+| a variant (`$Record`, `$Array`, `$Table`, `$Dict` …) | the variant itself, restored in place and written on change |
 | a signal | the signal, kept |
 
 ## where the options live
@@ -196,7 +196,7 @@ export const $settings! = $Record(Settings).create();
   `create()` remembers the schema a variant was made by.
 - a record takes field by field: a field that is gone is dropped, a new one starts at its initial value, a
   value that no longer fits as well.
-- a list whose items are a data type (`$List(Tab)`) gets them back as one: `$Record`s, not plain objects.
+- a list whose items are a data type (`$Array(Tab)`) gets them back as one: `$Record`s, not plain objects.
 - how it is put back: `assign` (a record), `replace` (a list, a table), `clear` + `set` (a dict, a map),
   `value` (an enum, a color).
 - a table goes to the database as a whole value under its key. by rows is later: it needs the table to
@@ -229,7 +229,7 @@ export const $settings = $Record(Settings).create(read('files:settings', {}));
 effect(() => write('files:settings', $settings));
 
 const stored = read('files:tabs', { index: 0, list: [] });
-export const $tabs = new $List(stored.list.map(tabOf));
+export const $tabs = new $Array(stored.list.map(tabOf));
 …
 effect(() => write('files:tabs', { index: $tabs.indexOf($tab), list: $tabs }));
 
@@ -244,7 +244,7 @@ now:
 ```js
 export const $settings! = $Record(Settings).create();
 
-export const $tabs! = $List(Tab).create([tabOf()]);
+export const $tabs! = $Array(Tab).create([tabOf()]);
 let $tabIndex! = 0;
 export const $tab = $tabs.at($tabIndex) ?? $tabs.at(0);   // the tab on screen, a computed of the index
 
@@ -252,7 +252,7 @@ $bookmarks!      = $Table(Bookmark).create(),             // a table: in the dat
 $folderTyped!    = $Dict(Str, Str).create(),
 $ownFolderTypes! = $Dict(Str, Foldertype).create();
 
-$ended! = new $List;
+$ended! = new $Array;
 
 export let $targets! = [];
 let $folderName!     = '';

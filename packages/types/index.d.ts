@@ -66,11 +66,12 @@ export interface StrSchema extends Schema<string> {
   case (spec: { regex?: RegExp | null, transform: (value: string) => string }): StrSchema;
 }
 
-export interface ListSchema<T> extends Schema<T[] | List<T>> {
+/** The schema of an array: [Str], Array(Str), or $Array(Str) for more (min, max, create). */
+export interface ArraySchema<T> extends Schema<T[]> {
   min (length: number): this;
   max (length: number): this;
-  /** A List of these items that keeps checking what comes in: List(Num).create([1, 2]), a $List from $List(Num). */
-  create (items?: Iterable<unknown>): List<T>;
+  /** A $Array that keeps to this schema: what comes in goes through the schema of an item. Only on $Array(…). */
+  create (items?: Iterable<unknown>): T[];
 }
 
 export type Infer<S> = S extends Schema<infer T> ? T : never;
@@ -118,81 +119,8 @@ export const Schema: new (definition: object) => Schema<unknown>;
 export function isSchema (value: unknown): value is Schema<unknown>;
 /** Marks a type whose schema takes nothing (Color, Path …): where a schema is asked, the type stands for it. */
 export function bare<T extends Function> (Type: T): T;
-/** A bare type as its schema (Path -> Path()), anything else as it is. Records, lists, dicts, tuples and unions ask it for their parts. */
+/** A bare type as its schema (Path -> Path()), anything else as it is. [Str] as the schema of an array of it. Records, arrays, dicts, tuples and unions ask it for their parts. */
 export function schemaOf<T> (value: T): T extends () => infer S ? S : T;
-
-/** A list: length is a getter, at(i) / set(i, v) replace [i]. $List is the same, reactive. */
-export interface List<T> extends Iterable<T> {
-  readonly length: number;
-  /** The schema it was made from, null for a list without one. */
-  readonly schema: ListSchema<T> | null;
-  at (index: number): T | undefined;
-  includes (value: T): boolean;
-  indexOf (value: T): number;
-  every (fn: (item: T, index: number) => unknown): boolean;
-  filter (fn: (item: T, index: number) => unknown): List<T>;
-  find (fn: (item: T, index: number) => unknown): T | undefined;
-  findIndex (fn: (item: T, index: number) => unknown): number;
-  flatMap<U> (fn: (item: T, index: number) => U | U[]): List<U>;
-  forEach (fn: (item: T, index: number) => void): void;
-  join (separator?: string): string;
-  map<U> (fn: (item: T, index: number) => U): List<U>;
-  reduce<U> (fn: (sum: U, item: T, index: number) => U, initial: U): U;
-  slice (start?: number, end?: number): List<T>;
-  some (fn: (item: T, index: number) => unknown): boolean;
-  toArray (): T[];
-  /** Is there an item the test (of match) lets through. */
-  has (test: unknown): boolean;
-  /** { [value of key]: item }, a later item wins. */
-  keyBy (key: keyof T | ((item: T) => PropertyKey)): Record<PropertyKey, T>;
-  /** The first item the test lets through. */
-  one (test: unknown): T | undefined;
-  /** The value of key of every item. */
-  pluck<K extends keyof T> (key: K): List<T[K]>;
-  /** The items the test (of match) lets through. */
-  where (test: unknown): List<T>;
-  /** The items the test does not let through. */
-  without (test: unknown): List<T>;
-  toReversed (): List<T>;
-  toSorted (fn?: (a: T, b: T) => number): List<T>;
-  /** A sorted copy: keys or getters in order, 'desc' after one flips it. */
-  toSortedBy (...keys: (keyof T | ((item: T) => unknown) | 'asc' | 'desc')[]): List<T>;
-  toSpliced (start: number, count?: number, ...items: T[]): List<T>;
-  with (index: number, value: T): List<T>;
-  push (...items: T[]): number;
-  pop (): T | undefined;
-  shift (): T | undefined;
-  unshift (...items: T[]): number;
-  splice (start: number, count?: number, ...items: T[]): T[];
-  sort (fn?: (a: T, b: T) => number): this;
-  /** Sorts the list itself: keys or getters in order, 'desc' after one flips it. */
-  sortBy (...keys: (keyof T | ((item: T) => unknown) | 'asc' | 'desc')[]): this;
-  reverse (): this;
-  set (index: number, value: T): this;
-  remove (value: T): boolean;
-  /** Removes every item the test (of match) lets through: how many. */
-  drop (test: unknown): number;
-  /** Removes what the test lets through, else adds value: true when it was added. */
-  toggle (value: T, test?: unknown): boolean;
-  replace (items: Iterable<T>): this;
-  clear (): this;
-}
-
-export interface ListConstructor {
-  new <T>(items?: Iterable<T>): List<T>;
-  /** A list that knows its schema: what comes in is checked, an item that is a data type made one. */
-  new <T>(schema: ListSchema<T>, items?: Iterable<unknown>): List<T>;
-  /** A copy of another List, with its schema. */
-  new <T>(other: List<T>): List<T>;
-  /** The schema of a list (an array or a List) whose items match item: List(Str). */
-  <T>(item: Schema<T>): ListSchema<T>;
-  from<T> (items: Iterable<T>): List<T>;
-  of<T>   (...items: T[]): List<T>;
-}
-
-export const List: ListConstructor;
-/** A List whose reads subscribe and whose writes notify. Called, the schema whose create() makes one. */
-export const $List: ListConstructor;
 
 /** Holds one value out of a fixed list. */
 export interface Enum<V> {
@@ -266,30 +194,37 @@ export const $Bool: ScalarConstructor<$Bool, boolean>;
 export const $Num : ScalarConstructor<$Num, number>;
 export const $Str : ScalarConstructor<$Str, string>;
 
-/** A List of rows that follow one record schema. A row is frozen, its position is its key. */
-export interface Table<T extends object> extends List<Readonly<T>> {
+/** What a $Table has besides an array: its schema, its columns, a column, a row patched. A row is frozen. */
+export interface TableMembers<T extends object> {
   readonly schema  : Schema<T[]>;
   readonly columns : (keyof T)[];
-  column<K extends keyof T> (key: K): List<T[K]>;
+  column<K extends keyof T> (key: K): T[K][];
   /** The row at index with patch over it, checked. */
-  update (index: number, patch: Partial<T>): Table<T>;
+  update (index: number, patch: Partial<T>): this;
 }
 
-export interface TableConstructor {
-  /** Rows parsed by the row schema, a missing field at its initial value. */
-  new <T extends object>(schema: Schema<T[]> | Schema<T>, rows?: Iterable<Partial<T>>): Table<T>;
-  /** A copy of another Table. */
-  new <T extends object>(other: Table<T>): Table<T>;
-  /** The schema: rows of these fields, or of a Record schema. */
-  <S extends Shape>(shape: S | Schema<{ [K in keyof S]: Infer<S[K]> }>): TypedSchema<{ [K in keyof S]: Infer<S[K]> }[], Table<{ [K in keyof S]: Infer<S[K]> }>>;
-}
+export type TableRows<T extends object> = Readonly<T>[] & TableMembers<T>;
 
-export const Table: TableConstructor;
-/** A Table whose reads subscribe and whose writes notify, one version for the whole table. Called, the schema whose create() makes one. */
-export const $Table: TableConstructor;
+type RowOf<S extends Shape> = { [K in keyof S]: Infer<S[K]> };
 
-/** A plain array whose reads (index, length, methods) subscribe and whose writes notify. Array.isArray stays true. */
-export declare const $Array: { <T>(items?: Iterable<T>): T[]; new <T>(items?: Iterable<T>): T[] };
+/** The schema of a table: rows of these fields, or of a Record schema. A table that is no $Table is a plain array of rows. */
+export declare function Table<S extends Shape> (shape: S | Schema<RowOf<S>>): Schema<RowOf<S>[]>;
+
+/** A reactive array of rows that follow one record schema, every row that comes in is checked. Called, the schema whose create() makes one. */
+export declare const $Table: {
+  new <T extends object>(schema: Schema<T[]> | Schema<T>, rows?: Iterable<Partial<T>>): TableRows<T>;
+  <S extends Shape>(shape: S | Schema<RowOf<S>>): TypedSchema<RowOf<S>[], TableRows<RowOf<S>>>;
+};
+
+/**
+ * new $Array(items): a plain array whose reads (index, length, methods) subscribe and whose writes notify, Array.isArray stays true.
+ * $Array(Str): the schema of an array, its create() a $Array that keeps to it (array.schema).
+ */
+export declare const $Array: {
+  new <T>(items?: Iterable<T>): T[];
+  new <T>(schema: ArraySchema<T>, items?: Iterable<unknown>): T[] & { readonly schema: ArraySchema<T> };
+  <T>(item: Schema<T> | ArraySchema<T>): ArraySchema<T>;
+};
 
 /** Frozen: fixed length, fixed values. */
 export interface Tuple<T extends readonly unknown[]> extends Iterable<T[number]> {
@@ -379,21 +314,8 @@ export declare const any: Readonly<object>;
 export declare function match<R = unknown> (value: unknown, arms: Arm<R>[], otherwise?: ((value: any) => R) | R): R | undefined;
 export declare function is (value: unknown, test: Test): boolean;
 
-// :::::: query, data last: rows |> where({ album }) |> toSortedBy('track')
-
-type Key<T> = keyof T | ((item: T) => unknown);
-
-/** The comparator of keys or getters in order, 'desc' after one flips it. Strings naturally, nullish last. */
-export declare function by<T = any> (...keys: (Key<T> | 'asc' | 'desc')[]): (a: T, b: T) => number;
-export declare function has (test: Test): <T>(list: Iterable<T>) => boolean;
-export declare function keyBy<T = any> (key: Key<T>): (list: Iterable<T>) => Record<PropertyKey, T>;
-export declare function one (test: Test): <T>(list: Iterable<T>) => T | undefined;
-export declare function pluck<K extends PropertyKey> (key: K): <T extends Record<K, unknown>>(list: Iterable<T>) => T[K][];
-/** Sorts the array or List itself. */
-export declare function sortBy<T = any> (...keys: (Key<T> | 'asc' | 'desc')[]): <L extends T[] | List<T>>(list: L) => L;
-export declare function toSortedBy<T = any> (...keys: (Key<T> | 'asc' | 'desc')[]): (list: Iterable<T>) => T[];
-export declare function where (test: Test): <T>(list: Iterable<T>) => T[];
-export declare function without (test: Test): <T>(list: Iterable<T>) => T[];
+/** The comparator of sortBy, for a sort of your own: items.toSorted(by('year', 'desc')). Strings naturally, nullish last. */
+export declare function by<T = any> (...order: ArrayOrder<T>): (a: T, b: T) => number;
 /** The value the test lets through (as a schema made it), or NONE. */
 export declare function pass (value: unknown, test: Test): unknown;
 export declare function which (value: unknown, tests: Test[]): { index: number, parts: Record<string, any> | null };
@@ -434,14 +356,14 @@ export interface SegmentsConstructor {
 
 export const Segments: SegmentsConstructor;
 
-/** What where, exclude, first, has, all and purge take: a value, an object of tests per key, a function, a RegExp, a schema, a class (match.js). */
+/** What where, exclude, first, has, all, purge and toggle take: a value, an object of tests per key, a function, a RegExp, a schema, a class (match.js). */
 export type ArrayTest<T> = unknown | ((item: T) => boolean);
 
 /** A key of an item, or a function of it. */
 export type ArrayKey<T> = keyof T | string | ((item: T) => unknown);
 
-/** The order sortBy takes: 'title' · 'title', 'desc' · ['author', 'title'] · { year: 'desc', title: 'asc' } · item => … */
-export type ArrayOrder<T> = ArrayKey<T>[] | [ArrayKey<T>, 'asc' | 'desc'] | [ArrayKey<T>[]] | [{ [key: string]: 'asc' | 'desc' }];
+/** The order sortBy takes: 'title' · 'title', 'desc' · 'artist', 'album', 'desc', 'track' · ['author', 'title'] · { year: 'desc', title: 'asc' } · item => … */
+export type ArrayOrder<T> = (ArrayKey<T> | 'asc' | 'desc')[] | [ArrayKey<T>[]] | [{ [key: string]: 'asc' | 'desc' }];
 
 declare global {
   interface Array<T> {
@@ -451,12 +373,19 @@ declare global {
     whereSome (criteria: Record<string, unknown>): T[];
     /** The items that do not match. */
     exclude (test: ArrayTest<T>): T[];
+    /** The second name of exclude, for now. */
+    without (test: ArrayTest<T>): T[];
     /** The first that matches, without a test the first item. */
     first (test?: ArrayTest<T>): T | undefined;
     /** Is there one that matches. */
     has (test: ArrayTest<T>): boolean;
     /** Do all match. */
     all (test: ArrayTest<T>): boolean;
+    /** The value of key of every item. */
+    pluck<K extends keyof T> (key: K): T[K][];
+    pluck<U> (key: (item: T) => U): U[];
+    /** { [value of key]: item }, a later item wins. */
+    keyBy (key: ArrayKey<T>): Record<string, T>;
     /** { [value of key]: [items] }. */
     groupBy (key: ArrayKey<T>): Record<string, T[]>;
     /** The first of each value of key, without a key the first of each item. */
@@ -471,5 +400,15 @@ declare global {
     swap (a: number, b: number): this;
     /** The items that match go, in place. */
     purge (test: ArrayTest<T>): this;
+    /** The second name of purge, for now. */
+    drop (test: ArrayTest<T>): this;
+    /** This one item goes (by identity). True if it was there. */
+    remove (value: T): boolean;
+    /** Other items in the same array. */
+    replace (items: Iterable<T>): this;
+    /** Empties the array. */
+    clear (): this;
+    /** Out if it is in (by the test, else by identity), else in. True if it is in afterwards. */
+    toggle (value: T, test?: ArrayTest<T>): boolean;
   }
 }

@@ -53,15 +53,14 @@ await table.as(Map);
 await table.as('keys');
 await table.as('values');
 await table.as('entries');
-await table.as(List); // a List of the values, a snapshot
 
-table.as($List); // a $List that follows the table: every change reads it anew
+table.as($Array); // a $Array that follows the table: every change reads it anew
 table.$items;    // the same, one per table, for markup:
 
 // @for (podcast of RAT.app.database.podcasts.$items) …
 ```
 
-a form of your own: `register(Type, store => …)`. `List`, `$List` and `$items` come from `@rat/app` (`bunker.js`): bunker itself knows nothing of rat.
+a form of your own: `register(Type, store => …)`. `$Array` and `$items` come from `@rat/app` (`bunker.js`): bunker itself knows nothing of rat.
 
 ## Files
 

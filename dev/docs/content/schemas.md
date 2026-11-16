@@ -34,7 +34,7 @@ Str.pattern(/^#/, 'a hex color')
 Str.email, Str.uuid
 Bool                              // reads 'yes', 'on', 'true' …
 Enum('a', 'b').default('b')
-List(Str).min(1)
+$Array(Str).min(1)   // [Str] without more
 Union(Num, Str)                   // the first case that fits
 Str.optional()                    // null and undefined pass
 Num.check(n => n % 2 === 0, 'even')

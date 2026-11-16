@@ -698,11 +698,11 @@ function reads (root, names, skip = new Set) {
   return edits;
 }
 
-// `new $Map`, `new $List(items)`, `$Dict(Str, Str).create(…)` (a schema's create() makes the variant it was
+// `new $Map`, `new $Array(items)`, `$Dict(Str, Str).create(…)` (a schema's create() makes the variant it was
 // called on): an instance of a reactive variant
 const isVariantName = node => node?.type === 'Identifier' && /^\$[A-Z]/.test(node.name);
 
-// $List(Tab), $List(Tab).stored('tabs'): the schema of a variant, schema methods chained on
+// $Array(Tab), $Array(Tab).stored('tabs'): the schema of a variant, schema methods chained on
 const isVariantSchema = node => node?.type === 'CallExpression'
   && (isVariantName(node.callee) || node.callee.type === 'MemberExpression' && isVariantSchema(node.callee.object));
 
@@ -710,7 +710,7 @@ const isVariant = init => init?.type === 'NewExpression' ? isVariantName(init.ca
   : init?.type === 'CallExpression' && init.callee.type === 'MemberExpression' && init.callee.property.name === 'create' && isVariantSchema(init.callee.object);
 
 // top level `let $x = …` / `const $x = …`, as { edits, names, variants }. a let goes through $(),
-// which picks the reactive variant of its value (a $List for an array, once @rat/types is loaded).
+// which picks the reactive variant of its value (a $Array for an array, once @rat/types is loaded).
 // a variant instance is no signal and gets no .value, it is used as written.
 // kept: the names written $x! (keptNames), they go through stored() with the name as the key
 function declarations (program, runtime, source, known = new Set, kept = new Set) {
@@ -806,7 +806,7 @@ yet. offsets count from offset.
 function created (list, index) {
   if (!/^\$[A-Z]/.test(list[index]?.value ?? '') || list[index + 1]?.type !== tt.parenL) return false;
   let close = closing(list, index + 1);
-  // schema methods between: $List(Tab).stored('tabs').create()
+  // schema methods between: $Array(Tab).stored('tabs').create()
   while (list[close + 1]?.type === tt.dot && list[close + 2]?.value !== 'create' && list[close + 3]?.type === tt.parenL) close = closing(list, close + 3);
   return list[close + 1]?.type === tt.dot && list[close + 2]?.value === 'create';
 }
@@ -966,7 +966,7 @@ function transformScript (code, { cases = new Map, filename, lift = false, names
   if (declared.computed) throw new CompileError(`${declared.computed.name} is a computed, made from others: there is nothing to keep. let ${declared.computed.name}! = … keeps a value`, { filename, index: offset + declared.computed.start, source });
   for (const name of kept.names) if (!declared.keeps.has(name)) throw new CompileError(`${name}! is kept beyond the page: a declaration of the top level only`, { filename, index: offset + sugared.indexOf(name), source });
 
-  // an imported $name is a signal or a reactive variant of another module ($List and the other $Names are
+  // an imported $name is a signal or a reactive variant of another module ($Array and the other $Names are
   // classes and stay as written): renamed in the import, read through $$.imported(), read and written as $x.value
   const reimported = new Map;   // import node -> { text, declarations }
   for (const node of program.body) {

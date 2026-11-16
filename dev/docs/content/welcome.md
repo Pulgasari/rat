@@ -12,7 +12,7 @@ it doesn't provide any revolutionary ideas but it fits my personal preferences.
 </script>
 
 <script>
-  items = RAT.List.create(data);
+  items = new RAT.$Array(data);
 </script>
 
 <ul>

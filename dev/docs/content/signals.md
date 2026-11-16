@@ -38,7 +38,7 @@ let $todos = [];
 $todos.push({ title: 'milk' });   // reactive too: a $Array
 ```
 
-An array, a `Map` or a `Set` assigned to a `$name` becomes its reactive variant: changing it in place updates the markup as well. A `new $List`, `new $Record` … stays as written and is used without `.value`.
+An array, a `Map` or a `Set` assigned to a `$name` becomes its reactive variant: changing it in place updates the markup as well. A `new $Array`, `new $Record` … stays as written and is used without `.value`.
 
 ## Typed and kept
 

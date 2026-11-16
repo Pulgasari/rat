@@ -10,7 +10,7 @@ In `.rat` and `.rat.js`, a `!` after the name in a declaration. The key is the n
 let $theme! = Enum('zombie', 'oled', 'rainbow');
 let $draft! = '';
 export const $settings! = $Record({ view: Enum('grid', 'list'), zoom: Num.default(100) }).create();
-export const $tabs!     = $List(Tab).create([{}]);
+export const $tabs!     = $Array(Tab).create([{}]);
 ```
 
 Inside a named view the key gets its name first: `podcasts:tabs`.
